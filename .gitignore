@@ -42,3 +42,6 @@ next-env.d.ts
 .env
 prisma/dev.db
 prisma/*.db-journal
+
+# SSH 金鑰絕不進版控
+*.pem
