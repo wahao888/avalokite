@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Avalo | Web Development & Enterprise AI Automation",
-    "description": "Avalo engineering studio: web design & development, enterprise AI automation, AI customer service. Transparent fixed pricing, order online, deployment and long-term care included."
+    "description": "Avalo digital engineering company: professional-grade websites, enterprise AI automation, and AI customer service for individuals and enterprises. Transparent fixed pricing, order online, deployment and long-term care included."
   },
   "nav": {
     "services": "Services",
@@ -16,15 +16,15 @@
     "label": "Engineering · Design · Automation",
     "title1": "Run your business on",
     "title2": "systems that work",
-    "desc": "From brand websites and revenue-ready e-commerce to enterprise AI automation and intelligent support — one engineer, end-to-end: design, build, deploy, maintain. Every price published. No haggling.",
+    "desc": "From brand websites and revenue-ready e-commerce to enterprise AI automation and intelligent support — Avalo delivers professional-grade systems for individuals and enterprises of every size: design, build, deploy, maintain. Every price published. No haggling.",
     "ctaPrimary": "See transparent pricing →",
     "ctaGhost": "View work",
     "scroll": "Scroll",
     "stats": [
-      { "num": "5", "suffix": "+", "label": "Live projects shipped" },
       { "num": "100", "suffix": "%", "label": "Prices published" },
       { "num": "1", "suffix": "-2", "label": "Months to delivery" },
-      { "num": "24", "suffix": "hr", "label": "Reply guarantee" }
+      { "num": "24", "suffix": "hr", "label": "Reply guarantee" },
+      { "num": "365", "suffix": "d", "label": "Year-round monitoring" }
     ]
   },
   "ticker": ["Web Design & Dev", "Enterprise AI Automation", "AI Customer Service", "LINE OA Integration", "Payment Integration", "Data Dashboards", "AI Search Optimization", "Systems Integration"],
@@ -32,7 +32,7 @@
     "label": "Core Services",
     "title1": "Three core",
     "title2": "service areas",
-    "intro": "I'm a full-stack engineer — no outsourcing, no middlemen. The person you talk to is the person who builds, ships, and maintains. I also cover what the market underserves: LINE OA AI support, report automation, and AI search optimization (getting ChatGPT to recommend your business).",
+    "intro": "Avalo unites design, full-stack engineering, and cloud architecture under one roof — one accountable team from discovery to long-term operations, with no layers of subcontracting. We also cover what the market underserves: LINE OA AI support, report automation, and AI search optimization (getting ChatGPT to recommend your business).",
     "items": [
       {
         "num": "01",
@@ -49,7 +49,7 @@
       {
         "num": "03",
         "name": "Systems & Custom Development",
-        "desc": "Membership systems, ERP/POS integration, API development, data engineering. When off-the-shelf software can't do it, I build it.",
+        "desc": "Membership systems, ERP/POS integration, API development, data engineering. When off-the-shelf software can't do it, Avalo builds it for you.",
         "tags": ["API Development", "ERP/POS", "Data Engineering", "Web3", "Cloud"]
       }
     ]
@@ -78,7 +78,7 @@
     "label": "Selected Work",
     "title1": "Real projects,",
     "title2": "all live right now",
-    "intro": "No concept mockups, no fake screenshots. Every project below was built by me and is running in production — click through and verify.",
+    "intro": "No concept mockups, no fake screenshots. Every project below was built by Avalo and is running in production — click through and verify.",
     "visit": "Visit site →",
     "items": [
       {
@@ -135,10 +135,10 @@
   },
   "about": {
     "label": "About Avalo",
-    "title1": "One engineer,",
+    "title1": "Design to operations,",
     "title2": "end-to-end ownership",
-    "p1": "Avalo is a one-person engineering studio. I'm a full-stack engineer focused on web, AI, and data engineering — every project above was architected, built, deployed, and maintained by me personally.",
-    "p2": "Working with me means no telephone game between sales and developers. You talk directly to the person doing the work: faster understanding, cheaper changes, and someone to call when things break.",
+    "p1": "Avalo is a digital engineering company focused on professional-grade websites and enterprise AI automation, serving clients from personal brands to enterprises. Our capabilities span design, full-stack development, cloud architecture, and security — every project above was architected, built, deployed, and maintained by Avalo end to end.",
+    "p2": "Working with Avalo means a transparent process with clear accountability: a dedicated point of contact, regular progress updates, and someone to call when things break — no quality lost in layers of subcontracting.",
     "cta": "Book a free consultation",
     "features": [
       {
@@ -148,8 +148,8 @@
       },
       {
         "num": "02",
-        "title": "Talk directly to the engineer",
-        "desc": "No sales layer, no subcontracting. The person scoping your project writes the code — feasibility and timelines get answered on the spot."
+        "title": "Talk directly to the engineering team",
+        "desc": "Every point of contact has an engineering background — no layers of retelling. Feasibility and timelines get answered on the spot."
       },
       {
         "num": "03",
@@ -159,7 +159,7 @@
       {
         "num": "04",
         "title": "Long-term care is the commitment",
-        "desc": "Monthly care plans keep your site looked after: backups, updates, monitoring, changes. You run the business; I run the systems."
+        "desc": "Monthly care plans keep your site looked after year-round: backups, updates, monitoring, changes. You run the business; Avalo runs the systems."
       }
     ]
   },
@@ -167,7 +167,7 @@
     "label": "Start a Project",
     "title1": "Let's talk about",
     "title2": "what you need",
-    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form for a free consultation. Replies within 24 hours.",
+    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form for a free consultation. A project consultant replies within 24 hours.",
     "items": {
       "email": "Email",
       "line": "LINE",
@@ -197,7 +197,7 @@
       "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like me to know…",
       "submit": "Send inquiry →",
       "submitting": "Sending…",
-      "success": "Got it! I'll reply within 24 hours.",
+      "success": "Got it! Our team will reply within 24 hours.",
       "error": "Failed to send. Please try again or email me directly."
     }
   },
@@ -248,11 +248,11 @@
   "order": {
     "resultTitle": "Payment Result",
     "successTitle": "Payment complete!",
-    "successDesc": "Your order is confirmed and a receipt has been emailed to you. I'll reach out within 24 hours to start the discovery call.",
+    "successDesc": "Your order is confirmed and a receipt has been emailed to you. A project consultant will reach out within 24 hours to start the discovery call.",
     "pendingTitle": "Awaiting payment",
     "pendingDesc": "If you chose ATM / convenience store payment, the order will update automatically once payment clears.",
     "failTitle": "Payment not completed",
-    "failDesc": "The transaction failed or was cancelled. Feel free to order again or contact me for help.",
+    "failDesc": "The transaction failed or was cancelled. Feel free to order again or contact our support team for help.",
     "orderNo": "Order No.",
     "backHome": "Back to home",
     "lookupTitle": "Order Lookup",

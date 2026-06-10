@@ -20,7 +20,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "一、服務提供者",
           body: [
-            `本網站由 Avalo 阿瓦羅工作室（下稱「本工作室」）經營，提供網站設計開發、企業 AI 自動化、系統整合等數位服務。聯絡方式：${SITE.email}、LINE ${SITE.lineId}。`,
+            `本網站由 Avalo 阿瓦羅（下稱「本公司」）經營，提供網站設計開發、企業 AI 自動化、系統整合等數位服務。聯絡方式：${SITE.email}、LINE ${SITE.lineId}。`,
           ],
         },
         {
@@ -28,7 +28,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           body: [
             "網站上標示之價格均為新台幣未稅價，結帳時加計 5% 營業稅。付款透過綠界科技 ECPay 處理，支援信用卡、ATM 轉帳與超商代碼。",
             "月費方案採信用卡定期定額，授權後每月自動扣款；您可隨時依退款政策取消，停扣自次一期生效。",
-            "本工作室採公開定價、不二價原則；客製專案於免費諮詢後提供書面固定報價。",
+            "本公司採公開定價、不二價原則；客製專案於免費諮詢後提供書面固定報價。",
           ],
         },
         {
@@ -41,19 +41,19 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "四、智慧財產權",
           body: [
-            "專案款項付清後，交付成果（網站程式碼、設計稿）之使用權歸客戶所有；本工作室保留開發框架、共用元件庫之權利，並得將成果列為作品集展示（可依客戶要求匿名）。",
+            "專案款項付清後，交付成果（網站程式碼、設計稿）之使用權歸客戶所有；本公司保留開發框架、共用元件庫之權利，並得將成果列為作品集展示（可依客戶要求匿名）。",
           ],
         },
         {
           h: "五、客戶義務",
           body: [
-            "客戶應提供專案所需之文字、圖片素材與帳號權限，並保證擁有合法使用權。因素材延遲提供導致之時程延宕，不可歸責於本工作室。",
+            "客戶應提供專案所需之文字、圖片素材與帳號權限，並保證擁有合法使用權。因素材延遲提供導致之時程延宕，不可歸責於本公司。",
           ],
         },
         {
           h: "六、責任限制",
           body: [
-            "本工作室就服務缺失之賠償責任，以該筆訂單實收金額為上限。對於不可抗力（第三方服務中斷、天災等）造成之損失不負賠償責任，但將盡力協助復原。",
+            "本公司就服務缺失之賠償責任，以該筆訂單實收金額為上限。對於不可抗力（第三方服務中斷、天災等）造成之損失不負賠償責任，但將盡力協助復原。",
           ],
         },
       ],
@@ -64,7 +64,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "1. Service Provider",
           body: [
-            `This site is operated by Avalo Studio ("the Studio"), providing web development, enterprise AI automation, and systems integration services. Contact: ${SITE.email}, LINE ${SITE.lineId}.`,
+            `This site is operated by Avalo ("the Company"), providing web development, enterprise AI automation, and systems integration services. Contact: ${SITE.email}, LINE ${SITE.lineId}.`,
           ],
         },
         {
@@ -85,19 +85,19 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "4. Intellectual Property",
           body: [
-            "Upon full payment, usage rights of deliverables (site code, designs) belong to the client. The Studio retains rights to its frameworks and shared component libraries, and may showcase the work in its portfolio (anonymized on request).",
+            "Upon full payment, usage rights of deliverables (site code, designs) belong to the client. The Company retains rights to its frameworks and shared component libraries, and may showcase the work in its portfolio (anonymized on request).",
           ],
         },
         {
           h: "5. Client Obligations",
           body: [
-            "Clients shall provide required content, assets, and account access, and warrant lawful rights to use them. Delays caused by late materials are not attributable to the Studio.",
+            "Clients shall provide required content, assets, and account access, and warrant lawful rights to use them. Delays caused by late materials are not attributable to the Company.",
           ],
         },
         {
           h: "6. Limitation of Liability",
           body: [
-            "The Studio's liability for service defects is capped at the amount actually paid for the order. The Studio is not liable for force majeure (third-party outages, disasters) but will assist with recovery.",
+            "The Company's liability for service defects is capped at the amount actually paid for the order. The Company is not liable for force majeure (third-party outages, disasters) but will assist with recovery.",
           ],
         },
       ],

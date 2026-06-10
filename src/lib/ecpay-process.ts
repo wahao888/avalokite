@@ -70,8 +70,8 @@ export async function processPaymentResult(params: Record<string, string>) {
         ? `[Avalo] 訂單 ${order.id} 付款成功`
         : `[Avalo] Order ${order.id} payment confirmed`,
       text: zh
-        ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n我會在 24 小時內與您聯絡，開始需求訪談。\n\n訂單查詢：${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo 阿瓦羅`
-        : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nI'll reach out within 24 hours to start the discovery call.\n\nOrder lookup: ${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo`,
+        ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n專案顧問將在 24 小時內與您聯絡，開始需求訪談。\n\n訂單查詢：${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo 阿瓦羅`
+        : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nA project consultant will reach out within 24 hours to start the discovery call.\n\nOrder lookup: ${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo`,
     });
     await notifyOwner(
       `[Avalo] 收款成功 ${order.id}（${payment.kind}）NT$${payment.amount}`,
