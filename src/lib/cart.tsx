@@ -17,6 +17,7 @@ export interface CartItem {
 
 interface CartContextValue {
   items: CartItem[];
+  ready: boolean; // localStorage 已載入
   add: (sku: string) => void;
   remove: (sku: string) => void;
   setQty: (sku: string, qty: number) => void;
@@ -90,6 +91,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     return {
       items,
+      ready: hydrated,
       add,
       remove,
       setQty,

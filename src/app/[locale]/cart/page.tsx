@@ -14,6 +14,8 @@ export default function CartPage() {
   const oneTime = cart.items.filter((i) => getProduct(i.sku)?.type === "onetime");
   const monthly = cart.items.filter((i) => getProduct(i.sku)?.type === "monthly");
 
+  if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
+
   if (cart.items.length === 0) {
     return (
       <main className="page-wrap page-wrap-narrow" style={{ textAlign: "center" }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
@@ -16,10 +16,12 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
 
-  if (cart.items.length === 0) {
-    if (typeof window !== "undefined") router.replace("/cart");
-    return null;
-  }
+  // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
+  const empty = cart.ready && cart.items.length === 0;
+  useEffect(() => {
+    if (empty && !submitting) router.replace("/cart");
+  }, [empty, submitting, router]);
+  if (!cart.ready || empty) return null;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

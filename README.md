@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Avalo 阿瓦羅 — 官方網站
 
-## Getting Started
+網站設計開發・企業 AI 自動化工作室官網。莫蘭迪木質×綠色系設計，
+透明不二價＋線上下單（綠界 ECPay 一次性＋信用卡定期定額月費訂閱）。
 
-First, run the development server:
+## 技術
+
+Next.js 16（App Router）· TypeScript · next-intl（zh-TW / en）· Prisma + SQLite · 綠界 ECPay · Nodemailer
+
+## 開發
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env        # 預設已填綠界官方測試商店
+npm install
+npx prisma migrate dev
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+綠界測試卡：`4311-9522-2222-2222`，效期任意未過期，CVV `222`，3D 驗證碼任填。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 主要路徑
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 路徑 | 說明 |
+|---|---|
+| `/`、`/en` | 首頁（服務、定價、案例、聯絡） |
+| `/cart` → `/checkout` | 購物車與免會員結帳 |
+| `/order/result`、`/order/lookup` | 付款結果、訂單查詢（編號＋Email） |
+| `/legal/{terms,privacy,refund}` | 服務條款／隱私權／退款政策（綠界審核必備） |
+| `/admin` | 營運後台（訂單、訂閱、詢問單；密碼見 `.env`） |
 
-## Learn More
+## 商品與文案
 
-To learn more about Next.js, take a look at the following resources:
+- 服務與價格唯一來源：`src/lib/products.ts`
+- 介面文案：`src/messages/{zh-TW,en}.json`
+- 聯絡資訊（Email / LINE）：`src/lib/site.ts`
+- Logo 三變體：`public/brand/`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 部署
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+見 [deploy/DEPLOY.md](deploy/DEPLOY.md)（EC2 一鍵硬化腳本、Nginx、HTTPS、綠界正式切換、S3 備份）。
