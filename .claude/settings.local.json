@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:jeantogo.com)",
+      "WebFetch(domain:gtclub.tw)",
+      "WebFetch(domain:tinghao-wang.github.io)",
+      "WebFetch(domain:damenkyt.com)",
+      "WebFetch(domain:agent.damentec.com)",
+      "Bash(curl -sL --max-time 20 https://damenkyt.com/)",
+      "Bash(curl -sL --max-time 20 https://agent.damentec.com/)",
+      "WebSearch"
+    ]
+  }
+}
