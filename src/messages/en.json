@@ -1,0 +1,276 @@
+{
+  "meta": {
+    "title": "Avalo | Web Development & Enterprise AI Automation",
+    "description": "Avalo engineering studio: web design & development, enterprise AI automation, AI customer service. Transparent fixed pricing, order online, deployment and long-term care included."
+  },
+  "nav": {
+    "services": "Services",
+    "pricing": "Pricing",
+    "cases": "Work",
+    "about": "About",
+    "contact": "Contact",
+    "cart": "Cart",
+    "cta": "Order Now"
+  },
+  "hero": {
+    "label": "Engineering · Design · Automation",
+    "title1": "Run your business on",
+    "title2": "systems that work",
+    "desc": "From brand websites and revenue-ready e-commerce to enterprise AI automation and intelligent support — one engineer, end-to-end: design, build, deploy, maintain. Every price published. No haggling.",
+    "ctaPrimary": "See transparent pricing →",
+    "ctaGhost": "View work",
+    "scroll": "Scroll",
+    "stats": [
+      { "num": "5", "suffix": "+", "label": "Live projects shipped" },
+      { "num": "100", "suffix": "%", "label": "Prices published" },
+      { "num": "1", "suffix": "-2", "label": "Months to delivery" },
+      { "num": "24", "suffix": "hr", "label": "Reply guarantee" }
+    ]
+  },
+  "ticker": ["Web Design & Dev", "Enterprise AI Automation", "AI Customer Service", "LINE OA Integration", "Payment Integration", "Data Dashboards", "AI Search Optimization", "Systems Integration"],
+  "services": {
+    "label": "Core Services",
+    "title1": "Three core",
+    "title2": "service areas",
+    "intro": "I'm a full-stack engineer — no outsourcing, no middlemen. The person you talk to is the person who builds, ships, and maintains. I also cover what the market underserves: LINE OA AI support, report automation, and AI search optimization (getting ChatGPT to recommend your business).",
+    "items": [
+      {
+        "num": "01",
+        "name": "Web Design & Development",
+        "desc": "Fully custom design, responsive layouts, SEO, payments and admin dashboards — websites that bring customers and orders, not just pretty facades.",
+        "tags": ["Custom Design", "RWD", "SEO/GEO", "Payments", "E-commerce"]
+      },
+      {
+        "num": "02",
+        "name": "Enterprise AI Automation",
+        "desc": "AI customer service, workflow automation, auto-generated reports. Hand repetitive work to systems — the labor saved pays it back within a year.",
+        "tags": ["AI Support", "n8n", "LINE OA", "RAG", "Report Automation"]
+      },
+      {
+        "num": "03",
+        "name": "Systems & Custom Development",
+        "desc": "Membership systems, ERP/POS integration, API development, data engineering. When off-the-shelf software can't do it, I build it.",
+        "tags": ["API Development", "ERP/POS", "Data Engineering", "Web3", "Cloud"]
+      }
+    ]
+  },
+  "pricing": {
+    "label": "Transparent Pricing",
+    "title1": "Every price published.",
+    "title2": "No haggling.",
+    "intro": "Each price comes with the Taiwan market range so you can compare yourself. When you're ready, add to cart and order online — no back-and-forth negotiation, no hidden extras.",
+    "notice": "✦ All plans include: discovery call, design approval, testing & launch\n✦ Prices exclude 5% VAT, added at checkout\n✦ Builds include first month of care; subscriptions cancellable anytime",
+    "onetimeHeading": "One-time Builds",
+    "monthlyHeading": "Monthly Subscriptions (auto-charged by credit card)",
+    "addToCart": "Add to Cart",
+    "inCart": "In Cart ✓",
+    "featured": "Most Popular",
+    "perMonth": "/mo",
+    "custom": {
+      "label": "Enterprise",
+      "name": "Custom System Development",
+      "desc": "Membership systems, ERP integration, high-traffic architecture, AI products — larger custom projects get a written fixed quote after a free consultation. The quote is final too.",
+      "price": "Free consultation",
+      "cta": "Book a free consultation →"
+    }
+  },
+  "cases": {
+    "label": "Selected Work",
+    "title1": "Real projects,",
+    "title2": "all live right now",
+    "intro": "No concept mockups, no fake screenshots. Every project below was built by me and is running in production — click through and verify.",
+    "visit": "Visit site →",
+    "items": [
+      {
+        "id": "jeantogo",
+        "type": "B2B Platform",
+        "year": "2024",
+        "name": "JeanToGo",
+        "label": "JEAN",
+        "desc": "Uber Eats partner onboarding platform helping restaurants across Taiwan apply for delivery partnership: online application flow, document guidance, and merchant onboarding content built for non-technical owners.",
+        "tags": ["B2B Platform", "Form Workflows", "F&B"],
+        "url": "https://jeantogo.com/"
+      },
+      {
+        "id": "gtclub",
+        "type": "Community Platform",
+        "year": "2024",
+        "name": "GT Club Taiwan",
+        "label": "GT",
+        "desc": "Membership community site with three topic hubs (AI, Web3, sustainability), member application forms, categorized newsletter subscriptions, an event photo wall, and light/dark themes.",
+        "tags": ["Membership", "Newsletter", "Theming"],
+        "url": "https://gtclub.tw/"
+      },
+      {
+        "id": "damenkyt",
+        "type": "FinTech SaaS",
+        "year": "2024",
+        "name": "Damen KYT",
+        "label": "KYT",
+        "desc": "Blockchain security and compliance platform — a Know Your Transaction (KYT) risk-screening SaaS helping businesses meet crypto compliance requirements. Built as a React SPA.",
+        "tags": ["Blockchain", "SaaS", "Compliance"],
+        "url": "https://damenkyt.com/"
+      },
+      {
+        "id": "agagent",
+        "type": "Enterprise AI",
+        "year": "2025",
+        "name": "AG Agent — Meeting Assistant",
+        "label": "AG",
+        "desc": "An internal AI agent that automatically captures, summarizes, and answers questions about weekly meeting records — semantic search over past decisions, built with Next.js + RAG.",
+        "tags": ["AI Agent", "RAG", "Automation"],
+        "url": "https://agent.damentec.com/"
+      },
+      {
+        "id": "portfolio",
+        "type": "Personal Brand",
+        "year": "2024",
+        "name": "Bilingual Portfolio Site",
+        "label": "TH",
+        "desc": "Bilingual (zh/en) portfolio for a Web3/AI full-stack engineer: modular content architecture, instant language switching, interactive browsing experience.",
+        "tags": ["Personal Brand", "Bilingual", "i18n"],
+        "url": "https://tinghao-wang.github.io/"
+      }
+    ]
+  },
+  "about": {
+    "label": "About Avalo",
+    "title1": "One engineer,",
+    "title2": "end-to-end ownership",
+    "p1": "Avalo is a one-person engineering studio. I'm a full-stack engineer focused on web, AI, and data engineering — every project above was architected, built, deployed, and maintained by me personally.",
+    "p2": "Working with me means no telephone game between sales and developers. You talk directly to the person doing the work: faster understanding, cheaper changes, and someone to call when things break.",
+    "cta": "Book a free consultation",
+    "features": [
+      {
+        "num": "01",
+        "title": "Fixed prices, published first",
+        "desc": "Every standard service is priced on this site with the market range alongside. No worrying about being overcharged, no time wasted negotiating."
+      },
+      {
+        "num": "02",
+        "title": "Talk directly to the engineer",
+        "desc": "No sales layer, no subcontracting. The person scoping your project writes the code — feasibility and timelines get answered on the spot."
+      },
+      {
+        "num": "03",
+        "title": "Deployment & security included",
+        "desc": "Every build ships to production with HTTPS, firewall, and security hardening — you don't just get a zip file and a goodbye."
+      },
+      {
+        "num": "04",
+        "title": "Long-term care is the commitment",
+        "desc": "Monthly care plans keep your site looked after: backups, updates, monitoring, changes. You run the business; I run the systems."
+      }
+    ]
+  },
+  "contact": {
+    "label": "Start a Project",
+    "title1": "Let's talk about",
+    "title2": "what you need",
+    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form for a free consultation. Replies within 24 hours.",
+    "items": {
+      "email": "Email",
+      "line": "LINE",
+      "hours": "Response time",
+      "hoursValue": "Mon–Fri 10:00–18:00 (GMT+8), replies within 24h",
+      "schedule": "Availability",
+      "scheduleValue": "Accepting new projects — limited slots"
+    },
+    "form": {
+      "title": "Free Consultation",
+      "subtitle": "INQUIRY FORM · Reply within 24h",
+      "name": "Name *",
+      "namePh": "Jane Doe",
+      "company": "Company / Brand",
+      "companyPh": "Acme Inc.",
+      "email": "Email *",
+      "emailPh": "you@example.com",
+      "phone": "LINE ID / Phone",
+      "phonePh": "+886 912 345 678",
+      "service": "Service needed",
+      "servicePh": "Select a service",
+      "serviceOptions": ["Web Design & Development", "Enterprise AI Automation", "AI Customer Service", "Custom System Development", "Website Health Check", "Other"],
+      "budget": "Budget range",
+      "budgetPh": "Select",
+      "budgetOptions": ["Under NT$30,000", "NT$30,000–100,000", "NT$100,000–300,000", "Over NT$300,000", "Not sure yet"],
+      "message": "Project description *",
+      "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like me to know…",
+      "submit": "Send inquiry →",
+      "submitting": "Sending…",
+      "success": "Got it! I'll reply within 24 hours.",
+      "error": "Failed to send. Please try again or email me directly."
+    }
+  },
+  "footer": {
+    "tagline": "Web Development · Enterprise AI Automation · Systems Integration",
+    "rights": "All Rights Reserved",
+    "links": { "terms": "Terms", "privacy": "Privacy", "refund": "Refund Policy", "lookup": "Order Lookup" },
+    "madeWith": "Designed & built by Avalo"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty",
+    "emptyDesc": "Browse the pricing section and pick what you need.",
+    "browse": "Browse pricing →",
+    "onetimeSection": "One-time Builds",
+    "monthlySection": "Monthly Subscriptions",
+    "qty": "Qty",
+    "remove": "Remove",
+    "subtotalOnetime": "One-time subtotal",
+    "subtotalMonthly": "Monthly subtotal",
+    "tax": "VAT 5%",
+    "totalDueNow": "Due now (incl. tax)",
+    "monthlyNote": "Subscriptions are charged monthly by credit card after authorization (incl. tax)",
+    "checkout": "Checkout →",
+    "continueShopping": "← Continue browsing"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "contactInfo": "Contact Details",
+    "name": "Name *",
+    "email": "Email *",
+    "emailNote": "Order confirmation and lookup use this email",
+    "phone": "Phone *",
+    "company": "Company (optional)",
+    "taxId": "Tax ID (optional)",
+    "note": "Notes (optional)",
+    "notePh": "Anything you'd like me to know up front — requirements, timeline…",
+    "orderSummary": "Order Summary",
+    "payOnetime": "One-time payment (incl. tax)",
+    "payMonthly": "Monthly recurring (incl. tax / mo)",
+    "payHint": "You'll be redirected to ECPay's secure page. If your order has both one-time and subscription items, you'll complete two authorizations in sequence.",
+    "agreement": "I have read and agree to the",
+    "and": "and",
+    "submit": "Pay with ECPay →",
+    "submitting": "Creating order…",
+    "error": "Failed to create order. Please check the fields and retry."
+  },
+  "order": {
+    "resultTitle": "Payment Result",
+    "successTitle": "Payment complete!",
+    "successDesc": "Your order is confirmed and a receipt has been emailed to you. I'll reach out within 24 hours to start the discovery call.",
+    "pendingTitle": "Awaiting payment",
+    "pendingDesc": "If you chose ATM / convenience store payment, the order will update automatically once payment clears.",
+    "failTitle": "Payment not completed",
+    "failDesc": "The transaction failed or was cancelled. Feel free to order again or contact me for help.",
+    "orderNo": "Order No.",
+    "backHome": "Back to home",
+    "lookupTitle": "Order Lookup",
+    "lookupDesc": "Enter your order number and the email used at checkout.",
+    "lookupOrderNo": "Order number",
+    "lookupEmail": "Email",
+    "lookupSubmit": "Look up",
+    "lookupNotFound": "Order not found. Please check the number and email.",
+    "status": { "pending": "Pending", "paid": "Paid", "partial": "Partial", "failed": "Failed", "cancelled": "Cancelled" },
+    "subStatus": { "pending": "Pending", "active": "Active", "failed": "Failed", "cancelled": "Cancelled" },
+    "itemsHeading": "Items",
+    "paymentsHeading": "Payments",
+    "subsHeading": "Subscriptions"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "refund": "Refund Policy",
+    "updated": "Last updated"
+  }
+}

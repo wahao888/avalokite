@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 訂單：免會員結帳，一張訂單可同時含一次性品項與訂閱品項
+model Order {
+  id          String   @id // AVL + timestamp36 + random，亦作為綠界 MerchantTradeNo 前綴
+  email       String
+  name        String
+  phone       String
+  company     String?
+  taxId       String? // 統編
+  note        String?
+  locale      String   @default("zh-TW")
+  items       String // JSON: [{ sku, qty }]
+  oneTimeTotal Int     @default(0) // 一次性小計（未稅，TWD）
+  monthlyTotal Int     @default(0) // 月費小計（未稅，TWD/月）
+  status      String   @default("pending") // pending | paid | partial | failed | cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  payments    Payment[]
+  subscriptions Subscription[]
+}
+
+// 一次綠界交易（一次性付款一筆；定期定額授權一筆）
+model Payment {
+  id               Int      @id @default(autoincrement())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  merchantTradeNo  String   @unique // 送綠界的交易編號
+  kind             String // onetime | period
+  amount           Int // 含稅總額（TWD）
+  status           String   @default("pending") // pending | paid | failed
+  ecpayTradeNo     String?
+  paymentType      String? // Credit_CreditCard / ATM_xxx / CVS_xxx
+  paidAt           DateTime?
+  rawReturn        String? // 綠界回傳原始參數 JSON
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// 月費訂閱（綠界信用卡定期定額授權）
+model Subscription {
+  id              Int      @id @default(autoincrement())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id])
+  merchantTradeNo String   @unique
+  sku             String
+  monthlyAmount   Int // 含稅每期扣款額（TWD）
+  status          String   @default("pending") // pending | active | failed | cancelled
+  totalSuccessTimes Int    @default(0)
+  lastChargeAt    DateTime?
+  gwsr            String? // 綠界授權單號，後台停扣用
+  rawReturn       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 聯絡 / 客製需求詢問單
+model Inquiry {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String?
+  budget    String?
+  message   String
+  locale    String   @default("zh-TW")
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,276 @@
+{
+  "meta": {
+    "title": "Avalo 阿瓦羅｜網站設計開發・企業 AI 自動化",
+    "description": "Avalo 阿瓦羅工程工作室：網站設計開發、企業 AI 自動化、AI 智能客服。公開透明不二價，線上直接下單，含部署與長期維護。"
+  },
+  "nav": {
+    "services": "服務",
+    "pricing": "定價",
+    "cases": "案例",
+    "about": "關於",
+    "contact": "聯絡",
+    "cart": "購物車",
+    "cta": "立即下單"
+  },
+  "hero": {
+    "label": "工程・設計・自動化",
+    "title1": "把你的生意",
+    "title2": "交給會跑的系統",
+    "desc": "從品牌官網、可收錢的電商網站，到企業 AI 自動化與智能客服 —— 一位工程師，端到端負責設計、開發、部署與維護。價格全部公開，不二價。",
+    "ctaPrimary": "看透明定價 →",
+    "ctaGhost": "查看案例",
+    "scroll": "往下捲動",
+    "stats": [
+      { "num": "5", "suffix": "+", "label": "實際上線作品" },
+      { "num": "100", "suffix": "%", "label": "價格公開透明" },
+      { "num": "1", "suffix": "-2", "label": "月內完成交付" },
+      { "num": "24", "suffix": "hr", "label": "詢問必回覆" }
+    ]
+  },
+  "ticker": ["網站設計開發", "企業 AI 自動化", "AI 智能客服", "LINE 官方帳號整合", "金流串接", "數據儀表板", "AI 搜尋優化 GEO", "系統整合開發"],
+  "services": {
+    "label": "核心服務",
+    "title1": "三大核心",
+    "title2": "服務領域",
+    "intro": "我是全端工程師，不外包、不轉手。從需求訪談到上線維護都是同一個人，溝通零落差。除了主力服務，也承接台灣市場最缺的：LINE 官方帳號 AI 客服、報表自動化、AI 搜尋優化（讓 ChatGPT 推薦你的店）。",
+    "items": [
+      {
+        "num": "01",
+        "name": "網站設計開發",
+        "desc": "全客製設計、RWD、SEO、金流串接到後台管理，做出真的能帶來客人和訂單的網站，而不只是漂亮的門面。",
+        "tags": ["全客製", "RWD", "SEO/GEO", "金流串接", "購物車"]
+      },
+      {
+        "num": "02",
+        "name": "企業 AI 自動化",
+        "desc": "AI 客服、流程自動化、報表自動產生。把重複性工作交給系統，省下的人力一年就回本。",
+        "tags": ["AI 客服", "n8n", "LINE OA", "RAG 知識庫", "報表自動化"]
+      },
+      {
+        "num": "03",
+        "name": "系統整合與客製開發",
+        "desc": "會員系統、ERP/POS 串接、API 開發、資料工程。市面套裝軟體做不到的，我幫你做出來。",
+        "tags": ["API 開發", "ERP/POS", "資料工程", "Web3", "雲端架構"]
+      }
+    ]
+  },
+  "pricing": {
+    "label": "透明定價",
+    "title1": "價格全部公開",
+    "title2": "不二價",
+    "intro": "每個價格都附上台灣市場行情對照，你可以自己比。確定需求就直接加入購物車線上下單，不用來回議價、不會追加隱藏費用。",
+    "notice": "✦ 所有方案皆含：需求訪談、設計確認、測試上線\n✦ 標示價格為未稅，結帳加 5% 營業稅\n✦ 建置案含第一個月維護；月費方案可隨時取消",
+    "onetimeHeading": "一次性建置",
+    "monthlyHeading": "月費訂閱（信用卡每月自動扣款）",
+    "addToCart": "加入購物車",
+    "inCart": "已在購物車 ✓",
+    "featured": "熱門選擇",
+    "perMonth": "/月",
+    "custom": {
+      "label": "企業方案",
+      "name": "客製系統開發",
+      "desc": "會員系統、ERP 串接、高流量架構、AI 產品開發 —— 規模較大的客製專案，免費諮詢後提供書面固定報價，報價後同樣不二價。",
+      "price": "免費諮詢報價",
+      "cta": "預約免費諮詢 →"
+    }
+  },
+  "cases": {
+    "label": "實際作品",
+    "title1": "全部都是",
+    "title2": "上線中的真實案例",
+    "intro": "不放概念稿、不放模擬圖。以下每一個都是實際開發、正在線上運作的作品，點進去就能驗證。",
+    "visit": "造訪網站 →",
+    "items": [
+      {
+        "id": "jeantogo",
+        "type": "B2B 服務平台",
+        "year": "2024",
+        "name": "JeanToGo",
+        "label": "JEAN",
+        "desc": "Uber Eats 合作商家申請平台。協助全台餐飲業者完成外送平台的合作申請：線上申請表單、資料整理流程、商家導引內容，讓非科技背景的店主也能無痛上架。",
+        "tags": ["B2B 平台", "表單流程", "餐飲業"],
+        "url": "https://jeantogo.com/"
+      },
+      {
+        "id": "gtclub",
+        "type": "社群會員平台",
+        "year": "2024",
+        "name": "GT Club 台灣共好交流協會",
+        "label": "GT",
+        "desc": "會員制社群官網：AI、Web3、永續三大主題專區，入會表單、分類電子報訂閱、活動照片牆、亮暗主題切換，完整支撐協會的會員營運。",
+        "tags": ["會員系統", "電子報", "主題切換"],
+        "url": "https://gtclub.tw/"
+      },
+      {
+        "id": "damenkyt",
+        "type": "FinTech SaaS",
+        "year": "2024",
+        "name": "Damen KYT",
+        "label": "KYT",
+        "desc": "區塊鏈安全合規平台。加密貨幣交易風險檢測（Know Your Transaction）SaaS，協助企業滿足金流合規要求，React 單頁應用架構。",
+        "tags": ["區塊鏈", "SaaS", "資安合規"],
+        "url": "https://damenkyt.com/"
+      },
+      {
+        "id": "agagent",
+        "type": "企業 AI 系統",
+        "year": "2025",
+        "name": "AG Agent 會議智能助手",
+        "label": "AG",
+        "desc": "企業內部 AI Agent：自動擷取、摘要及查詢周會資料，會議結束即產出重點，全文語意檢索歷史決議，Next.js + RAG 架構。",
+        "tags": ["AI Agent", "RAG", "企業自動化"],
+        "url": "https://agent.damentec.com/"
+      },
+      {
+        "id": "portfolio",
+        "type": "個人品牌網站",
+        "year": "2024",
+        "name": "雙語個人品牌網站",
+        "label": "TH",
+        "desc": "Web3 / AI 全端工程師的中英雙語作品集：模組化內容架構、語言即時切換、互動式瀏覽體驗。",
+        "tags": ["個人品牌", "中英雙語", "i18n"],
+        "url": "https://tinghao-wang.github.io/"
+      }
+    ]
+  },
+  "about": {
+    "label": "關於 Avalo",
+    "title1": "一位工程師",
+    "title2": "端到端負責",
+    "p1": "Avalo（阿瓦羅）是一間一人工程工作室。我是全端工程師，過去專注於 Web、AI 與資料工程領域 —— 你在上面看到的每個案例，從架構、開發到部署維運，都是我親手完成。",
+    "p2": "找我合作，你得到的不是業務轉包給工程師的傳話遊戲，而是直接和做事的人對話。需求理解快、改動成本低、出問題找得到人。",
+    "cta": "預約免費諮詢",
+    "features": [
+      {
+        "num": "01",
+        "title": "不二價，先看價再談",
+        "desc": "所有標準服務的價格都公開在網站上，並附市場行情對照。你不用擔心「被當盤子」，也不用花時間議價。"
+      },
+      {
+        "num": "02",
+        "title": "工程師直接對接",
+        "desc": "沒有業務、沒有轉包。跟你討論需求的人就是寫程式的人，技術上做不做得到、要花多久，當場就有答案。"
+      },
+      {
+        "num": "03",
+        "title": "交付含部署與資安",
+        "desc": "每個建置案都包含正式環境部署、HTTPS、防火牆與基礎資安強化 —— 不是丟個壓縮檔給你就結案。"
+      },
+      {
+        "num": "04",
+        "title": "長期維護才是承諾",
+        "desc": "月費維護方案讓網站持續有人顧：備份、更新、監控、修改。你專心做生意，系統的事交給我。"
+      }
+    ]
+  },
+  "contact": {
+    "label": "開始合作",
+    "title1": "聊聊你的",
+    "title2": "專案需求",
+    "intro": "標準服務可直接線上下單；客製專案或還不確定要什麼，填表單免費諮詢，24 小時內回覆。",
+    "items": {
+      "email": "Email",
+      "line": "LINE",
+      "hours": "回覆時間",
+      "hoursValue": "週一至週五 10:00–18:00，24 小時內必回",
+      "schedule": "目前排程",
+      "scheduleValue": "接受新案洽詢中，名額有限"
+    },
+    "form": {
+      "title": "免費諮詢表單",
+      "subtitle": "INQUIRY FORM · 24 小時內回覆",
+      "name": "姓名 *",
+      "namePh": "王小明",
+      "company": "公司 / 品牌名稱",
+      "companyPh": "XX 有限公司",
+      "email": "Email *",
+      "emailPh": "you@example.com",
+      "phone": "LINE ID / 手機",
+      "phonePh": "0912345678",
+      "service": "需要的服務",
+      "servicePh": "請選擇服務類型",
+      "serviceOptions": ["網站設計開發", "企業 AI 自動化", "AI 智能客服", "客製系統開發", "網站健檢", "其他（請說明）"],
+      "budget": "預算範圍",
+      "budgetPh": "請選擇",
+      "budgetOptions": ["NT$30,000 以下", "NT$30,000–100,000", "NT$100,000–300,000", "NT$300,000 以上", "尚未確定，想先了解"],
+      "message": "專案描述 *",
+      "messagePh": "請簡單描述你的需求、目標、時程，或任何想讓我了解的事…",
+      "submit": "送出詢問 →",
+      "submitting": "送出中…",
+      "success": "已收到你的詢問！我會在 24 小時內回覆。",
+      "error": "送出失敗，請稍後再試或直接 Email 聯絡。"
+    }
+  },
+  "footer": {
+    "tagline": "網站設計開發 · 企業 AI 自動化 · 系統整合",
+    "rights": "版權所有",
+    "links": { "terms": "服務條款", "privacy": "隱私權政策", "refund": "退款政策", "lookup": "訂單查詢" },
+    "madeWith": "Designed & built by Avalo"
+  },
+  "cart": {
+    "title": "購物車",
+    "empty": "購物車是空的",
+    "emptyDesc": "到定價區挑選你需要的服務吧。",
+    "browse": "瀏覽服務定價 →",
+    "onetimeSection": "一次性建置",
+    "monthlySection": "月費訂閱",
+    "qty": "數量",
+    "remove": "移除",
+    "subtotalOnetime": "一次性小計",
+    "subtotalMonthly": "月費小計",
+    "tax": "營業稅 5%",
+    "totalDueNow": "本次應付（含稅）",
+    "monthlyNote": "月費品項採信用卡定期定額，授權後每月自動扣款（含稅）",
+    "checkout": "前往結帳 →",
+    "continueShopping": "← 繼續選購"
+  },
+  "checkout": {
+    "title": "結帳",
+    "contactInfo": "聯絡資料",
+    "name": "姓名 *",
+    "email": "Email *",
+    "emailNote": "訂單確認與查詢都會用這個 Email",
+    "phone": "手機 *",
+    "company": "公司名稱（選填）",
+    "taxId": "統一編號（選填）",
+    "note": "備註（選填）",
+    "notePh": "想先告訴我的需求細節、希望的時程…",
+    "orderSummary": "訂單摘要",
+    "payOnetime": "一次性款項（含稅）",
+    "payMonthly": "月費定期定額（含稅／月）",
+    "payHint": "送出後將導向綠界 ECPay 安全頁面完成付款。若同時含一次性與月費品項，會依序完成兩筆授權。",
+    "agreement": "我已閱讀並同意",
+    "and": "與",
+    "submit": "前往綠界付款 →",
+    "submitting": "建立訂單中…",
+    "error": "建立訂單失敗，請檢查欄位後重試。"
+  },
+  "order": {
+    "resultTitle": "付款結果",
+    "successTitle": "付款完成！",
+    "successDesc": "訂單已成立，確認信已寄到你的 Email。我會在 24 小時內主動與你聯絡，開始需求訪談。",
+    "pendingTitle": "等待付款確認",
+    "pendingDesc": "若你選擇 ATM／超商繳費，完成繳費後系統會自動更新訂單狀態並寄送確認信。",
+    "failTitle": "付款未完成",
+    "failDesc": "交易未成功或已取消。歡迎重新下單，或聯絡我協助處理。",
+    "orderNo": "訂單編號",
+    "backHome": "回到首頁",
+    "lookupTitle": "訂單查詢",
+    "lookupDesc": "輸入訂單編號與下單時的 Email 查詢訂單狀態。",
+    "lookupOrderNo": "訂單編號",
+    "lookupEmail": "Email",
+    "lookupSubmit": "查詢",
+    "lookupNotFound": "查無此訂單，請確認編號與 Email 是否正確。",
+    "status": { "pending": "待付款", "paid": "已付款", "partial": "部分完成", "failed": "付款失敗", "cancelled": "已取消" },
+    "subStatus": { "pending": "待授權", "active": "扣款中", "failed": "授權失敗", "cancelled": "已取消" },
+    "itemsHeading": "訂購項目",
+    "paymentsHeading": "付款紀錄",
+    "subsHeading": "訂閱狀態"
+  },
+  "legal": {
+    "terms": "服務條款",
+    "privacy": "隱私權政策",
+    "refund": "退款政策",
+    "updated": "最後更新"
+  }
+}

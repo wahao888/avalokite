@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" role="img" aria-label="Avalo logo — seal variant">
+  <!-- V3「印章」：苔綠方印，紙色 A 鏤空，右下木點 -->
+  <g transform="translate(40,40)">
+    <rect x="-28" y="-28" width="56" height="56" rx="6" fill="#5F7155"/>
+    <rect x="-24" y="-24" width="48" height="48" rx="3" fill="none" stroke="#F0EBE3" stroke-width="1.2" opacity="0.5"/>
+    <g stroke="#F0EBE3" stroke-width="4.5" stroke-linecap="round" fill="none">
+      <path d="M0,-13 L-10,14"/>
+      <path d="M0,-13 L10,14"/>
+      <path d="M-5.5,4 L5.5,4"/>
+    </g>
+    <circle cx="17" cy="17" r="3" fill="#A98467"/>
+  </g>
+  <g fill="#2F2B26">
+    <text x="86" y="46" font-family="Fraunces, 'Noto Serif TC', Georgia, serif" font-weight="600"
+          font-size="30" letter-spacing="6">AVALO</text>
+    <text x="87" y="64" font-family="'DM Mono', 'Courier New', monospace"
+          font-size="10" letter-spacing="7" fill="#8C8478">阿瓦羅工作室</text>
+  </g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" role="img" aria-label="Avalo logo — annual rings variant">
+  <!-- V1「年輪」：同心年輪圈 × A 字母，木質×苔綠 -->
+  <g transform="translate(40,40)">
+    <circle r="30" fill="none" stroke="#A98467" stroke-width="2" stroke-linecap="round"
+            stroke-dasharray="118 18 40 12" transform="rotate(-30)" opacity="0.85"/>
+    <circle r="23" fill="none" stroke="#8A9A7B" stroke-width="2" stroke-linecap="round"
+            stroke-dasharray="58 14 52 20" transform="rotate(40)" opacity="0.8"/>
+    <circle r="16" fill="none" stroke="#A98467" stroke-width="2" stroke-linecap="round"
+            stroke-dasharray="64 12 18 8" transform="rotate(160)" opacity="0.6"/>
+    <g stroke="#5F7155" stroke-width="4" stroke-linecap="round" fill="none">
+      <path d="M0,-13 L-9,13"/>
+      <path d="M0,-13 L9,13"/>
+      <path d="M-5.2,4.5 Q0,1.5 5.2,4.5"/>
+    </g>
+  </g>
+  <g fill="#2F2B26">
+    <text x="86" y="46" font-family="Fraunces, 'Noto Serif TC', Georgia, serif" font-weight="600"
+          font-size="30" letter-spacing="6">AVALO</text>
+    <text x="87" y="64" font-family="'DM Mono', 'Courier New', monospace"
+          font-size="10" letter-spacing="7" fill="#8C8478">阿瓦羅工作室</text>
+  </g>
+</svg>
