@@ -1,5 +1,4 @@
 import { useTranslations } from "next-intl";
-import { SITE } from "@/lib/site";
 import ContactForm from "@/components/ContactForm";
 
 export default function Contact() {
@@ -18,37 +17,19 @@ export default function Contact() {
       <div className="contact-grid">
         <div className="fade-in">
           <p className="contact-intro">{t("intro")}</p>
-          <div className="contact-item">
-            <span className="contact-icon">📧</span>
-            <div>
-              <div className="contact-label">{t("items.email")}</div>
-              <div className="contact-value">{SITE.email}</div>
-            </div>
-          </div>
-          <div className="contact-item">
-            <span className="contact-icon">💬</span>
-            <div>
-              <div className="contact-label">{t("items.line")}</div>
-              <div className="contact-value">{SITE.lineId}</div>
-            </div>
-          </div>
-          <div className="contact-item">
-            <span className="contact-icon">⏰</span>
-            <div>
-              <div className="contact-label">{t("items.hours")}</div>
-              <div className="contact-value">{t("items.hoursValue")}</div>
-            </div>
-          </div>
-          <div className="contact-item">
-            <span className="contact-icon">📅</span>
-            <div>
-              <div className="contact-label">{t("items.schedule")}</div>
-              <div className="contact-value">{t("items.scheduleValue")}</div>
-            </div>
-          </div>
         </div>
         <div className="fade-in">
           <ContactForm />
+          <div className="form-footnote">
+            <div className="form-footnote-item">
+              <span className="form-footnote-label">{t("items.hours")}</span>
+              <span className="form-footnote-value">{t("items.hoursValue")}</span>
+            </div>
+            <div className="form-footnote-item">
+              <span className="form-footnote-label">{t("items.schedule")}</span>
+              <span className="form-footnote-value">{t("items.scheduleValue")}</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
