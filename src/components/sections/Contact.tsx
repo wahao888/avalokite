@@ -17,9 +17,6 @@ export default function Contact() {
       <div className="contact-grid">
         <div className="fade-in">
           <p className="contact-intro">{t("intro")}</p>
-        </div>
-        <div className="fade-in">
-          <ContactForm />
           <div className="form-footnote">
             <div className="form-footnote-item">
               <span className="form-footnote-label">{t("items.hours")}</span>
@@ -30,6 +27,9 @@ export default function Contact() {
               <span className="form-footnote-value">{t("items.scheduleValue")}</span>
             </div>
           </div>
+        </div>
+        <div className="fade-in">
+          <ContactForm />
         </div>
       </div>
     </section>
