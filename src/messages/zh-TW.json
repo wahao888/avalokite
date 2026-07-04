@@ -20,6 +20,8 @@
     "ctaPrimary": "看透明定價 →",
     "ctaGhost": "查看案例",
     "scroll": "往下捲動",
+    "inkToggle": "開關墨流背景",
+    "inkClear": "洗去墨跡",
     "stats": [
       { "num": "100", "suffix": "%", "label": "價格公開透明" },
       { "num": "1", "suffix": "-2", "label": "月內完成交付" },

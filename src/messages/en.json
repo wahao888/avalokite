@@ -20,6 +20,8 @@
     "ctaPrimary": "See transparent pricing →",
     "ctaGhost": "View work",
     "scroll": "Scroll",
+    "inkToggle": "Toggle ink flow background",
+    "inkClear": "Wash the ink away",
     "stats": [
       { "num": "100", "suffix": "%", "label": "Prices published" },
       { "num": "1", "suffix": "-2", "label": "Months to delivery" },

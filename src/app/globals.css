@@ -213,12 +213,68 @@ button { font-family: inherit; }
 
 /* ── HERO ── */
 .hero {
+  position: relative;
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   border-bottom: 1px solid var(--border);
 }
+
+/* 墨流し背景層：視覺蓋滿 Hero、不攔截任何點擊 */
+.hero-ink-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-ink-canvas[data-active="false"] { display: none; }
+
+/* 可讀性 overlay：左側文案區較實、右側留給墨流 */
+.hero-ink-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(240, 235, 227, 0.88) 0%,
+    rgba(240, 235, 227, 0.68) 42%,
+    rgba(240, 235, 227, 0.35) 100%
+  );
+}
+
+/* 低干擾控制鈕：Hero 右下角小圓鈕 */
+.hero-ink-controls {
+  position: absolute;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  z-index: 3;
+  display: flex;
+  gap: 0.5rem;
+}
+.hero-ink-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(240, 235, 227, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.hero-ink-btn:hover { color: var(--ink); border-color: var(--muted); }
+.hero-ink-btn.on { color: var(--moss); border-color: var(--moss); }
 .hero-left {
+  position: relative;
+  z-index: 2;
   padding: 10rem 4rem 6rem 4rem;
   display: flex;
   flex-direction: column;
@@ -261,8 +317,10 @@ button { font-family: inherit; }
 .hero-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 
 .hero-right {
-  background: var(--cream);
+  /* 底色交給墨流し canvas 的和紙渲染；無 WebGL 時退回 body 的 --paper */
+  background: transparent;
   position: relative;
+  z-index: 2;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -947,6 +1005,18 @@ button { font-family: inherit; }
   .hero { grid-template-columns: 1fr; }
   .hero-left { padding: 8rem 1.5rem 4rem; }
   .hero-right { display: none; }
+  /* 手機：文字後方 overlay 更實，維持可讀性 */
+  .hero-ink-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(240, 235, 227, 0.9) 0%,
+      rgba(240, 235, 227, 0.72) 55%,
+      rgba(240, 235, 227, 0.45) 100%
+    );
+  }
+  .hero-ink-controls { right: 1rem; bottom: 1rem; }
+  .hero-ink-btn { width: 36px; height: 36px; }
+  .hero-ink-btn-clear { display: none; }
   .section { padding: 5rem 1.5rem; }
   .section-header { grid-template-columns: 1fr; gap: 1.5rem; }
   .services-grid, .pricing-grid { grid-template-columns: 1fr; }

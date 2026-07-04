@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import HeroInkCanvas from "@/components/HeroInkCanvas";
 
 interface Stat {
   num: string;
@@ -13,6 +14,7 @@ export default function Hero() {
 
   return (
     <section className="hero">
+      <HeroInkCanvas />
       <div className="hero-left">
         <div className="hero-label">{t("label")}</div>
         <h1 className="hero-title">
