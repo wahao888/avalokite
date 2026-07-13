@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/admin-auth";
 import { getProduct } from "@/lib/products";
+import CancelSubButton from "@/components/CancelSubButton";
 
 export const dynamic = "force-dynamic";
 
@@ -185,20 +186,7 @@ export default async function AdminPage({
                 <td style={cellStyle}>{fmtDate(s.lastChargeAt)}</td>
                 <td style={cellStyle}>{s.gwsr ?? "-"}</td>
                 <td style={cellStyle}>
-                  {s.status === "cancelled" ? (
-                    "已終止"
-                  ) : (
-                    <form
-                      method="post"
-                      action="/api/admin/cancel-subscription"
-                      // 終止後無法重啟，避免誤觸
-                    >
-                      <input type="hidden" name="id" value={s.id} />
-                      <button type="submit" className="cart-remove" style={{ color: "#8a3b2a" }}>
-                        終止扣款
-                      </button>
-                    </form>
-                  )}
+                  {s.status === "cancelled" ? "已終止" : <CancelSubButton id={s.id} />}
                 </td>
               </tr>
             ))}
