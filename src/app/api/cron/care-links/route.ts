@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         })
       : "";
 
-    await sendMail({
+    const sent = await sendMail({
       to: sub.order.email,
       subject: zh
         ? `[Avalo] 維護首月即將結束，續約請授權（訂單 ${sub.orderId}）`
@@ -62,6 +62,11 @@ export async function GET(req: NextRequest) {
         : `Hi ${sub.order.name},\n\nThe first month of care included with order ${sub.orderId} ends on ${endDate}.\nTo keep Avalo maintaining your site, complete the recurring card authorization below. Billing of NT$${amount} (incl. tax) starts from month two and can be cancelled anytime:\n\n${payUrl}\n\nIf you'd rather not continue, ignore this email and care will simply end.\n\nAvalo`,
     });
 
+    // 只有真的寄出才標記，SMTP 未設定／寄信失敗時保持 pending，隔天重試
+    if (!sent) {
+      results.push({ orderId: sub.orderId, sent: false, reason: "mail-skipped" });
+      continue;
+    }
     await prisma.subscription.update({
       where: { id: sub.id },
       data: { authLinkSentAt: new Date() },

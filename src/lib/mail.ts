@@ -13,21 +13,25 @@ function transporter() {
   });
 }
 
+// 回傳是否真的寄出（SMTP 未設定或寄信失敗皆為 false）。
+// 金流流程不看回傳值（不擋單）；排程寄授權連結則據此決定是否標記已寄，避免漏寄。
 export async function sendMail(opts: {
   to: string;
   subject: string;
   text: string;
-}) {
+}): Promise<boolean> {
   const t = transporter();
   if (!t) {
     console.log(`[mail skipped] to=${opts.to} subject=${opts.subject}`);
-    return;
+    return false;
   }
   try {
     await t.sendMail({ from: process.env.MAIL_FROM, ...opts });
+    return true;
   } catch (err) {
     // 寄信失敗不可影響金流回應
     console.error("[mail error]", err);
+    return false;
   }
 }
 
