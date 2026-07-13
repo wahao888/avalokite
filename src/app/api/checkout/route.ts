@@ -103,11 +103,19 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // 維護採定期定額，首期於授權當下即扣。為對應「建置已含首月」，
+  // 維護授權連結不在結帳當下要求，而是於首月結束前寄給客戶，使首期落在第二個月。
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const careNote =
+    monthlyTotal > 0
+      ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n首月已含於建置，請於首月結束前將以下授權連結寄給客戶（首期即為第二個月）：\n${site}/api/pay/${orderId}2`
+      : "";
   await notifyOwner(
     `[Avalo] 新訂單 ${orderId} — ${d.name}`,
-    `一次性：NT$${oneTimeTotal}（未稅）\n月費：NT$${monthlyTotal}/月（未稅）\nEmail：${d.email}\n電話：${d.phone}`
+    `一次性：NT$${oneTimeTotal}（未稅）\nEmail：${d.email}\n電話：${d.phone}${careNote}`
   );
 
+  // 結帳只導向一次性付款；維護授權連結另行寄送（見上方店主通知）
   const firstMtn = oneTimeTotal > 0 ? `${orderId}1` : `${orderId}2`;
   return NextResponse.json({ orderId, payUrl: `/api/pay/${firstMtn}` });
 }

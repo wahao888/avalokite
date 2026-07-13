@@ -16,6 +16,8 @@ export interface Product {
   type: ProductType;
   price: number; // 未稅 TWD；monthly 為每月
   featured?: boolean;
+  // 一次性方案的建議接續維護：建置已含首月，第二個月起可選訂閱此月費方案
+  recommendedCareSku?: string;
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
   i18n: { "zh-TW": ProductI18n; en: ProductI18n };
 }
@@ -29,6 +31,7 @@ export const PRODUCTS: Product[] = [
     sku: "web-basic",
     type: "onetime",
     price: 39000,
+    recommendedCareSku: "care-basic",
     marketRange: { "zh-TW": "市場行情 NT$30,000–100,000", en: "Market rate NT$30k–100k" },
     i18n: {
       "zh-TW": {
@@ -64,6 +67,7 @@ export const PRODUCTS: Product[] = [
     type: "onetime",
     price: 89000,
     featured: true,
+    recommendedCareSku: "care-growth",
     marketRange: { "zh-TW": "市場行情 NT$75,000–400,000", en: "Market rate NT$75k–400k" },
     i18n: {
       "zh-TW": {
@@ -98,6 +102,7 @@ export const PRODUCTS: Product[] = [
     sku: "ai-chatbot",
     type: "onetime",
     price: 69000,
+    recommendedCareSku: "care-ai",
     marketRange: { "zh-TW": "市場行情 NT$100,000–500,000", en: "Market rate NT$100k–500k" },
     i18n: {
       "zh-TW": {
@@ -109,7 +114,7 @@ export const PRODUCTS: Product[] = [
           "RAG 知識庫（用你的 FAQ／文件訓練）",
           "真人轉接與對話紀錄後台",
           "每月對話用量報表",
-          "含部署與知識庫首次建置",
+          "含部署、知識庫首次建置與首月託管",
         ],
         unit: "一次性",
       },
@@ -122,7 +127,7 @@ export const PRODUCTS: Product[] = [
           "RAG knowledge base from your docs/FAQ",
           "Human handoff + conversation logs",
           "Monthly usage reports",
-          "Deployment + initial KB setup included",
+          "Deployment, initial KB setup + first month included",
         ],
         unit: "one-time",
       },
@@ -132,6 +137,7 @@ export const PRODUCTS: Product[] = [
     sku: "automation",
     type: "onetime",
     price: 29000,
+    recommendedCareSku: "care-ai",
     marketRange: { "zh-TW": "企業年投入約 NT$60,000–450,000", en: "Typical annual spend NT$60k–450k" },
     i18n: {
       "zh-TW": {
@@ -166,6 +172,7 @@ export const PRODUCTS: Product[] = [
     sku: "dashboard",
     type: "onetime",
     price: 39000,
+    recommendedCareSku: "care-growth",
     marketRange: { "zh-TW": "市場少有固定報價", en: "Rarely fixed-priced in market" },
     i18n: {
       "zh-TW": {
@@ -335,3 +342,7 @@ export const PRODUCTS: Product[] = [
 export const getProduct = (sku: string) => PRODUCTS.find((p) => p.sku === sku);
 export const oneTimeProducts = () => PRODUCTS.filter((p) => p.type === "onetime");
 export const monthlyProducts = () => PRODUCTS.filter((p) => p.type === "monthly");
+
+// 反查：哪些一次性方案建議搭配此維護（用於定價區「適用方案」標註）
+export const plansUsingCare = (careSku: string) =>
+  PRODUCTS.filter((p) => p.type === "onetime" && p.recommendedCareSku === careSku);

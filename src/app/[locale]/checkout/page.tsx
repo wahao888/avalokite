@@ -132,10 +132,13 @@ export default function CheckoutPage() {
             </div>
           )}
           {cart.monthlySubtotal > 0 && (
-            <div className="cart-summary-row total">
-              <span>{t("payMonthly")}</span>
-              <span className="amount">NT${fmt(withTax(cart.monthlySubtotal))}</span>
-            </div>
+            <>
+              <div className="cart-summary-row">
+                <span>{t("payMonthly")}</span>
+                <span>NT${fmt(withTax(cart.monthlySubtotal))}{locale === "en" ? "/mo" : "/月"}</span>
+              </div>
+              <div className="cart-monthly-note">{t("payMonthlyStart")}</div>
+            </>
           )}
           <div className="cart-monthly-note">✦ {t("payHint")}</div>
         </aside>

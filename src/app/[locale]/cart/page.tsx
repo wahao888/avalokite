@@ -14,6 +14,15 @@ export default function CartPage() {
   const oneTime = cart.items.filter((i) => getProduct(i.sku)?.type === "onetime");
   const monthly = cart.items.filter((i) => getProduct(i.sku)?.type === "monthly");
 
+  // 建置已含首月維護；針對車上的一次性方案，推薦「第二個月起」接續的維護（尚未加入車者）
+  const suggestedCareSkus = Array.from(
+    new Set(
+      oneTime
+        .map((i) => getProduct(i.sku)?.recommendedCareSku)
+        .filter((s): s is string => !!s && !cart.has(s))
+    )
+  );
+
   if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
 
   if (cart.items.length === 0) {
@@ -75,6 +84,39 @@ export default function CartPage() {
         <>
           <div className="cart-section-head">{t("monthlySection")}</div>
           {monthly.map((i) => renderRow(i.sku, i.qty))}
+        </>
+      )}
+
+      {suggestedCareSkus.length > 0 && (
+        <>
+          <div className="cart-section-head">{t("careSuggestHeading")}</div>
+          <p className="care-suggest-note">{t("careSuggestNote")}</p>
+          {suggestedCareSkus.map((sku) => {
+            const care = getProduct(sku)!;
+            const info = care.i18n[locale];
+            const forNames = oneTime
+              .map((i) => getProduct(i.sku)!)
+              .filter((p) => p.recommendedCareSku === sku)
+              .map((p) => p.i18n[locale].name)
+              .join("、");
+            return (
+              <div className="care-suggest-row" key={sku}>
+                <div>
+                  <div className="cart-item-name">{info.name}</div>
+                  <div className="cart-item-unit">
+                    {t("careSuggestFor")} {forNames} · {t("careSuggestFrom")}
+                  </div>
+                </div>
+                <div className="cart-price">
+                  NT${fmt(care.price)}
+                  <span style={{ fontSize: "0.7rem" }}>{perMonthLabel(locale)}</span>
+                </div>
+                <button className="care-suggest-add" onClick={() => cart.add(sku)}>
+                  ＋ {t("careSuggestAdd")}
+                </button>
+              </div>
+            );
+          })}
         </>
       )}
 

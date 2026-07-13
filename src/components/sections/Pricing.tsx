@@ -4,6 +4,7 @@ import {
   fmt,
   monthlyProducts,
   oneTimeProducts,
+  plansUsingCare,
   type Product,
 } from "@/lib/products";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -12,6 +13,7 @@ import type { Locale } from "@/i18n/routing";
 function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
   const t = useTranslations("pricing");
   const info = product.i18n[locale];
+  const applies = product.type === "monthly" ? plansUsingCare(product.sku) : [];
 
   return (
     <div className={`price-card${product.featured ? " featured" : ""}`}>
@@ -32,6 +34,13 @@ function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
       {info.features.map((f) => (
         <div className="price-feature" key={f}>{f}</div>
       ))}
+      {applies.length > 0 && (
+        <div className="price-applies">
+          {t("appliesTo")}
+          {locale === "en" ? ": " : "："}
+          {applies.map((p) => p.i18n[locale].name).join(locale === "en" ? ", " : "、")}
+        </div>
+      )}
       <div className="price-cta">
         <AddToCartButton sku={product.sku} />
       </div>

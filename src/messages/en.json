@@ -67,6 +67,7 @@
     "addToCart": "Add to Cart",
     "inCart": "In Cart ✓",
     "featured": "Most Popular",
+    "appliesTo": "For",
     "perMonth": "/mo",
     "custom": {
       "label": "Enterprise",
@@ -224,7 +225,12 @@
     "totalDueNow": "Due now (incl. tax)",
     "monthlyNote": "Subscriptions are charged monthly by credit card after authorization (incl. tax)",
     "checkout": "Checkout →",
-    "continueShopping": "← Continue browsing"
+    "continueShopping": "← Continue browsing",
+    "careSuggestHeading": "Ongoing care (optional)",
+    "careSuggestNote": "Your build includes the first month of care. From month two you can subscribe to continue — cancel anytime.",
+    "careSuggestFor": "for",
+    "careSuggestFrom": "from month 2",
+    "careSuggestAdd": "Add care"
   },
   "checkout": {
     "title": "Checkout",
@@ -238,9 +244,10 @@
     "note": "Notes (optional)",
     "notePh": "Anything you'd like me to know up front — requirements, timeline…",
     "orderSummary": "Order Summary",
-    "payOnetime": "One-time payment (incl. tax)",
-    "payMonthly": "Monthly recurring (incl. tax / mo)",
-    "payHint": "You'll be redirected to ECPay's secure page. If your order has both one-time and subscription items, you'll complete two authorizations in sequence.",
+    "payOnetime": "Build — one-time (paid today, incl. tax)",
+    "payMonthly": "Care — monthly (from month 2, incl. tax)",
+    "payMonthlyStart": "Your first month of care is included in the build fee; the care subscription only starts billing from month 2.",
+    "payHint": "Checkout collects only the one-time build fee above, via ECPay's secure page. Care is billed as a recurring card authorization, set up via a separate link before month 1 ends and charged automatically from month 2 — a separate authorization from the build fee, not a double charge.",
     "agreement": "I have read and agree to the",
     "and": "and",
     "submit": "Pay with ECPay →",

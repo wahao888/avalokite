@@ -599,6 +599,20 @@ button { font-family: inherit; }
   color: var(--moss);
   font-size: 0.7rem;
 }
+.price-applies {
+  margin-top: 1.2rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  color: var(--wood);
+}
+.price-card.featured .price-applies {
+  border-color: rgba(240, 235, 227, 0.2);
+  color: rgba(240, 235, 227, 0.6);
+}
 .price-cta { margin-top: auto; padding-top: 1.5rem; }
 .price-cta .btn-primary, .price-cta .btn-ghost { width: 100%; text-align: center; padding: 0.8rem 1rem; }
 .price-card.featured .btn-ghost { color: var(--paper); border-color: rgba(240,235,227,0.4); }
@@ -944,6 +958,43 @@ button { font-family: inherit; }
   line-height: 1.7;
   color: var(--wood);
   margin-top: 1rem;
+}
+
+/* ── 接續維護選配 ── */
+.care-suggest-note {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--wood);
+  margin-bottom: 1rem;
+}
+.care-suggest-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.1rem 1.3rem;
+  border: 1px dashed var(--border);
+  background: var(--cream);
+  margin-bottom: 0.8rem;
+}
+.care-suggest-add {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--moss);
+  color: var(--moss);
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.care-suggest-add:hover { background: var(--moss); color: var(--cream); }
+@media (max-width: 640px) {
+  .care-suggest-row { grid-template-columns: 1fr auto; row-gap: 0.6rem; }
 }
 
 .checkout-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }

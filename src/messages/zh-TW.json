@@ -66,6 +66,7 @@
     "monthlyHeading": "月費訂閱（信用卡每月自動扣款）",
     "addToCart": "加入購物車",
     "inCart": "已在購物車 ✓",
+    "appliesTo": "適用方案",
     "featured": "熱門選擇",
     "perMonth": "/月",
     "custom": {
@@ -224,7 +225,12 @@
     "totalDueNow": "本次應付（含稅）",
     "monthlyNote": "月費品項採信用卡定期定額，授權後每月自動扣款（含稅）",
     "checkout": "前往結帳 →",
-    "continueShopping": "← 繼續選購"
+    "continueShopping": "← 繼續選購",
+    "careSuggestHeading": "接續維護（選配）",
+    "careSuggestNote": "建置已含第一個月維護，第二個月起可訂閱接續、隨時取消。",
+    "careSuggestFor": "搭配",
+    "careSuggestFrom": "第二個月起",
+    "careSuggestAdd": "加入維護"
   },
   "checkout": {
     "title": "結帳",
@@ -238,9 +244,10 @@
     "note": "備註（選填）",
     "notePh": "想先告訴我的需求細節、希望的時程…",
     "orderSummary": "訂單摘要",
-    "payOnetime": "一次性款項（含稅）",
-    "payMonthly": "月費定期定額（含稅／月）",
-    "payHint": "送出後將導向綠界 ECPay 安全頁面完成付款。若同時含一次性與月費品項，會依序完成兩筆授權。",
+    "payOnetime": "一次性建置（今日付款・含稅）",
+    "payMonthly": "維護月費（第二個月起・含稅）",
+    "payMonthlyStart": "首月維護已含於建置費用，維護訂閱自第二個月起才開始扣款。",
+    "payHint": "結帳僅收取上方「一次性建置」款項，導向綠界 ECPay 安全頁面完成付款。維護月費採信用卡定期定額，於首月結束前另以獨立連結授權、第二個月起自動扣款——與建置款項是兩筆分開的授權，不是重複收費。",
     "agreement": "我已閱讀並同意",
     "and": "與",
     "submit": "前往綠界付款 →",
