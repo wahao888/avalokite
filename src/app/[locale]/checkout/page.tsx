@@ -134,13 +134,15 @@ export default function CheckoutPage() {
           {cart.monthlySubtotal > 0 && (
             <>
               <div className="cart-summary-row">
-                <span>{t("payMonthly")}</span>
+                <span>{cart.oneTimeSubtotal > 0 ? t("payMonthly") : t("payMonthlyNow")}</span>
                 <span>NT${fmt(withTax(cart.monthlySubtotal))}{locale === "en" ? "/mo" : "/月"}</span>
               </div>
-              <div className="cart-monthly-note">{t("payMonthlyStart")}</div>
+              <div className="cart-monthly-note">
+                {cart.oneTimeSubtotal > 0 ? t("payMonthlyStart") : t("payMonthlyNowNote")}
+              </div>
             </>
           )}
-          <div className="cart-monthly-note">✦ {t("payHint")}</div>
+          <div className="cart-monthly-note">✦ {cart.oneTimeSubtotal > 0 ? t("payHint") : t("payHintCareOnly")}</div>
         </aside>
       </div>
     </main>

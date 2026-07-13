@@ -5,6 +5,9 @@ import crypto from "crypto";
 
 const STAGE_URL = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
 const PROD_URL = "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
+// 信用卡定期定額訂單作業（暫停／終止／重新授權）
+const PERIOD_ACTION_STAGE = "https://payment-stage.ecpay.com.tw/Cashier/CreditCardPeriodAction";
+const PERIOD_ACTION_PROD = "https://payment.ecpay.com.tw/Cashier/CreditCardPeriodAction";
 
 export function ecpayConfig() {
   const merchantId = process.env.ECPAY_MERCHANT_ID;
@@ -13,11 +16,13 @@ export function ecpayConfig() {
   if (!merchantId || !hashKey || !hashIv) {
     throw new Error("ECPay env vars missing (ECPAY_MERCHANT_ID / HASH_KEY / HASH_IV)");
   }
+  const isProd = process.env.ECPAY_ENV === "production";
   return {
     merchantId,
     hashKey,
     hashIv,
-    actionUrl: process.env.ECPAY_ENV === "production" ? PROD_URL : STAGE_URL,
+    actionUrl: isProd ? PROD_URL : STAGE_URL,
+    periodActionUrl: isProd ? PERIOD_ACTION_PROD : PERIOD_ACTION_STAGE,
   };
 }
 
@@ -127,6 +132,41 @@ export function buildPeriodCheckout(
   };
   fields.CheckMacValue = checkMacValue(fields);
   return { action: actionUrl, fields };
+}
+
+// 終止信用卡定期定額（Action=Cancel，終止後無法重啟）。
+// 文件：https://developers.ecpay.com.tw/?p=16618
+export async function cancelPeriod(merchantTradeNo: string): Promise<{
+  success: boolean;
+  rtnCode: string;
+  rtnMsg: string;
+  raw: string;
+}> {
+  const { merchantId, periodActionUrl } = ecpayConfig();
+  const fields: Record<string, string> = {
+    MerchantID: merchantId,
+    MerchantTradeNo: merchantTradeNo,
+    Action: "Cancel",
+    TimeStamp: String(Math.floor(Date.now() / 1000)),
+  };
+  fields.CheckMacValue = checkMacValue(fields);
+
+  const res = await fetch(periodActionUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(fields).toString(),
+  });
+  const raw = await res.text();
+  // 回傳為 form-urlencoded：MerchantID=...&MerchantTradeNo=...&RtnCode=1&RtnMsg=...
+  const parsed: Record<string, string> = {};
+  new URLSearchParams(raw).forEach((v, k) => (parsed[k] = v));
+  const rtnCode = parsed.RtnCode ?? "";
+  return {
+    success: rtnCode === "1",
+    rtnCode,
+    rtnMsg: parsed.RtnMsg ?? raw.slice(0, 300),
+    raw,
+  };
 }
 
 // 產生訂單編號：AVL + base36 秒級時間 + 4 碼亂數（總長 ~14，留空間給尾碼）

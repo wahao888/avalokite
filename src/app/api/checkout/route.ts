@@ -93,12 +93,21 @@ export async function POST(req: NextRequest) {
         amount: withTax(monthlyTotal),
       },
     });
+    // 建置已含首月 → 維護自訂單 +30 天起扣（授權連結由 cron 於接近時寄出）；
+    // 單購維護（無建置）→ 當下即需授權並開始扣款。
+    const hasBuild = oneTimeTotal > 0;
+    const startsAt = hasBuild
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      : new Date();
     await prisma.subscription.create({
       data: {
         orderId: order.id,
         merchantTradeNo: mtn,
         sku: monthlySkus.join("+"),
         monthlyAmount: withTax(monthlyTotal),
+        startsAt,
+        // 單購維護於結帳當下即導向授權，視為已寄連結，不再由 cron 重複寄
+        authLinkSentAt: hasBuild ? null : new Date(),
       },
     });
   }

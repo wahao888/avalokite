@@ -30,11 +30,11 @@ export default async function AdminPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; suberr?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { error } = await searchParams;
+  const { error, suberr } = await searchParams;
 
   if (!(await isAdmin())) {
     return (
@@ -137,6 +137,15 @@ export default async function AdminPage({
       </div>
 
       <div className="cart-section-head">訂閱（{subscriptions.length}）</div>
+      {suberr && (
+        <div className="form-feedback err" style={{ marginBottom: "0.8rem" }}>
+          {suberr === "ecpay"
+            ? "綠界終止失敗，請查看該筆的 cancelResult 或改用綠界後台操作。"
+            : suberr === "exception"
+              ? "終止時發生錯誤，請查看伺服器 log。"
+              : "操作失敗，請確認訂閱是否存在。"}
+        </div>
+      )}
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -146,9 +155,11 @@ export default async function AdminPage({
               <th style={headStyle}>方案</th>
               <th style={headStyle}>月費(含稅)</th>
               <th style={headStyle}>狀態</th>
+              <th style={headStyle}>起扣日 / 連結</th>
               <th style={headStyle}>成功期數</th>
               <th style={headStyle}>最近扣款</th>
               <th style={headStyle}>綠界授權單號</th>
+              <th style={headStyle}>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -163,16 +174,39 @@ export default async function AdminPage({
                 </td>
                 <td style={cellStyle}>NT${s.monthlyAmount.toLocaleString()}</td>
                 <td style={cellStyle}><span className={`badge ${s.status}`}>{s.status}</span></td>
+                <td style={cellStyle}>
+                  {fmtDate(s.startsAt)}
+                  <br />
+                  <span style={{ color: "var(--muted)" }}>
+                    {s.authLinkSentAt ? `連結已寄 ${fmtDate(s.authLinkSentAt)}` : "連結未寄"}
+                  </span>
+                </td>
                 <td style={cellStyle}>{s.totalSuccessTimes}</td>
                 <td style={cellStyle}>{fmtDate(s.lastChargeAt)}</td>
                 <td style={cellStyle}>{s.gwsr ?? "-"}</td>
+                <td style={cellStyle}>
+                  {s.status === "cancelled" ? (
+                    "已終止"
+                  ) : (
+                    <form
+                      method="post"
+                      action="/api/admin/cancel-subscription"
+                      // 終止後無法重啟，避免誤觸
+                    >
+                      <input type="hidden" name="id" value={s.id} />
+                      <button type="submit" className="cart-remove" style={{ color: "#8a3b2a" }}>
+                        終止扣款
+                      </button>
+                    </form>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <p className="form-note" style={{ marginTop: "0.8rem" }}>
-        ✦ 停止扣款：登入綠界廠商後台 → 信用卡收單 → 定期定額查詢，以授權單號（gwsr）操作「終止授權」。
+        ✦ 「終止扣款」會呼叫綠界終止定期定額授權，<strong>終止後無法重啟</strong>，需重新下單。若 API 失敗，仍可登入綠界廠商後台 → 信用卡收單 → 定期定額查詢，以授權單號（gwsr）手動終止。
       </p>
 
       <div className="cart-section-head">詢問單（{inquiries.length}）</div>
