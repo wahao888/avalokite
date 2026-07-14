@@ -138,16 +138,6 @@
         "desc": "企業內部 AI Agent：自動擷取、摘要及查詢周會資料，會議結束即產出重點，全文語意檢索歷史決議，Next.js + RAG 架構。",
         "tags": ["AI Agent", "RAG", "企業自動化"],
         "url": "https://agent.damentec.com/"
-      },
-      {
-        "id": "portfolio",
-        "type": "個人品牌網站",
-        "year": "2024",
-        "name": "雙語個人品牌網站",
-        "label": "TH",
-        "desc": "Web3 / AI 全端工程師的中英雙語作品集：模組化內容架構、語言即時切換、互動式瀏覽體驗。",
-        "tags": ["個人品牌", "中英雙語", "i18n"],
-        "url": "https://tinghao-wang.github.io/"
       }
     ]
   },

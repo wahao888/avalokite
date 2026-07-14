@@ -138,16 +138,6 @@
         "desc": "An internal AI agent that automatically captures, summarizes, and answers questions about weekly meeting records — semantic search over past decisions, built with Next.js + RAG.",
         "tags": ["AI Agent", "RAG", "Automation"],
         "url": "https://agent.damentec.com/"
-      },
-      {
-        "id": "portfolio",
-        "type": "Personal Brand",
-        "year": "2024",
-        "name": "Bilingual Portfolio Site",
-        "label": "TH",
-        "desc": "Bilingual (zh/en) portfolio for a Web3/AI full-stack engineer: modular content architecture, instant language switching, interactive browsing experience.",
-        "tags": ["Personal Brand", "Bilingual", "i18n"],
-        "url": "https://tinghao-wang.github.io/"
       }
     ]
   },

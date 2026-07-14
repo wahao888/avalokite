@@ -669,7 +669,6 @@ button { font-family: inherit; }
 .case-img.brand-gtclub { background: linear-gradient(135deg, #232A20 0%, #46553C 100%); }
 .case-img.brand-damenkyt { background: linear-gradient(135deg, #20262E 0%, #3A4A5C 100%); }
 .case-img.brand-agagent { background: linear-gradient(135deg, #262030 0%, #4A3C5C 100%); }
-.case-img.brand-portfolio { background: linear-gradient(135deg, #2A2622 0%, #6B5B45 100%); }
 
 .case-body { padding: 2rem; }
 .case-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.8rem; }
