@@ -101,13 +101,13 @@
       },
       {
         "id": "jeantogo",
-        "type": "B2B Platform",
+        "type": "Lead-Gen Platform · Fully Custom",
         "year": "2024",
         "name": "JeanToGo",
         "label": "JEAN",
-        "desc": "Uber Eats partner onboarding platform helping restaurants across Taiwan apply for delivery partnership: online application flow, document guidance, and merchant onboarding content built for non-technical owners.",
-        "tags": ["B2B Platform", "Form Workflows", "F&B"],
-        "url": "https://jeantogo.com/"
+        "desc": "A lead-gen + concierge platform for Uber Eats onboarding: SEO content and per-city landing pages bring in search traffic, an online form captures enquiries, a back-office CRM tracks every lead, and advisors handle the whole application through to going live — so non-technical owners get on board painlessly.",
+        "tags": ["SEO Lead-Gen", "Enquiry Form", "Back-office CRM"],
+        "url": "/cases/jeantogo"
       },
       {
         "id": "gtclub",
