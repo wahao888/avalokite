@@ -121,13 +121,13 @@
       },
       {
         "id": "damenkyt",
-        "type": "FinTech SaaS",
+        "type": "Blockchain Security · Fully Custom",
         "year": "2024",
-        "name": "Damen KYT",
+        "name": "Damen KYT Anti-Fraud Platform",
         "label": "KYT",
-        "desc": "Blockchain security and compliance platform — a Know Your Transaction (KYT) risk-screening SaaS helping businesses meet crypto compliance requirements. Built as a React SPA.",
-        "tags": ["Blockchain", "SaaS", "Compliance"],
-        "url": "https://damenkyt.com/"
+        "desc": "A crypto anti-fraud & KYT (Know Your Transaction) platform: paste a wallet address for an instant risk score, file a report in 5 steps with an auto-generated PDF, plus blacklist/whitelist and a blockchain academy — live in Chinese and English.",
+        "tags": ["Blockchain Security", "Risk Scoring", "Anti-Fraud"],
+        "url": "/cases/damenkyt"
       },
       {
         "id": "agagent",

@@ -121,13 +121,13 @@
       },
       {
         "id": "damenkyt",
-        "type": "FinTech SaaS",
+        "type": "區塊鏈安全 · 完全客製",
         "year": "2024",
-        "name": "Damen KYT",
+        "name": "Damen KYT 反詐騙平台",
         "label": "KYT",
-        "desc": "區塊鏈安全合規平台。加密貨幣交易風險檢測（Know Your Transaction）SaaS，協助企業滿足金流合規要求，React 單頁應用架構。",
-        "tags": ["區塊鏈", "SaaS", "資安合規"],
-        "url": "https://damenkyt.com/"
+        "desc": "加密貨幣反詐騙與 KYT（Know Your Transaction）平台：輸入錢包地址即時算出風險評分、5 步驟線上報案自動產出 PDF、黑白名單與區塊鏈學院一應俱全，繁中／英雙語上線。",
+        "tags": ["區塊鏈安全", "風險評分", "反詐騙"],
+        "url": "/cases/damenkyt"
       },
       {
         "id": "agagent",
