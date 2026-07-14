@@ -111,13 +111,13 @@
       },
       {
         "id": "gtclub",
-        "type": "Community Platform",
+        "type": "Brand Site · Community · Fully Custom",
         "year": "2024",
         "name": "GT Club Taiwan",
         "label": "GT",
-        "desc": "Membership community site with three topic hubs (AI, Web3, sustainability), member application forms, categorized newsletter subscriptions, an event photo wall, and light/dark themes.",
-        "tags": ["Membership", "Newsletter", "Theming"],
-        "url": "https://gtclub.tw/"
+        "desc": "A brand website and community platform for the association: an immersive experience with light/dark themes and motion, three topic hubs (AI / Web3 / sustainability), a works showcase, and one-tap join & newsletter conversion (validation + anti-spam + server-side landing + instant email), plus founder-count stats and visit analytics.",
+        "tags": ["Brand Site", "Member Recruiting", "Newsletter"],
+        "url": "/cases/gtclub"
       },
       {
         "id": "damenkyt",
