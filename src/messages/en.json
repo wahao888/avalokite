@@ -83,7 +83,18 @@
     "title2": "all live right now",
     "intro": "No concept mockups, no fake screenshots. Every project below was built by Avalo and is running in production — click through and verify.",
     "visit": "Visit site →",
+    "viewCase": "View full case →",
     "items": [
+      {
+        "id": "finance",
+        "type": "Enterprise Finance · Fully Custom",
+        "year": "2026",
+        "name": "Finance Automation System",
+        "label": "FIN",
+        "desc": "A fully custom accounting system built from scratch: staff snap a photo of a receipt on Telegram and it's booked automatically, while the back office handles fixed-asset depreciation, FX, month-end close and P&L / balance-sheet reporting — fully governable and auditable. Not a template; a system grown around the client's own process.",
+        "tags": ["Fully custom", "AI bookkeeping", "Governance"],
+        "url": "/cases/finance-automation"
+      },
       {
         "id": "jeantogo",
         "type": "B2B Platform",

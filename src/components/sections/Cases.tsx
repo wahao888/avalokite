@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface CaseItem {
   id: string;
@@ -29,9 +30,16 @@ export default function Cases() {
           <span className="tag" key={tag}>{tag}</span>
         ))}
       </div>
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="case-link">
-        {t("visit")}
-      </a>
+      {item.url.startsWith("/") ? (
+        // 站內案例介紹頁（無外部網址者，如完全客製系統）
+        <Link href={item.url} className="case-link">
+          {t("viewCase")}
+        </Link>
+      ) : (
+        <a href={item.url} target="_blank" rel="noopener noreferrer" className="case-link">
+          {t("visit")}
+        </a>
+      )}
     </div>
   );
 
