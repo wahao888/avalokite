@@ -131,13 +131,13 @@
       },
       {
         "id": "agagent",
-        "type": "Enterprise AI",
+        "type": "Enterprise AI Knowledge Base · Fully Custom",
         "year": "2025",
         "name": "AG Agent — Meeting Assistant",
         "label": "AG",
-        "desc": "An internal AI agent that automatically captures, summarizes, and answers questions about weekly meeting records — semantic search over past decisions, built with Next.js + RAG.",
-        "tags": ["AI Agent", "RAG", "Automation"],
-        "url": "https://agent.damentec.com/"
+        "desc": "An internal AI meeting assistant: every week it auto-pulls reports and research from Google Drive, GPT produces structured highlights, Perplexity adds the latest news, and everything is vectorized for natural-language Q&A — with a dashboard, knowledge library and floating chatbot.",
+        "tags": ["AI Agent", "RAG Knowledge Base", "Meeting Automation"],
+        "url": "/cases/agagent"
       }
     ]
   },

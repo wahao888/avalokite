@@ -131,13 +131,13 @@
       },
       {
         "id": "agagent",
-        "type": "企業 AI 系統",
+        "type": "企業 AI 知識庫 · 完全客製",
         "year": "2025",
         "name": "AG Agent 會議智能助手",
         "label": "AG",
-        "desc": "企業內部 AI Agent：自動擷取、摘要及查詢周會資料，會議結束即產出重點，全文語意檢索歷史決議，Next.js + RAG 架構。",
-        "tags": ["AI Agent", "RAG", "企業自動化"],
-        "url": "https://agent.damentec.com/"
+        "desc": "企業內部 AI 週會助手：每週自動從 Google Drive 擷取週報與研究，GPT 產出結構化重點、Perplexity 補上最新消息，全部向量化後可用自然語言問答——Dashboard、知識庫與浮動 Chatbot 一應俱全。",
+        "tags": ["AI Agent", "RAG 知識庫", "會議自動化"],
+        "url": "/cases/agagent"
       }
     ]
   },
