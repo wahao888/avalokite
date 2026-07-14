@@ -39,7 +39,7 @@ describe("維護配對（recommendedCareSku）", () => {
     const names = (sku: string) => plansUsingCare(sku).map((p) => p.sku).sort();
     expect(names("care-basic")).toEqual(["web-basic"]);
     expect(names("care-growth")).toEqual(["dashboard", "web-commerce"]);
-    expect(names("care-ai")).toEqual(["ai-chatbot", "automation"]);
+    expect(names("care-ai")).toEqual(["ai-chatbot", "automation", "automation-bundle"]);
   });
 });
 

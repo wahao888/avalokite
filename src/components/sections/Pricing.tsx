@@ -1,6 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import {
+  ADDONS,
   fmt,
   monthlyProducts,
   oneTimeProducts,
@@ -84,6 +85,25 @@ export default function Pricing() {
           <PriceCard key={p.sku} product={p} locale={locale} />
         ))}
       </div>
+
+      {/* 單項功能・自由組合（完全客製的入口） */}
+      <div className="pricing-subhead">{t("addonHeading")}</div>
+      <p className="section-intro addon-intro fade-in">{t("addonIntro")}</p>
+      <div className="addon-grid fade-in">
+        {ADDONS.map((a) => (
+          <div className="addon-item" key={a.i18n[locale].name}>
+            <div className="addon-main">
+              <div className="addon-name">{a.i18n[locale].name}</div>
+              <div className="addon-desc">{a.i18n[locale].desc}</div>
+            </div>
+            <div className="addon-price">
+              NT${fmt(a.price)}
+              <span className="addon-from">{t("addonFrom")}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="addon-note fade-in">{t("addonNote")}</p>
 
       <div className="custom-quote fade-in">
         <div>

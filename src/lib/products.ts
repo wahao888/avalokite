@@ -169,6 +169,41 @@ export const PRODUCTS: Product[] = [
     },
   },
   {
+    sku: "automation-bundle",
+    type: "onetime",
+    price: 99000,
+    recommendedCareSku: "care-ai",
+    marketRange: { "zh-TW": "個別購買約 NT$126,000", en: "≈ NT$126k bought separately" },
+    i18n: {
+      "zh-TW": {
+        label: "AI 應用 · 優惠組合",
+        name: "自動化起步組合",
+        desc: "一次把常見的自動化與可視化組好：多條工作流＋數據儀表板，讓營運自動跑、數字看得見。",
+        features: [
+          "3 條完整自動化工作流（完全客製）",
+          "數據儀表板：整合營運數字、自動產出報表",
+          "串接 LINE／Email／Sheets／ERP／POS",
+          "自建自有，無第三方軟體月租",
+          "含部署上線與首月維運",
+        ],
+        unit: "組合一次性",
+      },
+      en: {
+        label: "AI Solutions · Bundle",
+        name: "Automation Starter Bundle",
+        desc: "The common automation and visibility pieces in one package: multiple workflows plus a data dashboard.",
+        features: [
+          "3 complete custom automation workflows",
+          "Data dashboard: unified metrics + automated reports",
+          "LINE / Email / Sheets / ERP / POS integrations",
+          "Self-owned — no third-party SaaS fees",
+          "Deployment + first month of care included",
+        ],
+        unit: "bundle, one-time",
+      },
+    },
+  },
+  {
     sku: "dashboard",
     type: "onetime",
     price: 39000,
@@ -346,3 +381,83 @@ export const monthlyProducts = () => PRODUCTS.filter((p) => p.type === "monthly"
 // 反查：哪些一次性方案建議搭配此維護（用於定價區「適用方案」標註）
 export const plansUsingCare = (careSku: string) =>
   PRODUCTS.filter((p) => p.type === "onetime" && p.recommendedCareSku === careSku);
+
+// ─── 單項功能參考價（à la carte）───
+// 客戶可自由挑選組合；因客製範圍會影響價格，最終以諮詢確認報價為準。
+// 價格為未稅參考價（TWD），可自由調整。
+export interface Addon {
+  price: number;
+  i18n: { "zh-TW": { name: string; desc: string }; en: { name: string; desc: string } };
+}
+export const ADDONS: Addon[] = [
+  {
+    price: 12000,
+    i18n: {
+      "zh-TW": { name: "金流串接", desc: "綠界／藍新，含定期定額" },
+      en: { name: "Payment gateway", desc: "ECPay / NewebPay, incl. recurring" },
+    },
+  },
+  {
+    price: 8000,
+    i18n: {
+      "zh-TW": { name: "電子發票串接", desc: "開立、作廢、寄送一條龍" },
+      en: { name: "E-invoice", desc: "Issue, void and send" },
+    },
+  },
+  {
+    price: 20000,
+    i18n: {
+      "zh-TW": { name: "會員／登入系統", desc: "註冊、登入、權限、個人頁" },
+      en: { name: "Membership / auth", desc: "Sign-up, login, roles, profile" },
+    },
+  },
+  {
+    price: 16000,
+    i18n: {
+      "zh-TW": { name: "線上預約系統", desc: "時段、通知、後台管理" },
+      en: { name: "Booking system", desc: "Slots, notifications, admin" },
+    },
+  },
+  {
+    price: 22000,
+    i18n: {
+      "zh-TW": { name: "Telegram／LINE 憑證入帳", desc: "拍照上傳，AI 抽取自動記錄" },
+      en: { name: "Telegram/LINE receipt entry", desc: "Photo upload, AI auto-booking" },
+    },
+  },
+  {
+    price: 9000,
+    i18n: {
+      "zh-TW": { name: "自動報表", desc: "Sheets／Excel／Email 定時寄送" },
+      en: { name: "Automated reports", desc: "Sheets / Excel / email on schedule" },
+    },
+  },
+  {
+    price: 25000,
+    i18n: {
+      "zh-TW": { name: "AI 知識庫問答（RAG）", desc: "用你的文件訓練的問答" },
+      en: { name: "AI knowledge base (RAG)", desc: "Q&A trained on your docs" },
+    },
+  },
+  {
+    price: 14000,
+    i18n: {
+      "zh-TW": { name: "後台權限與角色管理", desc: "多帳號、分權、操作紀錄" },
+      en: { name: "Roles & permissions", desc: "Multi-user, access control, logs" },
+    },
+  },
+  {
+    price: 10000,
+    i18n: {
+      "zh-TW": { name: "第三方 API 串接", desc: "每支既有系統／服務串接" },
+      en: { name: "Third-party API", desc: "Per external system integration" },
+    },
+  },
+  {
+    price: 12000,
+    i18n: {
+      "zh-TW": { name: "多語系網站", desc: "雙語或多語切換、內容管理" },
+      en: { name: "Multilingual site", desc: "Multi-language switch & content" },
+    },
+  },
+];

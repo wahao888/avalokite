@@ -1221,3 +1221,29 @@ button { font-family: inherit; }
   .fa-feat-grid { grid-template-columns: 1fr; }
   .fa-why { grid-template-columns: 1fr; }
 }
+
+/* ── 單項功能・自由組合（à la carte）── */
+.addon-intro { max-width: 640px; margin-bottom: 1.5rem; }
+.addon-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border); margin-bottom: 1.2rem;
+}
+.addon-item {
+  background: var(--paper); padding: 1.2rem 1.4rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.addon-main { min-width: 0; }
+.addon-name { font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--ink); }
+.addon-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.5; }
+.addon-price {
+  font-family: var(--font-display); font-weight: 600; font-size: 1.05rem;
+  color: var(--moss); white-space: nowrap;
+}
+.addon-from { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); margin-left: 0.15rem; }
+.addon-note {
+  font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.03em;
+  line-height: 1.7; color: var(--wood); max-width: 760px; margin-bottom: 3rem;
+}
+@media (max-width: 680px) {
+  .addon-grid { grid-template-columns: 1fr; }
+}
