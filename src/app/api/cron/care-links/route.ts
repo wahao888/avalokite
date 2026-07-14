@@ -10,9 +10,10 @@ const STALE_DAYS = 30; // 起扣日已過超過這麼多天則不再自動寄，
 const RESEND_GAP_DAYS = 5; // 兩封提醒之間的間隔
 const MAX_REMINDERS = 2; // 最多寄幾封（首封 + 一次跟催）
 
-// 由伺服器 cron 每日呼叫（帶 CRON_SECRET）：
-//   curl -fsS -H "x-cron-secret: $CRON_SECRET" http://127.0.0.1:3000/api/cron/care-links
-export async function GET(req: NextRequest) {
+// 由伺服器 cron 每日呼叫（帶 CRON_SECRET）。用 POST：此端點有副作用（寄信、改 DB），
+// 避免預抓／爬蟲以 GET 誤觸。
+//   curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" http://127.0.0.1:3000/api/cron/care-links
+export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const provided =
     req.headers.get("x-cron-secret") ??

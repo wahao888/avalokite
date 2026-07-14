@@ -64,14 +64,21 @@ export async function processPaymentResult(params: Record<string, string>) {
 
   if (success) {
     const zh = order.locale !== "en";
+    // 建置付款成功、且訂單含維護訂閱 → 預告稍後會另收授權連結，避免客戶對第二封信困惑
+    const careHeadsUp =
+      payment.kind === "onetime" && order.monthlyTotal > 0
+        ? zh
+          ? `\n\n※ 您的方案含維護：首月維護已包含在本次建置費用中。第二個月起維護開始，我們會在首月結束前另寄一封信，附上信用卡定期定額授權連結，屆時完成授權即可續接。`
+          : `\n\n※ Your plan includes care: the first month is covered by this build fee. From month two, we'll email you a separate recurring-payment authorization link before month one ends.`
+        : "";
     await sendMail({
       to: order.email,
       subject: zh
         ? `[Avalo] 訂單 ${order.id} 付款成功`
         : `[Avalo] Order ${order.id} payment confirmed`,
       text: zh
-        ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n專案顧問將在 24 小時內與您聯絡，開始需求訪談。\n\n訂單查詢：${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo 阿瓦羅`
-        : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nA project consultant will reach out within 24 hours to start the discovery call.\n\nOrder lookup: ${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo`,
+        ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n專案顧問將在 24 小時內與您聯絡，開始需求訪談。${careHeadsUp}\n\n訂單查詢：${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo 阿瓦羅`
+        : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nA project consultant will reach out within 24 hours to start the discovery call.${careHeadsUp}\n\nOrder lookup: ${process.env.NEXT_PUBLIC_SITE_URL}/order/lookup\n\nAvalo`,
     });
     await notifyOwner(
       `[Avalo] 收款成功 ${order.id}（${payment.kind}）NT$${payment.amount}`,
