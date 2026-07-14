@@ -53,16 +53,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [items, hydrated]);
 
   const add = useCallback((sku: string) => {
-    if (!getProduct(sku)) return;
+    const prod = getProduct(sku);
+    if (!prod) return;
     setItems((prev) => {
       const found = prev.find((i) => i.sku === sku);
       // 月費方案同品項不重複加（一個網站一份維護）；一次性可加量
       if (found) {
-        const p = getProduct(sku)!;
-        if (p.type === "monthly") return prev;
+        if (prod.type === "monthly") return prev;
         return prev.map((i) => (i.sku === sku ? { ...i, qty: i.qty + 1 } : i));
       }
-      return [...prev, { sku, qty: 1 }];
+      // 月費互斥：一個網站只保留一份維護，加入新維護時移除既有維護
+      const base =
+        prod.type === "monthly"
+          ? prev.filter((i) => getProduct(i.sku)?.type !== "monthly")
+          : prev;
+      return [...base, { sku, qty: 1 }];
     });
   }, []);
 

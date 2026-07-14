@@ -169,9 +169,10 @@ export async function cancelPeriod(merchantTradeNo: string): Promise<{
   };
 }
 
-// 產生訂單編號：AVL + base36 秒級時間 + 4 碼亂數（總長 ~14，留空間給尾碼）
+// 產生訂單編號：AVL + base36 秒級時間 + 6 碼亂數（總長 ~16，尾碼後仍 <20，符合綠界上限）
+// 6 碼 hex ≈ 1,600 萬組合，避免被枚舉出付款表單頁
 export function genOrderId(): string {
   const ts = Math.floor(Date.now() / 1000).toString(36).toUpperCase();
-  const rand = crypto.randomBytes(3).toString("hex").slice(0, 4).toUpperCase();
+  const rand = crypto.randomBytes(3).toString("hex").toUpperCase(); // 3 bytes → 6 hex 字元
   return `AVL${ts}${rand}`;
 }

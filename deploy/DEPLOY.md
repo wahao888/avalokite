@@ -93,7 +93,22 @@ sudo journalctl -u avalo -f        # 即時 log（新訂單/詢問單 mail skipp
 sudo fail2ban-client status sshd   # 被 ban 的 IP
 ```
 
-更新版本：`git pull && npm ci && npx prisma migrate deploy && npm run build && sudo systemctl restart avalo`
+更新版本（rsync 流程，建議用腳本）：
+
+```bash
+# 1) 本機 → 伺服器暫存區
+rsync -az --delete -e "ssh -i avalo-studio.pem" \
+  --exclude node_modules --exclude .next --exclude .git --exclude .env \
+  --exclude '*.pem' --exclude .claude --exclude 'prisma/*.db*' --exclude suminagashi \
+  ./ ubuntu@<EC2_IP>:/tmp/app/
+# 2) 伺服器上一鍵更新（同步→npm install→prisma generate→migrate deploy→build→restart→健康檢查）
+ssh -i avalo-studio.pem ubuntu@<EC2_IP> 'bash /tmp/app/deploy/server-update.sh'
+```
+
+> ⚠️ 三個踩過的雷（[server-update.sh](server-update.sh) 已內建處理）：
+> 1. **`prisma migrate deploy` 不會重生 client** —— 一定要先 `npx prisma generate`，否則新 schema 欄位型別對不上、`next build` 會失敗。
+> 2. **build 步驟別接 `| tail`** —— 那會用 tail 的 exit code 蓋掉 build 的，導致 build 失敗仍繼續 restart、帶壞的 `.next` 上線。腳本用 `set -euo pipefail`。
+> 3. **build 記憶體吃緊（t3.micro）** —— 腳本以 `NODE_OPTIONS=--max-old-space-size=1536` 讓 node 用 swap 當緩衝，避免被系統 OOM 直接砍掉。
 
 ## 安全防護總覽
 

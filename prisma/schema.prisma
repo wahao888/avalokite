@@ -54,7 +54,8 @@ model Subscription {
   monthlyAmount   Int // 含稅每期扣款額（TWD）
   status          String   @default("pending") // pending | active | failed | cancelled
   startsAt        DateTime? // 定期定額應開始扣款的時間；建置含首月者為訂單 +30 天，單購維護為當下
-  authLinkSentAt  DateTime? // 已寄出授權連結給客戶的時間（避免重複寄送）
+  authLinkSentAt  DateTime? // 最近一次寄出授權連結給客戶的時間
+  remindersSent   Int      @default(0) // 已寄出的授權/續約提醒次數（上限 2）
   totalSuccessTimes Int    @default(0)
   lastChargeAt    DateTime?
   gwsr            String? // 綠界授權單號，後台停扣用

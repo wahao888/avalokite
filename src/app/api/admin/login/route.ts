@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.redirect(`${site}/admin`, 303);
   res.cookies.set(ADMIN_COOKIE, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict", // 後台皆為狀態變更操作，禁止任何跨站帶 cookie（防 CSRF）
     secure: process.env.NODE_ENV === "production",
     maxAge,
     path: "/",

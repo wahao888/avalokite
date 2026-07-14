@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
   if (oneTimeTotal === 0 && monthlyTotal === 0) {
     return NextResponse.json({ error: "empty order" }, { status: 400 });
   }
+  // 有建置＝維護首月已含，維護延後起扣、授權連結晚點寄；無建置＝單購維護，當下即授權
+  const hasBuild = oneTimeTotal > 0;
 
   const orderId = genOrderId();
   const order = await prisma.order.create({
@@ -95,7 +97,8 @@ export async function POST(req: NextRequest) {
     });
     // 建置已含首月 → 維護自訂單 +30 天起扣（授權連結由 cron 於接近時寄出）；
     // 單購維護（無建置）→ 當下即需授權並開始扣款。
-    const hasBuild = oneTimeTotal > 0;
+    // 註：startsAt 僅決定「何時寄授權連結」；實際首期扣款發生在客戶點連結完成授權的當下
+    //（綠界定期定額首期即時扣），故「第二個月起」為近似值。
     const startsAt = hasBuild
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       : new Date();
@@ -106,8 +109,9 @@ export async function POST(req: NextRequest) {
         sku: monthlySkus.join("+"),
         monthlyAmount: withTax(monthlyTotal),
         startsAt,
-        // 單購維護於結帳當下即導向授權，視為已寄連結，不再由 cron 重複寄
+        // 單購維護於結帳當下即導向授權，視為已完成提醒，不再由 cron 寄
         authLinkSentAt: hasBuild ? null : new Date(),
+        remindersSent: hasBuild ? 0 : 2,
       },
     });
   }
@@ -117,7 +121,9 @@ export async function POST(req: NextRequest) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const careNote =
     monthlyTotal > 0
-      ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n首月已含於建置，請於首月結束前將以下授權連結寄給客戶（首期即為第二個月）：\n${site}/api/pay/${orderId}2`
+      ? hasBuild
+        ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n首月已含於建置。系統會在起扣日前自動寄授權連結給客戶（首期即為第二個月）；若要提前寄，連結為：\n${site}/api/pay/${orderId}2`
+        : `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n單購維護，客戶於結帳當下即完成定期定額授權、當月起扣，無需另寄連結。`
       : "";
   await notifyOwner(
     `[Avalo] 新訂單 ${orderId} — ${d.name}`,
