@@ -665,6 +665,7 @@ button { font-family: inherit; }
   letter-spacing: 0.2em;
 }
 .case-img.brand-finance { background: linear-gradient(135deg, #1E2A22 0%, #3B5A43 100%); }
+.case-img.brand-formula-kart { background: linear-gradient(135deg, #221E1C 0%, #7A4A34 100%); }
 .case-img.brand-jeantogo { background: linear-gradient(135deg, #2E2620 0%, #5C4632 100%); }
 .case-img.brand-gtclub { background: linear-gradient(135deg, #232A20 0%, #46553C 100%); }
 .case-img.brand-damenkyt { background: linear-gradient(135deg, #20262E 0%, #3A4A5C 100%); }

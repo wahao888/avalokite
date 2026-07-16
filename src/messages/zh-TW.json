@@ -138,6 +138,16 @@
         "desc": "企業內部 AI 週會助手：每週自動從 Google Drive 擷取週報與研究，GPT 產出結構化重點、Perplexity 補上最新消息，全部向量化後可用自然語言問答——Dashboard、知識庫與浮動 Chatbot 一應俱全。",
         "tags": ["AI Agent", "RAG 知識庫", "會議自動化"],
         "url": "/cases/agagent"
+      },
+      {
+        "id": "formula-kart",
+        "type": "互動遊戲 · 完全客製",
+        "year": "2026",
+        "name": "Formula Kart 3D 賽車遊戲",
+        "label": "KART",
+        "desc": "打開瀏覽器就能玩的 F1 風格 Q 版 3D 賽車遊戲：Three.js／WebGL 打造，3 賽道、9 車、動態天氣、漂移加速、44 項成就，還有最多 10 人的 WebSocket 即時多人競速，免安裝、免下載。",
+        "tags": ["Three.js／WebGL", "即時多人", "遊戲開發"],
+        "url": "/cases/formula-kart"
       }
     ]
   },

@@ -138,6 +138,16 @@
         "desc": "An internal AI meeting assistant: every week it auto-pulls reports and research from Google Drive, GPT produces structured highlights, Perplexity adds the latest news, and everything is vectorized for natural-language Q&A — with a dashboard, knowledge library and floating chatbot.",
         "tags": ["AI Agent", "RAG Knowledge Base", "Meeting Automation"],
         "url": "/cases/agagent"
+      },
+      {
+        "id": "formula-kart",
+        "type": "Interactive Game · Fully Custom",
+        "year": "2026",
+        "name": "Formula Kart — 3D Racing Game",
+        "label": "KART",
+        "desc": "An F1-style chibi 3D racing game that runs right in the browser: built with Three.js/WebGL, with 3 tracks, 9 cars, dynamic weather, drift & boost, 44 achievements, and up to 10-player real-time WebSocket racing — no install, no download.",
+        "tags": ["Three.js/WebGL", "Real-time Multiplayer", "Game Dev"],
+        "url": "/cases/formula-kart"
       }
     ]
   },
