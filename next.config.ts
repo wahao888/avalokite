@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async rewrites() {
+    // 獨立示範站（public/demo/*）：給客戶看的短網址，不走 i18n、站內也不連結。
+    return [{ source: "/demo/glass", destination: "/demo/glass/index.html" }];
+  },
   async headers() {
     return [
       {

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>晶宇玻璃｜建築玻璃材料・加工・丈量安裝</title>
+<meta name="description" content="強化玻璃、膠合玻璃、複層節能玻璃、鏡面、桌墊玻璃、淋浴拉門與玻璃隔間。自有加工、專業丈量、到府安裝，住宅／店面／辦公室／廠辦皆可承接。線上填規格，24 小時內回報價。" />
+<meta name="robots" content="noindex" />
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --ink:#0c1a22;
+    --ink-2:#1b3140;
+    --muted:#5b7080;
+    --line:#dfe7ea;
+    --bg:#f5f8f9;
+    --card:#ffffff;
+    --accent:#0e7f96;
+    --accent-2:#3fb6cf;
+    --accent-soft:#e6f4f7;
+    --glass-1:rgba(120,200,215,.30);
+    --glass-2:rgba(190,230,238,.55);
+    --radius:14px;
+    --shadow:0 1px 2px rgba(12,26,34,.05), 0 12px 32px -12px rgba(12,26,34,.18);
+    --wrap:1140px;
+    --fs:16px;
+    font-family:"PingFang TC","Noto Sans TC","Heiti TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:var(--fs);line-height:1.75;letter-spacing:.01em;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4{margin:0;line-height:1.3;letter-spacing:-.01em;font-weight:800}
+  p{margin:0}
+  .wrap{width:min(100% - 40px,var(--wrap));margin-inline:auto}
+  .eyebrow{font-size:12px;letter-spacing:.22em;font-weight:700;color:var(--accent);text-transform:uppercase}
+  .lede{color:var(--muted);font-size:17px;max-width:62ch}
+  section{padding:88px 0}
+  @media (max-width:720px){section{padding:60px 0}}
+
+  /* ---------- demo ribbon ---------- */
+  .demo-bar{background:var(--ink);color:#cfe3e9;font-size:12.5px;letter-spacing:.04em;text-align:center;padding:7px 16px}
+  .demo-bar b{color:#fff;font-weight:700}
+
+  /* ---------- nav ---------- */
+  header.nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;gap:28px;height:66px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:.02em;white-space:nowrap}
+  .brand .mark{width:32px;height:32px;flex:none}
+  .brand small{display:block;font-size:10.5px;font-weight:600;letter-spacing:.16em;color:var(--muted);line-height:1}
+  .nav-links{display:flex;gap:24px;margin-left:auto;font-size:14.5px;font-weight:600;color:var(--ink-2)}
+  .nav-links a{padding:6px 0;border-bottom:2px solid transparent;transition:.18s}
+  .nav-links a:hover{color:var(--accent);border-color:var(--accent)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .tel{font-weight:800;font-size:15px;letter-spacing:.02em;white-space:nowrap}
+  .tel span{display:block;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.1em}
+  @media (max-width:960px){.nav-links{display:none}}
+  @media (max-width:520px){.tel{display:none}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:999px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:.18s;white-space:nowrap}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -8px rgba(14,127,150,.7)}
+  .btn-primary:hover{background:#0a6b7f;transform:translateY(-1px)}
+  .btn-ghost{border-color:var(--line);background:#fff;color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-sm{padding:9px 16px;font-size:14px}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;background:
+      radial-gradient(1100px 520px at 78% -10%, #d8eef4 0%, rgba(216,238,244,0) 62%),
+      linear-gradient(180deg,#ffffff 0%, var(--bg) 100%);
+      border-bottom:1px solid var(--line)}
+  .hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:92px 0 84px}
+  .hero h1{font-size:clamp(34px,4.6vw,54px);letter-spacing:-.03em}
+  .hero h1 em{font-style:normal;color:var(--accent);position:relative;white-space:nowrap}
+  .hero .lede{margin-top:22px;font-size:17.5px}
+  .hero-cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+  .hero-note{margin-top:18px;font-size:13.5px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+  .hero-note i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-2);flex:none}
+
+  /* stacked glass panes illustration */
+  .panes{position:relative;aspect-ratio:1/.92;min-height:320px}
+  .pane{position:absolute;border-radius:16px;border:1px solid rgba(255,255,255,.85);
+        background:linear-gradient(135deg,var(--glass-2),var(--glass-1));
+        box-shadow:0 18px 40px -18px rgba(12,60,75,.45);backdrop-filter:blur(2px);
+        display:flex;align-items:flex-start;padding:14px 16px;font-size:12.5px;font-weight:700;color:#0b4d5c;letter-spacing:.04em}
+  .pane::after{content:"";position:absolute;inset:0;border-radius:16px;
+        background:linear-gradient(115deg,rgba(255,255,255,.75) 0 18%,rgba(255,255,255,0) 42%)}
+  .pane b{position:relative;z-index:1;background:rgba(255,255,255,.72);padding:4px 10px;border-radius:999px}
+  .p1{inset:0 34% 30% 0;animation:float 7s ease-in-out infinite}
+  .p2{inset:16% 16% 14% 20%;animation:float 7s ease-in-out infinite .6s}
+  .p3{inset:34% 0 0 40%;animation:float 7s ease-in-out infinite 1.2s}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @media (prefers-reduced-motion:reduce){.pane{animation:none!important}}
+  @media (max-width:900px){
+    .hero-in{grid-template-columns:1fr;gap:30px;padding:34px 0 52px}
+    .panes{min-height:230px;aspect-ratio:1/.72;order:-1}
+  }
+
+  /* ---------- trust strip ---------- */
+  .trust{background:var(--ink);color:#e8f3f6;padding:0}
+  .trust-in{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.12)}
+  .trust-i{background:var(--ink);padding:26px 22px;text-align:center}
+  .trust-i b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;color:#fff}
+  .trust-i span{font-size:13px;color:#9dbcc6;letter-spacing:.06em}
+  @media (max-width:720px){.trust-in{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---------- generic heading ---------- */
+  .head{max-width:70ch;margin-bottom:44px}
+  .head h2{font-size:clamp(26px,3.2vw,36px);margin-top:12px}
+  .head p{margin-top:14px}
+
+  /* ---------- products ---------- */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:940px){.grid-3{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.grid-3{grid-template-columns:1fr}}
+  .prod{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:.2s;display:flex;flex-direction:column}
+  .prod:hover{transform:translateY(-3px);border-color:#bfdbe2}
+  .prod .ph{height:148px;position:relative;overflow:hidden}
+  .prod .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(118deg,rgba(255,255,255,.7) 0 14%,rgba(255,255,255,0) 38%,rgba(255,255,255,.35) 62%,rgba(255,255,255,0) 78%)}
+  .g1{background:linear-gradient(135deg,#bfe6ef,#7dc6da)}
+  .g2{background:linear-gradient(135deg,#d6e8ee,#9fbecb)}
+  .g3{background:linear-gradient(135deg,#cfe9e4,#86bfb6)}
+  .g4{background:linear-gradient(135deg,#e2e8ef,#aab8c6)}
+  .g5{background:linear-gradient(135deg,#dce9f4,#8fb2cf)}
+  .g6{background:linear-gradient(135deg,#e6eef0,#b9cdd3)}
+  .prod .bd{padding:20px 22px 24px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .prod h3{font-size:18px}
+  .prod p{color:var(--muted);font-size:14.5px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:12px}
+  .tag{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--accent-soft);border-radius:999px;padding:4px 10px;letter-spacing:.02em}
+
+  /* ---------- usage ---------- */
+  .use{background:#fff;border-block:1px solid var(--line)}
+  .use-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:860px){.use-grid{grid-template-columns:repeat(2,1fr)}}
+  .use-i{border:1px solid var(--line);border-radius:var(--radius);padding:24px 22px;background:linear-gradient(180deg,#fbfdfd,#fff)}
+  .use-i .ic{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:14px}
+  .use-i h3{font-size:16.5px;margin-bottom:6px}
+  .use-i p{font-size:14px;color:var(--muted)}
+
+  /* ---------- process ---------- */
+  .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;counter-reset:s}
+  @media (max-width:940px){.steps{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:560px){.steps{grid-template-columns:repeat(2,1fr)}}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px;position:relative}
+  .step b{display:block;font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.16em;margin-bottom:10px}
+  .step h3{font-size:16px;margin-bottom:6px}
+  .step p{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+  /* ---------- gallery ---------- */
+  .gal{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:190px;gap:14px}
+  .gal figure{margin:0;border-radius:var(--radius);overflow:hidden;position:relative;border:1px solid var(--line)}
+  .gal figure::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.6) 0 12%,rgba(255,255,255,0) 36%)}
+  .gal figcaption{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:14px 16px;color:#fff;font-size:13.5px;font-weight:700;letter-spacing:.02em;
+      background:linear-gradient(180deg,rgba(8,26,33,0),rgba(8,26,33,.78))}
+  .gal figcaption span{display:block;font-weight:500;font-size:12px;opacity:.85}
+  .span2{grid-column:span 2}
+  .row2{grid-row:span 2}
+  @media (max-width:860px){.gal{grid-template-columns:repeat(2,1fr);grid-auto-rows:160px}.row2{grid-row:span 1}}
+
+  /* ---------- why ---------- */
+  .why{background:linear-gradient(180deg,#ffffff,#eef6f8);border-top:1px solid var(--line)}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:860px){.why-grid{grid-template-columns:1fr}}
+  .why-i{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;box-shadow:var(--shadow)}
+  .why-i b{font-size:13px;color:var(--accent);letter-spacing:.14em;font-weight:800}
+  .why-i h3{font-size:18px;margin:10px 0 8px}
+  .why-i p{color:var(--muted);font-size:14.5px}
+
+  /* ---------- form ---------- */
+  .quote{background:var(--ink);color:#eaf4f7}
+  .quote-in{display:grid;grid-template-columns:.9fr 1.1fr;gap:52px;align-items:start}
+  @media (max-width:900px){.quote-in{grid-template-columns:1fr;gap:34px}}
+  .quote h2{font-size:clamp(26px,3.2vw,36px);color:#fff;margin-top:12px}
+  .quote .lede{color:#a9c6cf;margin-top:14px}
+  .qlist{margin-top:26px;display:flex;flex-direction:column;gap:14px}
+  .qlist div{display:flex;gap:12px;font-size:14.5px;color:#cfe3e9}
+  .qlist .dot{margin-top:10px}
+  .qcard{background:#fff;color:var(--ink);border-radius:18px;padding:30px;box-shadow:0 24px 60px -24px rgba(0,0,0,.6)}
+  .qcard h3{font-size:19px}
+  .qcard>p{color:var(--muted);font-size:14px;margin-top:6px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media (max-width:520px){.frow{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  label{font-size:13px;font-weight:700;color:var(--ink-2)}
+  label span{color:#c0392b}
+  input,select,textarea{font:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fbfdfd;color:var(--ink);width:100%;transition:.15s}
+  textarea{min-height:88px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(63,182,207,.18);background:#fff}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:14px;text-align:center}
+  .ok{display:none;background:var(--accent-soft);border:1px solid #bfe1e9;border-radius:12px;padding:22px;text-align:center}
+  .ok b{display:block;font-size:17px;margin-bottom:6px;color:#0a6b7f}
+  .ok p{font-size:14px;color:var(--ink-2)}
+  .ok small{display:block;margin-top:12px;color:var(--muted);font-size:12.5px;line-height:1.6}
+
+  /* ---------- faq ---------- */
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 20px;margin-bottom:10px}
+  summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:700;font-size:16px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--accent);font-size:22px;font-weight:400;line-height:1;flex:none}
+  details[open] summary::after{content:"–"}
+  details p{padding:0 0 20px;color:var(--muted);font-size:14.5px;max-width:78ch}
+
+  /* ---------- footer ---------- */
+  footer{background:#08161d;color:#9dbcc6;padding:56px 0 34px;font-size:14px}
+  .f-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:36px}
+  @media (max-width:800px){.f-grid{grid-template-columns:1fr;gap:26px}}
+  footer h4{color:#fff;font-size:14px;letter-spacing:.12em;margin-bottom:14px}
+  footer a:hover{color:#7fd4e3}
+  .f-list{display:flex;flex-direction:column;gap:9px}
+  .f-brand{color:#fff;font-weight:800;font-size:19px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .f-bot{border-top:1px solid rgba(255,255,255,.1);margin-top:34px;padding-top:20px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#6f909b}
+
+  /* ---------- print / pdf ---------- */
+  @media print{
+    @page{size:A4;margin:12mm 10mm}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    html,body{background:#fff}
+    *{box-shadow:none!important}
+    header.nav{position:static;background:#fff}
+    .mcta{display:none!important}
+    .pane{animation:none!important}
+    section{padding:28px 0!important;break-inside:auto}
+    .hero{break-inside:avoid}
+    .hero-in{padding:18px 0 24px!important;gap:28px}
+    .hero h1{font-size:32px!important}
+    .hero .lede{font-size:14.5px}
+    .panes{aspect-ratio:auto!important;height:210px!important;min-height:0!important}
+    .prod .ph{height:96px}
+    .gal{grid-auto-rows:130px}
+    .prod,.step,.use-i,.why-i,.qcard,details,.gal figure{break-inside:avoid}
+    .quote,.trust,footer{break-inside:avoid}
+    .head{margin-bottom:24px}
+    body{padding-bottom:0}
+  }
+
+  /* ---------- mobile sticky cta ---------- */
+  .mcta{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+        background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+  .mcta .btn{flex:1}
+  @media (max-width:720px){.mcta{display:flex}body{padding-bottom:74px}}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">這是 <b>Avalo 阿瓦羅</b> 製作的示範網站，公司名稱、數據與案例皆為示意內容</div>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="24" height="24" rx="4" fill="#cfeaf1" stroke="#0e7f96" stroke-width="1.6"/>
+        <rect x="12.5" y="12.5" width="24" height="24" rx="4" fill="rgba(63,182,207,.45)" stroke="#0e7f96" stroke-width="1.6"/>
+      </svg>
+      <span>晶宇玻璃<small>CHING YU GLASS</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#products">產品項目</a>
+      <a href="#usage">應用場域</a>
+      <a href="#process">服務流程</a>
+      <a href="#works">施工實績</a>
+      <a href="#faq">常見問題</a>
+    </nav>
+    <div class="nav-cta">
+      <div class="tel">02-2345-6789<span>週一至週六 08:00–18:00</span></div>
+      <a href="#quote" class="btn btn-primary btn-sm">線上估價</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-in">
+      <div>
+        <div class="eyebrow">建築玻璃 · 加工 · 丈量安裝</div>
+        <h1>把每一片玻璃，<br>裝在<em>剛剛好</em>的位置</h1>
+        <p class="lede">從強化、膠合、複層節能到鏡面與桌墊玻璃，晶宇玻璃提供材料、加工、丈量與安裝一次到位的服務。住宅、店面、辦公室與廠辦工程皆可承接，尺寸與規格照現場條件量身處理。</p>
+        <div class="hero-cta">
+          <a href="#quote" class="btn btn-primary">填規格，24 小時內回報價</a>
+          <a href="#products" class="btn btn-ghost">看產品項目</a>
+        </div>
+        <div class="hero-note">
+          <i><span class="dot"></span>免費現場丈量</i>
+          <i><span class="dot"></span>CNS 認證強化玻璃</i>
+          <i><span class="dot"></span>安裝後一年保固</i>
+        </div>
+      </div>
+      <div class="panes" aria-hidden="true">
+        <div class="pane p1"><b>強化 10mm</b></div>
+        <div class="pane p2"><b>膠合 5+5mm</b></div>
+        <div class="pane p3"><b>複層節能 Low-E</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="trust">
+    <div class="wrap trust-in">
+      <div class="trust-i"><b>28 年</b><span>在地經營</span></div>
+      <div class="trust-i"><b>4,600+</b><span>累積施工件數</span></div>
+      <div class="trust-i"><b>48 小時</b><span>一般規格出貨</span></div>
+      <div class="trust-i"><b>1 年</b><span>安裝保固</span></div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="products">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Products</div>
+        <h2>常備材料與加工項目</h2>
+        <p class="lede">以下為常見規格，非標準尺寸、特殊厚度或造型加工同樣可以處理。不確定要用哪一種？把用途與現場尺寸告訴我們，我們幫你選。</p>
+      </div>
+      <div class="grid-3">
+
+        <article class="prod">
+          <div class="ph g1"></div>
+          <div class="bd">
+            <h3>強化玻璃</h3>
+            <p>經高溫強化處理，強度約為一般玻璃的 3–5 倍，破裂時呈顆粒狀，安全性高。門片、桌面、欄杆與隔間最常使用。</p>
+            <div class="tags"><span class="tag">5 / 8 / 10 / 12mm</span><span class="tag">可鑽孔開槽</span><span class="tag">CNS 認證</span></div>
+          </div>
+        </article>
+
+        <article class="prod">
+          <div class="ph g2"></div>
+          <div class="bd">
+            <h3>膠合玻璃</h3>
+            <p>兩片玻璃中間夾 PVB 膠膜，破裂後碎片不飛散，兼具防盜與隔音效果。天花、雨遮、落地窗與高樓層開窗適用。</p>
+            <div class="tags"><span class="tag">5+5 / 8+8mm</span><span class="tag">防墜安全</span><span class="tag">隔音</span></div>
+          </div>
+        </article>
+
+        <article class="prod">
+          <div class="ph g3"></div>
+          <div class="bd">
+            <h3>複層節能玻璃</h3>
+            <p>雙層玻璃中空封邊，可搭配 Low-E 鍍膜，有效降低熱傳與冷氣耗能，同時提升隔音表現。新建與換窗工程首選。</p>
+            <div class="tags"><span class="tag">Low-E 鍍膜</span><span class="tag">隔熱節能</span><span class="tag">搭配氣密窗</span></div>
+          </div>
+        </article>
+
+        <article class="prod">
+          <div class="ph g4"></div>
+          <div class="bd">
+            <h3>清玻・噴砂・夾紗</h3>
+            <p>依採光與隱私需求選擇透明、霧面噴砂或夾紗玻璃，可指定圖樣與透光比例，常用於衛浴、書房與辦公隔間。</p>
+            <div class="tags"><span class="tag">霧面噴砂</span><span class="tag">夾紗圖樣</span><span class="tag">客製切割</span></div>
+          </div>
+        </article>
+
+        <article class="prod">
+          <div class="ph g5"></div>
+          <div class="bd">
+            <h3>明鏡・造型鏡</h3>
+            <p>浴室明鏡、穿衣鏡、店面裝飾鏡，可做磨邊、斜邊與導角處理，另有防霧與防潮背膜可選。依現場尺寸裁切。</p>
+            <div class="tags"><span class="tag">磨邊／斜邊</span><span class="tag">防潮背膜</span><span class="tag">到府安裝</span></div>
+          </div>
+        </article>
+
+        <article class="prod">
+          <div class="ph g6"></div>
+          <div class="bd">
+            <h3>桌墊玻璃・層板</h3>
+            <p>餐桌、書桌、櫃體層板專用玻璃，四邊研磨導角不刮手，可依桌型做圓角或不規則裁切，附矽膠墊防滑。</p>
+            <div class="tags"><span class="tag">圓角導角</span><span class="tag">不規則裁切</span><span class="tag">快速交件</span></div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- USAGE -->
+  <section class="use" id="usage">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Applications</div>
+        <h2>我們處理的空間類型</h2>
+        <p class="lede">不同場域的載重、法規與安全需求都不一樣。我們會依照使用情境建議材質與厚度，而不是一律報同一種規格。</p>
+      </div>
+      <div class="use-grid">
+        <div class="use-i">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></div>
+          <h3>住宅裝修</h3>
+          <p>淋浴拉門、陽台落地窗、廚房烤漆玻璃、浴鏡與桌墊，配合裝修進度施工。</p>
+        </div>
+        <div class="use-i">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>
+          <h3>店面門市</h3>
+          <p>大面櫥窗、無框玻璃門、展示櫃與招牌玻璃，含破損緊急更換服務。</p>
+        </div>
+        <div class="use-i">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <h3>辦公室</h3>
+          <p>玻璃隔間、會議室隔音牆、夾紗與貼膜降低視線干擾，維持採光。</p>
+        </div>
+        <div class="use-i">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l6 4V8l6 4V3l6 4v14z"/></svg></div>
+          <h3>廠辦與公共工程</h3>
+          <p>大量規格件供應、依圖加工，可配合工地時程分批進料與現場安裝。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Process</div>
+        <h2>從詢價到完工，六個步驟</h2>
+        <p class="lede">不用先懂規格。只要說得出用在哪裡、大概多大，剩下的丈量與選材我們會處理完再給你確認。</p>
+      </div>
+      <div class="steps">
+        <div class="step"><b>STEP 01</b><h3>線上詢價</h3><p>填寫用途與概略尺寸，或直接電話說明需求。</p></div>
+        <div class="step"><b>STEP 02</b><h3>現場丈量</h3><p>大台北地區免費到場丈量，確認開口與載重條件。</p></div>
+        <div class="step"><b>STEP 03</b><h3>正式報價</h3><p>列出材質、厚度、加工與安裝費用，一張報價單看完。</p></div>
+        <div class="step"><b>STEP 04</b><h3>裁切加工</h3><p>依尺寸裁切、研磨、鑽孔，特殊件安排強化與膠合。</p></div>
+        <div class="step"><b>STEP 05</b><h3>配送安裝</h3><p>約定時段到場安裝，收邊打矽利康並現場清潔。</p></div>
+        <div class="step"><b>STEP 06</b><h3>驗收保固</h3><p>當場驗收，安裝品質一年保固，後續維修可回報。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKS -->
+  <section id="works" class="use">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Works</div>
+        <h2>近期施工實績</h2>
+        <p class="lede">實際案場照片可於此區塊替換為貴公司作品，網站後台可自行新增、排序與更新說明文字。</p>
+      </div>
+      <div class="gal">
+        <figure class="span2 row2" style="background:linear-gradient(135deg,#b9e2ee,#5aa9c2)">
+          <figcaption>內湖辦公室｜膠合玻璃隔間 42 坪<span>10mm 強化＋夾紗，含五金與收邊</span></figcaption>
+        </figure>
+        <figure style="background:linear-gradient(135deg,#d9e9f2,#93b7cd)">
+          <figcaption>大安區住宅｜無框淋浴拉門<span>8mm 強化・防潑水鍍膜</span></figcaption>
+        </figure>
+        <figure style="background:linear-gradient(135deg,#cfe7e2,#7fb8ae)">
+          <figcaption>永和店面｜櫥窗更換<span>12mm 強化・單片 2.4×3m</span></figcaption>
+        </figure>
+        <figure style="background:linear-gradient(135deg,#e3e9f0,#a4b3c2)">
+          <figcaption>三重廠辦｜複層節能窗<span>Low-E 5+12A+5，共 68 樘</span></figcaption>
+        </figure>
+        <figure style="background:linear-gradient(135deg,#dfeaf6,#8fa9c8)">
+          <figcaption>板橋自宅｜餐桌桌墊玻璃<span>10mm 圓角導角・附矽膠墊</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="why">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Why us</div>
+        <h2>為什麼客戶會回頭找我們</h2>
+      </div>
+      <div class="why-grid">
+        <div class="why-i">
+          <b>01</b>
+          <h3>報價說得清楚</h3>
+          <p>材料、加工、運費與安裝分開列，事後不會冒出額外費用。規格與厚度都寫在報價單上，方便你比較。</p>
+        </div>
+        <div class="why-i">
+          <b>02</b>
+          <h3>自有加工，交期穩定</h3>
+          <p>裁切、研磨與鑽孔在自家廠內完成，一般規格 48 小時可出貨，急件也能協調安排。</p>
+        </div>
+        <div class="why-i">
+          <b>03</b>
+          <h3>安全規格不打折</h3>
+          <p>依使用場域選用符合 CNS 規範的強化或膠合玻璃，該用膠合的地方絕不用一般玻璃充數。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE FORM -->
+  <section class="quote" id="quote">
+    <div class="wrap quote-in">
+      <div>
+        <div class="eyebrow" style="color:var(--accent-2)">Get a quote</div>
+        <h2>把需求填一次，<br>報價直接回給你</h2>
+        <p class="lede">不確定規格沒關係，寫下用途與大概尺寸就好。收到後我們會先確認需求，必要時安排免費丈量再出正式報價。</p>
+        <div class="qlist">
+          <div><span class="dot"></span><span>週一至週六 08:00–18:00 送出，當日回覆；非上班時段於隔日上午回覆。</span></div>
+          <div><span class="dot"></span><span>大台北地區免費現場丈量，外縣市可先線上評估。</span></div>
+          <div><span class="dot"></span><span>急件破損更換請直接來電 <b style="color:#fff">02-2345-6789</b>，我們優先處理。</span></div>
+        </div>
+      </div>
+
+      <div class="qcard">
+        <form id="quoteForm" novalidate>
+          <h3>線上估價單</h3>
+          <p>填寫約需 40 秒</p>
+          <div class="frow">
+            <div class="field">
+              <label for="name">稱呼 <span>*</span></label>
+              <input id="name" name="name" required placeholder="王小姐" />
+            </div>
+            <div class="field">
+              <label for="phone">聯絡電話 <span>*</span></label>
+              <input id="phone" name="phone" required inputmode="tel" placeholder="0912-345-678" />
+            </div>
+            <div class="field">
+              <label for="type">需求項目</label>
+              <select id="type" name="type">
+                <option>強化玻璃</option>
+                <option>膠合玻璃</option>
+                <option>複層節能玻璃</option>
+                <option>淋浴拉門</option>
+                <option>玻璃隔間</option>
+                <option>明鏡・造型鏡</option>
+                <option>桌墊玻璃・層板</option>
+                <option>破損緊急更換</option>
+                <option>不確定，需要建議</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="area">安裝地區</label>
+              <input id="area" name="area" placeholder="例：新北市板橋區" />
+            </div>
+            <div class="field full">
+              <label for="size">概略尺寸與數量</label>
+              <input id="size" name="size" placeholder="例：寬 120 × 高 200 公分，共 2 片" />
+            </div>
+            <div class="field full">
+              <label for="note">需求說明</label>
+              <textarea id="note" name="note" placeholder="例：浴室要換一片淋浴拉門，原本的裂了，希望這週內能安裝。"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;margin-top:18px">送出估價需求</button>
+          <p class="hint">送出即表示同意我們以電話或簡訊與您聯繫，資料不會提供給第三方。</p>
+        </form>
+
+        <div class="ok" id="okBox">
+          <b>已收到您的估價需求</b>
+          <p>我們會在上班時段內盡快與您聯繫，確認規格與安裝時間。</p>
+          <small>（示範說明：實際上線後，這張表單會即時寄送 Email 通知給店家，並把每一筆詢價存進後台名單，可以隨時查詢與追蹤。也可以改成傳送到 LINE。）</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap" style="max-width:900px">
+      <div class="head">
+        <div class="eyebrow">FAQ</div>
+        <h2>常見問題</h2>
+      </div>
+      <details open>
+        <summary>丈量要收費嗎？</summary>
+        <p>大台北地區免費到場丈量，外縣市依距離計費，成交後可折抵。若你已有明確尺寸，也可以直接線上報價。</p>
+      </details>
+      <details>
+        <summary>從下單到安裝大概要多久？</summary>
+        <p>一般常備規格約 3–5 個工作天，需要強化或膠合加工的品項約 7–10 個工作天。急件請先來電，我們會盡量協調排程。</p>
+      </details>
+      <details>
+        <summary>玻璃破了可以只換一片嗎？</summary>
+        <p>可以。請拍下破損位置與現場照片並提供概略尺寸，我們會先報價；緊急狀況可先協助封板，再安排更換。</p>
+      </details>
+      <details>
+        <summary>舊玻璃要怎麼處理？</summary>
+        <p>安裝時一併回收清運，不另外收費（大量拆除工程另議），現場會清潔完再離開。</p>
+      </details>
+      <details>
+        <summary>可以配合設計師或工班嗎？</summary>
+        <p>可以。提供圖面即可依圖加工，也能配合工地時程分批進場，長期合作有專案價。</p>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div>
+        <div class="f-brand">
+          <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="24" height="24" rx="4" fill="rgba(207,234,241,.25)" stroke="#7fd4e3" stroke-width="1.6"/>
+            <rect x="12.5" y="12.5" width="24" height="24" rx="4" fill="rgba(63,182,207,.3)" stroke="#7fd4e3" stroke-width="1.6"/>
+          </svg>
+          晶宇玻璃
+        </div>
+        <p style="max-width:34ch">建築玻璃材料、加工與丈量安裝。住宅、店面、辦公室與廠辦工程承接中。</p>
+      </div>
+      <div>
+        <h4>聯絡方式</h4>
+        <div class="f-list">
+          <a href="tel:0223456789">電話：02-2345-6789</a>
+          <span>傳真：02-2345-6780</span>
+          <span>信箱：service@example.com</span>
+          <span>地址：新北市板橋區示範路 88 號</span>
+        </div>
+      </div>
+      <div>
+        <h4>營業時間</h4>
+        <div class="f-list">
+          <span>週一至週五 08:00–18:00</span>
+          <span>週六 08:00–12:00</span>
+          <span>週日及國定假日休息</span>
+          <span>急件更換可電話預約</span>
+        </div>
+      </div>
+    </div>
+    <div class="f-bot">
+      <span>© 2026 晶宇玻璃（示範用途）</span>
+      <span>網站設計製作：Avalo 阿瓦羅</span>
+    </div>
+  </div>
+</footer>
+
+<div class="mcta">
+  <a href="tel:0223456789" class="btn btn-ghost">撥打電話</a>
+  <a href="#quote" class="btn btn-primary">線上估價</a>
+</div>
+
+<script>
+  document.getElementById('quoteForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('name');
+    var phone = document.getElementById('phone');
+    if (!name.value.trim()) { name.focus(); return; }
+    if (!phone.value.trim()) { phone.focus(); return; }
+    this.style.display = 'none';
+    document.getElementById('okBox').style.display = 'block';
+  });
+</script>
+</body>
+</html>
