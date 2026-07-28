@@ -22,6 +22,7 @@ const HERO_HINTS: Record<HeroStyle, string> = {
 import GrainDivider from "./_components/GrainDivider";
 import VenuePicker from "./_components/VenuePicker";
 import FreightEstimator from "./_components/FreightEstimator";
+import CatalogIcon from "./_components/CatalogIcon";
 
 export const metadata = {
   title: "文山木材行｜北投關渡 木材・角材・夾板專門",
@@ -199,6 +200,7 @@ export default function WenshanHome() {
           <div className="ws-grid ws-grid--3 ws-reveal">
             {CATALOG.map((cat) => (
               <Link key={cat.id} href={`${WS}/products#${cat.id}`} className="ws-catcard">
+                <CatalogIcon id={cat.id} />
                 <div className="ws-catcard__head">
                   <h3>{cat.name}</h3>
                 </div>

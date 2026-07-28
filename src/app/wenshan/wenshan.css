@@ -712,6 +712,28 @@
   box-shadow: 0 14px 30px rgba(74, 47, 29, 0.12);
 }
 
+/* 型錄分類等角圖示 */
+.ws-caticon {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  transition: transform 0.25s ease;
+}
+
+.ws-catcard .ws-caticon {
+  margin-bottom: 6px;
+}
+
+.ws-catcard:hover .ws-caticon {
+  transform: translateY(-3px) rotate(-3deg);
+}
+
+.ws-prodcat__head .ws-caticon {
+  width: 40px;
+  height: 40px;
+  align-self: center;
+}
+
 .ws-catcard__head {
   display: flex;
   align-items: center;

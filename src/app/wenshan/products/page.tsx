@@ -4,6 +4,7 @@ import { CATALOG } from "../_data/catalog";
 import { WS, SITE } from "../_data/site";
 import AddItemButton from "../_components/AddItemButton";
 import VenueFlag from "../_components/VenueFlag";
+import CatalogIcon from "../_components/CatalogIcon";
 import CaiCalculator from "../_components/CaiCalculator";
 import GrainDivider from "../_components/GrainDivider";
 
@@ -46,6 +47,7 @@ export default function ProductsPage() {
         {CATALOG.map((cat, idx) => (
           <section key={cat.id} id={cat.id} className="ws-prodcat">
             <div className="ws-prodcat__head">
+              <CatalogIcon id={cat.id} />
               <h2>{cat.name}</h2>
               <VenueFlag categoryId={cat.id} />
             </div>
