@@ -664,6 +664,43 @@ button { font-family: inherit; }
   color: rgba(240,235,227,0.22);
   letter-spacing: 0.2em;
 }
+.case-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 案例分類群組 */
+.cases-group { margin-bottom: 3rem; }
+.cases-group:last-child { margin-bottom: 0; }
+.cases-cat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.cases-cat-name {
+  font-family: var(--font-noto-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+.cases-cat-hint {
+  font-family: var(--font-dm-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.case-img.brand-wenshan { background: linear-gradient(135deg, #2E241C 0%, #7A5C3C 100%); }
 .case-img.brand-finance { background: linear-gradient(135deg, #1E2A22 0%, #3B5A43 100%); }
 .case-img.brand-formula-kart { background: linear-gradient(135deg, #221E1C 0%, #7A4A34 100%); }
 .case-img.brand-jeantogo { background: linear-gradient(135deg, #2E2620 0%, #5C4632 100%); }

@@ -23,13 +23,38 @@
     "inkToggle": "開關墨流背景",
     "inkClear": "洗去墨跡",
     "stats": [
-      { "num": "100", "suffix": "%", "label": "價格公開透明" },
-      { "num": "1", "suffix": "-2", "label": "月內完成交付" },
-      { "num": "24", "suffix": "hr", "label": "專人必回覆" },
-      { "num": "365", "suffix": "天", "label": "全年維運監控" }
+      {
+        "num": "100",
+        "suffix": "%",
+        "label": "價格公開透明"
+      },
+      {
+        "num": "1",
+        "suffix": "-2",
+        "label": "月內完成交付"
+      },
+      {
+        "num": "24",
+        "suffix": "hr",
+        "label": "專人必回覆"
+      },
+      {
+        "num": "365",
+        "suffix": "天",
+        "label": "全年維運監控"
+      }
     ]
   },
-  "ticker": ["網站設計開發", "企業 AI 自動化", "AI 智能客服", "LINE 官方帳號整合", "金流串接", "數據儀表板", "AI 搜尋優化 GEO", "系統整合開發"],
+  "ticker": [
+    "網站設計開發",
+    "企業 AI 自動化",
+    "AI 智能客服",
+    "LINE 官方帳號整合",
+    "金流串接",
+    "數據儀表板",
+    "AI 搜尋優化 GEO",
+    "系統整合開發"
+  ],
   "services": {
     "label": "核心服務",
     "title1": "三大核心",
@@ -40,19 +65,37 @@
         "num": "01",
         "name": "網站設計開發",
         "desc": "全客製設計、RWD、SEO、金流串接到後台管理，做出真的能帶來客人和訂單的網站，而不只是漂亮的門面。",
-        "tags": ["全客製", "RWD", "SEO/GEO", "金流串接", "購物車"]
+        "tags": [
+          "全客製",
+          "RWD",
+          "SEO/GEO",
+          "金流串接",
+          "購物車"
+        ]
       },
       {
         "num": "02",
         "name": "企業 AI 自動化",
         "desc": "AI 客服、流程自動化、報表自動產生。把重複性工作交給系統，省下的人力一年就回本。",
-        "tags": ["AI 客服", "n8n", "LINE OA", "RAG 知識庫", "報表自動化"]
+        "tags": [
+          "AI 客服",
+          "n8n",
+          "LINE OA",
+          "RAG 知識庫",
+          "報表自動化"
+        ]
       },
       {
         "num": "03",
         "name": "系統整合與客製開發",
         "desc": "會員系統、ERP/POS 串接、API 開發、資料工程。市面套裝軟體做不到的，Avalo 為你量身打造。",
-        "tags": ["API 開發", "ERP/POS", "資料工程", "Web3", "雲端架構"]
+        "tags": [
+          "API 開發",
+          "ERP/POS",
+          "資料工程",
+          "Web3",
+          "雲端架構"
+        ]
       }
     ]
   },
@@ -90,14 +133,34 @@
     "viewCase": "查看完整介紹 →",
     "items": [
       {
+        "id": "wenshan",
+        "category": "web",
+        "type": "形象官網・在地企業",
+        "year": "2026",
+        "name": "文山木材行",
+        "label": "WENSHAN",
+        "desc": "為深耕北投關渡近百年、傳承三代的木材行打造形象官網：3D 原木互動主視覺、12 大類木料型錄、場域快選引導估價，搭配詢價清單、才數計算機與運費試算——把傳統產業的專業，變成線上就能開始的生意。",
+        "tags": [
+          "形象官網",
+          "線上估價",
+          "3D 互動"
+        ],
+        "url": "/cases/wenshan"
+      },
+      {
         "id": "finance",
         "type": "企業財務系統・完全客製",
         "year": "2026",
         "name": "企業財務自動化系統",
         "label": "FIN",
         "desc": "為企業從零打造的完全客製會計系統：同仁用 Telegram 拍照上傳憑證即自動入帳，後台整合固定資產折舊、外匯遞推、月結關帳與損益表／資產負債表，全流程可治理、可稽核。這不是套版，是照著客戶的作業流程長出來的系統。",
-        "tags": ["完全客製", "AI 憑證入帳", "財務治理"],
-        "url": "/cases/finance-automation"
+        "tags": [
+          "完全客製",
+          "AI 憑證入帳",
+          "財務治理"
+        ],
+        "url": "/cases/finance-automation",
+        "category": "system"
       },
       {
         "id": "jeantogo",
@@ -106,8 +169,13 @@
         "name": "JeanToGo",
         "label": "JEAN",
         "desc": "Uber Eats 商家上架的「獲客＋代辦」平台：SEO 內容與各縣市方案落地頁帶進搜尋詢問，線上表單一鍵諮詢，後台 CRM 追蹤每筆商機，顧問全程代辦到開賣——讓非科技背景的店主也能無痛上架。",
-        "tags": ["SEO 獲客", "諮詢表單", "後台 CRM"],
-        "url": "/cases/jeantogo"
+        "tags": [
+          "SEO 獲客",
+          "諮詢表單",
+          "後台 CRM"
+        ],
+        "url": "/cases/jeantogo",
+        "category": "web"
       },
       {
         "id": "gtclub",
@@ -116,8 +184,13 @@
         "name": "GT Club 台灣共好交流協會",
         "label": "GT",
         "desc": "為協會打造的品牌官網與社群經營平台：明暗雙主題＋動效的沉浸體驗、AI／Web3／永續三大主題專區、成果展示，加入表單與電子報一鍵轉換（驗證＋防垃圾＋落地＋即時 Email 通知），還有發起人數統計與造訪分析。",
-        "tags": ["品牌官網", "會員招募", "電子報"],
-        "url": "/cases/gtclub"
+        "tags": [
+          "品牌官網",
+          "會員招募",
+          "電子報"
+        ],
+        "url": "/cases/gtclub",
+        "category": "web"
       },
       {
         "id": "damenkyt",
@@ -126,8 +199,13 @@
         "name": "Damen KYT 反詐騙平台",
         "label": "KYT",
         "desc": "加密貨幣反詐騙與 KYT（Know Your Transaction）平台：輸入錢包地址即時算出風險評分、5 步驟線上報案自動產出 PDF、黑白名單與區塊鏈學院一應俱全，繁中／英雙語上線。",
-        "tags": ["區塊鏈安全", "風險評分", "反詐騙"],
-        "url": "/cases/damenkyt"
+        "tags": [
+          "區塊鏈安全",
+          "風險評分",
+          "反詐騙"
+        ],
+        "url": "/cases/damenkyt",
+        "category": "system"
       },
       {
         "id": "agagent",
@@ -136,8 +214,13 @@
         "name": "AG Agent 會議智能助手",
         "label": "AG",
         "desc": "企業內部 AI 週會助手：每週自動從 Google Drive 擷取週報與研究，GPT 產出結構化重點、Perplexity 補上最新消息，全部向量化後可用自然語言問答——Dashboard、知識庫與浮動 Chatbot 一應俱全。",
-        "tags": ["AI Agent", "RAG 知識庫", "會議自動化"],
-        "url": "/cases/agagent"
+        "tags": [
+          "AI Agent",
+          "RAG 知識庫",
+          "會議自動化"
+        ],
+        "url": "/cases/agagent",
+        "category": "system"
       },
       {
         "id": "formula-kart",
@@ -146,8 +229,30 @@
         "name": "Formula Kart 3D 賽車遊戲",
         "label": "KART",
         "desc": "打開瀏覽器就能玩的 F1 風格 Q 版 3D 賽車遊戲：Three.js／WebGL 打造，3 賽道、9 車、動態天氣、漂移加速、44 項成就，還有最多 10 人的 WebSocket 即時多人競速，免安裝、免下載。",
-        "tags": ["Three.js／WebGL", "即時多人", "遊戲開發"],
-        "url": "/cases/formula-kart"
+        "tags": [
+          "Three.js／WebGL",
+          "即時多人",
+          "遊戲開發"
+        ],
+        "url": "/cases/formula-kart",
+        "category": "interactive"
+      }
+    ],
+    "categories": [
+      {
+        "id": "web",
+        "name": "形象官網・行銷網站",
+        "hint": "對應「形象官網／商務網站」方案・NT$39,000 起"
+      },
+      {
+        "id": "system",
+        "name": "客製系統・AI 應用",
+        "hint": "完全客製・專案報價"
+      },
+      {
+        "id": "interactive",
+        "name": "互動體驗・遊戲",
+        "hint": "完全客製・專案報價"
       }
     ]
   },
@@ -207,10 +312,23 @@
       "phonePh": "0912345678",
       "service": "需要的服務",
       "servicePh": "請選擇服務類型",
-      "serviceOptions": ["網站設計開發", "企業 AI 自動化", "AI 智能客服", "客製系統開發", "網站健檢", "其他（請說明）"],
+      "serviceOptions": [
+        "網站設計開發",
+        "企業 AI 自動化",
+        "AI 智能客服",
+        "客製系統開發",
+        "網站健檢",
+        "其他（請說明）"
+      ],
       "budget": "預算範圍",
       "budgetPh": "請選擇",
-      "budgetOptions": ["NT$30,000 以下", "NT$30,000–100,000", "NT$100,000–300,000", "NT$300,000 以上", "尚未確定，想先了解"],
+      "budgetOptions": [
+        "NT$30,000 以下",
+        "NT$30,000–100,000",
+        "NT$100,000–300,000",
+        "NT$300,000 以上",
+        "尚未確定，想先了解"
+      ],
       "message": "專案描述 *",
       "messagePh": "請簡單描述你的需求、目標、時程，或任何想讓我了解的事…",
       "submit": "送出詢問 →",
@@ -222,7 +340,12 @@
   "footer": {
     "tagline": "網站設計開發 · 企業 AI 自動化 · 系統整合",
     "rights": "版權所有",
-    "links": { "terms": "服務條款", "privacy": "隱私權政策", "refund": "退款政策", "lookup": "訂單查詢" },
+    "links": {
+      "terms": "服務條款",
+      "privacy": "隱私權政策",
+      "refund": "退款政策",
+      "lookup": "訂單查詢"
+    },
     "madeWith": "Designed & built by Avalo"
   },
   "cart": {
@@ -288,8 +411,19 @@
     "lookupEmail": "Email",
     "lookupSubmit": "查詢",
     "lookupNotFound": "查無此訂單，請確認編號與 Email 是否正確。",
-    "status": { "pending": "待付款", "paid": "已付款", "partial": "部分完成", "failed": "付款失敗", "cancelled": "已取消" },
-    "subStatus": { "pending": "待授權", "active": "扣款中", "failed": "授權失敗", "cancelled": "已取消" },
+    "status": {
+      "pending": "待付款",
+      "paid": "已付款",
+      "partial": "部分完成",
+      "failed": "付款失敗",
+      "cancelled": "已取消"
+    },
+    "subStatus": {
+      "pending": "待授權",
+      "active": "扣款中",
+      "failed": "授權失敗",
+      "cancelled": "已取消"
+    },
     "itemsHeading": "訂購項目",
     "paymentsHeading": "付款紀錄",
     "subsHeading": "訂閱狀態"

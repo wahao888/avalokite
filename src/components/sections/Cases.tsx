@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 
 interface CaseItem {
   id: string;
+  category: string;
   type: string;
   year: string;
   name: string;
@@ -12,10 +13,16 @@ interface CaseItem {
   url: string;
 }
 
+interface CaseCategory {
+  id: string;
+  name: string;
+  hint: string;
+}
+
 export default function Cases() {
   const t = useTranslations("cases");
   const items = t.raw("items") as CaseItem[];
-  const [first, ...rest] = items;
+  const categories = t.raw("categories") as CaseCategory[];
 
   const renderBody = (item: CaseItem) => (
     <div className="case-body">
@@ -30,8 +37,8 @@ export default function Cases() {
           <span className="tag" key={tag}>{tag}</span>
         ))}
       </div>
-      {item.url.startsWith("/") ? (
-        // 站內案例介紹頁（無外部網址者，如完全客製系統）
+      {item.url.startsWith("/cases/") ? (
+        // 站內案例介紹頁
         <Link href={item.url} className="case-link">
           {t("viewCase")}
         </Link>
@@ -57,22 +64,31 @@ export default function Cases() {
         <p className="section-intro">{t("intro")}</p>
       </div>
 
-      <div className="cases-grid fade-in">
-        <div className="case-card case-wide">
-          <div className={`case-img brand-${first.id}`}>
-            <span className="case-img-label">{first.label}</span>
-          </div>
-          {renderBody(first)}
-        </div>
-        {rest.map((item) => (
-          <div className="case-card" key={item.id}>
-            <div className={`case-img brand-${item.id}`}>
-              <span className="case-img-label">{item.label}</span>
+      {categories.map((cat) => {
+        const group = items.filter((i) => i.category === cat.id);
+        if (group.length === 0) return null;
+        return (
+          <div key={cat.id} className="cases-group fade-in">
+            <div className="cases-cat">
+              <h3 className="cases-cat-name">{cat.name}</h3>
+              <span className="cases-cat-hint">{cat.hint}</span>
             </div>
-            {renderBody(item)}
+            <div className="cases-grid">
+              {group.map((item, idx) => (
+                <div
+                  className={`case-card${idx === 0 && group.length % 2 === 1 ? " case-wide" : ""}`}
+                  key={item.id}
+                >
+                  <div className={`case-img brand-${item.id}`}>
+                    <img src={`/cases/${item.id}.jpg`} alt={item.name} loading="lazy" />
+                  </div>
+                  {renderBody(item)}
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </section>
   );
 }

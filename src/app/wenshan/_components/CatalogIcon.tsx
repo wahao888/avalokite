@@ -6,18 +6,18 @@ const AY = 0.5;
 const BX = -0.866;
 const BY = 0.5;
 
-type Pt = [number, number];
+export type Pt = [number, number];
 
-const alongA = (p: Pt, n: number): Pt => [p[0] + AX * n, p[1] + AY * n];
-const alongB = (p: Pt, n: number): Pt => [p[0] + BX * n, p[1] + BY * n];
-const down = (p: Pt, h: number): Pt => [p[0], p[1] + h];
+export const alongA = (p: Pt, n: number): Pt => [p[0] + AX * n, p[1] + AY * n];
+export const alongB = (p: Pt, n: number): Pt => [p[0] + BX * n, p[1] + BY * n];
+export const down = (p: Pt, h: number): Pt => [p[0], p[1] + h];
 const path = (pts: Pt[]) => `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L")} Z`;
 
-const WOOD = { top: "#e6cfa4", right: "#c69a63", left: "#9c7245" };
-const GREY = { top: "#eeece6", right: "#cfccc4", left: "#aaa69c" };
-const STROKE = "#58381e";
+export const WOOD = { top: "#e6cfa4", right: "#c69a63", left: "#9c7245" };
+export const GREY = { top: "#eeece6", right: "#cfccc4", left: "#aaa69c" };
+export const STROKE = "#58381e";
 
-function faces(p0: Pt, w: number, d: number, h: number) {
+export function faces(p0: Pt, w: number, d: number, h: number) {
   const t0 = p0;
   const t1 = alongA(p0, w);
   const t2 = alongB(t1, d);
@@ -34,7 +34,7 @@ interface BoxProps {
   children?: React.ReactNode;
 }
 
-function IsoBox({ p, w, d, h, c = WOOD, children }: BoxProps) {
+export function IsoBox({ p, w, d, h, c = WOOD, children }: BoxProps) {
   const { t0, t1, t2, t3 } = faces(p, w, d, h);
   return (
     <g stroke={STROKE} strokeWidth="1.4" strokeLinejoin="round">
@@ -46,7 +46,7 @@ function IsoBox({ p, w, d, h, c = WOOD, children }: BoxProps) {
   );
 }
 
-function Svg({ children }: { children: React.ReactNode }) {
+export function Svg({ children }: { children: React.ReactNode }) {
   return (
     <svg viewBox="0 0 64 64" className="ws-caticon" aria-hidden="true">
       {children}

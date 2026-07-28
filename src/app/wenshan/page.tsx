@@ -23,6 +23,7 @@ import GrainDivider from "./_components/GrainDivider";
 import VenuePicker from "./_components/VenuePicker";
 import FreightEstimator from "./_components/FreightEstimator";
 import CatalogIcon from "./_components/CatalogIcon";
+import ServiceIcon from "./_components/ServiceIcon";
 
 export const metadata = {
   title: "文山木材行｜北投關渡 木材・角材・夾板專門",
@@ -30,24 +31,24 @@ export const metadata = {
 
 const SERVICES = [
   {
+    id: "retail",
     title: "木料零售批發",
     desc: "一支角材到整車板料都歡迎。關渡大型倉庫現貨供應，常用規格不用等。",
-    icon: "M8 40 L8 18 L32 6 L56 18 L56 40 M8 26 L56 26 M8 33 L56 33",
   },
   {
+    id: "cutting",
     title: "代客裁切加工",
     desc: "裁切、刨光、導角、鑽孔。裁好標好送到工地，下車就能用。",
-    icon: "M6 34 L42 34 M42 34 L58 26 M14 34 L18 42 M24 34 L28 42 M34 34 L38 42",
   },
   {
+    id: "delivery",
     title: "工地配送到點",
     desc: "雙北免費配送到工地，週二至週六 07:00 出車，跟上你的工班進度。",
-    icon: "M6 38 L38 38 L38 22 L6 22 Z M38 28 L50 28 L56 34 L56 38 L38 38 M14 44 a4 4 0 1 0 0.01 0 M46 44 a4 4 0 1 0 0.01 0",
   },
   {
+    id: "consult",
     title: "選料諮詢",
     desc: "帶圖來、用講的都行。黃老闆親自看料給建議，該省的幫你省，該挑的幫你挑。",
-    icon: "M32 8 a16 16 0 1 1 -0.01 0 M32 16 a8 8 0 1 1 -0.01 0 M32 26 a2.5 2.5 0 1 1 -0.01 0",
   },
 ];
 
@@ -156,9 +157,7 @@ export default function WenshanHome() {
           <div className="ws-grid ws-grid--4 ws-reveal">
             {SERVICES.map((s) => (
               <div key={s.title} className="ws-card-i">
-                <svg className="ws-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d={s.icon} />
-                </svg>
+                <ServiceIcon id={s.id} />
                 <h3>{s.title}</h3>
                 <p>{s.desc}</p>
               </div>
@@ -297,7 +296,7 @@ export default function WenshanHome() {
           <div className="ws-about ws-reveal">
             <div className="ws-about__story">
               <p>
-                文山木材行在北投立功街起家，走過近一個世紀。從第一代肩挑手扛，
+                文山木材行在北投起家，走過近一個世紀。從第一代肩挑手扛，
                 到現在關渡的大倉庫，我們只做一件事——把木料顧好，把客人顧好。
               </p>
               <p>

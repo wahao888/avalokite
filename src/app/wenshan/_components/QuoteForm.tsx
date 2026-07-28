@@ -7,6 +7,7 @@ import { VENUES, findVenue } from "../_data/venues";
 import { estimateFreight, ALL_REGIONS } from "../_data/freight";
 import { SITE, WS } from "../_data/site";
 import { useQuoteList } from "./QuoteListProvider";
+import VenueIcon from "./VenueIcon";
 
 const PROJECT_TYPES = [
   "裝潢隔間",
@@ -174,6 +175,7 @@ export default function QuoteForm({ initialVenue }: { initialVenue?: string }) {
                 aria-pressed={venue === v.id}
                 onClick={() => setVenue(venue === v.id ? null : v.id)}
               >
+                <VenueIcon id={v.id} />
                 {v.name}
               </button>
             ))}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { VENUES } from "../_data/venues";
 import { findItem } from "../_data/catalog";
 import { WS } from "../_data/site";
+import VenueIcon from "./VenueIcon";
 
 // 場域快選：選擇施工場域 → 顯示常用料 → 帶清單去估價
 // 選擇記到 sessionStorage，型錄頁據此標「你的場域常用」
@@ -46,6 +47,7 @@ export default function VenuePicker() {
             aria-pressed={selected === v.id}
             onClick={() => pick(v.id)}
           >
+            <VenueIcon id={v.id} />
             {v.name}
           </button>
         ))}

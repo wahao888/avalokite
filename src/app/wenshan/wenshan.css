@@ -793,6 +793,9 @@
 
 .ws-chip {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--ws-border);
   background: var(--ws-card);
   border-radius: 999px;
@@ -800,6 +803,20 @@
   font-size: 15px;
   color: var(--ws-ink-soft);
   transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ws-venue-ico {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+}
+
+.ws-chip[aria-pressed="true"] .ws-venue-ico {
+  stroke: var(--ws-paper);
+}
+
+.ws-card-i .ws-caticon {
+  margin-bottom: 12px;
 }
 
 .ws-chip:hover {

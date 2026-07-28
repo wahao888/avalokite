@@ -40,7 +40,9 @@ export default function WsFooter() {
         </div>
         <div className="ws-footer__credit">
           <span>© {year} {SITE.name}｜本網站內容之品項與規格以現場報價為準</span>
-          <span>網站設計製作：Avalo 阿瓦羅</span>
+          <a href="https://avalokite.xyz" target="_blank" rel="noopener noreferrer">
+            網站設計製作：Avalo 阿瓦羅
+          </a>
         </div>
       </div>
     </footer>

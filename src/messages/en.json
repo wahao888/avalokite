@@ -23,13 +23,38 @@
     "inkToggle": "Toggle ink flow background",
     "inkClear": "Wash the ink away",
     "stats": [
-      { "num": "100", "suffix": "%", "label": "Prices published" },
-      { "num": "1", "suffix": "-2", "label": "Months to delivery" },
-      { "num": "24", "suffix": "hr", "label": "Reply guarantee" },
-      { "num": "365", "suffix": "d", "label": "Year-round monitoring" }
+      {
+        "num": "100",
+        "suffix": "%",
+        "label": "Prices published"
+      },
+      {
+        "num": "1",
+        "suffix": "-2",
+        "label": "Months to delivery"
+      },
+      {
+        "num": "24",
+        "suffix": "hr",
+        "label": "Reply guarantee"
+      },
+      {
+        "num": "365",
+        "suffix": "d",
+        "label": "Year-round monitoring"
+      }
     ]
   },
-  "ticker": ["Web Design & Dev", "Enterprise AI Automation", "AI Customer Service", "LINE OA Integration", "Payment Integration", "Data Dashboards", "AI Search Optimization", "Systems Integration"],
+  "ticker": [
+    "Web Design & Dev",
+    "Enterprise AI Automation",
+    "AI Customer Service",
+    "LINE OA Integration",
+    "Payment Integration",
+    "Data Dashboards",
+    "AI Search Optimization",
+    "Systems Integration"
+  ],
   "services": {
     "label": "Core Services",
     "title1": "Three core",
@@ -40,19 +65,37 @@
         "num": "01",
         "name": "Web Design & Development",
         "desc": "Fully custom design, responsive layouts, SEO, payments and admin dashboards — websites that bring customers and orders, not just pretty facades.",
-        "tags": ["Custom Design", "RWD", "SEO/GEO", "Payments", "E-commerce"]
+        "tags": [
+          "Custom Design",
+          "RWD",
+          "SEO/GEO",
+          "Payments",
+          "E-commerce"
+        ]
       },
       {
         "num": "02",
         "name": "Enterprise AI Automation",
         "desc": "AI customer service, workflow automation, auto-generated reports. Hand repetitive work to systems — the labor saved pays it back within a year.",
-        "tags": ["AI Support", "n8n", "LINE OA", "RAG", "Report Automation"]
+        "tags": [
+          "AI Support",
+          "n8n",
+          "LINE OA",
+          "RAG",
+          "Report Automation"
+        ]
       },
       {
         "num": "03",
         "name": "Systems & Custom Development",
         "desc": "Membership systems, ERP/POS integration, API development, data engineering. When off-the-shelf software can't do it, Avalo builds it for you.",
-        "tags": ["API Development", "ERP/POS", "Data Engineering", "Web3", "Cloud"]
+        "tags": [
+          "API Development",
+          "ERP/POS",
+          "Data Engineering",
+          "Web3",
+          "Cloud"
+        ]
       }
     ]
   },
@@ -90,14 +133,34 @@
     "viewCase": "View full case →",
     "items": [
       {
+        "id": "wenshan",
+        "category": "web",
+        "type": "Brand Website · Local Business",
+        "year": "2026",
+        "name": "Wenshan Lumber",
+        "label": "WENSHAN",
+        "desc": "A brand website for a three-generation lumber yard in Taipei: an interactive 3D log hero, a 12-category catalog in trade units, a venue picker guiding estimates, plus a quote list and freight/unit calculators — turning traditional expertise into business that starts online.",
+        "tags": [
+          "Brand website",
+          "Online estimates",
+          "3D interactive"
+        ],
+        "url": "/cases/wenshan"
+      },
+      {
         "id": "finance",
         "type": "Enterprise Finance · Fully Custom",
         "year": "2026",
         "name": "Finance Automation System",
         "label": "FIN",
         "desc": "A fully custom accounting system built from scratch: staff snap a photo of a receipt on Telegram and it's booked automatically, while the back office handles fixed-asset depreciation, FX, month-end close and P&L / balance-sheet reporting — fully governable and auditable. Not a template; a system grown around the client's own process.",
-        "tags": ["Fully custom", "AI bookkeeping", "Governance"],
-        "url": "/cases/finance-automation"
+        "tags": [
+          "Fully custom",
+          "AI bookkeeping",
+          "Governance"
+        ],
+        "url": "/cases/finance-automation",
+        "category": "system"
       },
       {
         "id": "jeantogo",
@@ -106,8 +169,13 @@
         "name": "JeanToGo",
         "label": "JEAN",
         "desc": "A lead-gen + concierge platform for Uber Eats onboarding: SEO content and per-city landing pages bring in search traffic, an online form captures enquiries, a back-office CRM tracks every lead, and advisors handle the whole application through to going live — so non-technical owners get on board painlessly.",
-        "tags": ["SEO Lead-Gen", "Enquiry Form", "Back-office CRM"],
-        "url": "/cases/jeantogo"
+        "tags": [
+          "SEO Lead-Gen",
+          "Enquiry Form",
+          "Back-office CRM"
+        ],
+        "url": "/cases/jeantogo",
+        "category": "web"
       },
       {
         "id": "gtclub",
@@ -116,8 +184,13 @@
         "name": "GT Club Taiwan",
         "label": "GT",
         "desc": "A brand website and community platform for the association: an immersive experience with light/dark themes and motion, three topic hubs (AI / Web3 / sustainability), a works showcase, and one-tap join & newsletter conversion (validation + anti-spam + server-side landing + instant email), plus founder-count stats and visit analytics.",
-        "tags": ["Brand Site", "Member Recruiting", "Newsletter"],
-        "url": "/cases/gtclub"
+        "tags": [
+          "Brand Site",
+          "Member Recruiting",
+          "Newsletter"
+        ],
+        "url": "/cases/gtclub",
+        "category": "web"
       },
       {
         "id": "damenkyt",
@@ -126,8 +199,13 @@
         "name": "Damen KYT Anti-Fraud Platform",
         "label": "KYT",
         "desc": "A crypto anti-fraud & KYT (Know Your Transaction) platform: paste a wallet address for an instant risk score, file a report in 5 steps with an auto-generated PDF, plus blacklist/whitelist and a blockchain academy — live in Chinese and English.",
-        "tags": ["Blockchain Security", "Risk Scoring", "Anti-Fraud"],
-        "url": "/cases/damenkyt"
+        "tags": [
+          "Blockchain Security",
+          "Risk Scoring",
+          "Anti-Fraud"
+        ],
+        "url": "/cases/damenkyt",
+        "category": "system"
       },
       {
         "id": "agagent",
@@ -136,8 +214,13 @@
         "name": "AG Agent — Meeting Assistant",
         "label": "AG",
         "desc": "An internal AI meeting assistant: every week it auto-pulls reports and research from Google Drive, GPT produces structured highlights, Perplexity adds the latest news, and everything is vectorized for natural-language Q&A — with a dashboard, knowledge library and floating chatbot.",
-        "tags": ["AI Agent", "RAG Knowledge Base", "Meeting Automation"],
-        "url": "/cases/agagent"
+        "tags": [
+          "AI Agent",
+          "RAG Knowledge Base",
+          "Meeting Automation"
+        ],
+        "url": "/cases/agagent",
+        "category": "system"
       },
       {
         "id": "formula-kart",
@@ -146,8 +229,30 @@
         "name": "Formula Kart — 3D Racing Game",
         "label": "KART",
         "desc": "An F1-style chibi 3D racing game that runs right in the browser: built with Three.js/WebGL, with 3 tracks, 9 cars, dynamic weather, drift & boost, 44 achievements, and up to 10-player real-time WebSocket racing — no install, no download.",
-        "tags": ["Three.js/WebGL", "Real-time Multiplayer", "Game Dev"],
-        "url": "/cases/formula-kart"
+        "tags": [
+          "Three.js/WebGL",
+          "Real-time Multiplayer",
+          "Game Dev"
+        ],
+        "url": "/cases/formula-kart",
+        "category": "interactive"
+      }
+    ],
+    "categories": [
+      {
+        "id": "web",
+        "name": "Brand & Marketing Websites",
+        "hint": "Maps to the Brand/Business Site plans · from NT$39,000"
+      },
+      {
+        "id": "system",
+        "name": "Custom Systems & AI",
+        "hint": "Fully custom · project pricing"
+      },
+      {
+        "id": "interactive",
+        "name": "Interactive & Games",
+        "hint": "Fully custom · project pricing"
       }
     ]
   },
@@ -207,10 +312,23 @@
       "phonePh": "+886 912 345 678",
       "service": "Service needed",
       "servicePh": "Select a service",
-      "serviceOptions": ["Web Design & Development", "Enterprise AI Automation", "AI Customer Service", "Custom System Development", "Website Health Check", "Other"],
+      "serviceOptions": [
+        "Web Design & Development",
+        "Enterprise AI Automation",
+        "AI Customer Service",
+        "Custom System Development",
+        "Website Health Check",
+        "Other"
+      ],
       "budget": "Budget range",
       "budgetPh": "Select",
-      "budgetOptions": ["Under NT$30,000", "NT$30,000–100,000", "NT$100,000–300,000", "Over NT$300,000", "Not sure yet"],
+      "budgetOptions": [
+        "Under NT$30,000",
+        "NT$30,000–100,000",
+        "NT$100,000–300,000",
+        "Over NT$300,000",
+        "Not sure yet"
+      ],
       "message": "Project description *",
       "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like me to know…",
       "submit": "Send inquiry →",
@@ -222,7 +340,12 @@
   "footer": {
     "tagline": "Web Development · Enterprise AI Automation · Systems Integration",
     "rights": "All Rights Reserved",
-    "links": { "terms": "Terms", "privacy": "Privacy", "refund": "Refund Policy", "lookup": "Order Lookup" },
+    "links": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "refund": "Refund Policy",
+      "lookup": "Order Lookup"
+    },
     "madeWith": "Designed & built by Avalo"
   },
   "cart": {
@@ -288,8 +411,19 @@
     "lookupEmail": "Email",
     "lookupSubmit": "Look up",
     "lookupNotFound": "Order not found. Please check the number and email.",
-    "status": { "pending": "Pending", "paid": "Paid", "partial": "Partial", "failed": "Failed", "cancelled": "Cancelled" },
-    "subStatus": { "pending": "Pending", "active": "Active", "failed": "Failed", "cancelled": "Cancelled" },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "partial": "Partial",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "subStatus": {
+      "pending": "Pending",
+      "active": "Active",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
     "itemsHeading": "Items",
     "paymentsHeading": "Payments",
     "subsHeading": "Subscriptions"
