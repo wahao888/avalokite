@@ -1,0 +1,11 @@
+# Avalo 自家 log 的輪替設定（放到 /etc/logrotate.d/avalo）
+# health.log 每 5 分鐘寫一行，一年會累積約 10MB；backup/daily 較少但一併管理。
+/opt/avalo/health.log /opt/avalo/daily.log /opt/avalo/backup.log /opt/avalo/cron-care.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
