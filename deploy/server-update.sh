@@ -7,12 +7,20 @@
 #   1. `prisma migrate deploy` 不會重生 client → 這裡一定跑 `prisma generate`，否則新欄位型別對不上、build 失敗。
 #   2. `set -o pipefail` + 不用 `| tail` 吃掉 build 的 exit code → build 失敗立即中止，不會帶著壞的 .next 去 restart。
 #   3. 限制 build heap，讓 node 用 swap 當緩衝而非直接被系統 OOM（t3.micro 記憶體吃緊）。
+#   4. rsync --delete 必須排除 prisma/*.db* —— 本機那份 rsync 不會上傳資料庫，所以 /tmp/app/prisma/
+#      沒有 prod.db，--delete 會把伺服器上的正式資料庫整個刪掉（migrate deploy 再建一個空的，
+#      訂單／付款／訂閱全部消失）。2026-07-30 實際發生過一次。
 set -euo pipefail
 
 APP=/opt/avalo/app
 
-echo "=== 1/5 同步程式碼（保留 node_modules/.next/.env）==="
-sudo rsync -a --delete --exclude node_modules --exclude .next --exclude .env /tmp/app/ "$APP"/
+echo "=== 0/5 部署前先備份資料庫 ==="
+sudo -u avalo bash -lc "$APP/deploy/backup-db.sh" || echo "（備份略過：資料庫尚未存在）"
+
+echo "=== 1/5 同步程式碼（保留 node_modules/.next/.env/資料庫）==="
+sudo rsync -a --delete --exclude node_modules --exclude .next --exclude .env \
+  --exclude 'prisma/*.db' --exclude 'prisma/*.db-journal' --exclude 'prisma/*.db-wal' \
+  --exclude 'prisma/*.db-shm' /tmp/app/ "$APP"/
 sudo chown -R avalo:avalo "$APP"
 
 echo "=== 2/5 安裝相依 ==="

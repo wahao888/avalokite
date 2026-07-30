@@ -105,10 +105,11 @@ rsync -az --delete -e "ssh -i avalo-studio.pem" \
 ssh -i avalo-studio.pem ubuntu@<EC2_IP> 'bash /tmp/app/deploy/server-update.sh'
 ```
 
-> ⚠️ 三個踩過的雷（[server-update.sh](server-update.sh) 已內建處理）：
+> ⚠️ 四個踩過的雷（[server-update.sh](server-update.sh) 已內建處理）：
 > 1. **`prisma migrate deploy` 不會重生 client** —— 一定要先 `npx prisma generate`，否則新 schema 欄位型別對不上、`next build` 會失敗。
 > 2. **build 步驟別接 `| tail`** —— 那會用 tail 的 exit code 蓋掉 build 的，導致 build 失敗仍繼續 restart、帶壞的 `.next` 上線。腳本用 `set -euo pipefail`。
 > 3. **build 記憶體吃緊（t3.micro）** —— 腳本以 `NODE_OPTIONS=--max-old-space-size=1536` 讓 node 用 swap 當緩衝，避免被系統 OOM 直接砍掉。
+> 4. **`rsync --delete` 會刪掉正式資料庫** —— 本機上傳時排除了 `prisma/*.db*`，所以 `/tmp/app/prisma/` 裡沒有 `prod.db`；伺服器端若不排除，`--delete` 就會把正式庫刪光，`migrate deploy` 再造一個空的，訂單／付款／訂閱全沒。腳本已加 `--exclude 'prisma/*.db*'` 系列，並在同步前先跑一次 [backup-db.sh](backup-db.sh)。2026-07-30 實際踩過一次（當時庫內只有機器人灌的垃圾資料，無實質損失）。
 
 ## 安全防護總覽
 

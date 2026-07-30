@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
+import { clientIp, rateLimited } from "@/lib/rate-limit";
+
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_PER_WINDOW = 5;
 
 const schema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -12,9 +16,15 @@ const schema = z.object({
   budget: z.string().trim().max(100).optional().or(z.literal("")),
   message: z.string().trim().min(1).max(3000),
   locale: z.string().max(10).optional(),
+  // honeypot
+  website: z.string().max(500).optional().or(z.literal("")),
 });
 
 export async function POST(req: NextRequest) {
+  if (rateLimited(`contact:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -26,6 +36,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid input" }, { status: 400 });
   }
   const d = parsed.data;
+
+  // Honeypot：機器人填了隱藏欄位 → 假裝成功、不落庫不寄信
+  if (d.website) {
+    return NextResponse.json({ ok: true });
+  }
+
   const inquiry = await prisma.inquiry.create({
     data: {
       name: d.name,

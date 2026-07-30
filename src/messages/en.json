@@ -329,12 +329,13 @@
         "Over NT$300,000",
         "Not sure yet"
       ],
+      "honeypot": "Please leave this field empty",
       "message": "Project description *",
-      "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like me to know…",
+      "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like our team to know…",
       "submit": "Send inquiry →",
       "submitting": "Sending…",
       "success": "Got it! Our team will reply within 24 hours.",
-      "error": "Failed to send. Please try again or email me directly."
+      "error": "Failed to send. Please try again, or email our team directly."
     }
   },
   "footer": {
@@ -380,7 +381,7 @@
     "company": "Company (optional)",
     "taxId": "Tax ID (optional)",
     "note": "Notes (optional)",
-    "notePh": "Anything you'd like me to know up front — requirements, timeline…",
+    "notePh": "Anything you'd like our team to know up front — requirements, timeline…",
     "orderSummary": "Order Summary",
     "payOnetime": "Build — one-time (paid today, incl. tax)",
     "payMonthly": "Care — monthly (from month 2, incl. tax)",

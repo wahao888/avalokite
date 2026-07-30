@@ -35,11 +35,38 @@ export async function sendMail(opts: {
   }
 }
 
+// 通知信流量閘：每小時最多寄 MAX_PER_HOUR 封給站方。
+// 超過就停寄，只在「剛超過」時補一封告知信，避免被灌爆信箱。
+// （2026-07-30 曾有掃描器灌 /api/contact 205 次，直接產生 205 封通知信。）
+const MAX_PER_HOUR = 30;
+const HOUR_MS = 60 * 60 * 1000;
+let ownerMailTimes: number[] = [];
+
 export async function notifyOwner(subject: string, text: string) {
   const owner = process.env.MAIL_OWNER;
   if (!owner) {
     console.log(`[owner mail skipped] ${subject}`);
     return;
   }
+
+  const now = Date.now();
+  ownerMailTimes = ownerMailTimes.filter((t) => now - t < HOUR_MS);
+  if (ownerMailTimes.length >= MAX_PER_HOUR) {
+    // 只有「正好跨過門檻」那一次寄出告警，之後靜默丟棄
+    if (ownerMailTimes.length === MAX_PER_HOUR) {
+      ownerMailTimes.push(now);
+      await sendMail({
+        to: owner,
+        subject: `[Avalo] ⚠️ 通知信已達每小時上限（${MAX_PER_HOUR} 封），暫停寄送`,
+        text: `一小時內已寄出 ${MAX_PER_HOUR} 封站方通知信，為避免信箱被灌爆已暫停寄送，滿一小時後自動恢復。\n\n這通常代表有機器人在灌表單。請檢查 nginx access log 找出來源 IP：\n  sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head\n\n期間的資料仍會正常寫入資料庫，可到 /admin 查看，不會遺失。\n\n被擋下的第一封：${subject}`,
+      });
+      console.warn(`[owner mail throttled] ${subject}`);
+      return;
+    }
+    console.warn(`[owner mail dropped] ${subject}`);
+    return;
+  }
+
+  ownerMailTimes.push(now);
   await sendMail({ to: owner, subject, text });
 }

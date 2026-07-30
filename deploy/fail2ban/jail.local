@@ -1,0 +1,41 @@
+# Avalo — fail2ban 設定（放到 /etc/fail2ban/jail.local）
+#
+# 網頁層的三個 jail 只封 http/https 埠，不封 22：
+# 這是刻意的，萬一自己人誤觸也不會連 SSH 都進不來，救得回來。
+
+[sshd]
+enabled = true
+maxretry = 4
+bantime = 1h
+findtime = 10m
+
+# nginx 限流被觸發（error.log 出現 limiting requests）→ 封鎖
+[nginx-limit-req]
+enabled  = true
+filter   = nginx-limit-req
+logpath  = /var/log/nginx/error.log
+action   = iptables-multiport[name=nginx-limit-req, port="http,https"]
+maxretry = 10
+findtime = 5m
+bantime  = 1h
+
+# 已知的漏洞掃描路徑（wp-admin、phpmyadmin 之類）
+[nginx-botsearch]
+enabled  = true
+filter   = nginx-botsearch
+logpath  = /var/log/nginx/access.log
+action   = iptables-multiport[name=nginx-botsearch, port="http,https"]
+maxretry = 5
+findtime = 10m
+bantime  = 6h
+
+# 自訂：短時間內大量 4xx＝掃描器或灌水機器人（見 filter.d/avalo-scan.conf）
+# maxretry 抓 40 是為了不誤傷正常使用者（一般人不會 5 分鐘內產生 40 個 4xx）
+[avalo-scan]
+enabled  = true
+filter   = avalo-scan
+logpath  = /var/log/nginx/access.log
+action   = iptables-multiport[name=avalo-scan, port="http,https"]
+maxretry = 40
+findtime = 5m
+bantime  = 6h

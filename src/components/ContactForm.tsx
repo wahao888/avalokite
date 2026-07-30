@@ -37,6 +37,17 @@ export default function ContactForm() {
       <div className="form-title">{t("title")}</div>
       <div className="form-subtitle">{t("subtitle")}</div>
 
+      {/* Honeypot：一般使用者看不到，機器人填了就會被靜默丟棄 */}
+      <div
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+      >
+        <label>
+          {t("honeypot")}
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+        </label>
+      </div>
+
       {status === "ok" && <div className="form-feedback ok">{t("success")}</div>}
       {status === "err" && <div className="form-feedback err">{t("error")}</div>}
 

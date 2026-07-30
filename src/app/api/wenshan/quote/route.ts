@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
+import { clientIp, rateLimited } from "@/lib/rate-limit";
 
 // 文山木材行 線上估價單
 // 儲存沿用 Inquiry（service 作為來源識別），通知信寄 MAIL_OWNER
@@ -30,32 +31,11 @@ const schema = z.object({
   website: z.string().max(500).optional().or(z.literal("")),
 });
 
-// 簡易 in-memory rate limit（單機 node 部署，夠用）
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
-const hits = new Map<string, number[]>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const arr = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  if (arr.length >= MAX_PER_WINDOW) {
-    hits.set(ip, arr);
-    return true;
-  }
-  arr.push(now);
-  hits.set(ip, arr);
-  // 防止 Map 無限增長
-  if (hits.size > 5000) {
-    for (const [k, v] of hits) {
-      if (v.every((t) => now - t >= WINDOW_MS)) hits.delete(k);
-    }
-  }
-  return false;
-}
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (rateLimited(ip)) {
+  if (rateLimited(`wenshan-quote:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
