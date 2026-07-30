@@ -29,7 +29,7 @@ const C = {
       { n: "3D 互動", l: "原木斷面主視覺（WebGL）" },
       { n: "12 大類", l: "木料型錄・行內規格" },
       { n: "3 分鐘", l: "場域快選 → 線上估價" },
-      { n: "0 購物車", l: "詢價清單直通報價流程" },
+      { n: "師傅友善", l: "施工場地・工具寄放" },
     ],
     conv: {
       label: "怎麼運作",
@@ -61,6 +61,7 @@ const C = {
         { t: "才數計算機", d: "輸入寸×寸×尺立刻換算才數，展現只有行內才懂的貼心。" },
         { t: "運費試算", d: "雙北免運一目瞭然，外縣市選地區即估運費，與公告價同源不打架。" },
         { t: "線上估價表單", d: "三步驟三分鐘，送出即入後台名單並寄信通知，防機器人防灌水。" },
+        { t: "師傅設施專區", d: "把「可現場施工、可寄放工具」這個同業少有的優勢做成獨立段落與 FAQ，直接對木工師傅溝通。" },
         { t: "在地 SEO 佈局", d: "商家結構化資料（地址／營業時間／座標），綁定網域後即可搶在地搜尋。" },
       ],
     },
@@ -91,7 +92,7 @@ const C = {
       { n: "3D hero", l: "Interactive log cross-section (WebGL)" },
       { n: "12 categories", l: "Catalog in trade units" },
       { n: "3 minutes", l: "Venue picker → online estimate" },
-      { n: "No cart", l: "Quote list straight to pricing" },
+      { n: "Pro-friendly", l: "On-site workspace & tool storage" },
     ],
     conv: {
       label: "How it works",
@@ -123,6 +124,7 @@ const C = {
         { t: "Trade-unit calculator", d: "Instant conversion to 才 — insider-level thoughtfulness." },
         { t: "Freight estimator", d: "Free delivery zones at a glance; out-of-area fees estimated from one source of truth." },
         { t: "Online estimate form", d: "Three steps in three minutes; lands as a lead with email notification, bot-protected." },
+        { t: "Pro-facility section", d: "A dedicated section and FAQ for on-site workspace and tool storage — a rare edge, spoken directly to carpenters." },
         { t: "Local SEO groundwork", d: "Store structured data (address/hours/geo), ready to rank once the domain binds." },
       ],
     },

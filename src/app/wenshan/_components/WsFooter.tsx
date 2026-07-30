@@ -9,7 +9,7 @@ export default function WsFooter() {
         <div>
           <div className="ws-footer__brand">{SITE.name}</div>
           <p className="ws-footer__meta">
-            {SITE.tagline}・木料零售批發・代客裁切・雙北免費配送
+            {SITE.tagline}・木料零售批發・代客裁切・施工場地・雙北免費配送
           </p>
         </div>
         <div className="ws-footer__meta">
@@ -30,6 +30,9 @@ export default function WsFooter() {
           </div>
           <div>
             <Link href={`${WS}/quote`}>線上估價</Link>
+          </div>
+          <div>
+            <Link href={`${WS}#facility`}>師傅設施</Link>
           </div>
           <div>
             <Link href={`${WS}#delivery`}>運送方式</Link>

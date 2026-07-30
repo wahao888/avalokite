@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     template: "%s｜文山木材行",
   },
   description:
-    "文山木材行，深耕北投關渡近百年、傳承三代。角材、夾板、木心板、南方松現貨齊全，代客裁切，雙北工地免費配送。線上估價，黃老闆親自為你選料。",
+    "文山木材行，深耕北投關渡近百年、傳承三代。角材、夾板、木心板、南方松現貨齊全，代客裁切，雙北工地免費配送。提供師傅施工場地與工具寄放。線上估價，黃老闆親自為你選料。",
   robots: INDEXABLE ? undefined : { index: false, follow: false },
   openGraph: {
     title: "文山木材行｜北投關渡 木材・角材・夾板專門",
@@ -52,7 +52,8 @@ const jsonLd = {
   "@type": "Store",
   additionalType: "https://schema.org/HardwareStore",
   name: SITE.name,
-  description: "木材行：角材、夾板、板材零售批發，代客裁切，雙北免費配送。",
+  description:
+    "木材行：角材、夾板、板材零售批發，代客裁切，雙北免費配送，並提供木工師傅施工場地與工具寄放。",
   telephone: SITE.phoneIntl,
   address: {
     "@type": "PostalAddress",

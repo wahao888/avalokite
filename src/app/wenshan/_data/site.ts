@@ -22,8 +22,8 @@ export const SITE = {
     "https://www.google.com/maps/place/%E6%96%87%E5%B1%B1%E6%9C%A8%E6%9D%90%E8%A1%8C/@25.1260476,121.4690197,17z/",
   rating: "4.8",
   // 打烊時間為暫定，待客戶確認
-  hoursDisplay: "週二至週六 07:00–17:00（週日、週一公休）",
-  openingDays: ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  hoursDisplay: "週一至週六 07:00–17:00（週日公休）",
+  openingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
   opens: "07:00",
   closes: "17:00",
   // LINE 官方帳號開通後填入（例如 "@wenshanwood"），填入後全站 LINE 按鈕自動啟用

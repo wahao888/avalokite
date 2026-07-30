@@ -17,6 +17,7 @@ export default function WsNav() {
         </Link>
         <nav className="ws-nav__links" aria-label="主選單">
           <Link href={`${WS}/products`}>木料目錄</Link>
+          <Link href={`${WS}#facility`}>師傅設施</Link>
           <Link href={`${WS}#delivery`}>運送方式</Link>
           <Link href={`${WS}#about`}>關於我們</Link>
           <Link href={`${WS}#faq`}>常見問題</Link>

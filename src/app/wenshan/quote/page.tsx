@@ -54,7 +54,7 @@ export default async function QuotePage({
           <div className="ws-infocard">
             <h3>小提醒</h3>
             <ul className="ws-ul" style={{ fontSize: 14 }}>
-              <li>雙北工地免費配送，出車週二至週六。</li>
+              <li>雙北工地免費配送，出車週一至週六。</li>
               <li>料單、圖面內容直接貼在備註即可。</li>
               <li>送出後不會產生任何費用。</li>
             </ul>

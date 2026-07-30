@@ -48,7 +48,7 @@ export const SURCHARGE = 200;
 
 export const FREIGHT_NOTES = [
   `每趟基本運費內含 ${INCLUDED_CAI} 才，超過部分每滿 ${SURCHARGE_STEP_CAI} 才加收 NT$${SURCHARGE}。`,
-  "出車時間：週二至週六 07:00 起，依路線順序配送。",
+  "出車時間：週一至週六 07:00 起，依路線順序配送。",
   "大宗、長期配合另有優惠，歡迎來電洽談。",
   "以上為公告價，實際運費依現場狀況與吊掛需求為準。",
 ];

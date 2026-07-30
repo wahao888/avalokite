@@ -24,6 +24,7 @@ import VenuePicker from "./_components/VenuePicker";
 import FreightEstimator from "./_components/FreightEstimator";
 import CatalogIcon from "./_components/CatalogIcon";
 import ServiceIcon from "./_components/ServiceIcon";
+import FacilityIcon from "./_components/FacilityIcon";
 
 export const metadata = {
   title: "文山木材行｜北投關渡 木材・角材・夾板專門",
@@ -43,12 +44,35 @@ const SERVICES = [
   {
     id: "delivery",
     title: "工地配送到點",
-    desc: "雙北免費配送到工地，週二至週六 07:00 出車，跟上你的工班進度。",
+    desc: "雙北免費配送到工地，週一至週六 07:00 出車，跟上你的工班進度。",
   },
   {
     id: "consult",
     title: "選料諮詢",
     desc: "帶圖來、用講的都行。黃老闆親自看料給建議，該省的幫你省，該挑的幫你挑。",
+  },
+];
+
+const FACILITIES = [
+  {
+    id: "workspace",
+    title: "現場施工場地",
+    desc: "買了料不必先運回去。我們的場地開放給合作師傅當場裁切、組裝、加工，量好尺寸就地做完，直接載去工地。",
+    points: [
+      "省一趟運料往返，工期抓得更準",
+      "現場缺料、尺寸要改，隨時補、隨時裁",
+      "駐店師傅與設備就在旁邊，有問題馬上問",
+    ],
+  },
+  {
+    id: "storage",
+    title: "倉庫工具寄放",
+    desc: "電鋸、釘槍、手工具不用每天扛上下車。倉庫提供師傅寄放空間，來的時候拿、走的時候放。",
+    points: [
+      "重工具留在店裡，人到就開工",
+      "長期配合的師傅可長期寄放",
+      "料與工具放一起，備料一次搞定",
+    ],
   },
 ];
 
@@ -85,8 +109,16 @@ const FAQS = [
     a: "現金、轉帳皆可，工程客戶可談月結。詳細方式報價時一併說明。",
   },
   {
+    q: "可以在你們那裡施工嗎？",
+    a: "可以。我們的場地開放給合作的木工師傅使用，買了料當場就能裁切、組裝、加工，省下一趟運料往返。使用方式歡迎來電或到店跟黃老闆談。",
+  },
+  {
+    q: "工具可以寄放在你們倉庫嗎？",
+    a: "可以。倉庫提供師傅寄放工具的空間，電鋸、釘槍這些重家伙不用每天扛上下車，人到就能開工。長期配合的師傅也可以長期寄放。",
+  },
+  {
     q: "可以到現場自取嗎？",
-    a: "歡迎！關渡倉庫週二至週六 07:00 開門，來現場看料挑料，順便聽黃老闆講講木頭。",
+    a: "歡迎！關渡倉庫週一至週六 07:00 開門，來現場看料挑料，順便聽黃老闆講講木頭。",
   },
 ];
 
@@ -135,11 +167,11 @@ export default function WenshanHome() {
           </div>
           <div className="ws-trust__item">
             <span className="ws-trust__num">雙北免運</span>
-            <span className="ws-trust__label">配送到工地・週二至週六出車</span>
+            <span className="ws-trust__label">配送到工地・週一至週六出車</span>
           </div>
           <div className="ws-trust__item">
-            <span className="ws-trust__num">駐店師傅</span>
-            <span className="ws-trust__label">專業木工・裁切加工</span>
+            <span className="ws-trust__num">師傅友善</span>
+            <span className="ws-trust__label">施工場地・工具寄放</span>
           </div>
         </div>
       </section>
@@ -235,8 +267,43 @@ export default function WenshanHome() {
         </div>
       </section>
 
+      {/* 師傅專屬設施 —— 同業少有的差異化 */}
+      <section className="ws-section" id="facility">
+        <div className="ws-wrap">
+          <div className="ws-reveal">
+            <p className="ws-eyebrow">For pros</p>
+            <h2 className="ws-h2">師傅，這裡也是你的工作場</h2>
+            <p className="ws-lede">
+              不只賣料。我們把場地和倉庫開放給合作的木工師傅——買了料當場就能施工，
+              工具不用天天扛來扛去。這是同業少有的服務，也是我們最想給師傅的方便。
+            </p>
+          </div>
+          <div className="ws-grid ws-grid--2 ws-reveal">
+            {FACILITIES.map((f) => (
+              <div key={f.id} className="ws-card-i ws-card-i--wide">
+                <FacilityIcon id={f.id} />
+                <div>
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                  <ul className="ws-ul ws-card-i__points">
+                    {f.points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="ws-notes ws-reveal">
+            場地使用與倉租方式依需求與期間安排，歡迎來電 {SITE.phoneDisplay} 或到店與黃老闆談。
+          </p>
+        </div>
+      </section>
+
+      <GrainDivider />
+
       {/* 運送與運費 */}
-      <section className="ws-section" id="delivery">
+      <section className="ws-section ws-section--tint" id="delivery">
         <div className="ws-wrap">
           <div className="ws-reveal">
             <p className="ws-eyebrow">Delivery</p>
@@ -244,7 +311,7 @@ export default function WenshanHome() {
               運送方式 <span className="ws-badge-free">雙北工地免運</span>
             </h2>
             <p className="ws-lede">
-              自有車隊，週二至週六 07:00 出車。材料綁好墊好，到點不缺角。
+              自有車隊，週一至週六 07:00 出車。材料綁好墊好，到點不缺角。
             </p>
           </div>
           <div className="ws-reveal">

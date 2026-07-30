@@ -132,7 +132,7 @@ export default function QuoteForm({ initialVenue }: { initialVenue?: string }) {
       <div className="ws-success">
         <h2>估價需求已收到</h2>
         <p>
-          我們會在營業時間內（週二至週六 07:00–17:00）盡快回覆報價。
+          我們會在營業時間內（週一至週六 07:00–17:00）盡快回覆報價。
           <br />
           急件歡迎直接來電，黃老闆現場為你服務。
         </p>
@@ -312,7 +312,7 @@ export default function QuoteForm({ initialVenue }: { initialVenue?: string }) {
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-            <p className="ws-tool__hint">週日、週一公休，出車為週二至週六。</p>
+            <p className="ws-tool__hint">週日公休，出車為週一至週六。</p>
           </div>
           <div className="ws-field">
             <label htmlFor="ws-name">
