@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { genOrderId } from "@/lib/ecpay";
 import { getProduct, withTax } from "@/lib/products";
 import { notifyOwner } from "@/lib/mail";
+import { clientIp, rateLimited } from "@/lib/rate-limit";
+
+// 每筆結帳都會寫入 Order＋Payment（＋Subscription）。沒有限流的話，
+// 通用 /api/ 的 5r/s 等於每天可灌 43 萬筆進 SQLite。
+// 10 次/10 分鐘對真實購買者（含改單重送）綽綽有餘。
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_PER_WINDOW = 10;
 
 const schema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -25,6 +32,10 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (rateLimited(`checkout:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();

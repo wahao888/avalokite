@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildAioCheckout, buildPeriodCheckout } from "@/lib/ecpay";
 import { getProduct } from "@/lib/products";
+import { clientIp, rateLimited } from "@/lib/rate-limit";
+
+// 這頁的隱藏欄位會帶出該筆訂單的品名與金額，交易編號猜中即可讀取。
+// 20 次/10 分鐘足夠真實付款者（含重新整理），但擋掉編號列舉。
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_PER_WINDOW = 20;
 
 // 產生自動送出的綠界付款表單頁
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ mtn: string }> }
 ) {
+  if (rateLimited(`pay:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
+
   const { mtn } = await params;
   if (!/^[A-Z0-9]{4,20}$/.test(mtn)) {
     return NextResponse.json({ error: "bad trade no" }, { status: 400 });
