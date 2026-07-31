@@ -106,6 +106,40 @@ sudo certbot renew --dry-run
 3. `deploy/domains.txt` 加該網域與 `www.` 版本，跑 certbot `--expand`。
 4. 子網域維持可用並 301 轉址至新網域，**免費保留 6 個月**（合約條款）。
 
+## 3.6 信件寄送與網域信譽
+
+**現況（2026-07-31 查證）**：所有通知信（主站詢問單、訂單、客戶站表單）都從
+`service@chaingull.com` 經 Google Workspace（`smtp.gmail.com:587`）寄出。
+chaingull.com 的 SPF／DKIM／DMARC 齊全且對齊，信件驗證沒有問題。
+
+**avalokite.xyz 本身不寄信**，應維持以下防偽造姿態（記錄設在 GoDaddy）：
+
+| 類型 | 名稱 | 值 | 用途 |
+|---|---|---|---|
+| TXT | `@` | `v=spf1 include:_spf.google.com -all` | 只有 Google 可代寄，其餘硬性拒絕 |
+| TXT | `_dmarc` | `v=DMARC1; p=reject; adkim=s; aspf=s; rua=mailto:service@chaingull.com` | 偽造直接拒收；報告寄給自己 |
+
+外加一筆設在 **chaingull.com**（不是 avalokite.xyz）的授權記錄，否則跨網域的
+DMARC 報告多數郵件商不會寄：
+
+| 類型 | 名稱 | 值 |
+|---|---|---|
+| TXT | `avalokite.xyz._report._dmarc` | `v=DMARC1` |
+
+> ⚠️ **不要加 null MX（`MX 0 .`）**。法務頁（`/legal/*`）掛著 `hello@avalokite.xyz`
+> （來源 `src/lib/site.ts`），加了就等於永久保證該地址退信。
+> 目前 avalokite.xyz 無 MX 且 A 記錄那台沒跑 SMTP，**寄到 hello@ 其實已經一律退信**——
+> 要嘛設轉寄／Workspace 別名網域收下來，要嘛把 site.ts 的 `email` 改成實際收得到的地址。
+
+**日後把交易信搬離 Gmail 時**（客戶變多、不想再讓客戶表單的流量影響商務信箱信譽）：
+1. 選 Resend 或 AWS SES，寄件網域用 `mail.avalokite.xyz`（與 chaingull.com 完全隔離，
+   且對客戶而言品牌一致）。
+2. 在該子網域設 SPF 與服務商給的 DKIM。avalokite.xyz 現有的 DMARC 會自動涵蓋子網域，
+   不必另設 `_dmarc.mail`。
+3. 只改 `.env` 的 `SMTP_*` 與 `MAIL_FROM`，程式碼不動——`notifyTenant()` 已經是
+   「From 固定自有網域＋顯示名做租戶品牌化＋Reply-To 指向提交者」的正確寫法。
+4. 用 mail-tester.com 確認 SPF/DKIM/DMARC 三項皆通過再切換。
+
 ## 4. 綠界正式環境切換清單
 
 1. 申請綠界「特約商店」：網站需已上線並含 **價格、聯絡方式、退款政策**（本站已內建 `/legal/refund` 等頁）。
