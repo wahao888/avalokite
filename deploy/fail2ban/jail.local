@@ -10,12 +10,15 @@ bantime = 1h
 findtime = 10m
 
 # nginx 限流被觸發（error.log 出現 limiting requests）→ 封鎖
+# maxretry 從 10 放寬到 30：Next.js 的 _rsc 預抓是一次一整批，正常使用者
+# 開幾個頁面就可能連續觸發十幾次限流，10 次會誤封真人（2026-07-30 差點封到 Barry 自己）。
+# 真正的掃描器有 avalo-scan 那個 jail 負責，這個 jail 只擋持續性的洗版。
 [nginx-limit-req]
 enabled  = true
 filter   = nginx-limit-req
 logpath  = /var/log/nginx/error.log
 action   = iptables-multiport[name=nginx-limit-req, port="http,https"]
-maxretry = 10
+maxretry = 30
 findtime = 5m
 bantime  = 1h
 
