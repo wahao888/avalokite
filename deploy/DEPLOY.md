@@ -58,11 +58,53 @@ MAIL_OWNER="<你自己的收件信箱>"
 
 ## 3. HTTPS（Let's Encrypt，自動續期）
 
+憑證涵蓋的網域清單維護在 **`deploy/domains.txt`**（主站 + 每個客戶站子網域），
+用同一張憑證涵蓋全部，新增客戶時 `--expand` 擴充即可。
+
 ```bash
 sudo snap install --classic certbot
-sudo certbot --nginx -d yourdomain.com
+sudo certbot --nginx --expand $(sed '/^#/d;/^$/d;s/^/-d /' /opt/avalo/app/deploy/domains.txt | tr '\n' ' ')
 sudo certbot renew --dry-run
 ```
+
+## 3.5 客戶站（多租戶子網域）
+
+客戶站掛在 `<slug>.avalokite.xyz`，由 Next 的 `src/proxy.ts` 依 `Host` 改寫到內部路由
+`/sites/<slug>/*`。子目錄形式（`avalokite.xyz/<slug>`）已淘汰——會稀釋主站主題，
+且落入 Google site reputation abuse（寄生內容）政策範圍。
+
+**一次性設定（只做一次）**
+
+1. GoDaddy DNS 加 A 記錄：`*` → `13.209.138.204`。之後新增客戶完全不用碰 DNS。
+2. nginx 的 `server_name` 需含萬用子網域，並加上 default server 擋 Host 亂送。
+   `deploy/nginx.conf` 已是正確版本，但**正式機上的 `/etc/nginx/sites-available/avalo`
+   已被 certbot 改寫過（多了 443 區塊），不可直接覆蓋**，請手動比對這兩處：
+
+   ```nginx
+   # 主站台（80 與 443 兩個 server 區塊都要改）
+   server_name avalokite.xyz www.avalokite.xyz *.avalokite.xyz;
+   ```
+   並把 `deploy/nginx.conf` 最上方兩個 `default_server` 區塊複製過去。
+   改完 `sudo nginx -t && sudo systemctl reload nginx`。
+
+**新增一家客戶**
+
+1. `src/lib/tenants.ts` 的 `TENANTS` 加一筆（`slug` 即子網域，不可用 `RESERVED` 內的字）。
+2. 建站頁面：`cp -r src/app/sites/wenshan src/app/sites/<slug>` 後改資料與樣式。
+   刻意不做通用模板——各站自帶 root layout 與 CSS，App Router 會分別 code-split，
+   互不影響；共用元件的回歸測試成本反而更高。
+3. `deploy/domains.txt` 加一行 `<slug>.avalokite.xyz`。
+4. 正式機 `.env` 加該租戶的通知收件人（例 `TENANT_NOTIFY_<SLUG>=owner@example.com`，
+   逗號分隔可多人）。**`.env` 被 rsync 排除，必須直接改伺服器上那份再 restart。**
+5. 部署後跑第 3 節的 certbot `--expand`。
+
+**客戶改綁自有網域**
+
+1. 客戶把該網域的 A 記錄指到 `13.209.138.204`。
+2. `tenants.ts` 該筆填 `domain: "example.com.tw"`，並視情況把 `indexable` 改 `true`
+   （同時把該站 `_data/site.ts` 的 `INDEXABLE` 一併改）。
+3. `deploy/domains.txt` 加該網域與 `www.` 版本，跑 certbot `--expand`。
+4. 子網域維持可用並 301 轉址至新網域，**免費保留 6 個月**（合約條款）。
 
 ## 4. 綠界正式環境切換清單
 

@@ -613,6 +613,16 @@ button { font-family: inherit; }
   border-color: rgba(240, 235, 227, 0.2);
   color: rgba(240, 235, 227, 0.6);
 }
+.price-promo-note {
+  margin-top: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+  color: var(--wood);
+}
+.price-card.featured .price-promo-note { color: rgba(240, 235, 227, 0.6); }
+
 .price-cta { margin-top: auto; padding-top: 1.5rem; }
 .price-cta .btn-primary, .price-cta .btn-ghost { width: 100%; text-align: center; padding: 0.8rem 1rem; }
 .price-card.featured .btn-ghost { color: var(--paper); border-color: rgba(240,235,227,0.4); }

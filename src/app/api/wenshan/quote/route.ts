@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { notifyOwner } from "@/lib/mail";
+import { notifyTenant } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { getTenant } from "@/lib/tenants";
 
 // 文山木材行 線上估價單
-// 儲存沿用 Inquiry（service 作為來源識別），通知信寄 MAIL_OWNER
+//
+// 租戶由「路徑常數」決定，不看 Host：API 不經過 proxy.ts 的 Host 改寫，
+// 而 Host 是使用者可控的輸入，拿它決定資料要寫進誰的帳戶等於開後門。
+const TENANT = getTenant("wenshan")!;
 
 const schema = z.object({
   venue: z.string().trim().max(50).optional().or(z.literal("")),
@@ -35,7 +39,8 @@ const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 
 export async function POST(req: NextRequest) {
-  if (rateLimited(`wenshan-quote:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
+  // key 帶 tenant：一家客戶被灌爆不影響其他客戶站的表單
+  if (rateLimited(`quote:${TENANT.slug}:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
@@ -77,22 +82,27 @@ export async function POST(req: NextRequest) {
     .filter((l): l is string => l !== null)
     .join("\n");
 
+  // 先落庫再寄信：SMTP 掛掉時客戶後台仍看得到單，不會漏。
   const inquiry = await prisma.inquiry.create({
     data: {
+      tenantId: TENANT.slug,
       name: d.name,
       email: d.email || "",
       phone: d.phone,
       company: [d.venue, d.projectType].filter(Boolean).join("／") || null,
-      service: "文山木材行報價",
+      service: "線上估價單",
       budget: d.region || null,
       message,
+      payload: JSON.stringify(d),
       locale: "zh-TW",
     },
   });
 
-  await notifyOwner(
-    `[文山木材行] 新估價單 #${inquiry.id} — ${d.name}${d.venue ? `（${d.venue}）` : ""}`,
-    [
+  const notified = await notifyTenant(TENANT, {
+    subject: `[${TENANT.name}] 新估價單 #${inquiry.id} — ${d.name}${d.venue ? `（${d.venue}）` : ""}`,
+    // 提交者填了 email 才設 Reply-To，讓老闆按「回覆」就能直接回客人
+    replyTo: d.email || undefined,
+    text: [
       `姓名：${d.name}`,
       `電話：${d.phone}`,
       `Email：${d.email || "-"}`,
@@ -100,7 +110,12 @@ export async function POST(req: NextRequest) {
       "",
       message,
     ].join("\n"),
-  );
+  });
+
+  // 記錄通知信是否真的送出；後台會把未送達的單標記出來
+  if (notified) {
+    await prisma.inquiry.update({ where: { id: inquiry.id }, data: { notified: true } });
+  }
 
   return NextResponse.json({ ok: true });
 }

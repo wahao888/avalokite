@@ -54,9 +54,13 @@ export async function POST(req: NextRequest) {
       locale: d.locale ?? "zh-TW",
     },
   });
-  await notifyOwner(
+  const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
     `姓名：${d.name}\nEmail：${d.email}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message}`
   );
+  // 後台會把通知信未送達的單標記出來（SMTP 掛掉時仍不會漏單）
+  if (notified) {
+    await prisma.inquiry.update({ where: { id: inquiry.id }, data: { notified: true } });
+  }
   return NextResponse.json({ ok: true });
 }

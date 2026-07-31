@@ -1,0 +1,19 @@
+# Let's Encrypt 憑證涵蓋的網域清單，一行一個。
+#
+# 新增客戶站的流程（每家約 30 秒）：
+#   1. 在 src/lib/tenants.ts 的 TENANTS 加一筆（slug 就是子網域）
+#   2. 在本檔加一行 <slug>.avalokite.xyz
+#   3. 部署後於伺服器執行：
+#        sudo certbot --nginx --expand $(sed '/^#/d;/^$/d;s/^/-d /' /opt/avalo/app/deploy/domains.txt | tr '\n' ' ')
+#        sudo certbot renew --dry-run
+#
+# DNS 不用動：GoDaddy 已設 A 記錄 * → 13.209.138.204，所有子網域自動解析。
+#
+# 為什麼不用 wildcard 憑證：wildcard 需要 DNS-01 挑戰，而 GoDaddy 的 Domains API
+# 有帳號門檻、certbot-dns-godaddy 是維護不穩的第三方 plugin，且把 DNS API 金鑰放在
+# 跑客戶站的機器上，爆炸半徑不成比例。單張憑證上限 100 個名稱，10 家客戶只用 12 個。
+# 真的超過 ~20 個名稱時，換 DNS 商到 Cloudflare／Route 53（有官方 plugin）比硬啃 GoDaddy 便宜。
+
+avalokite.xyz
+www.avalokite.xyz
+wenshan.avalokite.xyz

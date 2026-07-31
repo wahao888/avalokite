@@ -66,17 +66,29 @@ model Subscription {
   updatedAt       DateTime @updatedAt
 }
 
-// 聯絡 / 客製需求詢問單
+// 聯絡 / 客製需求詢問單。同時承載客戶站（多租戶）的表單提交。
 model Inquiry {
   id        Int      @id @default(autoincrement())
+  // 客戶站 slug（見 src/lib/tenants.ts）。null = Avalo 主站自己的詢問單。
+  // 刻意存字串而非 FK：租戶登錄表住在程式碼裡，沒有 Tenant table。
+  // 必須 nullable —— SQLite 的 ALTER TABLE ADD COLUMN 只有加 nullable 欄位時
+  // 才是 metadata-only 操作，加 NOT NULL 會整表重建。
+  tenantId  String?
   name      String
   email     String
   phone     String?
   company   String?
-  service   String?
+  service   String? // 表單名稱（例：線上估價單）
   budget    String?
-  message   String
+  message   String  // 人類可讀全文
+  payload   String? // JSON：結構化欄位，各家表單形狀不同就靠這個
   locale    String   @default("zh-TW")
   handled   Boolean  @default(false)
+  handledAt DateTime?
+  notified  Boolean  @default(false) // 通知信是否真的寄出（sendMail 回傳值）
   createdAt DateTime @default(now())
+
+  // 服務 portal 的「本租戶依時間倒序」列表與 CSV 匯出。
+  // handled 不另建索引：單租戶幾百到幾千列，SQLite 全掃比走索引還快。
+  @@index([tenantId, createdAt])
 }

@@ -6,6 +6,7 @@ import {
   monthlyProducts,
   oneTimeProducts,
   plansUsingCare,
+  promoProducts,
   type Product,
 } from "@/lib/products";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -15,10 +16,11 @@ function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
   const t = useTranslations("pricing");
   const info = product.i18n[locale];
   const applies = product.type === "monthly" ? plansUsingCare(product.sku) : [];
+  const badge = product.badge?.[locale] ?? (product.featured ? t("featured") : null);
 
   return (
-    <div className={`price-card${product.featured ? " featured" : ""}`}>
-      {product.featured && <div className="featured-badge">{t("featured")}</div>}
+    <div className={`price-card${product.featured || product.badge ? " featured" : ""}`}>
+      {badge && <div className="featured-badge">{badge}</div>}
       <div className="price-label">{info.label}</div>
       <div className="price-name">{info.name}</div>
       <p className="price-desc">{info.desc}</p>
@@ -41,6 +43,9 @@ function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
           {locale === "en" ? ": " : "："}
           {applies.map((p) => p.i18n[locale].name).join(locale === "en" ? ", " : "、")}
         </div>
+      )}
+      {product.promoNote && (
+        <div className="price-promo-note">{product.promoNote[locale]}</div>
       )}
       <div className="price-cta">
         <AddToCartButton sku={product.sku} />
@@ -71,6 +76,18 @@ export default function Pricing() {
           <div className="pricing-notice">{t("notice")}</div>
         </div>
       </div>
+
+      {promoProducts().length > 0 && (
+        <>
+          <div className="pricing-subhead">{t("promoHeading")}</div>
+          <p className="section-intro addon-intro fade-in">{t("promoIntro")}</p>
+          <div className="pricing-grid fade-in">
+            {promoProducts().map((p) => (
+              <PriceCard key={p.sku} product={p} locale={locale} />
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="pricing-subhead">{t("onetimeHeading")}</div>
       <div className="pricing-grid fade-in">

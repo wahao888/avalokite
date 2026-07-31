@@ -1,0 +1,111 @@
+/* 客戶後台。刻意極簡：使用者是客戶的老闆，不是設計評審。
+   不沿用客戶站的 ws- 樣式系統——後台跨租戶共用，不能綁任何一家的視覺。 */
+
+:root {
+  --p-ink: #23201c;
+  --p-paper: #f5f2ec;
+  --p-card: #fffdf9;
+  --p-border: #ddd6ca;
+  --p-muted: #7d7568;
+  --p-accent: #4f6b4a;
+  --p-warn: #a8551f;
+}
+
+* { box-sizing: border-box; }
+
+body.portal {
+  margin: 0;
+  background: var(--p-paper);
+  color: var(--p-ink);
+  font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+.p-wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+.p-head {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  align-items: baseline; justify-content: space-between;
+  padding-bottom: 1rem; border-bottom: 2px solid var(--p-ink); margin-bottom: 1.5rem;
+}
+.p-title { font-size: 1.3rem; font-weight: 700; margin: 0; }
+.p-sub { color: var(--p-muted); font-size: 0.85rem; margin: 0.2rem 0 0; }
+.p-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+
+.p-btn {
+  display: inline-block; padding: 0.55rem 1rem; border: 1px solid var(--p-ink);
+  background: var(--p-ink); color: var(--p-paper); border-radius: 2px;
+  font-size: 0.85rem; text-decoration: none; cursor: pointer; font-family: inherit;
+}
+.p-btn:hover { opacity: 0.85; }
+.p-btn-ghost { background: transparent; color: var(--p-ink); }
+.p-btn-link {
+  background: none; border: none; padding: 0; color: var(--p-accent);
+  text-decoration: underline; cursor: pointer; font: inherit; font-size: 0.85rem;
+}
+
+.p-stats { display: flex; gap: 1.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+.p-stat { font-size: 0.85rem; color: var(--p-muted); }
+.p-stat b { display: block; font-size: 1.6rem; color: var(--p-ink); line-height: 1.2; }
+
+.p-filters { display: flex; gap: 0.8rem; margin-bottom: 1rem; font-size: 0.85rem; }
+.p-filters a { color: var(--p-muted); text-decoration: none; padding-bottom: 2px; }
+.p-filters a.on { color: var(--p-ink); font-weight: 700; border-bottom: 2px solid var(--p-accent); }
+
+/* 表格在窄螢幕自己橫向捲動，頁面本身不橫捲 */
+.p-tablewrap { overflow-x: auto; border: 1px solid var(--p-border); background: var(--p-card); }
+.p-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 700px; }
+.p-table th {
+  text-align: left; padding: 0.6rem 0.8rem; background: var(--p-paper);
+  border-bottom: 1px solid var(--p-border); font-size: 0.72rem;
+  letter-spacing: 0.05em; color: var(--p-muted); font-weight: 600; white-space: nowrap;
+}
+.p-table td { padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--p-border); vertical-align: top; }
+.p-table tr.done { opacity: 0.55; }
+.p-table a { color: var(--p-ink); }
+.p-msg { max-width: 34ch; color: var(--p-muted); font-size: 0.8rem; }
+.p-nowrap { white-space: nowrap; }
+.p-warn { color: var(--p-warn); font-size: 0.75rem; }
+.p-empty { padding: 3rem 1rem; text-align: center; color: var(--p-muted); }
+
+.p-pager { display: flex; gap: 1rem; justify-content: center; margin-top: 1.2rem; font-size: 0.85rem; }
+.p-pager a { color: var(--p-accent); }
+
+/* 詳情頁 */
+.p-detail { background: var(--p-card); border: 1px solid var(--p-border); padding: 1.2rem; }
+.p-field { display: grid; grid-template-columns: 8rem 1fr; gap: 0.6rem; padding: 0.5rem 0; border-bottom: 1px solid var(--p-border); }
+.p-field:last-child { border-bottom: none; }
+.p-field dt { color: var(--p-muted); font-size: 0.8rem; }
+.p-field dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.p-back { display: inline-block; margin-bottom: 1rem; color: var(--p-accent); font-size: 0.85rem; }
+
+/* 登入 */
+.p-login { max-width: 22rem; margin: 12vh auto; padding: 0 1rem; }
+.p-login h1 { font-size: 1.2rem; margin: 0 0 0.3rem; }
+.p-login p { color: var(--p-muted); font-size: 0.85rem; margin: 0 0 1.4rem; }
+.p-login input {
+  width: 100%; padding: 0.7rem 0.8rem; border: 1px solid var(--p-border);
+  background: var(--p-card); border-radius: 2px; font-size: 1rem; font-family: inherit;
+  margin-bottom: 0.8rem; color: var(--p-ink);
+}
+.p-login .p-btn { width: 100%; }
+.p-error {
+  background: #f8e8e0; border: 1px solid var(--p-warn); color: var(--p-warn);
+  padding: 0.6rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .p-field { grid-template-columns: 1fr; gap: 0.2rem; }
+  .p-head { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --p-ink: #ece7de; --p-paper: #1a1815; --p-card: #22201c;
+    --p-border: #3b372f; --p-muted: #968d7e; --p-accent: #9dbb95; --p-warn: #e0a06f;
+  }
+  .p-btn { background: var(--p-ink); color: var(--p-paper); }
+  .p-error { background: #3a2418; }
+}

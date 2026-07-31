@@ -3,6 +3,10 @@
 
 export type ProductType = "onetime" | "monthly";
 
+// 促銷方案自成一組，於定價區獨立呈現。
+// 刻意不與正式方案並排：避免 NT$10,000 的 Launch 與 NT$39,000 的形象官網互相打架。
+export type ProductGroup = "promo";
+
 export interface ProductI18n {
   label: string; // 小標（方案類別）
   name: string;
@@ -16,6 +20,9 @@ export interface Product {
   type: ProductType;
   price: number; // 未稅 TWD；monthly 為每月
   featured?: boolean;
+  group?: ProductGroup; // 不設 = 一般方案
+  badge?: { "zh-TW": string; en: string }; // 覆寫 featured-badge 文字
+  promoNote?: { "zh-TW": string; en: string }; // 卡片底部小字（席次／條件）
   // 一次性方案的建議接續維護：建置已含首月，第二個月起可選訂閱此月費方案
   recommendedCareSku?: string;
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
@@ -272,6 +279,93 @@ export const PRODUCTS: Product[] = [
       },
     },
   },
+  // ─── 首波創始客戶計畫（限量促銷）───
+  // 「0 元建置」不是獨立 SKU：單購 launch-care（無一次性品項）時，
+  // checkout 的 hasBuild=false 分支會讓定期定額當月起扣，正是該方案要的行為。
+  {
+    sku: "launch-setup",
+    type: "onetime",
+    price: 10000,
+    group: "promo",
+    recommendedCareSku: "launch-care",
+    badge: { "zh-TW": "限量 10 席", en: "10 seats only" },
+    promoNote: {
+      "zh-TW": "首波創始客戶名額；創始價於訂閱存續期間鎖定，不隨日後定價調整。",
+      en: "Founding-client seats. Your rate stays locked for as long as the subscription runs.",
+    },
+    marketRange: {
+      "zh-TW": "Avalo 標準形象官網 NT$39,000",
+      en: "Avalo Brand Website NT$39,000",
+    },
+    i18n: {
+      "zh-TW": {
+        label: "創始客戶計畫",
+        name: "Launch 快啟官網",
+        desc: "託管式形象官網：建置、主機、表單後台一次到位，10 個工作天上線。",
+        features: [
+          "5 頁以內形象官網，全客製設計",
+          "專屬表單後台＋新訊即時 Email 通知",
+          "子網域與 SSL 憑證（隨時可改綁自有網域）",
+          "GA4、sitemap、結構化資料基礎建置",
+          "含部署上線與第一個月維護",
+        ],
+        unit: "一次性",
+      },
+      en: {
+        label: "Founding Client Program",
+        name: "Launch Website",
+        desc: "A managed brand site: build, hosting and a form dashboard, live in 10 business days.",
+        features: [
+          "Up to 5 pages, fully custom design",
+          "Private form dashboard + instant email alerts",
+          "Subdomain with SSL (custom domain any time)",
+          "GA4, sitemap and structured data",
+          "Deployment + first month of care included",
+        ],
+        unit: "one-time",
+      },
+    },
+  },
+  {
+    sku: "launch-care",
+    type: "monthly",
+    price: 2000,
+    group: "promo",
+    badge: { "zh-TW": "創始價鎖定", en: "Rate locked" },
+    promoNote: {
+      "zh-TW": "亦可 0 元建置啟動，需承諾 24 個月；單購此方案即為該路徑。",
+      en: "Also available with zero build fee on a 24-month term — subscribe to this plan alone.",
+    },
+    marketRange: { "zh-TW": "行情 NT$1,500–5,000/月", en: "Market NT$1.5k–5k/mo" },
+    i18n: {
+      "zh-TW": {
+        label: "創始客戶計畫",
+        name: "Launch 託管維護",
+        desc: "網站上線之後的一切：主機、備份、監控、改稿與表單後台。",
+        features: [
+          "主機代管、SSL 憑證與每日自動備份",
+          "表單後台、Email 通知與資料 CSV 匯出",
+          "每月 1 小時內容修改（文字、圖片、公告）",
+          "安全更新與監控告警",
+          "資料隨時可匯出，解約提供 6 個月轉址",
+        ],
+        unit: "每月",
+      },
+      en: {
+        label: "Founding Client Program",
+        name: "Launch Care",
+        desc: "Everything after launch: hosting, backups, monitoring, edits and your form dashboard.",
+        features: [
+          "Hosting, SSL and daily automated backups",
+          "Form dashboard, email alerts and CSV export",
+          "1 hour of content edits every month",
+          "Security updates and uptime alerts",
+          "Export your data any time; 6-month redirect on exit",
+        ],
+        unit: "per month",
+      },
+    },
+  },
   // ─── 月費訂閱 ───
   {
     sku: "care-basic",
@@ -375,8 +469,12 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const getProduct = (sku: string) => PRODUCTS.find((p) => p.sku === sku);
-export const oneTimeProducts = () => PRODUCTS.filter((p) => p.type === "onetime");
-export const monthlyProducts = () => PRODUCTS.filter((p) => p.type === "monthly");
+// 促銷方案由 promoProducts() 獨立呈現，故從兩個常規清單排除（見 ProductGroup 註解）
+export const oneTimeProducts = () =>
+  PRODUCTS.filter((p) => p.type === "onetime" && !p.group);
+export const monthlyProducts = () =>
+  PRODUCTS.filter((p) => p.type === "monthly" && !p.group);
+export const promoProducts = () => PRODUCTS.filter((p) => p.group === "promo");
 
 // 反查：哪些一次性方案建議搭配此維護（用於定價區「適用方案」標註）
 export const plansUsingCare = (careSku: string) =>

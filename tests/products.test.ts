@@ -6,6 +6,7 @@ import {
   oneTimeProducts,
   monthlyProducts,
   plansUsingCare,
+  promoProducts,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -18,6 +19,42 @@ describe("withTax（5% 營業稅，四捨五入）", () => {
     expect(withTax(2990)).toBe(3140); // 3139.5 → 3140
     expect(withTax(5990)).toBe(6290); // 6289.5 → 6290
     expect(withTax(9900)).toBe(10395);
+  });
+  it("促銷方案含稅金額", () => {
+    expect(withTax(10000)).toBe(10500);
+    expect(withTax(2000)).toBe(2100);
+  });
+});
+
+describe("促銷方案（首波創始客戶計畫）", () => {
+  it("兩個 SKU 都存在且標為 promo", () => {
+    for (const sku of ["launch-setup", "launch-care"]) {
+      const p = getProduct(sku);
+      expect(p, `${sku} 應存在`).toBeTruthy();
+      expect(p!.group).toBe("promo");
+    }
+  });
+
+  it("promo 與常規清單互斥（避免定價區並排互打）", () => {
+    const promo = new Set(promoProducts().map((p) => p.sku));
+    expect(promo.size).toBeGreaterThan(0);
+    for (const p of [...oneTimeProducts(), ...monthlyProducts()]) {
+      expect(promo.has(p.sku), `${p.sku} 不應同時出現在常規清單`).toBe(false);
+    }
+  });
+
+  it("每個 promo 方案都有中英皆備的 badge 與 promoNote", () => {
+    for (const p of promoProducts()) {
+      for (const locale of ["zh-TW", "en"] as const) {
+        expect(p.badge?.[locale], `${p.sku} badge.${locale}`).toBeTruthy();
+        expect(p.promoNote?.[locale], `${p.sku} promoNote.${locale}`).toBeTruthy();
+      }
+    }
+  });
+
+  it("launch-setup 指向 launch-care，反查也成立", () => {
+    expect(getProduct("launch-setup")!.recommendedCareSku).toBe("launch-care");
+    expect(plansUsingCare("launch-care").map((p) => p.sku)).toEqual(["launch-setup"]);
   });
 });
 

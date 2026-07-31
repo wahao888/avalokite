@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Serif_TC, Noto_Sans_TC, DM_Mono } from "next/font/google";
-import { SITE, INDEXABLE, WS } from "./_data/site";
+import { getTenant, tenantOrigin } from "@/lib/tenants";
+import { SITE, INDEXABLE } from "./_data/site";
 import { QuoteListProvider } from "./_components/QuoteListProvider";
 import QuoteListFab from "./_components/QuoteListFab";
 import WsNav from "./_components/WsNav";
@@ -27,8 +28,15 @@ const mono = DM_Mono({
   weight: ["400", "500"],
 });
 
+// 本站的 origin 由租戶登錄表決定（子網域，或客戶綁定自有網域後改用該網域），
+// 不能沿用 NEXT_PUBLIC_SITE_URL——那是 Avalo 主站的網址。
+const ORIGIN = tenantOrigin(getTenant("wenshan")!);
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(ORIGIN),
+  // favicon 放 public/ 而非 app/ 內：app/ 內的 icon.svg 會產生帶內部路徑
+  // （/sites/wenshan/icon.svg）的 <link>，把改寫前的實作路徑洩進 HTML。
+  icons: { icon: "/sites/wenshan/icon.svg" },
   title: {
     default: "文山木材行｜北投關渡 木材・角材・夾板專門",
     template: "%s｜文山木材行",
@@ -42,11 +50,10 @@ export const metadata: Metadata = {
       "深耕關渡近百年、傳承三代。木料現貨齊全、代客裁切，雙北工地免費配送。",
     type: "website",
     locale: "zh_TW",
-    images: [{ url: "/wenshan/og.png", width: 1200, height: 630 }],
+    images: [{ url: "/sites/wenshan/og.png", width: 1200, height: 630 }],
   },
 };
 
-// 客戶網域綁定後：INDEXABLE 改 true（_data/site.ts），並於 next.config.ts 加 host rewrite
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Store",
@@ -74,7 +81,7 @@ const jsonLd = {
     opens: SITE.opens,
     closes: SITE.closes,
   },
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000") + WS,
+  url: ORIGIN,
 };
 
 export default function WenshanLayout({ children }: { children: React.ReactNode }) {

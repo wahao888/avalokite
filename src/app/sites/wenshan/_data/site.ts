@@ -1,8 +1,11 @@
 // 文山木材行 — 站點基本資料（客戶確認後可直接修改此檔）
-// 上線遷移：客戶網域綁定後，把 INDEXABLE 改為 true，並在 next.config.ts 加 host-based rewrite
-//   { source: "/:path*", has: [{ type: "host", value: "客戶網域" }], destination: "/wenshan/:path*" }
+//
+// 本站掛在 wenshan.avalokite.xyz，由 src/proxy.ts 依 Host 改寫到 /sites/wenshan/*，
+// 所以站內連結一律用網址列上看得到的外部路徑（/、/products、/quote），WS 前綴為空字串。
+// 客戶綁自有網域時：於 src/lib/tenants.ts 的該筆 tenant 填 domain，並把下方 INDEXABLE 改 true。
 
-export const WS = "/wenshan";
+/** 站內連結前綴。子網域掛載下為空字串；保留此常數是為了日後改回子目錄時只需改這裡。 */
+export const WS = "";
 
 export const SITE = {
   name: "文山木材行",
@@ -31,4 +34,5 @@ export const SITE = {
 } as const;
 
 // 客戶網域綁定前先不進索引，避免與未來正式網域重複內容
+// 註：robots.txt 由 src/proxy.ts 依 tenants.ts 的 indexable 產生，兩處請一併調整
 export const INDEXABLE = false;

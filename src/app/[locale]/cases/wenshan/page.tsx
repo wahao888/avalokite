@@ -1,8 +1,10 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { getTenant, tenantOrigin } from "@/lib/tenants";
 import type { Locale } from "@/i18n/routing";
 
-const SITE_URL = "/wenshan";
+// 客戶站已改掛子網域，主站連過去要用絕對網址（同源相對路徑會落回 apex 的 301）
+const SITE_URL = tenantOrigin(getTenant("wenshan")!);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

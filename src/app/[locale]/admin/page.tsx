@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/admin-auth";
 import { getProduct } from "@/lib/products";
+import { getTenant } from "@/lib/tenants";
 import CancelSubButton from "@/components/CancelSubButton";
 
 export const dynamic = "force-dynamic";
@@ -203,6 +204,7 @@ export default async function AdminPage({
           <thead>
             <tr>
               <th style={headStyle}>#</th>
+              <th style={headStyle}>來源</th>
               <th style={headStyle}>客戶</th>
               <th style={headStyle}>服務 / 預算</th>
               <th style={headStyle}>內容</th>
@@ -214,6 +216,15 @@ export default async function AdminPage({
             {inquiries.map((q) => (
               <tr key={q.id} style={q.handled ? { opacity: 0.5 } : undefined}>
                 <td style={cellStyle}>{q.id}</td>
+                <td style={cellStyle}>
+                  {getTenant(q.tenantId)?.name ?? "Avalo 主站"}
+                  {!q.notified && (
+                    <>
+                      <br />
+                      <span title="通知信未送出，請確認 SMTP 與該租戶的收件人設定">⚠ 未通知</span>
+                    </>
+                  )}
+                </td>
                 <td style={cellStyle}>
                   {q.name}
                   <br />
