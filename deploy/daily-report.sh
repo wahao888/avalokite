@@ -37,7 +37,13 @@ top_bad=$(printf '%s' "$ALL" | awk '$9 ~ /^4/ {print $1}' | sort | uniq -c | sor
 probes=$(printf '%s' "$ALL" | awk '$9 == 444' | grep -c . || true)
 probe_ips=$(printf '%s' "$ALL" | awk '$9 == 444 {print $1}' | sort -u | grep -c . || true)
 
-bans=$(for j in sshd nginx-limit-req nginx-botsearch avalo-scan avalo-honeypath; do
+# 後台登入失敗只存在於 journal——成功與失敗在 nginx log 裡都是 303，無法辨識
+authfail=$(journalctl -u avalo --since "yesterday" --until "today" --no-pager 2>/dev/null \
+  | grep -c "\[auth fail\]" || true)
+authfail_ip=$(journalctl -u avalo --since "yesterday" --until "today" --no-pager 2>/dev/null \
+  | grep -oE "\[auth fail\] \S+ ip=\S+" | awk '{print $NF}' | sort -u | grep -c . || true)
+
+bans=$(for j in sshd nginx-limit-req nginx-botsearch avalo-scan avalo-honeypath avalo-auth; do
   printf "  %-18s 目前封鎖 %s／累計 %s\n" "$j" \
     "$(fail2ban-client status $j 2>/dev/null | grep 'Currently banned' | grep -oE '[0-9]+$')" \
     "$(fail2ban-client status $j 2>/dev/null | grep 'Total banned' | grep -oE '[0-9]+$')"
@@ -69,6 +75,9 @@ $top_path
 
   產生 4xx Top 5（這份才是該注意的名單）：
 $top_bad
+
+  後台登入失敗  $authfail 次，來自 $authfail_ip 個 IP
+              （登入成功與失敗在 nginx log 都是 303，這項只能從 journal 取得）
 
 ── 防護 ──
 $bans

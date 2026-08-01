@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
       rec.fails = 0;
     }
     attempts.set(key, rec);
+    // 見 api/admin/login 的說明：303 讓失敗在 nginx log 裡無法辨識，
+    // 這行是 fail2ban（avalo-auth jail）與每日簡報唯一的偵測來源。
+    console.warn(`[auth fail] portal:${tenant.slug} ip=${clientIp(req)}`);
     return NextResponse.redirect(absoluteUrl(req, "/portal?error=1"), 303);
   }
 

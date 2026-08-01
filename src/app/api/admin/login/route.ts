@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
       rec.fails = 0;
     }
     attempts.set(ip, rec);
+    // 成功與失敗都是 303，在 nginx log 裡分不出來——不記這行的話，
+    // 暴力破解在每日簡報（只看 4xx）與 fail2ban 眼中完全隱形。
+    // deploy/fail2ban 的 avalo-auth jail 讀 journal 抓這行，5 次封 1 小時；
+    // 上面那個 Map 只存在於行程記憶體，每次部署就歸零，fail2ban 才是持久的那層。
+    console.warn(`[auth fail] admin ip=${ip}`);
     return NextResponse.redirect(`${site}/admin?error=1`, 303);
   }
 
