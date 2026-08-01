@@ -32,6 +32,19 @@ maxretry = 5
 findtime = 10m
 bantime  = 6h
 
+# 自訂：一擊即封——探測 .env / wp-admin / .git 之類路徑（見 filter.d/avalo-honeypath.conf）。
+# 這類請求只有攻擊者會發，所以 maxretry=1，不必等累積。
+# 2026-07-31 簡報顯示 409 次 .env 探測分散在 50 個 IP，每個都剛好打不到
+# avalo-scan 的 40 次門檻就換 IP——這個 jail 就是補那個縫。
+[avalo-honeypath]
+enabled  = true
+filter   = avalo-honeypath
+logpath  = /var/log/nginx/access.log
+action   = iptables-multiport[name=avalo-honeypath, port="http,https"]
+maxretry = 1
+findtime = 1d
+bantime  = 1d
+
 # 自訂：短時間內大量 4xx＝掃描器或灌水機器人（見 filter.d/avalo-scan.conf）
 # maxretry 抓 40 是為了不誤傷正常使用者（一般人不會 5 分鐘內產生 40 個 4xx）
 [avalo-scan]

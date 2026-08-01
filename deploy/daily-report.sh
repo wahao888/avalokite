@@ -25,11 +25,19 @@ total=$(count "$ALL")
 uniq_ip=$(printf '%s' "$ALL" | awk '{print $1}' | sort -u | grep -c . || true)
 err4=$(printf '%s' "$ALL" | awk '$9 ~ /^4/' | grep -c . || true)
 err5=$(printf '%s' "$ALL" | awk '$9 ~ /^5/' | grep -c . || true)
-top_ip=$(printf '%s' "$ALL" | awk '{print $1}' | sort | uniq -c | sort -rn | head -5)
 top_path=$(printf '%s' "$ALL" | awk '{print $7}' | cut -d? -f1 | sort | uniq -c | sort -rn | head -8)
 forms=$(printf '%s' "$ALL" | grep -cE 'POST /api/(contact|wenshan/quote)' || true)
 
-bans=$(for j in sshd nginx-limit-req nginx-botsearch avalo-scan; do
+# 流量 Top IP 要把「正常」與「可疑」分開列。
+# 原本只有一份混合名單，排在前面的其實多半是搜尋引擎／AI 爬蟲（拿 200、爬 robots.txt），
+# 看起來像攻擊者但不是——2026-07-31 的簡報就造成過這種誤讀。
+# 判準：產生 4xx 的比例。444 是 nginx 對 .env/wp-admin 之類探測的回應，只有攻擊者會拿到。
+top_ip=$(printf '%s' "$ALL" | awk '$9 ~ /^[23]/ {print $1}' | sort | uniq -c | sort -rn | head -5)
+top_bad=$(printf '%s' "$ALL" | awk '$9 ~ /^4/ {print $1}' | sort | uniq -c | sort -rn | head -5)
+probes=$(printf '%s' "$ALL" | awk '$9 == 444' | grep -c . || true)
+probe_ips=$(printf '%s' "$ALL" | awk '$9 == 444 {print $1}' | sort -u | grep -c . || true)
+
+bans=$(for j in sshd nginx-limit-req nginx-botsearch avalo-scan avalo-honeypath; do
   printf "  %-18s 目前封鎖 %s／累計 %s\n" "$j" \
     "$(fail2ban-client status $j 2>/dev/null | grep 'Currently banned' | grep -oE '[0-9]+$')" \
     "$(fail2ban-client status $j 2>/dev/null | grep 'Total banned' | grep -oE '[0-9]+$')"
@@ -49,11 +57,18 @@ body="Avalo 每日簡報（統計區間：$YDAY UTC）
   4xx／5xx    $err4 ／ $err5
   表單送出    $forms 次
 
-  來源 IP Top 5：
+  正常流量 Top 5（拿到 2xx/3xx，多為真人與搜尋引擎爬蟲）：
 $top_ip
 
   熱門路徑 Top 8：
 $top_path
+
+── 可疑活動 ──
+  探測請求    $probes 次，來自 $probe_ips 個 IP
+              （444＝有人在找 .env／wp-admin／.git 之類，正常訪客不會產生）
+
+  產生 4xx Top 5（這份才是該注意的名單）：
+$top_bad
 
 ── 防護 ──
 $bans
