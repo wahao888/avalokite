@@ -185,7 +185,7 @@ OOM 被砍的來源），而且慢很多——同一份改動，伺服器 build 
 （11 條路由、11 支 JS chunk、API POST 全數通過）。若 `.next` 沒送上去，
 server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會爆掉。
 
-> ⚠️ 五個踩過的雷（[server-update.sh](server-update.sh) 已內建處理）：
+> ⚠️ 六個踩過的雷（[server-update.sh](server-update.sh) 與 [deploy.sh](deploy.sh) 已內建處理）：
 > 1. **`prisma migrate deploy` 不會重生 client** —— 一定要先 `npx prisma generate`，否則新 schema 欄位型別對不上、`next build` 會失敗。
 > 2. **build 步驟別接 `| tail`** —— 那會用 tail 的 exit code 蓋掉 build 的，導致 build 失敗仍繼續 restart、帶壞的 `.next` 上線。腳本用 `set -euo pipefail`。
 > 3. **build 記憶體吃緊（t3.micro）** —— 腳本以 `NODE_OPTIONS=--max-old-space-size=1536` 讓 node 用 swap 當緩衝，避免被系統 OOM 直接砍掉。
@@ -193,6 +193,12 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 > 5. **`[ -f "$APP/.next/..." ]` 永遠判為假** —— `/opt/avalo/app` 屬於 avalo 使用者，
 >    ubuntu 讀不到，所以判斷「有沒有本機送上來的產物」必須用 `sudo test -f`，
 >    否則會靜靜地每次都退回伺服器 build（症狀：本機與伺服器的 `.next/BUILD_ID` 對不起來）。
+> 6. **`NEXT_PUBLIC_*` 會在 build 當下被烤進 bundle** —— 改成本機 build 之後，本機 `.env`
+>    的開發用值（`NEXT_PUBLIC_SITE_URL=http://localhost:3000`）會被編進正式站的 sitemap、
+>    robots 與 canonical。2026-08-03 實際踩過：上線的 `sitemap.xml` 整份都是 localhost 網址。
+>    [deploy.sh](deploy.sh) 已改為 build 前先 ssh 取伺服器 `.env` 的 `NEXT_PUBLIC_*` 並 export
+>    （取不到就中止，不讓錯的值上線）。**新增任何 `NEXT_PUBLIC_` 變數時，要記得加到伺服器的
+>    `.env`，本機那份不會影響正式站。**
 
 ## 監控與告警
 

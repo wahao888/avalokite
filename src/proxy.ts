@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createProxy from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { tenantFromHost, robotsFor } from "./lib/tenants";
+import { tenantFromHost, robotsFor, sitemapFor } from "./lib/tenants";
 
 const intlProxy = createProxy(routing);
 
@@ -26,6 +26,14 @@ export default function proxy(req: NextRequest) {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
+    // 同理：不攔的話子網域會拿到主站的 sitemap（滿滿 avalokite.xyz 的網址）
+    if (path === "/sitemap.xml") {
+      const xml = sitemapFor(tenant);
+      if (!xml) return new NextResponse("Not Found", { status: 404 });
+      return new NextResponse(xml, {
+        headers: { "content-type": "application/xml; charset=utf-8" },
+      });
+    }
     // /portal 是跨租戶共用的後台路由，租戶由 Host + cookie 決定，不可改寫；
     // /api 已被 matcher 排除，這裡再擋一次以防日後 matcher 放寬。
     if (path === "/portal" || path.startsWith("/portal/") || path.startsWith("/api/")) {
@@ -46,8 +54,9 @@ export default function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 主站的 robots.txt 交給 app 目錄自己處理，不進 i18n 路由
-  if (path === "/robots.txt") return NextResponse.next();
+  // 主站的 robots.txt / sitemap.xml 交給 app 目錄自己處理（app/robots.ts、
+  // app/sitemap.ts），不進 i18n 路由——否則會被導成 /zh-TW/robots.txt
+  if (path === "/robots.txt" || path === "/sitemap.xml") return NextResponse.next();
 
   return intlProxy(req);
 }
@@ -57,7 +66,8 @@ export const config = {
     // 排除 api、demo 示範站、Next 內部資源與靜態檔案（admin 走預設語系路由）。
     // 客戶站不再需要排除：它們現在靠 Host 改寫，路徑本身就是 / 開頭的一般路徑。
     "/((?!api|demo|_next|_vercel|.*\\..*).*)",
-    // 帶副檔名的路徑被上面排除，但 robots.txt 需要逐租戶產生，單獨列入
+    // 帶副檔名的路徑被上面排除，但這兩個需要逐租戶產生，單獨列入
     "/robots.txt",
+    "/sitemap.xml",
   ],
 };

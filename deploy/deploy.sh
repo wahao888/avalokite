@@ -19,6 +19,28 @@ echo "=== 1/4 本機測試 ==="
 npx vitest run
 
 echo "=== 2/4 本機 build ==="
+# NEXT_PUBLIC_* 會在 build 時被「編進」前端 bundle 與預先產生的頁面，
+# 所以必須用伺服器那份的值，不能用本機的——本機 .env 是開發用的
+# （NEXT_PUBLIC_SITE_URL=http://localhost:3000），直接 build 會把 localhost
+# 烤進 sitemap.xml、robots.txt 與各頁的 canonical。2026-08-03 實際踩過。
+#
+# 直接向伺服器拿，而不是在 repo 另存一份：兩份就會有一份過期，
+# 伺服器的 .env 是唯一真實來源。
+echo "  取用伺服器的 NEXT_PUBLIC_* 設定…"
+PUBLIC_ENV=$(ssh -i "$KEY" "$HOST" 'sudo grep -E "^NEXT_PUBLIC_" /opt/avalo/app/.env' || true)
+if [ -z "$PUBLIC_ENV" ]; then
+  echo "  ⚠ 取不到伺服器的 NEXT_PUBLIC_*，中止以免把本機的值烤進正式站" >&2
+  exit 1
+fi
+while IFS= read -r line; do
+  [ -z "$line" ] && continue
+  key=${line%%=*}
+  val=${line#*=}
+  val=${val%\"}; val=${val#\"}   # 去掉 .env 常見的引號
+  export "$key=$val"
+  echo "    $key=$val"
+done <<< "$PUBLIC_ENV"
+
 # schema 改過的話，generate 必須先跑，否則型別對不上（見 DEPLOY.md 的雷 ①）
 npx prisma generate >/dev/null
 npm run build

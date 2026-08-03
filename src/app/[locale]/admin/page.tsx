@@ -5,6 +5,8 @@ import { getProduct } from "@/lib/products";
 import { getTenant } from "@/lib/tenants";
 import CancelSubButton from "@/components/CancelSubButton";
 
+export { NOINDEX as metadata } from "@/lib/site-routes";
+
 export const dynamic = "force-dynamic";
 
 const cellStyle: React.CSSProperties = {

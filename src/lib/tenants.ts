@@ -88,3 +88,18 @@ export function robotsFor(t: Tenant): string {
     ? `User-agent: *\nAllow: /\nSitemap: ${tenantOrigin(t)}/sitemap.xml\n`
     : `User-agent: *\nDisallow: /\n`;
 }
+
+/**
+ * 逐租戶產生 sitemap.xml（來源是 Tenant.paths）。
+ * 未對外的租戶回 null → proxy 回 404：robots 已經是 Disallow: /，
+ * 再供一份 sitemap 等於自打嘴巴，也會把還沒上線的頁面送進搜尋引擎。
+ * 客戶站不做多語系，所以不需要 hreflang。
+ */
+export function sitemapFor(t: Tenant): string | null {
+  if (!t.indexable) return null;
+  const origin = tenantOrigin(t);
+  const urls = t.paths
+    .map((p) => `  <url><loc>${origin}${p === "/" ? "/" : p}</loc></url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
