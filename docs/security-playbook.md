@@ -469,7 +469,29 @@ nginx 會繼續寫入已被改名的舊檔，fail2ban 監看的檔案就再也�
 → 用 `copytruncate`（複製後就地清空，不需通知寫入端）。
 → 另開獨立目錄（如 `/var/log/nginx-docker`），不要跟主機那套 logrotate 混用。
 
-### 7.13 建置不可重現
+### 7.13 fail2ban 重啟會重播歷史，把自己人關在外面
+一擊即封（`maxretry = 1`）的 jail 若配上長 `findtime`（例如 `1d`），
+**每次 fail2ban 重啟都會把該視窗內的所有歷史事件重新判一遍**——
+包含自己測試時留下的紀錄。
+
+> 實例：重開機後重啟 fail2ban 修復封鎖鏈，站長自己的 IP 被當天稍早的
+> 測試紀錄重新封鎖，網站完全進不去，而且看起來像「網站掛了」。
+
+→ `maxretry = 1` 時 `findtime` 對偵測毫無作用（打一次就封，視窗多長都一樣），
+它唯一的實際作用就是決定重播範圍。**設短（10m），防護力完全不變。**
+→ 任何時候重啟 fail2ban 後，順手確認自己沒被關進去：
+`sudo fail2ban-client status <jail> | grep <你的IP>`
+
+### 7.14 Docker 新版不再用 host socket 接埠
+Docker 29 之後，發布的埠改由 iptables DNAT 轉發，主機層**不再有 LISTEN socket**。
+`ss -tlnp | grep :80` 會是空的，`curl 127.0.0.1:80` 會 connection refused，
+但公開網址完全正常。
+
+→ 別把這個當故障。要確認埠有沒有通，看
+`sudo iptables -t nat -n -L DOCKER | grep dpt:` 或直接從外部測公開網址。
+→ 副作用：舊的啟動腳本若用 `ss | grep :80` 偵測埠衝突，那個檢查會永遠通過。
+
+### 7.15 建置不可重現
 `package-lock.json` 若被 gitignore，每次 build 都重新解析版本——
 同樣的程式碼在不同時間 build 可能裝到不同版本。出事時難以回溯。
 

@@ -55,7 +55,13 @@ filter   = avalo-honeypath
 logpath  = /var/log/nginx/access.log
 action   = iptables-multiport[name=avalo-honeypath, port="http,https"]
 maxretry = 1
-findtime = 1d
+# findtime 刻意設短：maxretry=1 時它對「偵測」毫無作用（打一次就封，
+# 不管視窗多長），但它決定 fail2ban **重啟時會回頭重播多久的日誌**。
+# 設 1d 的話，只要在一天內重啟 fail2ban（重開機、改設定），就會把當天所有
+# 歷史 444 重新算一次、重新封鎖——包含自己人測試留下的那些。
+# 2026-08-03 在 damenkyt 實際踩到：重啟 fail2ban 後 Barry 自己的 IP 被
+# 歷史紀錄重新封鎖、網站進不去。改成 10m 後重播窗口極小，防護力不變。
+findtime = 10m
 bantime  = 1d
 
 # 自訂：短時間內大量 4xx＝掃描器或灌水機器人（見 filter.d/avalo-scan.conf）
