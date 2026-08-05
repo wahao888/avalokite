@@ -613,6 +613,203 @@ button { font-family: inherit; }
   border-color: rgba(240, 235, 227, 0.2);
   color: rgba(240, 235, 227, 0.6);
 }
+/* ─── 首波創始客戶計畫 ───
+   刻意用一個外框把整段包起來：這是「一個方案、兩種付法」，
+   拆成兩張並排的商品卡會被讀成兩個不同產品。 */
+.promo-box {
+  position: relative;
+  border: 2px solid var(--ink);
+  background: var(--cream);
+  padding: 2.5rem 2rem 2rem;
+  margin-bottom: 4rem;
+}
+.promo-box::before {
+  /* 外框內側再描一條細線，做出「這一區不一樣」的份量 */
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+}
+.promo-box-head { position: relative; text-align: center; margin-bottom: 2rem; }
+.promo-badge {
+  display: inline-block;
+  background: var(--moss);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  padding: 0.35rem 1rem;
+  margin-bottom: 1rem;
+}
+.promo-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin: 0 0 0.8rem;
+  line-height: 1.2;
+}
+.promo-intro {
+  max-width: 46rem;
+  margin: 0 auto;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.9;
+}
+
+.promo-includes {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.6rem;
+  margin-bottom: 2.2rem;
+}
+.promo-includes-head {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--moss);
+  margin-bottom: 1rem;
+}
+.promo-includes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem 2rem;
+}
+.promo-includes li {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  padding-left: 1.3rem;
+  position: relative;
+}
+.promo-includes li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--wood);
+}
+
+.promo-choose-head {
+  position: relative;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+}
+.promo-plans {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+.promo-plan {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  padding: 2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.promo-plan:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(47,43,38,0.1); }
+.promo-plan.featured { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.promo-plan-flag {
+  position: absolute;
+  top: -1px; right: -1px;
+  background: var(--moss);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.8rem;
+}
+.promo-plan-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+.promo-plan-tagline {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1.4rem;
+  line-height: 1.6;
+}
+.promo-plan.featured .promo-plan-tagline { color: rgba(240,235,227,0.65); }
+
+.promo-plan-price { border-top: 1px solid var(--border); padding-top: 1rem; }
+.promo-plan.featured .promo-plan-price,
+.promo-plan.featured .promo-plan-total { border-color: rgba(240,235,227,0.2); }
+.promo-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+}
+.promo-price-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.promo-plan.featured .promo-price-label { color: rgba(240,235,227,0.6); }
+.promo-price-value { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; }
+.promo-cur { font-size: 0.75rem; margin-right: 0.15rem; }
+.promo-per { font-size: 0.75rem; margin-left: 0.1rem; }
+.promo-free { font-style: normal; color: var(--moss); }
+.promo-plan.featured .promo-free { color: var(--sage); }
+.promo-term .promo-price-value { font-family: var(--font-serif); font-size: 1rem; }
+
+.promo-plan-terms { list-style: none; margin: 1.2rem 0 0; padding: 0; }
+.promo-plan-terms li {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  padding: 0.3rem 0 0.3rem 1.1rem;
+  position: relative;
+}
+.promo-plan-terms li::before { content: "·"; position: absolute; left: 0.2rem; color: var(--wood); }
+
+.promo-plan-total {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.promo-plan-total b { font-family: var(--font-display); font-size: 1.05rem; color: var(--ink); }
+.promo-plan.featured .promo-plan-total { color: rgba(240,235,227,0.6); }
+.promo-plan.featured .promo-plan-total b { color: var(--paper); }
+
+.promo-cta { width: 100%; margin-top: 1.2rem; padding: 0.85rem 1rem; text-align: center; }
+.promo-plan.featured .btn-ghost { color: var(--paper); border-color: rgba(240,235,227,0.4); }
+.promo-plan.featured .btn-ghost:hover { background: var(--paper); color: var(--ink); }
+
+.promo-foot {
+  position: relative;
+  margin: 1.8rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  line-height: 2;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 780px) {
+  .promo-box { padding: 2rem 1.2rem 1.5rem; }
+  .promo-includes ul { grid-template-columns: 1fr; }
+  .promo-plans { grid-template-columns: 1fr; }
+}
+
 .price-promo-note {
   margin-top: 1.2rem;
   font-family: var(--font-mono);

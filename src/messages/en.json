@@ -105,8 +105,6 @@
     "title2": "No haggling.",
     "intro": "These are our pre-assembled bundle deals — all prices public, with market ranges to compare. But they're just common combos: your needs can be fully custom, and we'll suggest more ways to save you time. Mix the à la carte features below, or just tell us what you need for a quote.",
     "notice": "✦ All plans include: discovery call, design approval, testing & launch\n✦ Prices exclude 5% VAT, added at checkout\n✦ Builds include first month of care; subscriptions cancellable anytime",
-    "promoHeading": "Founding Client Program (10 seats)",
-    "promoIntro": "Avalo is building a managed website service for small businesses in Taiwan. We're opening 10 founding-client seats at the founding rate, which stays locked for as long as the subscription runs. We host the site and the form dashboard; your data stays yours and can be exported at any time.",
     "onetimeHeading": "Bundle Deals (pre-assembled, best value)",
     "monthlyHeading": "Monthly Subscriptions (auto-charged by credit card)",
     "addToCart": "Add to Cart",
@@ -436,5 +434,23 @@
     "privacy": "Privacy Policy",
     "refund": "Refund Policy",
     "updated": "Last updated"
+  },
+  "promo": {
+    "badge": "10 seats only",
+    "title": "Founding Client Program",
+    "intro": "Avalo is building a managed website service for small businesses in Taiwan. We're opening 10 founding-client seats at the founding rate, which stays locked for as long as the subscription runs. We host the site and the form dashboard; your data stays yours and can be exported at any time.",
+    "includesHeading": "Both options deliver exactly the same thing",
+    "chooseHeading": "Choose how you'd like to pay",
+    "recommended": "Most popular",
+    "setupFee": "Build fee",
+    "monthlyFee": "Monthly",
+    "noSetupFee": "None",
+    "perMonth": "/mo",
+    "term": "Minimum term",
+    "months": "{n} months",
+    "termTotal": "Total over the term ({n} months, pre-tax)",
+    "choose": "Choose {name}",
+    "inCart": "Selected ✓",
+    "foot": "✦ Prices exclude 5% VAT, added at checkout　✦ Early termination requires paying out the remaining months　✦ Source code belongs to Avalo during the subscription; handed over free after 24 months　✦ Custom domain, SEO and multilingual are à la carte below"
   }
 }

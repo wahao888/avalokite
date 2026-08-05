@@ -6,10 +6,10 @@ import {
   monthlyProducts,
   oneTimeProducts,
   plansUsingCare,
-  promoProducts,
   type Product,
 } from "@/lib/products";
 import AddToCartButton from "@/components/AddToCartButton";
+import PromoPlans from "@/components/sections/PromoPlans";
 import type { Locale } from "@/i18n/routing";
 
 function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
@@ -77,17 +77,9 @@ export default function Pricing() {
         </div>
       </div>
 
-      {promoProducts().length > 0 && (
-        <>
-          <div className="pricing-subhead">{t("promoHeading")}</div>
-          <p className="section-intro addon-intro fade-in">{t("promoIntro")}</p>
-          <div className="pricing-grid fade-in">
-            {promoProducts().map((p) => (
-              <PriceCard key={p.sku} product={p} locale={locale} />
-            ))}
-          </div>
-        </>
-      )}
+      {/* 促銷方案自成一個外框區塊：它是「一個方案、兩種付法」，
+          渲染成兩張商品卡會讓人以為是兩個不同的產品（實際踩過） */}
+      <PromoPlans />
 
       <div className="pricing-subhead">{t("onetimeHeading")}</div>
       <div className="pricing-grid fade-in">

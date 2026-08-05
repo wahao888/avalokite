@@ -7,6 +7,9 @@ import {
   monthlyProducts,
   plansUsingCare,
   promoProducts,
+  PROMO_PLANS,
+  PROMO_INCLUDES,
+  promoPlanTotal,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -55,6 +58,72 @@ describe("促銷方案（首波創始客戶計畫）", () => {
   it("launch-setup 指向 launch-care，反查也成立", () => {
     expect(getProduct("launch-setup")!.recommendedCareSku).toBe("launch-care");
     expect(plansUsingCare("launch-care").map((p) => p.sku)).toEqual(["launch-setup"]);
+  });
+});
+
+describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => {
+  it("每個方案的 SKU 都存在且是 promo 群組", () => {
+    expect(PROMO_PLANS.length).toBe(2);
+    for (const plan of PROMO_PLANS) {
+      expect(plan.skus.length).toBeGreaterThan(0);
+      for (const sku of plan.skus) {
+        const p = getProduct(sku);
+        expect(p, `${plan.id} 參照了不存在的 ${sku}`).toBeTruthy();
+        expect(p!.group).toBe("promo");
+      }
+    }
+  });
+
+  it("方案標示的價格與實際 SKU 價格一致（避免文案與收費不符）", () => {
+    for (const plan of PROMO_PLANS) {
+      const setup = plan.skus
+        .map((s) => getProduct(s)!)
+        .filter((p) => p.type === "onetime")
+        .reduce((n, p) => n + p.price, 0);
+      const monthly = plan.skus
+        .map((s) => getProduct(s)!)
+        .filter((p) => p.type === "monthly")
+        .reduce((n, p) => n + p.price, 0);
+      expect(setup, `${plan.id} 建置費與 SKU 不符`).toBe(plan.setup);
+      expect(monthly, `${plan.id} 月費與 SKU 不符`).toBe(plan.monthly);
+    }
+  });
+
+  it("兩個方案：付建置費的綁約較短，零元建置的綁約較長", () => {
+    const paid = PROMO_PLANS.find((p) => p.setup > 0)!;
+    const free = PROMO_PLANS.find((p) => p.setup === 0)!;
+    expect(paid.termMonths).toBeLessThan(free.termMonths);
+    // 零元方案不含一次性 SKU，checkout 的 hasBuild=false 分支才會當月起扣
+    expect(free.skus.some((s) => getProduct(s)!.type === "onetime")).toBe(false);
+    // 每個方案都要有月費，否則不是訂閱制
+    for (const plan of PROMO_PLANS) {
+      expect(plan.skus.some((s) => getProduct(s)!.type === "monthly")).toBe(true);
+    }
+  });
+
+  it("承諾期內合計金額正確，且零元方案總價較高（長約換免建置費）", () => {
+    const paid = PROMO_PLANS.find((p) => p.setup > 0)!;
+    const free = PROMO_PLANS.find((p) => p.setup === 0)!;
+    expect(promoPlanTotal(paid)).toBe(10000 + 2000 * 12);
+    expect(promoPlanTotal(free)).toBe(2000 * 24);
+    expect(promoPlanTotal(free)).toBeGreaterThan(promoPlanTotal(paid));
+  });
+
+  it("只有一個方案標為推薦，且中英文文案齊備", () => {
+    expect(PROMO_PLANS.filter((p) => p.featured).length).toBe(1);
+    for (const plan of PROMO_PLANS) {
+      for (const locale of ["zh-TW", "en"] as const) {
+        const i = plan.i18n[locale];
+        expect(i.name.length, `${plan.id}.${locale} name`).toBeGreaterThan(0);
+        expect(i.tagline.length, `${plan.id}.${locale} tagline`).toBeGreaterThan(0);
+        expect(i.terms.length, `${plan.id}.${locale} terms`).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
+
+  it("共通交付內容中英文條目數一致", () => {
+    expect(PROMO_INCLUDES["zh-TW"].length).toBe(PROMO_INCLUDES.en.length);
+    expect(PROMO_INCLUDES["zh-TW"].length).toBeGreaterThanOrEqual(5);
   });
 });
 

@@ -480,6 +480,108 @@ export const promoProducts = () => PRODUCTS.filter((p) => p.group === "promo");
 export const plansUsingCare = (careSku: string) =>
   PRODUCTS.filter((p) => p.type === "onetime" && p.recommendedCareSku === careSku);
 
+// ─── 首波創始客戶計畫：方案組合 ───
+//
+// launch-setup 與 launch-care 是「結帳用的 SKU」，不是「客戶看到的方案」。
+// 客戶要選的是付款方式（付建置費綁短約 vs 零元建置綁長約），交付內容完全相同，
+// 所以定價區把共通內容列一次，再讓客戶二選一——而不是渲染成兩張獨立商品卡。
+export interface PromoPlan {
+  id: string;
+  skus: string[]; // 選擇此方案時要加進購物車的 SKU
+  setup: number; // 建置費（未稅）
+  monthly: number; // 月費（未稅）
+  termMonths: number;
+  featured?: boolean;
+  i18n: {
+    "zh-TW": { name: string; tagline: string; terms: string[] };
+    en: { name: string; tagline: string; terms: string[] };
+  };
+}
+
+/** 兩個方案共通的交付內容（只列一次，避免看起來像兩個不同產品） */
+export const PROMO_INCLUDES: { "zh-TW": string[]; en: string[] } = {
+  "zh-TW": [
+    "5 頁以內形象官網，全客製設計",
+    "專屬表單後台＋新訊即時 Email 通知",
+    "子網域與 SSL 憑證（隨時可改綁自有網域）",
+    "GA4、sitemap、結構化資料基礎建置",
+    "主機代管、每日自動備份與監控告警",
+    "每月 1 小時內容修改（文字、圖片、公告）",
+    "資料隨時可 CSV 匯出，解約提供 6 個月轉址",
+    "資料齊全後 10 個工作天上線",
+  ],
+  en: [
+    "Up to 5 pages, fully custom design",
+    "Private form dashboard + instant email alerts",
+    "Subdomain with SSL (custom domain any time)",
+    "GA4, sitemap and structured data",
+    "Hosting, daily backups and uptime monitoring",
+    "1 hour of content edits every month",
+    "Export your data any time; 6-month redirect on exit",
+    "Live in 10 business days once content is ready",
+  ],
+};
+
+export const PROMO_PLANS: PromoPlan[] = [
+  {
+    id: "founding",
+    skus: ["launch-setup", "launch-care"],
+    setup: 10000,
+    monthly: 2000,
+    termMonths: 12,
+    featured: true,
+    i18n: {
+      "zh-TW": {
+        name: "創始價",
+        tagline: "建置費一次付清，綁約期較短",
+        terms: [
+          "最短承諾 12 個月",
+          "建置費已含第一個月維護，月費自第二個月起扣",
+          "期滿轉月繳，30 天前通知即可終止",
+        ],
+      },
+      en: {
+        name: "Founding Rate",
+        tagline: "Pay the build fee up front, shorter commitment",
+        terms: [
+          "12-month minimum term",
+          "Build fee includes the first month; billing starts in month two",
+          "Rolls to monthly after; cancel with 30 days' notice",
+        ],
+      },
+    },
+  },
+  {
+    id: "zero-setup",
+    skus: ["launch-care"],
+    setup: 0,
+    monthly: 2000,
+    termMonths: 24,
+    i18n: {
+      "zh-TW": {
+        name: "零元啟動",
+        tagline: "開辦成本為零，以較長的承諾期交換",
+        terms: [
+          "最短承諾 24 個月",
+          "無建置費，月費自當月起扣",
+          "期滿免費移交網站原始碼",
+        ],
+      },
+      en: {
+        name: "Zero Setup",
+        tagline: "No upfront cost, in exchange for a longer term",
+        terms: [
+          "24-month minimum term",
+          "No build fee; billing starts this month",
+          "Source code handed over free at the end of term",
+        ],
+      },
+    },
+  },
+];
+
+export const promoPlanTotal = (p: PromoPlan) => p.setup + p.monthly * p.termMonths;
+
 // ─── 單項功能參考價（à la carte）───
 // 客戶可自由挑選組合；因客製範圍會影響價格，最終以諮詢確認報價為準。
 // 價格為未稅參考價（TWD），可自由調整。
