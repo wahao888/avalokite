@@ -154,3 +154,12 @@ describe("recalcOrderStatus", () => {
     });
   }
 });
+
+describe("subscriptionUrl（信件與 redirect 用的連結）", () => {
+  it("預設語系不帶前綴、英文帶 /en —— 帶錯會多吃一次 307 轉址", async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://avalokite.xyz";
+    const { subscriptionUrl } = await import("../src/lib/subscription");
+    expect(subscriptionUrl("AVLX2", "zh-TW")).toBe("https://avalokite.xyz/subscription/AVLX2");
+    expect(subscriptionUrl("AVLX2", "en")).toBe("https://avalokite.xyz/en/subscription/AVLX2");
+  });
+});

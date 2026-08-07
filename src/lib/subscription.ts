@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cancelPeriod } from "@/lib/ecpay";
 import { getProduct, withTax } from "@/lib/products";
 import { notifyOwner, sendMail } from "@/lib/mail";
+import { localePath } from "@/i18n/routing";
 
 // 訂閱生命週期的單一入口：後台、客戶自助頁、排程都走這裡，
 // 才不會有三份「終止＋重建」的邏輯各自漂移。
@@ -13,7 +14,7 @@ import { notifyOwner, sendMail } from "@/lib/mail";
 /** 訂閱管理頁網址（mtn 本身即為存取憑證，同 /api/pay/[mtn] 的設計） */
 export function subscriptionUrl(mtn: string, locale: string) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return `${site}/${locale === "en" ? "en" : "zh-TW"}/subscription/${mtn}`;
+  return `${site}${localePath(locale, `/subscription/${mtn}`)}`;
 }
 
 /**

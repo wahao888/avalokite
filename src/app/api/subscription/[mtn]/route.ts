@@ -5,6 +5,7 @@ import {
   cancelSubscription,
   findSubscription,
   replaceSubscription,
+  subscriptionUrl,
 } from "@/lib/subscription";
 
 // 客戶自助管理訂閱：換方案 / 重新授權（換卡）/ 終止扣款。
@@ -32,12 +33,8 @@ export async function POST(
 
   const form = await req.formData();
   const action = String(form.get("action") ?? "");
-  const locale = sub.order.locale === "en" ? "en" : "zh-TW";
   const back = (q: string) =>
-    NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/subscription/${mtn}?${q}`,
-      303
-    );
+    NextResponse.redirect(`${subscriptionUrl(mtn, sub.order.locale)}?${q}`, 303);
 
   if (action === "cancel") {
     const r = await cancelSubscription(sub, "customer");

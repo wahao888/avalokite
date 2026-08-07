@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { fmt, getProduct } from "@/lib/products";
-import type { Locale } from "@/i18n/routing";
+import { localePath, type Locale } from "@/i18n/routing";
 
 interface LookupResult {
   id: string;
@@ -115,7 +115,7 @@ export default function OrderLookupPage() {
                       <>
                         {" · "}
                         <a
-                          href={`/${locale}/subscription/${s.merchantTradeNo}`}
+                          href={localePath(locale, `/subscription/${s.merchantTradeNo}`)}
                           style={{ color: "var(--moss)" }}
                         >
                           {t("manageSub")}
