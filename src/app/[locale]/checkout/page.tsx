@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
-import { fmt, getProduct, withTax } from "@/lib/products";
+import { careRequired, fmt, getProduct, withTax } from "@/lib/products";
+import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
 
 export default function CheckoutPage() {
@@ -15,8 +16,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
+  const [stale, setStale] = useState(false); // 條款已改版，需重新確認
 
   // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
+  // 含建置的訂單有 12 個月最短承諾期，這件事必須在按下付款前就講明白
+  const hasBuild = careRequired(cart.items.map((i) => i.sku));
   const empty = cart.ready && cart.items.length === 0;
   useEffect(() => {
     if (empty && !submitting) router.replace("/cart");
@@ -26,6 +30,7 @@ export default function CheckoutPage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(false);
+    setStale(false);
     setSubmitting(true);
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
     try {
@@ -34,6 +39,12 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, locale, items: cart.items }),
       });
+      // 條款在結帳途中改版 → 不默默用新版成立契約，請客戶重新確認
+      if (res.status === 409) {
+        setStale(true);
+        setSubmitting(false);
+        return;
+      }
       if (!res.ok) throw new Error();
       const { payUrl } = (await res.json()) as { payUrl: string };
       cart.clear();
@@ -53,6 +64,14 @@ export default function CheckoutPage() {
         <form className="form-panel" onSubmit={onSubmit}>
           <div className="form-title">{t("contactInfo")}</div>
           {error && <div className="form-feedback err">{t("error")}</div>}
+          {stale && (
+            <div className="form-feedback err">
+              {t("termsChanged")}{" "}
+              <a href="/legal/terms" target="_blank" style={{ textDecoration: "underline" }}>
+                {tl("terms")}
+              </a>
+            </div>
+          )}
 
           <div className="form-row">
             <div className="form-group">
@@ -87,16 +106,21 @@ export default function CheckoutPage() {
             <textarea id="co-note" name="note" maxLength={2000} className="form-textarea" placeholder={t("notePh")} />
           </div>
 
+          {/* 同意必須真的送到伺服器並存進訂單——沒有 name 的 checkbox 只是瀏覽器端的門檻，
+              留不下任何證據。version 一併送出，伺服器會比對是否為現行版本。 */}
           <div className="form-group" style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
             <label style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", cursor: "pointer" }}>
-              <input type="checkbox" required style={{ marginTop: "0.25rem" }} />
+              <input type="checkbox" name="agree" value="yes" required style={{ marginTop: "0.25rem" }} />
               <span>
                 {t("agreement")}{" "}
                 <Link href="/legal/terms" target="_blank" style={{ color: "var(--moss)" }}>{tl("terms")}</Link>{" "}
                 {t("and")}{" "}
                 <Link href="/legal/refund" target="_blank" style={{ color: "var(--moss)" }}>{tl("refund")}</Link>
+                {hasBuild && <><br />{t("commitNotice")}</>}
               </span>
             </label>
+            <input type="hidden" name="termsVersion" value={LEGAL_VERSION} />
+            <div className="form-note">{t("agreementRecord", { version: LEGAL_VERSION })}</div>
           </div>
 
           <button

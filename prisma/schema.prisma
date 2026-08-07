@@ -21,6 +21,13 @@ model Order {
   oneTimeTotal Int     @default(0) // 一次性小計（未稅，TWD）
   monthlyTotal Int     @default(0) // 月費小計（未稅，TWD/月）
   status      String   @default("pending") // pending | paid | partial | failed | cancelled
+  // 契約同意的留證：客戶結帳時同意的條款版本、內容雜湊、時間與來源 IP。
+  // 條款會隨部署改版，沒有這四個欄位就無法證明客戶當初同意的是什麼。
+  // 雜湊由伺服器以自己的條款內容計算（見 lib/legal-consent.ts），不接受前端傳值。
+  agreedTermsVersion String?
+  agreedTermsHash    String?
+  agreedAt           DateTime?
+  agreedIp           String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   payments    Payment[]

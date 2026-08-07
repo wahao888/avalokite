@@ -481,6 +481,13 @@ export const promoProducts = () => PRODUCTS.filter((p) => p.group === "promo");
 export const plansUsingCare = (careSku: string) =>
   PRODUCTS.filter((p) => p.type === "onetime" && p.recommendedCareSku === careSku);
 
+/**
+ * 含建置的訂單，其維護方案的最短承諾期（月）。
+ * 建置以遠低於行情的價格交付，後續維護是對價的一部分——這是收月費而非一次性接案的支點。
+ * 單購維護（無建置）不綁約；促銷方案有自己的承諾期（見 PROMO_PLANS）。
+ */
+export const BUILD_COMMIT_MONTHS = 12;
+
 // ─── 維護必選規則 ───
 //
 // 建置案交付後就得有人顧：主機、備份、安全更新都是持續成本，

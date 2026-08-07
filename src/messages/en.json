@@ -104,7 +104,7 @@
     "title1": "Every price published.",
     "title2": "No haggling.",
     "intro": "These are our pre-assembled bundle deals — all prices public, with market ranges to compare. But they're just common combos: your needs can be fully custom, and we'll suggest more ways to save you time. Mix the à la carte features below, or just tell us what you need for a quote.",
-    "notice": "✦ All plans include: discovery call, design approval, testing & launch\n✦ Prices exclude 5% VAT, added at checkout\n✦ Builds require a care plan, billed from month one and cancellable anytime",
+    "notice": "✦ All plans include: discovery call, design approval, testing & launch\n✦ Prices exclude 5% VAT, added at checkout\n✦ Builds require a care plan, billed from month one with a 12-month minimum term; cancellable anytime after that",
     "onetimeHeading": "Bundle Deals (pre-assembled, best value)",
     "monthlyHeading": "Monthly Subscriptions (auto-charged by credit card)",
     "addToCart": "Add to Cart",
@@ -370,7 +370,9 @@
     "careRequiredNote": "Once your site is live it needs hosting, backups, security updates and monitoring — so every build comes with a care plan, billed from month one. Pick one; you can change or cancel it any time.",
     "careRecommended": "Recommended",
     "careRequiredBlocked": "Please choose a care plan to continue to checkout.",
-    "mixedBuildsBlocked": "Founding Client Program plans cannot share an order with standard build plans — they come with different care plans and rates. Please check out separately, or remove one of them."
+    "mixedBuildsBlocked": "Founding Client Program plans cannot share an order with standard build plans — they come with different care plans and rates. Please check out separately, or remove one of them.",
+    "careCommitNote": "✦ Orders that include a build carry a {months}-month minimum care term, starting from the first care charge. After that it continues month to month and can be cancelled anytime. Build work is priced well below market on the basis of ongoing care.",
+    "careCommitPromo": "✦ The Founding Client Program term depends on the plan you picked (12 months with the build fee, 24 months with zero setup). See the plan terms on the pricing page."
   },
   "checkout": {
     "title": "Checkout",
@@ -395,7 +397,10 @@
     "and": "and",
     "submit": "Pay with ECPay →",
     "submitting": "Creating order…",
-    "error": "Failed to create order. Please check the fields and retry."
+    "error": "Failed to create order. Please check the fields and retry.",
+    "commitNotice": "and I understand that the care plan on this order has a minimum term (see Terms, section 3).",
+    "agreementRecord": "When you place the order we record the terms version you accepted ({version}), the time and your IP address as evidence of the contract. Later revisions do not affect this order.",
+    "termsChanged": "Our terms were just updated. Please review them again before placing the order."
   },
   "order": {
     "resultTitle": "Payment Result",
@@ -439,7 +444,12 @@
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
     "refund": "Refund Policy",
-    "updated": "Last updated"
+    "updated": "Last updated",
+    "version": "Version",
+    "contentId": "Content ID",
+    "archivedNotice": "You are viewing an archived version. These are the terms that applied to certain existing orders, not the current ones.",
+    "versionNotFound": "No archived copy of version {version} was found. If you need the terms that applied to your order, email service@avalokite.xyz and we will send you a full copy.",
+    "viewCurrent": "View current version"
   },
   "promo": {
     "badge": "10 seats only",

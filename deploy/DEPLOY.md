@@ -200,6 +200,24 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 >    （取不到就中止，不讓錯的值上線）。**新增任何 `NEXT_PUBLIC_` 變數時，要記得加到伺服器的
 >    `.env`，本機那份不會影響正式站。**
 
+## 修改服務條款／退款政策的程序
+
+條款是客戶結帳時打勾同意的契約本文，訂單會存下當下的**版本號、內容雜湊、時間與 IP**
+（`Order.agreedTerms*`），確認信也會附上版本連結。所以條款不能直接改——直接改會讓既有
+訂單的同意紀錄對不回原文，等於自廢舉證能力。
+
+```
+1. 把 legal-content.ts 現行的 LEGAL.terms 與 LEGAL.refund 整段複製進
+   legal-archive.ts，以「現行的」LEGAL_VERSION 當 key
+2. 再改 legal-content.ts 的內容，並把 LEGAL_VERSION 改成今天的日期
+3. npx vitest run tests/legal.test.ts   ← 會擋下漏封存、中英不同步、updated 沒跟著改
+4. 照常部署
+```
+
+`legal-archive.ts` **只增不改**：既有條目動一個字就等於偽造證據。
+新版條款只對其生效後的訂單有效（條款第十四條已明訂），既有訂單仍適用下單時的版本，
+客戶可用 `/legal/terms?v=<版本>` 查回當時的全文。
+
 ## 監控與告警
 
 | 排程（root crontab） | 做什麼 |

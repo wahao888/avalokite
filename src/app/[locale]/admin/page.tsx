@@ -139,7 +139,24 @@ export default async function AdminPage({
                       </div>
                     ))}
                   </td>
-                  <td style={cellStyle}>{fmtDate(o.createdAt)}</td>
+                  <td style={cellStyle}>
+                    {fmtDate(o.createdAt)}
+                    <br />
+                    {/* 契約留證：爭議時要拿得出來的三件事 */}
+                    <span style={{ color: "var(--muted)", fontSize: "0.7rem" }}>
+                      {o.agreedTermsVersion ? (
+                        <>
+                          條款 {o.agreedTermsVersion}
+                          <br />
+                          {o.agreedTermsHash}
+                          <br />
+                          {fmtDate(o.agreedAt)}　IP {o.agreedIp ?? "-"}
+                        </>
+                      ) : (
+                        "⚠ 無同意紀錄"
+                      )}
+                    </span>
+                  </td>
                 </tr>
               );
             })}

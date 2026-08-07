@@ -1549,3 +1549,16 @@ button { font-family: inherit; }
 @media (max-width: 680px) {
   .addon-grid { grid-template-columns: 1fr; }
 }
+
+/* 購物車的綁約揭露：不能只寫在條款裡，要在客戶按結帳前就看得到 */
+.care-commit-note {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--sage) 14%, transparent);
+  border-left: 2px solid var(--moss);
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+}

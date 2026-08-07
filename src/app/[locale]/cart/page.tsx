@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
 import {
+  BUILD_COMMIT_MONTHS,
   careOptionsFor,
   fmt,
   getProduct,
@@ -29,6 +30,8 @@ export default function CartPage() {
   const careNeeded = careOptions.length > 0;
   const recommendedCare = recommendedCareFor(skus);
   const selectedCare = careOptions.find((o) => cart.has(o.sku));
+  // 促銷方案的承諾期由方案自己公告（12／24 個月），與一般建置的 12 個月不同
+  const isPromo = careOptions.some((o) => o.group === "promo");
   // 單購維護（無建置）時照舊以列表呈現，不進必選區塊
   const looseMonthly = monthly.filter(
     (i) => !careOptions.some((o) => o.sku === i.sku)
@@ -108,6 +111,14 @@ export default function CartPage() {
           <p className="care-required-note">
             {mixedBuilds ? t("mixedBuildsBlocked") : t("careRequiredNote")}
           </p>
+          {/* 綁約要在購物車就講清楚，不能只寫在條款裡等客戶自己去翻 */}
+          {!mixedBuilds && (
+            <p className="care-commit-note">
+              {isPromo
+                ? t("careCommitPromo")
+                : t("careCommitNote", { months: BUILD_COMMIT_MONTHS })}
+            </p>
+          )}
           <div className="care-options" role="radiogroup" aria-label={t("careRequiredHeading")}>
             {careOptions.map((care) => {
               const info = care.i18n[locale];

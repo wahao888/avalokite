@@ -15,6 +15,7 @@ import {
   recommendedCareFor,
   promoPlanForSkus,
   mixedBuildConflict,
+  BUILD_COMMIT_MONTHS,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -260,5 +261,18 @@ describe("促銷與正式建置不得同車（mixedBuildConflict）", () => {
     expect(mixedBuildConflict(["web-commerce", "care-growth"])).toBe(false);
     expect(mixedBuildConflict(["launch-setup", "site-rescue"])).toBe(false);
     expect(mixedBuildConflict([])).toBe(false);
+  });
+});
+
+describe("承諾期（BUILD_COMMIT_MONTHS）", () => {
+  it("含建置的訂單綁 12 個月，單購維護不綁", () => {
+    expect(BUILD_COMMIT_MONTHS).toBe(12);
+    expect(careRequired(["web-basic"])).toBe(true); // → 綁約
+    expect(careRequired(["care-basic"])).toBe(false); // 單購維護 → 不綁
+    expect(careRequired(["site-rescue"])).toBe(false); // 健檢 → 不綁
+  });
+
+  it("促銷方案的承諾期優先於一般建置的 12 個月", () => {
+    expect(promoPlanForSkus(["launch-care"])?.termMonths).toBe(24);
   });
 });

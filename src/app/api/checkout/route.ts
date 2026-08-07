@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { genOrderId } from "@/lib/ecpay";
 import {
+  BUILD_COMMIT_MONTHS,
   careOptionsFor,
   careRequired,
   getProduct,
@@ -12,6 +13,8 @@ import {
 } from "@/lib/products";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { LEGAL_VERSION } from "@/lib/legal-content";
+import { consentRecord } from "@/lib/legal-consent";
 
 // 每筆結帳都會寫入 Order＋Payment（＋Subscription）。沒有限流的話，
 // 通用 /api/ 的 5r/s 等於每天可灌 43 萬筆進 SQLite。
@@ -32,6 +35,9 @@ const schema = z.object({
     .or(z.literal("")),
   note: z.string().trim().max(2000).optional().or(z.literal("")),
   locale: z.string().max(10).optional(),
+  // 契約同意：勾選值與客戶當下看到的條款版本
+  agree: z.literal("yes"),
+  termsVersion: z.string().max(20),
   items: z
     .array(z.object({ sku: z.string().max(50), qty: z.number().int().min(1).max(9) }))
     .min(1)
@@ -54,6 +60,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid input" }, { status: 400 });
   }
   const d = parsed.data;
+
+  // 客戶看到的條款版本與現行版不符（結帳中途剛好部署了新版）→ 不默默用新版成立契約，
+  // 請對方重新確認。這種情況罕見，但它正是留證機制存在的理由。
+  if (d.termsVersion !== LEGAL_VERSION) {
+    return NextResponse.json(
+      { error: "terms updated", termsVersion: LEGAL_VERSION },
+      { status: 409 }
+    );
+  }
 
   // 價格一律以伺服器端目錄為準，不信任前端
   let oneTimeTotal = 0;
@@ -99,6 +114,8 @@ export async function POST(req: NextRequest) {
       note: d.note || null,
       locale: d.locale ?? "zh-TW",
       items: JSON.stringify(d.items),
+      // 同意紀錄：雜湊以伺服器自己的條款內容計算，不採信前端傳來的值
+      ...consentRecord(d.locale ?? "zh-TW", clientIp(req)),
       oneTimeTotal,
       monthlyTotal,
     },
@@ -125,11 +142,13 @@ export async function POST(req: NextRequest) {
         amount: withTax(monthlyTotal),
       },
     });
-    // 促銷方案有最短承諾期（創始價 12 個月／零元啟動 24 個月），寫進訂閱紀錄，
-    // 日後要判斷提前解約或「滿 24 個月免費移交原始碼」才有依據，不必翻合約。
+    // 最短承諾期寫進訂閱紀錄，日後要判斷提前解約或「滿 24 個月免費移交原始碼」
+    // 才有依據，不必翻合約。促銷方案有自己的承諾期，其餘含建置的訂單一律 12 個月，
+    // 單購維護則不綁約。
     const promo = promoPlanForSkus(skus);
-    const commitEndsAt = promo
-      ? new Date(new Date().setMonth(new Date().getMonth() + promo.termMonths))
+    const termMonths = promo?.termMonths ?? (careRequired(skus) ? BUILD_COMMIT_MONTHS : null);
+    const commitEndsAt = termMonths
+      ? new Date(new Date().setMonth(new Date().getMonth() + termMonths))
       : null;
 
     // 維護自第一個月起計費，兩種路徑都是「當下授權、首期即時扣」：
@@ -142,7 +161,7 @@ export async function POST(req: NextRequest) {
         sku: monthlySkus.join("+"),
         monthlyAmount: withTax(monthlyTotal),
         startsAt: new Date(),
-        termMonths: promo?.termMonths ?? null,
+        termMonths,
         commitEndsAt,
         // 有建置者若在結果頁中離未授權，交由 cron 寄連結追回；單購維護當下即授權，不需追
         authLinkSentAt: hasBuild ? null : new Date(),
@@ -161,7 +180,9 @@ export async function POST(req: NextRequest) {
       : "";
   await notifyOwner(
     `[Avalo] 新訂單 ${orderId} — ${d.name}`,
-    `一次性：NT$${oneTimeTotal}（未稅）\nEmail：${d.email}\n電話：${d.phone}${careNote}`
+    `一次性：NT$${oneTimeTotal}（未稅）\nEmail：${d.email}\n電話：${d.phone}${careNote}` +
+      `\n\n【同意紀錄】條款 ${order.agreedTermsVersion}（${order.agreedTermsHash}）` +
+      `\n同意時間：${order.agreedAt?.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}　IP：${order.agreedIp}`
   );
 
   // 結帳只導向一次性付款；維護授權連結另行寄送（見上方店主通知）

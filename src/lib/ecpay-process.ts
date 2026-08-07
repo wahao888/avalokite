@@ -68,6 +68,13 @@ export async function processPaymentResult(params: Record<string, string>) {
         : "";
     // 定期定額首期於授權當下即扣，信件要講清楚「已扣第一期」而不是含糊的「付款成功」
     const isPeriod = payment.kind === "period";
+    // 契約留證：把客戶同意的版本寫進確認信，客戶手上就有一份可對照的副本，
+    // 而不是只有我們單方面的資料庫紀錄。
+    const termsLine = order.agreedTermsVersion
+      ? zh
+        ? `\n\n本訂單適用您於下單時同意的條款版本 ${order.agreedTermsVersion}（識別碼 ${order.agreedTermsHash}）：\n${site}/legal/terms?v=${order.agreedTermsVersion}\n日後條款如有修訂，不影響本訂單。`
+        : `\n\nThis order is governed by the terms version you accepted at checkout, ${order.agreedTermsVersion} (id ${order.agreedTermsHash}):\n${site}/en/legal/terms?v=${order.agreedTermsVersion}\nLater revisions do not affect this order.`
+      : "";
     await sendMail({
       to: order.email,
       subject: isPeriod
@@ -82,8 +89,8 @@ export async function processPaymentResult(params: Record<string, string>) {
           ? `${order.name} 您好，\n\n您訂單 ${order.id} 的維護訂閱已完成信用卡定期定額授權，第一期 NT$${payment.amount}（含稅）已扣款，之後每月自動扣款。\n\n管理訂閱（換方案、更換信用卡、終止扣款）：\n${subscriptionUrl(mtn, order.locale)}\n\nAvalo 阿瓦羅`
           : `Hi ${order.name},\n\nThe recurring card authorization for order ${order.id} is complete. The first charge of NT$${payment.amount} (incl. tax) has been made, and billing continues monthly.\n\nManage your subscription (change plan, update card, cancel):\n${subscriptionUrl(mtn, order.locale)}\n\nAvalo`
         : zh
-          ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n專案顧問將在 24 小時內與您聯絡，開始需求訪談。${careHeadsUp}\n\n訂單查詢：${site}/order/lookup\n\nAvalo 阿瓦羅`
-          : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nA project consultant will reach out within 24 hours to start the discovery call.${careHeadsUp}\n\nOrder lookup: ${site}/order/lookup\n\nAvalo`,
+          ? `${order.name} 您好，\n\n您的訂單 ${order.id} 已收到款項 NT$${payment.amount}（含稅）。\n專案顧問將在 24 小時內與您聯絡，開始需求訪談。${careHeadsUp}${termsLine}\n\n訂單查詢：${site}/order/lookup\n\nAvalo 阿瓦羅`
+          : `Hi ${order.name},\n\nPayment of NT$${payment.amount} (incl. tax) for order ${order.id} is confirmed.\nA project consultant will reach out within 24 hours to start the discovery call.${careHeadsUp}${termsLine}\n\nOrder lookup: ${site}/order/lookup\n\nAvalo`,
     });
     await notifyOwner(
       `[Avalo] 收款成功 ${order.id}（${payment.kind}）NT$${payment.amount}`,
