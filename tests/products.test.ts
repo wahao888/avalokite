@@ -10,6 +10,9 @@ import {
   PROMO_PLANS,
   PROMO_INCLUDES,
   promoPlanTotal,
+  careRequired,
+  careOptionsFor,
+  recommendedCareFor,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -141,11 +144,67 @@ describe("維護配對（recommendedCareSku）", () => {
     }
   });
 
+  it("目錄文案不再宣稱建置含首月維護", () => {
+    for (const p of PRODUCTS) {
+      for (const locale of ["zh-TW", "en"] as const) {
+        for (const f of p.i18n[locale].features) {
+          expect(f, `${p.sku}.${locale}`).not.toMatch(/第一個月維護|首月維護|首月託管|首月維運/);
+          expect(f.toLowerCase(), `${p.sku}.${locale}`).not.toMatch(/first month/);
+        }
+      }
+    }
+    for (const plan of PROMO_PLANS) {
+      for (const locale of ["zh-TW", "en"] as const) {
+        for (const term of plan.i18n[locale].terms) {
+          expect(term, `${plan.id}.${locale}`).not.toMatch(/含第一個月維護/);
+          expect(term.toLowerCase(), `${plan.id}.${locale}`).not.toMatch(/includes the first month/);
+        }
+      }
+    }
+  });
+
   it("plansUsingCare 反查正確", () => {
     const names = (sku: string) => plansUsingCare(sku).map((p) => p.sku).sort();
     expect(names("care-basic")).toEqual(["web-basic"]);
     expect(names("care-growth")).toEqual(["dashboard", "web-commerce"]);
     expect(names("care-ai")).toEqual(["ai-chatbot", "automation", "automation-bundle"]);
+  });
+});
+
+describe("維護必選（careRequired / careOptionsFor）", () => {
+  it("車上有建置方案時必選維護，且列出全部正式月費方案", () => {
+    expect(careRequired(["web-basic"])).toBe(true);
+    expect(careOptionsFor(["web-basic"]).map((p) => p.sku)).toEqual(
+      monthlyProducts().map((p) => p.sku)
+    );
+  });
+
+  it("網站健檢與單購維護不強制", () => {
+    expect(careRequired(["site-rescue"])).toBe(false);
+    expect(careOptionsFor(["site-rescue"])).toEqual([]);
+    expect(careRequired(["care-basic"])).toBe(false);
+    expect(careRequired([])).toBe(false);
+  });
+
+  it("促銷建置只能搭配促銷維護，不與正式月費混選", () => {
+    const opts = careOptionsFor(["launch-setup"]);
+    expect(opts.map((p) => p.sku)).toEqual(["launch-care"]);
+    expect(careRequired(["launch-setup"])).toBe(true);
+  });
+
+  it("推薦維護以車上最高價的建置方案為準", () => {
+    expect(recommendedCareFor(["web-basic"])).toBe("care-basic");
+    // web-commerce（89,000）> web-basic（39,000）→ 取 care-growth
+    expect(recommendedCareFor(["web-basic", "web-commerce"])).toBe("care-growth");
+    expect(recommendedCareFor(["site-rescue"])).toBeUndefined();
+  });
+
+  it("必選的維護方案都真實存在且為月費", () => {
+    for (const p of oneTimeProducts()) {
+      for (const care of careOptionsFor([p.sku])) {
+        expect(care.type).toBe("monthly");
+      }
+    }
   });
 });
 

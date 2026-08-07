@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { genOrderId } from "@/lib/ecpay";
-import { getProduct, withTax } from "@/lib/products";
+import { careOptionsFor, careRequired, getProduct, withTax } from "@/lib/products";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 
@@ -65,7 +65,15 @@ export async function POST(req: NextRequest) {
   if (oneTimeTotal === 0 && monthlyTotal === 0) {
     return NextResponse.json({ error: "empty order" }, { status: 400 });
   }
-  // 有建置＝維護首月已含，維護延後起扣、授權連結晚點寄；無建置＝單購維護，當下即授權
+  // 建置案必須搭配維護（購物車已擋，此處為伺服器端再驗一次，防繞過前端）
+  const skus = d.items.map((i) => i.sku);
+  if (careRequired(skus)) {
+    const options = careOptionsFor(skus).map((p) => p.sku);
+    if (!monthlySkus.some((s) => options.includes(s))) {
+      return NextResponse.json({ error: "care plan required" }, { status: 400 });
+    }
+  }
+  // 有建置＝先付建置款，付款成功後於結果頁接著完成維護授權；無建置＝單購維護，當下即授權
   const hasBuild = oneTimeTotal > 0;
 
   const orderId = genOrderId();
@@ -106,34 +114,29 @@ export async function POST(req: NextRequest) {
         amount: withTax(monthlyTotal),
       },
     });
-    // 建置已含首月 → 維護自訂單 +30 天起扣（授權連結由 cron 於接近時寄出）；
-    // 單購維護（無建置）→ 當下即需授權並開始扣款。
-    // 註：startsAt 僅決定「何時寄授權連結」；實際首期扣款發生在客戶點連結完成授權的當下
-    //（綠界定期定額首期即時扣），故「第二個月起」為近似值。
-    const startsAt = hasBuild
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      : new Date();
+    // 維護自第一個月起計費，兩種路徑都是「當下授權、首期即時扣」：
+    // 有建置 → 建置付款成功後，結果頁接著引導完成維護授權；
+    // 單購維護 → 結帳當下直接導向授權。
     await prisma.subscription.create({
       data: {
         orderId: order.id,
         merchantTradeNo: mtn,
         sku: monthlySkus.join("+"),
         monthlyAmount: withTax(monthlyTotal),
-        startsAt,
-        // 單購維護於結帳當下即導向授權，視為已完成提醒，不再由 cron 寄
+        startsAt: new Date(),
+        // 有建置者若在結果頁中離未授權，交由 cron 寄連結追回；單購維護當下即授權，不需追
         authLinkSentAt: hasBuild ? null : new Date(),
         remindersSent: hasBuild ? 0 : 2,
       },
     });
   }
 
-  // 維護採定期定額，首期於授權當下即扣。為對應「建置已含首月」，
-  // 維護授權連結不在結帳當下要求，而是於首月結束前寄給客戶，使首期落在第二個月。
+  // 維護採定期定額，首期於授權當下即扣，自第一個月起計費。
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const careNote =
     monthlyTotal > 0
       ? hasBuild
-        ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n首月已含於建置。系統會在起扣日前自動寄授權連結給客戶（首期即為第二個月）；若要提前寄，連結為：\n${site}/api/pay/${orderId}2`
+        ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n建置付款成功後，結果頁會引導客戶完成定期定額授權（第一期即時扣）。若客戶中離未授權，cron 會自動寄授權連結追回；連結為：\n${site}/api/pay/${orderId}2`
         : `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n單購維護，客戶於結帳當下即完成定期定額授權、當月起扣，無需另寄連結。`
       : "";
   await notifyOwner(

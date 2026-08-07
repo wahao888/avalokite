@@ -54,6 +54,12 @@ export default async function OrderResultPage({
         </p>
       )}
 
+      {nextPayment?.kind === "period" && (
+        <p className="cart-monthly-note" style={{ marginBottom: "1.5rem" }}>
+          ✦ {t("careAuthNote")}
+        </p>
+      )}
+
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
         {nextPayment && (
           <a href={`/api/pay/${nextPayment.merchantTradeNo}`} className="btn-primary">

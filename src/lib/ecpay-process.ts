@@ -64,12 +64,12 @@ export async function processPaymentResult(params: Record<string, string>) {
 
   if (success) {
     const zh = order.locale !== "en";
-    // 建置付款成功、且訂單含維護訂閱 → 預告稍後會另收授權連結，避免客戶對第二封信困惑
+    // 建置付款成功、且訂單含維護訂閱 → 提醒還有一步：維護的定期定額授權（自第一個月起計費）
     const careHeadsUp =
       payment.kind === "onetime" && order.monthlyTotal > 0
         ? zh
-          ? `\n\n※ 您的方案含維護：首月維護已包含在本次建置費用中。第二個月起維護開始，我們會在首月結束前另寄一封信，附上信用卡定期定額授權連結，屆時完成授權即可續接。`
-          : `\n\n※ Your plan includes care: the first month is covered by this build fee. From month two, we'll email you a separate recurring-payment authorization link before month one ends.`
+          ? `\n\n※ 還有一步：您的方案含維護，維護自第一個月起計費，需另外完成信用卡定期定額授權（與本次建置款項是兩筆分開的授權）。付款完成頁面上即有授權按鈕；若已關閉頁面，我們會另寄授權連結給您。`
+          : `\n\n※ One more step: your plan includes care, billed from month one via a separate recurring card authorization (separate from this build payment). The button is on the payment result page — if you've closed it, we'll email you the link.`
         : "";
     await sendMail({
       to: order.email,

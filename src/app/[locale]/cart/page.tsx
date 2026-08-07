@@ -3,7 +3,13 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
-import { fmt, getProduct, withTax } from "@/lib/products";
+import {
+  careOptionsFor,
+  fmt,
+  getProduct,
+  recommendedCareFor,
+  withTax,
+} from "@/lib/products";
 import type { Locale } from "@/i18n/routing";
 
 export default function CartPage() {
@@ -14,13 +20,15 @@ export default function CartPage() {
   const oneTime = cart.items.filter((i) => getProduct(i.sku)?.type === "onetime");
   const monthly = cart.items.filter((i) => getProduct(i.sku)?.type === "monthly");
 
-  // 建置已含首月維護；針對車上的一次性方案，推薦「第二個月起」接續的維護（尚未加入車者）
-  const suggestedCareSkus = Array.from(
-    new Set(
-      oneTime
-        .map((i) => getProduct(i.sku)?.recommendedCareSku)
-        .filter((s): s is string => !!s && !cart.has(s))
-    )
+  // 車上有建置方案 → 必須擇一維護（自第一個月起計費），未選則不給結帳
+  const skus = cart.items.map((i) => i.sku);
+  const careOptions = careOptionsFor(skus);
+  const careNeeded = careOptions.length > 0;
+  const recommendedCare = recommendedCareFor(skus);
+  const selectedCare = careOptions.find((o) => cart.has(o.sku));
+  // 單購維護（無建置）時照舊以列表呈現，不進必選區塊
+  const looseMonthly = monthly.filter(
+    (i) => !careOptions.some((o) => o.sku === i.sku)
   );
 
   if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
@@ -68,6 +76,7 @@ export default function CartPage() {
 
   const oneTimeTax = withTax(cart.oneTimeSubtotal) - cart.oneTimeSubtotal;
   const dueNow = withTax(cart.oneTimeSubtotal);
+  const careBlocked = careNeeded && !selectedCare;
 
   return (
     <main className="page-wrap page-wrap-narrow">
@@ -80,43 +89,56 @@ export default function CartPage() {
           {oneTime.map((i) => renderRow(i.sku, i.qty))}
         </>
       )}
-      {monthly.length > 0 && (
+      {looseMonthly.length > 0 && (
         <>
           <div className="cart-section-head">{t("monthlySection")}</div>
-          {monthly.map((i) => renderRow(i.sku, i.qty))}
+          {looseMonthly.map((i) => renderRow(i.sku, i.qty))}
         </>
       )}
 
-      {suggestedCareSkus.length > 0 && (
+      {careNeeded && (
         <>
-          <div className="cart-section-head">{t("careSuggestHeading")}</div>
-          <p className="care-suggest-note">{t("careSuggestNote")}</p>
-          {suggestedCareSkus.map((sku) => {
-            const care = getProduct(sku)!;
-            const info = care.i18n[locale];
-            const forNames = oneTime
-              .map((i) => getProduct(i.sku)!)
-              .filter((p) => p.recommendedCareSku === sku)
-              .map((p) => p.i18n[locale].name)
-              .join("、");
-            return (
-              <div className="care-suggest-row" key={sku}>
-                <div>
-                  <div className="cart-item-name">{info.name}</div>
-                  <div className="cart-item-unit">
-                    {t("careSuggestFor")} {forNames} · {t("careSuggestFrom")}
-                  </div>
-                </div>
-                <div className="cart-price">
-                  NT${fmt(care.price)}
-                  <span style={{ fontSize: "0.7rem" }}>{perMonthLabel(locale)}</span>
-                </div>
-                <button className="care-suggest-add" onClick={() => cart.add(sku)}>
-                  ＋ {t("careSuggestAdd")}
+          <div className="cart-section-head">
+            {t("careRequiredHeading")}
+            <span className="care-required-tag">{t("careRequiredTag")}</span>
+          </div>
+          <p className="care-required-note">{t("careRequiredNote")}</p>
+          <div className="care-options" role="radiogroup" aria-label={t("careRequiredHeading")}>
+            {careOptions.map((care) => {
+              const info = care.i18n[locale];
+              const chosen = selectedCare?.sku === care.sku;
+              return (
+                <button
+                  key={care.sku}
+                  type="button"
+                  role="radio"
+                  aria-checked={chosen}
+                  className={`care-option${chosen ? " chosen" : ""}`}
+                  onClick={() => cart.add(care.sku)}
+                >
+                  <span className="care-option-check" aria-hidden>
+                    {chosen ? "✓" : ""}
+                  </span>
+                  <span className="care-option-body">
+                    <span className="cart-item-name">
+                      {info.name}
+                      {care.sku === recommendedCare && (
+                        <span className="care-option-rec">{t("careRecommended")}</span>
+                      )}
+                    </span>
+                    <span className="care-option-desc">{info.desc}</span>
+                    <span className="care-option-features">
+                      {info.features.slice(0, 3).join(" · ")}
+                    </span>
+                  </span>
+                  <span className="cart-price">
+                    NT${fmt(care.price)}
+                    <span style={{ fontSize: "0.7rem" }}>{perMonthLabel(locale)}</span>
+                  </span>
                 </button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </>
       )}
 
@@ -148,8 +170,13 @@ export default function CartPage() {
             </div>
           </>
         )}
+        {careBlocked && <div className="cart-blocked-note">{t("careRequiredBlocked")}</div>}
         <div style={{ display: "flex", gap: "1rem", marginTop: "2rem", flexWrap: "wrap" }}>
-          <Link href="/checkout" className="btn-primary">{t("checkout")}</Link>
+          {careBlocked ? (
+            <span className="btn-primary is-disabled" aria-disabled>{t("checkout")}</span>
+          ) : (
+            <Link href="/checkout" className="btn-primary">{t("checkout")}</Link>
+          )}
           <Link href={{ pathname: "/", hash: "pricing" }} className="btn-ghost">
             {t("continueShopping")}
           </Link>

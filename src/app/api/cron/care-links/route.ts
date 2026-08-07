@@ -5,7 +5,9 @@ import { sendMail, notifyOwner } from "@/lib/mail";
 export const dynamic = "force-dynamic";
 
 const DAY = 24 * 60 * 60 * 1000;
-const LEAD_DAYS = 5; // 起扣日前幾天開始寄授權連結（兼「首月即將到期」提醒）
+// 維護自第一個月起計費，正常路徑是客戶在建置付款成功頁直接完成授權。
+// 這支 cron 只負責追回「中離未授權」的訂單，故先留一天緩衝再開始寄。
+const GRACE_HOURS = 24;
 const STALE_DAYS = 30; // 起扣日已過超過這麼多天則不再自動寄，改人工處理，避免騷擾陳年訂單
 const RESEND_GAP_DAYS = 5; // 兩封提醒之間的間隔
 const MAX_REMINDERS = 2; // 最多寄幾封（首封 + 一次跟催）
@@ -25,16 +27,16 @@ export async function POST(req: NextRequest) {
 
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const now = Date.now();
-  const leadThreshold = new Date(now + LEAD_DAYS * DAY);
+  const graceThreshold = new Date(now - GRACE_HOURS * 60 * 60 * 1000);
   const staleThreshold = new Date(now - STALE_DAYS * DAY);
   const resendThreshold = new Date(now - RESEND_GAP_DAYS * DAY);
 
-  // 待授權、未達提醒上限、起扣日進入通知窗（且未過期太久）、且尚未寄或距上封已超過間隔
+  // 待授權、未達提醒上限、已過緩衝期（且未過期太久）、且尚未寄或距上封已超過間隔
   const due = await prisma.subscription.findMany({
     where: {
       status: "pending",
       remindersSent: { lt: MAX_REMINDERS },
-      startsAt: { lte: leadThreshold, gte: staleThreshold },
+      startsAt: { lte: graceThreshold, gte: staleThreshold },
       OR: [{ authLinkSentAt: null }, { authLinkSentAt: { lte: resendThreshold } }],
     },
     include: { order: { include: { payments: true } } },
@@ -55,20 +57,15 @@ export async function POST(req: NextRequest) {
     const followUp = sub.remindersSent > 0; // 第二封為跟催
     const payUrl = `${site}/api/pay/${sub.merchantTradeNo}`;
     const amount = sub.monthlyAmount.toLocaleString();
-    const endDate = sub.startsAt
-      ? new Date(sub.startsAt).toLocaleDateString(zh ? "zh-TW" : "en-US", {
-          timeZone: "Asia/Taipei",
-        })
-      : "";
 
     const sent = await sendMail({
       to: sub.order.email,
       subject: zh
-        ? `[Avalo] ${followUp ? "再次提醒：" : ""}維護首月即將結束，續約請授權（訂單 ${sub.orderId}）`
-        : `[Avalo] ${followUp ? "Reminder: " : ""}Your first month of care is ending — authorize to continue (order ${sub.orderId})`,
+        ? `[Avalo] ${followUp ? "再次提醒：" : ""}維護方案尚未完成授權（訂單 ${sub.orderId}）`
+        : `[Avalo] ${followUp ? "Reminder: " : ""}Your care plan isn't authorized yet (order ${sub.orderId})`,
       text: zh
-        ? `${sub.order.name} 您好，\n\n${followUp ? "先前寄給您的維護續約連結尚未完成授權，再次提醒。\n\n" : ""}您訂單 ${sub.orderId} 內含的第一個月維護即將於 ${endDate} 結束。\n若要持續由 Avalo 為您維護，請點擊以下連結完成信用卡定期定額授權，第二個月起每月自動扣款 NT$${amount}（含稅），可隨時取消：\n\n${payUrl}\n\n若暫不續約，可忽略本信，維護將自然結束。\n\nAvalo 阿瓦羅`
-        : `Hi ${sub.order.name},\n\n${followUp ? "This is a follow-up — the care renewal link we sent hasn't been authorized yet.\n\n" : ""}The first month of care included with order ${sub.orderId} ends on ${endDate}.\nTo keep Avalo maintaining your site, complete the recurring card authorization below. Billing of NT$${amount} (incl. tax) starts from month two and can be cancelled anytime:\n\n${payUrl}\n\nIf you'd rather not continue, ignore this email and care will simply end.\n\nAvalo`,
+        ? `${sub.order.name} 您好，\n\n${followUp ? "先前寄給您的維護授權連結尚未完成，再次提醒。\n\n" : ""}您訂單 ${sub.orderId} 的建置款項已收到，但方案內含的維護尚未完成信用卡定期定額授權。\n維護自第一個月起計費，請點擊以下連結完成授權，每月自動扣款 NT$${amount}（含稅），可隨時取消：\n\n${payUrl}\n\n完成授權後，主機代管、備份、安全更新與監控才會正式啟動。\n\nAvalo 阿瓦羅`
+        : `Hi ${sub.order.name},\n\n${followUp ? "This is a follow-up — the care authorization link we sent hasn't been completed yet.\n\n" : ""}We've received the build payment for order ${sub.orderId}, but the care plan included in it still needs a recurring card authorization.\nCare is billed from month one. Complete the authorization below for NT$${amount} (incl. tax) per month, cancellable anytime:\n\n${payUrl}\n\nHosting, backups, security updates and monitoring start once it's authorized.\n\nAvalo`,
     });
 
     // 只有真的寄出才計數，SMTP 未設定／寄信失敗時保持原狀，隔天重試

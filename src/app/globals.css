@@ -78,7 +78,9 @@ button { font-family: inherit; }
   transition: background 0.2s, transform 0.15s;
 }
 .btn-primary:hover { background: var(--moss-deep); transform: translateY(-2px); }
-.btn-primary:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+.btn-primary:disabled,
+.btn-primary.is-disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+.btn-primary.is-disabled:hover { background: var(--muted); transform: none; }
 
 .btn-ghost {
   color: var(--ink);
@@ -1205,8 +1207,16 @@ button { font-family: inherit; }
   margin-top: 1rem;
 }
 
-/* ── 接續維護選配 ── */
-.care-suggest-note {
+/* ── 維護方案（必選其一）── */
+.care-required-tag {
+  margin-left: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--moss);
+  color: var(--cream);
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+}
+.care-required-note {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.05em;
@@ -1214,32 +1224,76 @@ button { font-family: inherit; }
   color: var(--wood);
   margin-bottom: 1rem;
 }
-.care-suggest-row {
+.care-options { display: grid; gap: 0.8rem; }
+.care-option {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 1.5rem;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.2rem;
   align-items: center;
-  padding: 1.1rem 1.3rem;
-  border: 1px dashed var(--border);
+  width: 100%;
+  text-align: left;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--border);
   background: var(--cream);
-  margin-bottom: 0.8rem;
-}
-.care-suggest-add {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--moss);
-  color: var(--moss);
-  background: none;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
 }
-.care-suggest-add:hover { background: var(--moss); color: var(--cream); }
+.care-option:hover { border-color: var(--moss); }
+.care-option.chosen { border-color: var(--moss); border-width: 2px; padding: calc(1.2rem - 1px) calc(1.4rem - 1px); }
+.care-option-check {
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--cream);
+  flex-shrink: 0;
+}
+.care-option.chosen .care-option-check { background: var(--moss); border-color: var(--moss); }
+.care-option-body { display: block; }
+.care-option-desc {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  line-height: 1.6;
+}
+.care-option-features {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: var(--wood);
+  margin-top: 0.45rem;
+}
+.care-option-rec {
+  margin-left: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--moss);
+  border: 1px solid var(--moss);
+  padding: 0.1rem 0.4rem;
+  vertical-align: middle;
+}
+.cart-blocked-note {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  color: #8a3b2a;
+  margin-top: 1.2rem;
+}
 @media (max-width: 640px) {
-  .care-suggest-row { grid-template-columns: 1fr auto; row-gap: 0.6rem; }
+  .care-option { grid-template-columns: auto 1fr; row-gap: 0.6rem; }
+  .care-option .cart-price { grid-column: 2; }
 }
 
 .checkout-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }

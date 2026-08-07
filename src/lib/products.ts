@@ -23,7 +23,8 @@ export interface Product {
   group?: ProductGroup; // 不設 = 一般方案
   badge?: { "zh-TW": string; en: string }; // 覆寫 featured-badge 文字
   promoNote?: { "zh-TW": string; en: string }; // 卡片底部小字（席次／條件）
-  // 一次性方案的建議接續維護：建置已含首月，第二個月起可選訂閱此月費方案
+  // 建議搭配的維護方案。有此欄位＝該方案必須搭配一份維護（購物車強制擇一），
+  // 維護自第一個月起計費；建置費不含任何維護月份。
   recommendedCareSku?: string;
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
   i18n: { "zh-TW": ProductI18n; en: ProductI18n };
@@ -50,7 +51,7 @@ export const PRODUCTS: Product[] = [
           "RWD 響應式（手機／平板／桌機）",
           "SEO 基礎建置＋GA4 安裝",
           "聯絡表單＋LINE 導流",
-          "含部署上線與第一個月維護",
+          "含部署上線與交付驗收",
         ],
         unit: "一次性",
       },
@@ -63,7 +64,7 @@ export const PRODUCTS: Product[] = [
           "Responsive (mobile / tablet / desktop)",
           "SEO foundation + GA4 setup",
           "Contact form + LINE integration",
-          "Deployment + first month of care included",
+          "Deployment and handover included",
         ],
         unit: "one-time",
       },
@@ -86,7 +87,7 @@ export const PRODUCTS: Product[] = [
           "金流串接（綠界／藍新，含定期定額）",
           "訂單管理後台",
           "電子發票串接可選",
-          "含部署上線與第一個月維護",
+          "含部署上線與交付驗收",
         ],
         unit: "一次性",
       },
@@ -99,7 +100,7 @@ export const PRODUCTS: Product[] = [
           "Payment gateway (incl. recurring billing)",
           "Order management dashboard",
           "E-invoice integration available",
-          "Deployment + first month of care included",
+          "Deployment and handover included",
         ],
         unit: "one-time",
       },
@@ -121,7 +122,7 @@ export const PRODUCTS: Product[] = [
           "RAG 知識庫（用你的 FAQ／文件訓練）",
           "真人轉接與對話紀錄後台",
           "每月對話用量報表",
-          "含部署、知識庫首次建置與首月託管",
+          "含部署上線與知識庫首次建置",
         ],
         unit: "一次性",
       },
@@ -134,7 +135,7 @@ export const PRODUCTS: Product[] = [
           "RAG knowledge base from your docs/FAQ",
           "Human handoff + conversation logs",
           "Monthly usage reports",
-          "Deployment, initial KB setup + first month included",
+          "Deployment and initial knowledge base setup",
         ],
         unit: "one-time",
       },
@@ -191,7 +192,7 @@ export const PRODUCTS: Product[] = [
           "數據儀表板：整合營運數字、自動產出報表",
           "串接 LINE／Email／Sheets／ERP／POS",
           "自建自有，無第三方軟體月租",
-          "含部署上線與首月維運",
+          "含部署上線與交付驗收",
         ],
         unit: "組合一次性",
       },
@@ -204,7 +205,7 @@ export const PRODUCTS: Product[] = [
           "Data dashboard: unified metrics + automated reports",
           "LINE / Email / Sheets / ERP / POS integrations",
           "Self-owned — no third-party SaaS fees",
-          "Deployment + first month of care included",
+          "Deployment and handover included",
         ],
         unit: "bundle, one-time",
       },
@@ -307,7 +308,7 @@ export const PRODUCTS: Product[] = [
           "專屬表單後台＋新訊即時 Email 通知",
           "子網域與 SSL 憑證（隨時可改綁自有網域）",
           "GA4、sitemap、結構化資料基礎建置",
-          "含部署上線與第一個月維護",
+          "含部署上線與交付驗收",
         ],
         unit: "一次性",
       },
@@ -320,7 +321,7 @@ export const PRODUCTS: Product[] = [
           "Private form dashboard + instant email alerts",
           "Subdomain with SSL (custom domain any time)",
           "GA4, sitemap and structured data",
-          "Deployment + first month of care included",
+          "Deployment and handover included",
         ],
         unit: "one-time",
       },
@@ -480,6 +481,36 @@ export const promoProducts = () => PRODUCTS.filter((p) => p.group === "promo");
 export const plansUsingCare = (careSku: string) =>
   PRODUCTS.filter((p) => p.type === "onetime" && p.recommendedCareSku === careSku);
 
+// ─── 維護必選規則 ───
+//
+// 建置案交付後就得有人顧：主機、備份、安全更新都是持續成本，
+// 所以車上有建置方案時，必須擇一維護方案，且自第一個月起計費。
+// 網站健檢（無 recommendedCareSku）是一次性報告，不在此限。
+const buildsNeedingCare = (skus: string[]) =>
+  skus
+    .map(getProduct)
+    .filter((p): p is Product => !!p && p.type === "onetime" && !!p.recommendedCareSku);
+
+/** 車上的建置方案是否要求搭配維護 */
+export const careRequired = (skus: string[]) => buildsNeedingCare(skus).length > 0;
+
+/**
+ * 車上建置方案可選的維護方案。促銷建置（Launch）綁定促銷維護，
+ * 不與正式月費方案混選，否則創始價會被一般方案的價格帶稀釋。
+ */
+export const careOptionsFor = (skus: string[]): Product[] => {
+  const builds = buildsNeedingCare(skus);
+  if (builds.length === 0) return [];
+  if (builds.some((p) => p.group === "promo")) {
+    return PRODUCTS.filter((p) => p.type === "monthly" && p.group === "promo");
+  }
+  return monthlyProducts();
+};
+
+/** 預設推薦的維護方案：以車上最高價的建置方案為準 */
+export const recommendedCareFor = (skus: string[]): string | undefined =>
+  buildsNeedingCare(skus).sort((a, b) => b.price - a.price)[0]?.recommendedCareSku;
+
 // ─── 首波創始客戶計畫：方案組合 ───
 //
 // launch-setup 與 launch-care 是「結帳用的 SKU」，不是「客戶看到的方案」。
@@ -536,7 +567,7 @@ export const PROMO_PLANS: PromoPlan[] = [
         tagline: "建置費一次付清，綁約期較短",
         terms: [
           "最短承諾 12 個月",
-          "建置費已含第一個月維護，月費自第二個月起扣",
+          "建置費一次付清，維護月費自第一個月起扣",
           "期滿轉月繳，30 天前通知即可終止",
         ],
       },
@@ -545,7 +576,7 @@ export const PROMO_PLANS: PromoPlan[] = [
         tagline: "Pay the build fee up front, shorter commitment",
         terms: [
           "12-month minimum term",
-          "Build fee includes the first month; billing starts in month two",
+          "Build fee paid up front; care billing starts in month one",
           "Rolls to monthly after; cancel with 30 days' notice",
         ],
       },
