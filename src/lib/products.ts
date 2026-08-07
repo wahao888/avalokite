@@ -507,6 +507,19 @@ export const careOptionsFor = (skus: string[]): Product[] => {
   return monthlyProducts();
 };
 
+/**
+ * 促銷建置與正式建置不得同車。
+ *
+ * careOptionsFor 在有促銷建置時只會回促銷維護（NT$2,000/月），
+ * 若車上同時有商務網站（正常搭配成長維護 NT$5,990/月），等於用促銷價
+ * 買到正式方案的維護——這是定價漏洞，不是彈性。健檢（無 recommendedCareSku）
+ * 是獨立的一次性報告，不受此限。
+ */
+export const mixedBuildConflict = (skus: string[]) => {
+  const builds = buildsNeedingCare(skus);
+  return builds.some((p) => p.group === "promo") && builds.some((p) => !p.group);
+};
+
 /** 預設推薦的維護方案：以車上最高價的建置方案為準 */
 export const recommendedCareFor = (skus: string[]): string | undefined =>
   buildsNeedingCare(skus).sort((a, b) => b.price - a.price)[0]?.recommendedCareSku;

@@ -7,6 +7,7 @@ import {
   careOptionsFor,
   fmt,
   getProduct,
+  mixedBuildConflict,
   recommendedCareFor,
   withTax,
 } from "@/lib/products";
@@ -22,6 +23,8 @@ export default function CartPage() {
 
   // 車上有建置方案 → 必須擇一維護（自第一個月起計費），未選則不給結帳
   const skus = cart.items.map((i) => i.sku);
+  // 促銷建置與正式建置同車 → 維護選項會被促銷價汙染，請客戶分兩張單
+  const mixedBuilds = mixedBuildConflict(skus);
   const careOptions = careOptionsFor(skus);
   const careNeeded = careOptions.length > 0;
   const recommendedCare = recommendedCareFor(skus);
@@ -76,7 +79,7 @@ export default function CartPage() {
 
   const oneTimeTax = withTax(cart.oneTimeSubtotal) - cart.oneTimeSubtotal;
   const dueNow = withTax(cart.oneTimeSubtotal);
-  const careBlocked = careNeeded && !selectedCare;
+  const careBlocked = mixedBuilds || (careNeeded && !selectedCare);
 
   return (
     <main className="page-wrap page-wrap-narrow">
@@ -102,7 +105,9 @@ export default function CartPage() {
             {t("careRequiredHeading")}
             <span className="care-required-tag">{t("careRequiredTag")}</span>
           </div>
-          <p className="care-required-note">{t("careRequiredNote")}</p>
+          <p className="care-required-note">
+            {mixedBuilds ? t("mixedBuildsBlocked") : t("careRequiredNote")}
+          </p>
           <div className="care-options" role="radiogroup" aria-label={t("careRequiredHeading")}>
             {careOptions.map((care) => {
               const info = care.i18n[locale];
@@ -170,7 +175,11 @@ export default function CartPage() {
             </div>
           </>
         )}
-        {careBlocked && <div className="cart-blocked-note">{t("careRequiredBlocked")}</div>}
+        {careBlocked && (
+          <div className="cart-blocked-note">
+            {mixedBuilds ? t("mixedBuildsBlocked") : t("careRequiredBlocked")}
+          </div>
+        )}
         <div style={{ display: "flex", gap: "1rem", marginTop: "2rem", flexWrap: "wrap" }}>
           {careBlocked ? (
             <span className="btn-primary is-disabled" aria-disabled>{t("checkout")}</span>

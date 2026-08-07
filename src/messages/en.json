@@ -369,7 +369,8 @@
     "careRequiredTag": "Required",
     "careRequiredNote": "Once your site is live it needs hosting, backups, security updates and monitoring — so every build comes with a care plan, billed from month one. Pick one; you can change or cancel it any time.",
     "careRecommended": "Recommended",
-    "careRequiredBlocked": "Please choose a care plan to continue to checkout."
+    "careRequiredBlocked": "Please choose a care plan to continue to checkout.",
+    "mixedBuildsBlocked": "Founding Client Program plans cannot share an order with standard build plans — they come with different care plans and rates. Please check out separately, or remove one of them."
   },
   "checkout": {
     "title": "Checkout",

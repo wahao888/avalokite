@@ -26,8 +26,9 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "二、訂購與付款",
           body: [
-            "網站上標示之價格均為新台幣未稅價，結帳時加計 5% 營業稅。付款透過綠界科技 ECPay 處理，支援信用卡、ATM 轉帳與超商代碼。",
-            "月費方案採信用卡定期定額，授權後每月自動扣款；您可隨時依退款政策取消，停扣自次一期生效。",
+            "網站上標示之價格均為新台幣未稅價，結帳時加計 5% 營業稅。付款透過綠界科技 ECPay 處理，一次性款項與月費訂閱均以信用卡支付。",
+            "建置類服務須搭配一份維護方案，維護自第一個月起計費。建置款與維護月費為兩筆分開的授權：建置款於結帳時一次收取，維護採信用卡定期定額，於建置付款完成後另行授權，首期於授權當下扣款。",
+            "月費方案採信用卡定期定額，授權後每月自動扣款；您可隨時依退款政策取消，停扣自次一期生效。促銷方案（如首波創始客戶計畫）另訂有最短承諾期，以該方案於定價頁公告之條款為準。",
             "本公司採公開定價、不二價原則；客製專案於免費諮詢後提供書面固定報價。",
           ],
         },
@@ -70,8 +71,9 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "2. Orders & Payment",
           body: [
-            "Listed prices are in TWD excluding tax; 5% VAT is added at checkout. Payments are processed by ECPay (credit card, ATM transfer, convenience store code).",
-            "Subscriptions are charged monthly by credit card after authorization. You may cancel anytime per the Refund Policy; cancellation takes effect from the next billing cycle.",
+            "Listed prices are in TWD excluding tax; 5% VAT is added at checkout. Payments are processed by ECPay; both one-time fees and subscriptions are paid by credit card.",
+            "Build services require an accompanying care plan, billed from month one. The build fee and the care subscription are two separate authorizations: the build fee is collected at checkout, and the care plan is authorized as a recurring card payment afterwards, with the first charge made at authorization.",
+            "Subscriptions are charged monthly by credit card after authorization. You may cancel anytime per the Refund Policy; cancellation takes effect from the next billing cycle. Promotional plans (such as the Founding Client Program) carry a minimum term as published on the pricing page.",
             "All standard services are fixed-price as published. Custom projects receive a written fixed quote after a free consultation.",
           ],
         },
@@ -190,7 +192,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "二、月費訂閱服務",
           body: [
-            "您可隨時取消訂閱：來信或 LINE 告知即可，已扣之當期費用不退，自次一期停止扣款。",
+            "您可隨時取消訂閱：於「訂單查詢」找到您的訂單後點「管理訂閱」即可自助終止，或來信、LINE 告知亦可。已扣之當期費用不退，自次一期停止扣款。",
             "首次訂閱 7 天內若服務尚未開始提供，可申請全額退款。",
           ],
         },
@@ -201,7 +203,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "四、退款方式與時程",
           body: [
-            `退款依原付款方式退回（信用卡刷退／轉帳），於確認後 14 個工作天內完成。申請請來信 ${SITE.email} 並附訂單編號。`,
+            `退款以原信用卡刷退方式退回，於確認後 14 個工作天內完成。申請請來信 ${SITE.email} 並附訂單編號。`,
           ],
         },
       ],
@@ -220,7 +222,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "2. Monthly Subscriptions",
           body: [
-            "Cancel anytime by email or LINE. The current billed month is non-refundable; charging stops from the next cycle.",
+            "Cancel anytime: find your order under \"Order Lookup\" and use \"Manage\" to cancel it yourself, or just email or LINE us. The current billed month is non-refundable; charging stops from the next cycle.",
             "Within 7 days of first subscribing, a full refund is available if service has not yet started.",
           ],
         },

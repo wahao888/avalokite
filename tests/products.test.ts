@@ -14,6 +14,7 @@ import {
   careOptionsFor,
   recommendedCareFor,
   promoPlanForSkus,
+  mixedBuildConflict,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -242,5 +243,22 @@ describe("目錄完整性", () => {
   });
   it("月費方案只用於 monthlyProducts", () => {
     expect(monthlyProducts().every((p) => p.type === "monthly")).toBe(true);
+  });
+});
+
+describe("促銷與正式建置不得同車（mixedBuildConflict）", () => {
+  it("促銷建置＋正式建置 → 衝突（否則正式方案會吃到促銷維護價）", () => {
+    expect(mixedBuildConflict(["launch-setup", "web-commerce"])).toBe(true);
+    // 沒擋住的話，89,000 的商務網站只需搭 NT$2,000/月而非 NT$5,990/月
+    expect(careOptionsFor(["launch-setup", "web-commerce"]).map((p) => p.sku)).toEqual([
+      "launch-care",
+    ]);
+  });
+
+  it("單獨的促銷或正式建置、以及搭配網站健檢，都不算衝突", () => {
+    expect(mixedBuildConflict(["launch-setup", "launch-care"])).toBe(false);
+    expect(mixedBuildConflict(["web-commerce", "care-growth"])).toBe(false);
+    expect(mixedBuildConflict(["launch-setup", "site-rescue"])).toBe(false);
+    expect(mixedBuildConflict([])).toBe(false);
   });
 });

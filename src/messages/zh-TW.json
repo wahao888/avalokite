@@ -369,7 +369,8 @@
     "careRequiredTag": "必選",
     "careRequiredNote": "網站上線之後需要主機、備份、安全更新與監控，因此建置案一律搭配一份維護方案，自第一個月起計費。請選擇一個方案，日後可隨時升降級或取消。",
     "careRecommended": "推薦",
-    "careRequiredBlocked": "請先選擇一個維護方案才能結帳。"
+    "careRequiredBlocked": "請先選擇一個維護方案才能結帳。",
+    "mixedBuildsBlocked": "創始客戶計畫的方案不能與一般建置方案同一張訂單（兩者的維護方案與價格不同）。請分成兩張訂單結帳，或移除其中一項。"
   },
   "checkout": {
     "title": "結帳",

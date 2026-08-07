@@ -6,6 +6,7 @@ import {
   careOptionsFor,
   careRequired,
   getProduct,
+  mixedBuildConflict,
   promoPlanForSkus,
   withTax,
 } from "@/lib/products";
@@ -73,6 +74,10 @@ export async function POST(req: NextRequest) {
   }
   // 建置案必須搭配維護（購物車已擋，此處為伺服器端再驗一次，防繞過前端）
   const skus = d.items.map((i) => i.sku);
+  // 促銷建置與正式建置同車會讓正式方案吃到促銷維護價，直接擋掉
+  if (mixedBuildConflict(skus)) {
+    return NextResponse.json({ error: "promo and standard builds cannot be mixed" }, { status: 400 });
+  }
   if (careRequired(skus)) {
     const options = careOptionsFor(skus).map((p) => p.sku);
     if (!monthlySkus.some((s) => options.includes(s))) {

@@ -80,7 +80,7 @@ interface BaseTradeOptions {
   returnUrl: string; // server-to-server 通知
 }
 
-// 一次性付款（信用卡／ATM／超商代碼）
+// 一次性付款（只收信用卡，原因見下方 ChoosePayment）
 export function buildAioCheckout(opts: BaseTradeOptions): EcpayFormPayload {
   const { merchantId, actionUrl } = ecpayConfig();
   const fields: Record<string, string> = {
