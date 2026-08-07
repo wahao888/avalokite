@@ -94,7 +94,10 @@ export function buildAioCheckout(opts: BaseTradeOptions): EcpayFormPayload {
     ReturnURL: opts.returnUrl,
     OrderResultURL: opts.orderResultUrl,
     ClientBackURL: opts.clientBackUrl,
-    ChoosePayment: "ALL",
+    // 只收信用卡：建置案必定搭配定期定額維護（只能刷卡），
+    // 開放 ATM／超商會讓兩筆款項的流程與時間軸分岔（代碼繳費要等數日才入帳，
+    // 期間無法接著授權維護），而且未繳費的訂單無法用同一組 MerchantTradeNo 重送。
+    ChoosePayment: "Credit",
     EncryptType: "1",
     NeedExtraPaidInfo: "N",
   };

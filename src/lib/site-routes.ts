@@ -22,6 +22,7 @@ export const PRIVATE_PATHS = [
   "/checkout",
   "/order/lookup",
   "/order/result",
+  "/subscription", // 客戶自助管理訂閱（網址含交易編號，絕不可被收錄）
 ];
 
 const LEGAL_DOCS = ["terms", "privacy", "refund"]; // 對應 legal/[doc] 的 DOCS

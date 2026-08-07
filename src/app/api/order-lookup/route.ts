@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
       status: s.status,
       totalSuccessTimes: s.totalSuccessTimes,
       lastChargeAt: s.lastChargeAt,
+      // 管理訂閱頁的憑證。查詢已驗證過訂單編號＋Email，交出這組編號是安全的
+      merchantTradeNo: s.merchantTradeNo,
     })),
   });
 }

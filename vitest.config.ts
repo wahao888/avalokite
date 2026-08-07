@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -5,6 +6,9 @@ export default defineConfig({
   // bundler 條件下解析得到。加上這兩個條件，tests/proxy.test.ts 才能載入 src/proxy.ts。
   resolve: {
     conditions: ["node", "import", "react-server"],
+    // src 內混用 "@/lib/x" 與 "./x" 兩種寫法；沒有這個 alias，
+    // 測試就無法 mock 以 "@/" 匯入的模組（mock 與來源會解析成兩個不同的模組）
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
     environment: "node",

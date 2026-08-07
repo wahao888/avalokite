@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/admin-auth";
-import { cancelPeriod } from "@/lib/ecpay";
+import { cancelSubscription, findSubscription } from "@/lib/subscription";
+import { prisma } from "@/lib/prisma";
 
-// 後台一鍵終止定期定額扣款（呼叫綠界 CreditCardPeriodAction，Action=Cancel）
+// 後台一鍵終止定期定額扣款。實際邏輯與客戶自助終止共用 lib/subscription，
+// 兩邊都會呼叫綠界終止、作廢待付授權、重算訂單狀態並通知站方。
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -13,24 +14,13 @@ export async function POST(req: NextRequest) {
   const id = Number(form.get("id"));
   if (!id) return NextResponse.redirect(`${site}/admin?suberr=badid`, 303);
 
-  const sub = await prisma.subscription.findUnique({ where: { id } });
+  const row = await prisma.subscription.findUnique({ where: { id } });
+  const sub = row ? await findSubscription(row.merchantTradeNo) : null;
   if (!sub) return NextResponse.redirect(`${site}/admin?suberr=notfound`, 303);
-  if (sub.status === "cancelled") {
-    return NextResponse.redirect(`${site}/admin`, 303);
-  }
 
   try {
-    const r = await cancelPeriod(sub.merchantTradeNo);
-    await prisma.subscription.update({
-      where: { id },
-      data: r.success
-        ? { status: "cancelled", cancelledAt: new Date(), cancelResult: r.raw.slice(0, 1000) }
-        : { cancelResult: `FAIL ${r.rtnCode} ${r.rtnMsg}`.slice(0, 1000) },
-    });
-    return NextResponse.redirect(
-      `${site}/admin${r.success ? "" : "?suberr=ecpay"}`,
-      303
-    );
+    const r = await cancelSubscription(sub, "admin");
+    return NextResponse.redirect(`${site}/admin${r.ok ? "" : "?suberr=ecpay"}`, 303);
   } catch (err) {
     console.error("[cancel-subscription]", err);
     await prisma.subscription.update({

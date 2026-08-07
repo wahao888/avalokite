@@ -23,10 +23,22 @@ export default async function OrderResultPage({
       })
     : null;
 
+  // 還有未完成的付款／授權 → 引導完成下一筆（cancelled 的舊授權不算）
+  const nextPayment = order?.payments.find((p) => p.status === "pending");
+  // 建置已付、只剩維護授權：這是每一筆建置訂單的必經狀態，
+  // 不能沿用「等待付款確認」的文案——客戶剛刷卡成功，看到那句會以為刷失敗。
+  const awaitingCare =
+    !!order &&
+    nextPayment?.kind === "period" &&
+    order.payments.some((p) => p.kind === "onetime" && p.status === "paid");
+
   let heading = t("failTitle");
   let desc = t("failDesc");
   if (!error && order) {
-    if (order.status === "paid") {
+    if (awaitingCare) {
+      heading = t("careAuthTitle");
+      desc = t("careAuthDesc");
+    } else if (order.status === "paid") {
       heading = t("successTitle");
       desc = t("successDesc");
     } else if (order.status === "pending" || order.status === "partial") {
@@ -34,9 +46,6 @@ export default async function OrderResultPage({
       desc = t("pendingDesc");
     }
   }
-
-  // 還有未完成的定期定額授權 → 引導完成第二筆
-  const nextPayment = order?.payments.find((p) => p.status === "pending");
 
   return (
     <main className="page-wrap page-wrap-narrow" style={{ textAlign: "center" }}>
@@ -54,7 +63,7 @@ export default async function OrderResultPage({
         </p>
       )}
 
-      {nextPayment?.kind === "period" && (
+      {awaitingCare && (
         <p className="cart-monthly-note" style={{ marginBottom: "1.5rem" }}>
           ✦ {t("careAuthNote")}
         </p>

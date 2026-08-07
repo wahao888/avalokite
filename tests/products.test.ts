@@ -13,6 +13,7 @@ import {
   careRequired,
   careOptionsFor,
   recommendedCareFor,
+  promoPlanForSkus,
 } from "../src/lib/products";
 
 describe("withTax（5% 營業稅，四捨五入）", () => {
@@ -205,6 +206,25 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
         expect(care.type).toBe("monthly");
       }
     }
+  });
+});
+
+describe("承諾期反查（promoPlanForSkus）", () => {
+  it("付建置費綁 12 個月，零元啟動綁 24 個月", () => {
+    expect(promoPlanForSkus(["launch-setup", "launch-care"])?.termMonths).toBe(12);
+    expect(promoPlanForSkus(["launch-care"])?.termMonths).toBe(24);
+  });
+
+  it("同時符合兩個方案時取條件較嚴格（SKU 較多）的那個", () => {
+    const plan = promoPlanForSkus(["launch-setup", "launch-care"]);
+    expect(plan?.id).toBe("founding");
+    expect(plan?.setup).toBe(10000);
+  });
+
+  it("一般方案沒有綁約", () => {
+    expect(promoPlanForSkus(["web-basic", "care-basic"])).toBeUndefined();
+    expect(promoPlanForSkus(["site-rescue"])).toBeUndefined();
+    expect(promoPlanForSkus([])).toBeUndefined();
   });
 });
 

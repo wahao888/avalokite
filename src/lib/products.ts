@@ -613,6 +613,16 @@ export const PROMO_PLANS: PromoPlan[] = [
 
 export const promoPlanTotal = (p: PromoPlan) => p.setup + p.monthly * p.termMonths;
 
+/**
+ * 反查訂單屬於哪個促銷方案，用來把「最短承諾期」寫進訂閱紀錄。
+ * 兩個方案共用 launch-care，差別在有沒有 launch-setup，
+ * 故取「所有 SKU 都在訂單裡」之中條件最嚴格（SKU 最多）的那個。
+ */
+export const promoPlanForSkus = (skus: string[]): PromoPlan | undefined =>
+  PROMO_PLANS.filter((p) => p.skus.every((s) => skus.includes(s))).sort(
+    (a, b) => b.skus.length - a.skus.length
+  )[0];
+
 // ─── 單項功能參考價（à la carte）───
 // 客戶可自由挑選組合；因客製範圍會影響價格，最終以諮詢確認報價為準。
 // 價格為未稅參考價（TWD），可自由調整。

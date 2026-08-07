@@ -18,6 +18,7 @@ interface LookupResult {
     status: string;
     totalSuccessTimes: number;
     lastChargeAt: string | null;
+    merchantTradeNo: string;
   }[];
 }
 
@@ -110,6 +111,17 @@ export default function OrderLookupPage() {
                     NT${fmt(s.monthlyAmount)}{locale === "en" ? "/mo" : "/月"}
                     {" "}· {locale === "en" ? "charged" : "已扣"} {s.totalSuccessTimes}
                     {locale === "en" ? " times" : " 期"}
+                    {s.status !== "cancelled" && s.status !== "replaced" && (
+                      <>
+                        {" · "}
+                        <a
+                          href={`/${locale}/subscription/${s.merchantTradeNo}`}
+                          style={{ color: "var(--moss)" }}
+                        >
+                          {t("manageSub")}
+                        </a>
+                      </>
+                    )}
                   </span>
                   <span className={`badge ${s.status}`}>{t(`subStatus.${s.status}`)}</span>
                 </div>

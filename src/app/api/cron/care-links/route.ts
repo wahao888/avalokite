@@ -44,11 +44,9 @@ export async function POST(req: NextRequest) {
 
   const results: { orderId: string; sent: boolean; reason?: string }[] = [];
   for (const sub of due) {
-    // 僅在建置一次性款項已付清後才寄維護授權連結
-    const buildPaid = sub.order.payments.some(
-      (p) => p.kind === "onetime" && p.status === "paid"
-    );
-    if (!buildPaid) {
+    // 僅在建置一次性款項已付清後才寄維護授權連結。
+    // 沒有一次性品項的訂單（單購維護、換方案後的新訂閱）視同已付，否則永遠追不到。
+    if (!buildPaid(sub.order.payments)) {
       results.push({ orderId: sub.orderId, sent: false, reason: "build-unpaid" });
       continue;
     }
@@ -91,5 +89,46 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ checked: due.length, sent: sentCount, results });
+  // 追完仍未授權 → 網站已交付但維護沒收到錢，這種狀態不該靜默。
+  // 每筆只通知一次（escalatedAt），之後由人工接手。
+  const stuck = (
+    await prisma.subscription.findMany({
+      where: {
+        status: "pending",
+        remindersSent: { gte: MAX_REMINDERS },
+        escalatedAt: null,
+        startsAt: { gte: staleThreshold },
+      },
+      include: { order: { include: { payments: true } } },
+    })
+  ).filter((s) => buildPaid(s.order.payments));
+
+  for (const sub of stuck) {
+    await notifyOwner(
+      `[Avalo] ⚠️ 維護未授權需人工處理 — 訂單 ${sub.orderId}`,
+      `已寄出 ${sub.remindersSent} 封授權連結仍未完成授權，建置款項已收。\n\n` +
+        `客戶：${sub.order.name} <${sub.order.email}>\n電話：${sub.order.phone}\n` +
+        `方案：${sub.sku} NT$${sub.monthlyAmount}/月（含稅）\n` +
+        `下單時間：${sub.createdAt.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}\n\n` +
+        `授權連結：${site}/api/pay/${sub.merchantTradeNo}\n` +
+        `後續不會再自動寄信，請直接聯絡客戶。`
+    );
+    await prisma.subscription.update({
+      where: { id: sub.id },
+      data: { escalatedAt: new Date() },
+    });
+  }
+
+  return NextResponse.json({
+    checked: due.length,
+    sent: sentCount,
+    escalated: stuck.length,
+    results,
+  });
+}
+
+/** 訂單的建置款是否已付清；沒有一次性品項者視同已付 */
+function buildPaid(payments: { kind: string; status: string }[]) {
+  const onetime = payments.filter((p) => p.kind === "onetime");
+  return onetime.length === 0 || onetime.every((p) => p.status === "paid");
 }

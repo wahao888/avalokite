@@ -48,9 +48,9 @@ describe("CheckMacValue 驗章", () => {
 
 describe("一次性結帳表單 buildAioCheckout", () => {
   const { fields } = buildAioCheckout(baseOpts);
-  it("金額與付款方式正確", () => {
+  it("金額正確，且只收信用卡（不開放 ATM／超商，見 buildAioCheckout 註解）", () => {
     expect(fields.TotalAmount).toBe("40950");
-    expect(fields.ChoosePayment).toBe("ALL");
+    expect(fields.ChoosePayment).toBe("Credit");
   });
   it("附帶可驗證的 CheckMacValue", () => {
     expect(verifyCheckMac(fields)).toBe(true);

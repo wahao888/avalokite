@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { genOrderId } from "@/lib/ecpay";
-import { careOptionsFor, careRequired, getProduct, withTax } from "@/lib/products";
+import {
+  careOptionsFor,
+  careRequired,
+  getProduct,
+  promoPlanForSkus,
+  withTax,
+} from "@/lib/products";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 
@@ -114,6 +120,13 @@ export async function POST(req: NextRequest) {
         amount: withTax(monthlyTotal),
       },
     });
+    // 促銷方案有最短承諾期（創始價 12 個月／零元啟動 24 個月），寫進訂閱紀錄，
+    // 日後要判斷提前解約或「滿 24 個月免費移交原始碼」才有依據，不必翻合約。
+    const promo = promoPlanForSkus(skus);
+    const commitEndsAt = promo
+      ? new Date(new Date().setMonth(new Date().getMonth() + promo.termMonths))
+      : null;
+
     // 維護自第一個月起計費，兩種路徑都是「當下授權、首期即時扣」：
     // 有建置 → 建置付款成功後，結果頁接著引導完成維護授權；
     // 單購維護 → 結帳當下直接導向授權。
@@ -124,6 +137,8 @@ export async function POST(req: NextRequest) {
         sku: monthlySkus.join("+"),
         monthlyAmount: withTax(monthlyTotal),
         startsAt: new Date(),
+        termMonths: promo?.termMonths ?? null,
+        commitEndsAt,
         // 有建置者若在結果頁中離未授權，交由 cron 寄連結追回；單購維護當下即授權，不需追
         authLinkSentAt: hasBuild ? null : new Date(),
         remindersSent: hasBuild ? 0 : 2,

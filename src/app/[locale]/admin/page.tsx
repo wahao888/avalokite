@@ -69,10 +69,17 @@ export default async function AdminPage({
     prisma.subscription.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
-      include: { order: true },
+      include: { order: { include: { payments: true } } },
     }),
     prisma.inquiry.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
   ]);
+
+  // 建置款已付、維護卻還沒授權——服務在跑但月費沒進來，這種訂單要最先被看到
+  const awaitingAuth = subscriptions.filter((s) => {
+    if (s.status !== "pending") return false;
+    const onetime = s.order.payments.filter((p) => p.kind === "onetime");
+    return onetime.length === 0 || onetime.every((p) => p.status === "paid");
+  });
 
   return (
     <main className="page-wrap" style={{ maxWidth: 1280 }}>
@@ -140,6 +147,52 @@ export default async function AdminPage({
         </table>
       </div>
 
+      {awaitingAuth.length > 0 && (
+        <>
+          <div className="cart-section-head">⚠️ 建置已付、維護未授權（{awaitingAuth.length}）</div>
+          <div className="form-feedback err" style={{ marginBottom: "0.8rem" }}>
+            這些訂單的網站已收到建置款但維護還沒授權＝服務在跑、月費沒進來。
+            排程最多自動寄 2 封授權連結，之後就需要人工聯絡。
+          </div>
+          <div style={{ overflowX: "auto", marginBottom: "2rem" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={headStyle}>訂單</th>
+                  <th style={headStyle}>客戶</th>
+                  <th style={headStyle}>月費(含稅)</th>
+                  <th style={headStyle}>已寄提醒</th>
+                  <th style={headStyle}>下單時間</th>
+                  <th style={headStyle}>授權連結</th>
+                </tr>
+              </thead>
+              <tbody>
+                {awaitingAuth.map((s) => (
+                  <tr key={s.id}>
+                    <td style={cellStyle}><code>{s.orderId}</code></td>
+                    <td style={cellStyle}>
+                      {s.order.name}
+                      <br />
+                      <span style={{ color: "var(--muted)" }}>{s.order.email}<br />{s.order.phone}</span>
+                    </td>
+                    <td style={cellStyle}>NT${s.monthlyAmount.toLocaleString()}</td>
+                    <td style={cellStyle}>
+                      {s.remindersSent} 封{s.escalatedAt ? <><br />⚠ 已通知人工</> : null}
+                    </td>
+                    <td style={cellStyle}>{fmtDate(s.createdAt)}</td>
+                    <td style={cellStyle}>
+                      <a href={`/api/pay/${s.merchantTradeNo}`} style={{ color: "var(--moss)" }}>
+                        /api/pay/{s.merchantTradeNo}
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       <div className="cart-section-head">訂閱（{subscriptions.length}）</div>
       {suberr && (
         <div className="form-feedback err" style={{ marginBottom: "0.8rem" }}>
@@ -160,6 +213,7 @@ export default async function AdminPage({
               <th style={headStyle}>月費(含稅)</th>
               <th style={headStyle}>狀態</th>
               <th style={headStyle}>起扣日 / 連結</th>
+              <th style={headStyle}>綁約</th>
               <th style={headStyle}>成功期數</th>
               <th style={headStyle}>最近扣款</th>
               <th style={headStyle}>綠界授權單號</th>
@@ -185,11 +239,39 @@ export default async function AdminPage({
                     {s.authLinkSentAt ? `連結已寄 ${fmtDate(s.authLinkSentAt)}` : "連結未寄"}
                   </span>
                 </td>
+                <td style={cellStyle}>
+                  {s.commitEndsAt ? (
+                    <>
+                      {s.termMonths} 個月
+                      <br />
+                      <span style={{ color: "var(--muted)" }}>
+                        至 {fmtDate(s.commitEndsAt)}
+                        {s.commitEndsAt > new Date() ? "" : "（已期滿）"}
+                      </span>
+                    </>
+                  ) : (
+                    "無"
+                  )}
+                </td>
                 <td style={cellStyle}>{s.totalSuccessTimes}</td>
                 <td style={cellStyle}>{fmtDate(s.lastChargeAt)}</td>
                 <td style={cellStyle}>{s.gwsr ?? "-"}</td>
                 <td style={cellStyle}>
-                  {s.status === "cancelled" ? "已終止" : <CancelSubButton id={s.id} />}
+                  {s.status === "cancelled" ? (
+                    "已終止"
+                  ) : s.status === "replaced" ? (
+                    <span style={{ color: "var(--muted)" }}>已換方案</span>
+                  ) : (
+                    <CancelSubButton id={s.id} />
+                  )}
+                  {s.previousMtn && (
+                    <>
+                      <br />
+                      <span style={{ color: "var(--muted)", fontSize: "0.7rem" }}>
+                        換自 {s.previousMtn}
+                      </span>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

@@ -1226,6 +1226,7 @@ button { font-family: inherit; }
 }
 .care-options { display: grid; gap: 0.8rem; }
 .care-option {
+  position: relative; /* 訂閱管理頁的換方案表單以隱藏 radio 疊在卡片上 */
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 1.2rem;
@@ -1312,6 +1313,7 @@ button { font-family: inherit; }
 .badge.pending { color: var(--wood); border-color: var(--wood); }
 .badge.failed, .badge.cancelled { color: #8a3b2a; border-color: #c0876f; }
 .badge.partial { color: var(--walnut); border-color: var(--walnut); }
+.badge.replaced { color: var(--muted); border-color: var(--border); }
 
 /* ── Legal ── */
 .legal-content h2 {

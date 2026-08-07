@@ -35,7 +35,8 @@ model Payment {
   merchantTradeNo  String   @unique // 送綠界的交易編號
   kind             String // onetime | period
   amount           Int // 含稅總額（TWD）
-  status           String   @default("pending") // pending | paid | failed
+  // pending | paid | failed | cancelled（換方案／重新授權後作廢的舊授權，不計入訂單狀態）
+  status           String   @default("pending")
   ecpayTradeNo     String?
   paymentType      String? // Credit_CreditCard / ATM_xxx / CVS_xxx
   paidAt           DateTime?
@@ -52,16 +53,26 @@ model Subscription {
   merchantTradeNo String   @unique
   sku             String
   monthlyAmount   Int // 含稅每期扣款額（TWD）
-  status          String   @default("pending") // pending | active | failed | cancelled
+  // pending | active | failed | cancelled | replaced（換方案或重新授權後的舊訂閱）
+  status          String   @default("pending")
   startsAt        DateTime? // 訂閱起算時間（＝結帳當下）；維護自第一個月起計費，亦為 cron 追授權的基準
   authLinkSentAt  DateTime? // 最近一次寄出授權連結給客戶的時間
   remindersSent   Int      @default(0) // 已寄出的授權/續約提醒次數（上限 2）
   totalSuccessTimes Int    @default(0)
   lastChargeAt    DateTime?
   gwsr            String? // 綠界授權單號，後台停扣用
-  cancelledAt     DateTime? // 後台終止扣款的時間
+  cancelledAt     DateTime? // 終止扣款的時間（後台或客戶自助）
   cancelResult    String? // 綠界終止 API 回傳原始內容
   rawReturn       String?
+  // 追完提醒仍未授權時，通知站方人工處理的時間（只通知一次）
+  escalatedAt     DateTime?
+  // 促銷方案的最短承諾期。一般月費方案為 null＝無綁約。
+  // 換方案／重新授權時會沿用到新訂閱，承諾期不因換方案重新起算。
+  termMonths      Int?
+  commitEndsAt    DateTime?
+  // 綠界定期定額無法改金額或換卡，換方案／重新授權一律是「終止舊的、開新的」。
+  // 這裡記錄新訂閱是從哪一筆換過來的，才追得回同一個客戶的訂閱史。
+  previousMtn     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
