@@ -207,6 +207,16 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 | `*/5 * * * *` [health-check.sh](health-check.sh) | 檢查網站是否活著、磁碟 <85%、憑證 >20 天。異常才寄信，同一項目 1 小時冷卻，恢復時也會通知 |
 | `0 0 * * *` [daily-report.sh](daily-report.sh) | 台北時間早上 8 點寄每日簡報：流量、4xx/5xx、來源 IP Top5、熱門路徑、fail2ban 封鎖數、磁碟／記憶體／憑證／資料庫筆數／最近備份 |
 
+| 排程（avalo crontab） | 做什麼 |
+|---|---|
+| `15 3 * * *` `/opt/avalo/run-care-cron.sh` | 打 `/api/cron/care-links`：追回「建置已付但維護未授權」的訂單（最多 2 封信），追完仍未授權則通知站方人工處理。log 在 `/opt/avalo/cron-care.log` |
+| `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
+
+`run-care-cron.sh` 刻意住在 repo 外（`/opt/avalo/`），內容只有兩行：從 `.env` 讀
+`CRON_SECRET` 再 curl 本機端點——秘密只存在 `.env` 一處，不會跟著 rsync 進 repo。
+**`CRON_SECRET` 只需要在伺服器的 `.env` 有**；本機沒有時該端點會回 401，這是預期行為
+（本機要測就自己加一個開發用的值，不必與正式站相同）。
+
 寄信走 [notify.js](notify.js)（伺服器沒有 MTA，直接沿用 `.env` 那組 SMTP）。
 **每日簡報同時是心跳**：整台機器掛掉時 health-check 也寄不出信，所以「某天沒收到簡報」本身就是警訊。
 真正的外部監控（UptimeRobot 之類）仍建議另外接，才擋得住整台機器失聯的情況。
