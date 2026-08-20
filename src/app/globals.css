@@ -1098,6 +1098,8 @@ button { font-family: inherit; }
   color: var(--muted);
 }
 .form-footnote-value { font-size: 0.88rem; line-height: 1.6; color: var(--ink-soft); }
+.form-footnote-value a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); transition: color 0.2s, border-color 0.2s; }
+.form-footnote-value a:hover { color: var(--wood); border-color: var(--wood); }
 
 /* ── FOOTER ── */
 .footer {
@@ -1131,6 +1133,25 @@ button { font-family: inherit; }
   transition: color 0.2s;
 }
 .footer-links a:hover { color: var(--sage); }
+
+/* 商家資訊：頁尾最下方整排小字（統編／地址／電話／登記信箱） */
+.footer-legal {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid rgba(240,235,227,0.08);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  line-height: 1.9;
+  color: rgba(240,235,227,0.5);
+}
+.footer-legal a { color: inherit; text-decoration: none; transition: color 0.2s; }
+.footer-legal a:hover { color: var(--sage); }
+.footer-legal-name { color: rgba(240,235,227,0.72); }
+.footer-legal-brand { margin-left: 0.5rem; color: rgba(240,235,227,0.4); }
 
 /* ── 內頁（cart / checkout / order / legal）── */
 .page-wrap {
@@ -1380,6 +1401,7 @@ button { font-family: inherit; }
   .form-row { grid-template-columns: 1fr; }
   .form-panel { padding: 2rem 1.5rem; }
   .footer { flex-direction: column; text-align: center; padding: 3rem 1.5rem; }
+  .footer-legal { justify-content: center; text-align: center; }
   .checkout-grid { grid-template-columns: 1fr; }
   .cart-row { grid-template-columns: 1fr auto; row-gap: 0.8rem; }
   .custom-quote { grid-template-columns: 1fr; }

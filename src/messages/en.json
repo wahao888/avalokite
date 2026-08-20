@@ -347,7 +347,14 @@
       "refund": "Refund Policy",
       "lookup": "Order Lookup"
     },
-    "madeWith": "Designed & built by Avalo"
+    "madeWith": "Designed & built by Avalo",
+    "legal": {
+      "brandNote": "trading as Avalo",
+      "taxId": "Tax ID",
+      "address": "Address",
+      "phone": "Tel",
+      "email": "Registered email"
+    }
   },
   "cart": {
     "title": "Cart",

@@ -347,7 +347,14 @@
       "refund": "退款政策",
       "lookup": "訂單查詢"
     },
-    "madeWith": "Designed & built by Avalo"
+    "madeWith": "Designed & built by Avalo",
+    "legal": {
+      "brandNote": "品牌 Avalo 阿瓦羅",
+      "taxId": "統一編號",
+      "address": "地址",
+      "phone": "電話",
+      "email": "登記信箱"
+    }
   },
   "cart": {
     "title": "購物車",

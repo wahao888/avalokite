@@ -5,13 +5,13 @@
 //      1. 把「現行」的整份內容複製進 legal-archive.ts，標上舊的 LEGAL_VERSION
 //      2. 改完內容後更新下方的 LEGAL_VERSION（用改動日期）
 //    詳見 legal-archive.ts 的說明與 deploy/DEPLOY.md。
-import { SITE } from "./site";
+import { COMPANY, SITE } from "./site";
 
 /**
  * 條款版本。客戶同意的版本會寫進訂單，日後爭議時據此還原當時的條款全文。
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
-export const LEGAL_VERSION = "2026-08-07";
+export const LEGAL_VERSION = "2026-08-20";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -35,7 +35,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "一、服務提供者與適用範圍",
           body: [
-            `本網站由 Avalo 阿瓦羅（下稱「本公司」）經營，提供網站設計開發、企業 AI 自動化、系統整合等數位服務。聯絡方式：${SITE.email}、LINE ${SITE.lineId}。`,
+            `本網站由${COMPANY.legalName}（統一編號 ${COMPANY.taxId}，以品牌「${SITE.name}」對外營業，下稱「本公司」）經營，提供網站設計開發、企業 AI 自動化、系統整合等數位服務。`,
+            `營業地址：${COMPANY.address}。聯絡電話：${COMPANY.phoneDisplay}。客服信箱：${SITE.email}（與登記信箱 ${COMPANY.registeredEmail} 為同一收件匣）。LINE：${SITE.lineId}。`,
             "本條款適用於您透過本網站訂購之所有服務。您於結帳時勾選同意，即與本公司成立契約；本公司會記錄您同意的條款版本與時間，作為雙方權利義務之依據。",
             "本條款中，「建置服務」指網站、AI 應用、自動化流程等一次性交付之專案；「維護方案」指按月計費之託管、備份、監控與內容修改服務。",
           ],
@@ -168,7 +169,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "1. Provider & Scope",
           body: [
-            `This site is operated by Avalo ("the Company"), providing web development, enterprise AI automation, and systems integration services. Contact: ${SITE.email}, LINE ${SITE.lineId}.`,
+            `This site is operated by ${COMPANY.legalName} (Taiwan unified business number ${COMPANY.taxId}), trading as "${SITE.name}" ("the Company"), providing web development, enterprise AI automation, and systems integration services.`,
+            `Registered address: ${COMPANY.address}. Telephone: ${COMPANY.phoneDisplay}. Support: ${SITE.email} (same mailbox as our registered email ${COMPANY.registeredEmail}). LINE: ${SITE.lineId}.`,
             "These Terms apply to all services ordered through this site. By checking the agreement box at checkout you enter into a contract with the Company; we record the version of these Terms you agreed to and the time of agreement as the basis of both parties' rights and obligations.",
             "In these Terms, \"Build Services\" means one-time delivered projects (websites, AI applications, automation workflows); \"Care Plan\" means the monthly hosting, backup, monitoring and content-editing service.",
           ],
