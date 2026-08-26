@@ -37,7 +37,7 @@ emit() { local IFS=$'\t'; printf '%s\n' "$*"; }
 
 # nginx.conf 裡那組「一律回 444」的掃描路徑樣式，這裡必須跟它保持一致。
 # 用 [.] 而不是 \. ：值是透過 awk -v 傳進去的，反斜線會先被 awk 的跳脫處理吃掉一層。
-PROBE_RE='(^|/)(wp-admin|wp-login|wp-content|xmlrpc[.]php|phpmyadmin|[.]env|[.]git|[.]svn|[.]aws|[.]ds_store|vendor/|cgi-bin/|autodiscover|eval-stdin[.]php|server-status)'
+PROBE_RE='(^|/)(wp-admin|wp-login|wp-content|wp-includes|wp-json|wp-config[.]php|xmlrpc[.]php|phpmyadmin|[.]env|[.]git|[.]svn|[.]aws|[.]ds_store|vendor/|cgi-bin/|autodiscover|eval-stdin[.]php|server-status|@fs/|webmail|roundcube|file-manager/|media/system/js/|umi([.]min)?[.]js|(config|env)[.](js|json)|api/(config|env)$)'
 
 collect() {
   emit period "$YDAY"
