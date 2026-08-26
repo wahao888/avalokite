@@ -239,7 +239,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 | 排程（root crontab） | 做什麼 |
 |---|---|
 | `*/5 * * * *` [health-check.sh](health-check.sh) | 檢查網站是否活著、磁碟 <85%、憑證 >20 天。異常才寄信，同一項目 1 小時冷卻，恢復時也會通知 |
-| `0 0 * * *` [daily-report.sh](daily-report.sh) | 台北時間早上 8 點寄每日簡報：流量、4xx/5xx、來源 IP Top5、熱門路徑、fail2ban 封鎖數、磁碟／記憶體／憑證／資料庫筆數／最近備份 |
+| `0 0 * * *` [daily-report.sh](daily-report.sh) | 台北時間早上 8 點寄每日簡報（HTML 儀表板）：先給結論與待辦，再列防禦戰報、流量、生意、機器狀況 |
 
 | 排程（avalo crontab） | 做什麼 |
 |---|---|
@@ -255,12 +255,39 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 **每日簡報同時是心跳**：整台機器掛掉時 health-check 也寄不出信，所以「某天沒收到簡報」本身就是警訊。
 真正的外部監控（UptimeRobot 之類）仍建議另外接，才擋得住整台機器失聯的情況。
 
+### 每日簡報怎麼讀
+
+信分兩支程式：[daily-report.sh](daily-report.sh) 只採集（輸出 TSV），
+[report-render.js](report-render.js) 負責判讀、排版成 HTML 並寄出（純文字版一併附上，
+不吃 HTML 的信箱照樣讀得到）。改版面不必上伺服器，本機就能預覽：
+
+```bash
+node deploy/report-render.js --stdout < deploy/report-sample.tsv > /tmp/preview.html
+node deploy/report-render.js --text   < deploy/report-sample.tsv   # 純文字版與主旨
+```
+
+主旨開頭的 ✅ ／ ⚠️ ／ 🔴 就是當天結論，信的第一段是「今天需要你做的事」——
+沒有待辦時可以直接歸檔，其餘數字都只是佐證。幾個關鍵欄位：
+
+- **漏網檢查**：命中掃描特徵（`.env`、`wp-admin`…）卻被送進 Next 的請求數（2xx／404／405）。
+  `0` 代表攔截樣式覆蓋完整；>0 就是有探測穿過去了，信裡會列出實際路徑，
+  照著補進 [nginx-scan-block.conf](nginx-scan-block.conf) 即可。
+- **只拿到導轉**：命中掃描特徵、但拿到 3xx 的請求數。沒進到程式，所以不算漏網，
+  但代表某個 server 區塊少了 `include /etc/nginx/snippets/avalo-scan-block.conf` ——
+  access.log 記的是 301 而非 444，fail2ban 的 `avalo-honeypath` 就抓不到它。
+  2026-08-26 首次上線當天就抓到這個：certbot 產生的 :80 導轉站台沒有攔截規則，
+  前一天 15 次探測全都只拿到 301（詳見 snippet 內的註解）。
+- **後台成功登入**：來自 `src/app/api/*/login/route.ts` 印的 `[auth ok]`。
+  成功與失敗在 nginx log 都是 303，只有這行分得出來——沒有它就答不出「後台有沒有被進去過」。
+- **4xx 的組成**：444／429 是「系統主動攔截」，不是網站壞掉；真正代表我方有問題的只有 5xx，
+  以及路徑認得出來的 404（＝自家壞連結）。
+
 ## 安全防護總覽
 
 | 層 | 措施 |
 |---|---|
 | AWS | SG 只開 80/443/22(限源IP)、IAM Role 而非金鑰、EBS 快照 |
 | 主機 | SSH 金鑰限定＋禁 root、fail2ban（4 個 jail，見 [fail2ban/](fail2ban/)）、unattended-upgrades、UFW、swap |
-| Nginx | 速率限制（表單 6r/min、API 5r/s、頁面 10r/s，綠界回呼白名單）、單 IP 併發上限、掃描路徑 444、安全標頭＋CSP、隱藏版本 |
+| Nginx | 速率限制（表單 6r/min、API 5r/s、頁面 10r/s，綠界回呼白名單）、單 IP 併發上限、掃描路徑 444（:443 與 :80 兩個 server 區塊都 include [nginx-scan-block.conf](nginx-scan-block.conf)）、安全標頭＋CSP、隱藏版本 |
 | 應用 | Zod 驗證所有輸入、價格以伺服器目錄為準、ECPay CheckMacValue 雙向驗章、admin HMAC session＋登入鎖定、systemd 沙箱（NoNewPrivileges/ProtectSystem） |
 | 資料 | 卡號完全不經手（綠界頁面處理）、每日備份 S3 保留 30 份 |

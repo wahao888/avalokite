@@ -5,6 +5,10 @@
 //   node deploy/notify.js "主旨" "內文"
 //   echo "內文" | node deploy/notify.js "主旨"
 //
+// 也可以被其他腳本 require（每日簡報就是這樣用的，要寄 HTML）：
+//   const { send } = require("./notify.js");
+//   await send({ subject, text, html });
+//
 // 注意：這條路徑不經過 src/lib/mail.ts 的每小時 30 封上限，
 // 所以每支呼叫端都必須自己做冷卻（見 health-check.sh 的 COOLDOWN）。
 const fs = require("fs");
@@ -33,20 +37,13 @@ function loadEnv() {
   return out;
 }
 
-async function main() {
+// text 一定要給：不少信箱（與所有純文字閱讀器）不吃 HTML，
+// 而這封信是心跳訊號，寧可醜也不能讀不到。
+async function send({ subject, text, html }) {
   const env = loadEnv();
-  const subject = process.argv[2];
-  const body = process.argv[3] ?? fs.readFileSync(0, "utf8");
-
-  if (!subject) {
-    console.error("用法: node deploy/notify.js \"主旨\" [\"內文\"]");
-    process.exit(2);
-  }
   if (!env.SMTP_HOST || !env.MAIL_OWNER) {
-    console.error("[notify] .env 缺 SMTP_HOST 或 MAIL_OWNER，不寄信");
-    process.exit(1);
+    throw new Error(".env 缺 SMTP_HOST 或 MAIL_OWNER，不寄信");
   }
-
   const nodemailer = require(path.join(APP, "node_modules", "nodemailer"));
   const t = nodemailer.createTransport({
     host: env.SMTP_HOST,
@@ -54,12 +51,26 @@ async function main() {
     secure: Number(env.SMTP_PORT) === 465,
     auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASS } : undefined,
   });
-
-  await t.sendMail({ from: env.MAIL_FROM, to: env.MAIL_OWNER, subject, text: body });
+  await t.sendMail({ from: env.MAIL_FROM, to: env.MAIL_OWNER, subject, text, html });
   console.log(`[notify] sent: ${subject}`);
 }
 
-main().catch((err) => {
-  console.error("[notify] failed:", err.message);
-  process.exit(1);
-});
+async function main() {
+  const subject = process.argv[2];
+  const body = process.argv[3] ?? fs.readFileSync(0, "utf8");
+
+  if (!subject) {
+    console.error('用法: node deploy/notify.js "主旨" ["內文"]');
+    process.exit(2);
+  }
+  await send({ subject, text: body });
+}
+
+module.exports = { loadEnv, send };
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("[notify] failed:", err.message);
+    process.exit(1);
+  });
+}

@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
   }
 
   attempts.delete(ip); // 成功即清除該 IP 的失敗紀錄
+  // 成功登入也要留一行：每日簡報靠這個回答「後台有沒有被進去過」。
+  // 只記失敗的話，暴力破解「成功的那一次」在所有紀錄裡都是隱形的。
+  console.warn(`[auth ok] admin ip=${ip}`);
   const { token, maxAge } = makeSessionToken();
   const res = NextResponse.redirect(`${site}/admin`, 303);
   res.cookies.set(ADMIN_COOKIE, token, {

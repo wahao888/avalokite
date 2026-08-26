@@ -1,0 +1,67 @@
+# daily-report.sh 採集出來的資料長這樣，留一份當樣本，用來本機預覽版面：
+#   node deploy/report-render.js --stdout < deploy/report-sample.tsv > /tmp/preview.html
+#   node deploy/report-render.js --text   < deploy/report-sample.tsv
+# 數字取自 2026-08-23 那天的真實簡報，欄位以 tab 分隔（別用空白）。
+period	23/Aug/2026
+period_short	08/23
+total	2592
+uniq_ip	156
+s2xx	1988
+s3xx	487
+s404	57
+s429	12
+s444	24
+s4other	0
+s5xx	0
+err4	93
+leak	0
+forms	0
+probe_ips	13
+rejected	6
+top_ip	279	222.239.104.46
+top_ip	143	222.239.104.50
+top_ip	143	222.239.104.48
+top_ip	143	222.239.104.37
+top_ip	143	222.239.104.27
+top_bad	20	45.148.10.92
+top_bad	14	104.152.52.71
+top_bad	11	185.242.226.14
+top_bad	9	193.32.162.7
+top_bad	6	91.246.61.220
+top_path	230	/
+top_path	41	/en
+top_path	35	/robots.txt
+top_path	20	/wp-admin/install.php
+top_path	19	/_next/static/chunks/0pl2ea671ihe9.css
+top_path	18	/_next/static/chunks/3xgfz1-1bmo20.js
+top_path	18	/_next/static/chunks/turbopack-16ctme1u8tsx4.js
+top_path	18	/_next/static/chunks/3k1mjaj7pf1th.js
+top_404	21	/apple-touch-icon-precomposed.png
+top_404	12	/ads.txt
+top_404	9	/sitemap_index.xml
+top_404	6	/favicon.ico
+authfail	0
+authfail_ip	0
+authok	0
+bans	9
+jail	sshd	0	14
+jail	nginx-limit-req	0	2
+jail	nginx-botsearch	1	23
+jail	avalo-scan	0	5
+jail	avalo-honeypath	7	112
+jail	avalo-auth	0	3
+svc	active
+disk_pct	31
+disk_txt	5.9G／20G
+mem_txt	612MB／1919MB
+swap_txt	118MB／2048MB
+cert_end	Oct 25 09:14:22 2026 GMT
+cert_days	60
+db_inquiry	4
+db_order	2
+db_payment	2
+new_inquiry	0
+new_order	0
+new_paid	0
+backup	avalo-20260824-0000.db.gz
+backup_age_h	8

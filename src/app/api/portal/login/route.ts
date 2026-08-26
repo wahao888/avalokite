@@ -55,6 +55,8 @@ export async function POST(req: NextRequest) {
   }
 
   attempts.delete(key);
+  // 見 api/admin/login：成功登入同樣要留紀錄，否則簡報答不出「有沒有被進去過」。
+  console.warn(`[auth ok] portal:${tenant.slug} ip=${clientIp(req)}`);
   const { token, maxAge } = makePortalToken(tenant.slug);
   const res = NextResponse.redirect(absoluteUrl(req, "/portal"), 303);
   res.cookies.set(PORTAL_COOKIE, token, {

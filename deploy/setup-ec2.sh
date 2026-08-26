@@ -89,6 +89,9 @@ EOF
 systemctl daemon-reload
 
 # Nginx 站台（先 HTTP，certbot 之後升級 HTTPS）
+# 掃描攔截規則走 snippet：certbot 之後的 :80 導轉站台也要 include 同一份
+mkdir -p /etc/nginx/snippets
+cp "$(dirname "$0")/nginx-scan-block.conf" /etc/nginx/snippets/avalo-scan-block.conf
 cp "$(dirname "$0")/nginx.conf" /etc/nginx/sites-available/avalo
 sed -i "s/YOUR_DOMAIN/$DOMAIN/g" /etc/nginx/sites-available/avalo
 ln -sf /etc/nginx/sites-available/avalo /etc/nginx/sites-enabled/avalo
