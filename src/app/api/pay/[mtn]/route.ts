@@ -47,7 +47,14 @@ export async function GET(
     merchantTradeNo: mtn,
     totalAmount: payment.amount,
     itemName: itemName || "Avalo 服務",
-    tradeDesc: "Avalo digital services",
+    // 綠界付款頁與信用卡帳單都會顯示這段。含建置的訂單一定會刷兩次（建置單筆＋
+    // 維護定期定額，綠界的定期定額 TotalAmount 必須等於 PeriodAmount，無法把
+    // 建置費併進首期），所以描述必須讓客戶一眼分辨兩筆的差別，否則第二筆看起來
+    // 就像重複扣款。不用特殊符號：綠界會擋。
+    tradeDesc:
+      order.locale === "en"
+        ? `Avalo ${payment.kind === "period" ? "monthly care recurring" : "one time build payment"} order ${order.id}`
+        : `Avalo ${payment.kind === "period" ? "維護月費 定期定額" : "建置費用 單筆付款"} 訂單 ${order.id}`,
     clientBackUrl: `${site}/order/result?id=${order.id}`,
     orderResultUrl: `${site}/api/ecpay/client-return`,
     returnUrl: `${site}/api/ecpay/return`,
