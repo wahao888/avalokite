@@ -296,6 +296,9 @@ ${section(
          .join("")
      )}
    </td></tr>`)}
+   ${n(s.local_req) > 0
+      ? `<div style="padding-top:8px;font:400 11px/1.6 ${FONT};color:${C.muted};">另有 ${fmt(s.local_req)} 次來自本機（健康檢查與手動測試），已從以上所有數字排除。</div>`
+      : ""}
    <div style="height:16px;line-height:16px;font-size:0;">&nbsp;</div>
    <div style="font:600 12px/1.4 ${FONT};color:${C.ink};padding-bottom:6px;">熱門路徑</div>
    ${barRows(l.top_path, maxPath, C.moss)}
@@ -375,7 +378,7 @@ ${l.jail.map(([name, cur, tot]) => `  ${name.padEnd(18)} 封鎖中 ${cur}／累�
 
 【流量】
   總請求 ${fmt(total)}　不重複 IP ${fmt(s.uniq_ip)}　表單送出 ${fmt(s.forms)}　正常回應率 ${pct(okReq, total)}%
-  2xx/3xx ${fmt(okReq)}　主動攔截 ${fmt(blocked)}　404 ${fmt(s.s404)}　5xx ${fmt(s.s5xx)}
+  2xx/3xx ${fmt(okReq)}　主動攔截 ${fmt(blocked)}　404 ${fmt(s.s404)}　5xx ${fmt(s.s5xx)}${n(s.local_req) > 0 ? `\n  （另有 ${fmt(s.local_req)} 次來自本機的健康檢查與手動測試，已排除）` : ""}
 
   熱門路徑：
 ${l.top_path.map(([c, p]) => `    ${String(c).padStart(6)} ${short(p, 60)}`).join("\n")}

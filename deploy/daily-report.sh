@@ -28,7 +28,11 @@ D1=$(date -u -d "today 00:00:00" +%s)000
 # 用 zgrep 才讀得到壓縮過的那幾份。找不到符合時 grep 會回非 0，
 # 這裡一律接 `|| true`，別用 `|| echo 0`——那會讓輸出多一行 0，欄位就會錯位。
 lines() { zgrep -h "$YDAY" "$LOG" "$LOG".1 "$LOG".*.gz 2>/dev/null || true; }
-ALL=$(lines)
+# 本機請求要抽掉再算。健康檢查、還有上伺服器手動測攔截規則時打的那些，
+# 都會進 access.log；不分開的話 127.0.0.1 會爬上「產生 4xx 最多的 IP」榜首，
+# 攔截次數也被自己的測試灌水（2026-08-26 的簡報就出現過 50 次）。
+RAW=$(lines)
+ALL=$(printf '%s' "$RAW" | awk '$1 != "127.0.0.1" && $1 != "::1"')
 count() { printf '%s' "$1" | grep -c . 2>/dev/null || true; }
 
 # 一行一筆、tab 分欄丟給 render。值裡面可能有攻擊者送來的路徑，
@@ -72,6 +76,7 @@ collect() {
           s2, s3, s444, s429, s404, s4o, s5, e4, leak, redir }')"
 
   emit total "$(count "$ALL")"
+  emit local_req "$(printf '%s' "$RAW" | awk '$1 == "127.0.0.1" || $1 == "::1"' | grep -c . || true)"
   emit uniq_ip "$(printf '%s' "$ALL" | awk '{print $1}' | sort -u | grep -c . || true)"
   emit s2xx "$s2xx"; emit s3xx "$s3xx"; emit s404 "$s404"; emit s429 "$s429"
   emit s444 "$s444"; emit s4other "$s4other"; emit s5xx "$s5xx"; emit err4 "$err4"
