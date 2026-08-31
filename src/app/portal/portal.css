@@ -101,6 +101,37 @@ body.portal {
   .p-head { flex-direction: column; align-items: flex-start; }
 }
 
+/* ── 今日供應板（僅 flavorBoard 租戶）───────────────── */
+.p-board-form { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.2rem; }
+.p-fieldset {
+  border: 1px solid var(--p-border); background: var(--p-card);
+  border-radius: 2px; padding: 1rem 1.1rem 1.2rem; margin: 0;
+}
+.p-fieldset legend {
+  font-size: 0.8rem; font-weight: 700; padding: 0 0.4rem; color: var(--p-muted);
+  letter-spacing: 0.06em;
+}
+.p-fieldset .p-sub { margin: 0 0 0.8rem; }
+.p-fieldset textarea, .p-fieldset input[type="text"] {
+  width: 100%; padding: 0.7rem 0.8rem; border: 1px solid var(--p-border);
+  background: var(--p-paper); border-radius: 2px; font: inherit; font-size: 1rem;
+  color: var(--p-ink); line-height: 1.6; resize: vertical;
+}
+.p-checks {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.15rem;
+}
+.p-check {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.5rem;
+  border-radius: 2px; cursor: pointer; line-height: 1.4;
+}
+.p-check:hover { background: var(--p-paper); }
+.p-check input { width: 1.1rem; height: 1.1rem; accent-color: #c9931a; flex: none; }
+.p-check small { display: block; font-size: 0.72rem; color: var(--p-muted); letter-spacing: 0.04em; }
+.p-swatch {
+  width: 1rem; height: 1rem; border-radius: 50%; flex: none;
+  border: 1px solid var(--p-border);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --p-ink: #ece7de; --p-paper: #1a1815; --p-card: #22201c;

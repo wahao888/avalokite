@@ -46,6 +46,10 @@ export default async function PortalPage({
           <p className="p-sub">網站送出的詢問與估價單都會列在這裡，並即時寄到你的信箱。</p>
         </div>
         <div className="p-actions">
+          {/* 有今日供應板的租戶才顯示（見 src/lib/tenants.ts 的 flavorBoard） */}
+          {tenant.flavorBoard && (
+            <a className="p-btn" href="/portal/board">今日口味</a>
+          )}
           <a className="p-btn p-btn-ghost" href="/api/portal/export">下載 CSV</a>
           <form method="post" action="/api/portal/logout">
             <button type="submit" className="p-btn-link">登出</button>

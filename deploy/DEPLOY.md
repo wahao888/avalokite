@@ -98,6 +98,23 @@ sudo certbot renew --dry-run
    逗號分隔可多人）。**`.env` 被 rsync 排除，必須直接改伺服器上那份再 restart。**
 5. 部署後跑第 3 節的 certbot `--expand`。
 
+**目前已上線的客戶站**
+
+| slug | 客戶 | 特殊之處 |
+| --- | --- | --- |
+| `wenshan` | 文山木材行 | 線上估價單 `/api/wenshan/quote` |
+| `monsieurlong` | Monsieur Long 隆先生 | 合作邀請／訂購表單 `/api/monsieurlong/inquiry`；後台多一頁 `/portal/board`（今日口味），需 `FlavorBoard` migration；`ownSitemap` 由站內 `sitemap.ts` 產生 |
+
+Monsieur Long 首次部署的額外步驟（只做一次）：
+
+1. `npx prisma migrate deploy` 會建立 `FlavorBoard` 表（deploy.sh 已含）。
+2. 伺服器 `.env` 加 `PORTAL_PW_MONSIEURLONG`（隨機強密碼，交給店家）與
+   `TENANT_NOTIFY_MONSIEURLONG`（店家收表單的信箱），然後 `sudo systemctl restart avalo`。
+3. certbot `--expand`（domains.txt 已加 `monsieurlong.avalokite.xyz`）。
+4. 內容定稿、店家確認可對外後，再把 `tenants.ts` 的 `indexable` 與
+   `_data/site.ts` 的 `INDEXABLE` 一起改 `true`（在那之前 robots 是 Disallow，
+   sitemap 也刻意回空）。
+
 **客戶改綁自有網域**
 
 1. 客戶把該網域的 A 記錄指到 `13.209.138.204`。

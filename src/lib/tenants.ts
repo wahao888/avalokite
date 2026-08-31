@@ -17,6 +17,14 @@ export type Tenant = {
   paths: string[];
   /** 表單通知收件人的環境變數名（值可為逗號分隔的多個信箱） */
   notifyEnv: string;
+  /**
+   * true = 該站自己有 app/sites/<slug>/sitemap.ts，proxy 不代為產生。
+   * 有動態子頁（口味、活動）的站需要這個——路徑清單住在站內的 _data，
+   * 不該為了 sitemap 把它們拉進每個請求都會跑的 proxy bundle。
+   */
+  ownSitemap?: boolean;
+  /** true = 後台多一頁「今日供應」，讓店家自己換每日口味（見 /portal/board） */
+  flavorBoard?: boolean;
 };
 
 /** 客戶站掛載的主網域 */
@@ -32,6 +40,16 @@ export const TENANTS: Tenant[] = [
     indexable: false,
     paths: ["/", "/products", "/quote"],
     notifyEnv: "TENANT_NOTIFY_WENSHAN",
+  },
+  {
+    slug: "monsieurlong",
+    name: "Monsieur Long 隆先生",
+    indexable: false,
+    // 靜態路徑僅供參考；實際 sitemap 由站內 sitemap.ts 產生（含口味與活動子頁）
+    paths: ["/", "/flavors", "/events", "/collab", "/custom", "/store"],
+    notifyEnv: "TENANT_NOTIFY_MONSIEURLONG",
+    ownSitemap: true,
+    flavorBoard: true,
   },
 ];
 
@@ -96,7 +114,7 @@ export function robotsFor(t: Tenant): string {
  * 客戶站不做多語系，所以不需要 hreflang。
  */
 export function sitemapFor(t: Tenant): string | null {
-  if (!t.indexable) return null;
+  if (!t.indexable || t.ownSitemap) return null;
   const origin = tenantOrigin(t);
   const urls = t.paths
     .map((p) => `  <url><loc>${origin}${p === "/" ? "/" : p}</loc></url>`)

@@ -53,3 +53,51 @@ export function allInquiriesForExport(tenantId: string) {
     orderBy: { createdAt: "desc" },
   });
 }
+
+// ── 今日供應看板（Tenant.flavorBoard 的租戶才用得到）─────────────
+// 一個租戶一列，主鍵就是 tenantId，所以 where 天生帶租戶範圍。
+
+export type BoardRow = {
+  slugs: string[];
+  extras: string[];
+  note: string | null;
+  updatedAt: Date | null;
+};
+
+/** JSON 欄位解析失敗一律當空陣列——看板壞掉不該讓整個首頁 500 */
+function parseList(raw: string | undefined | null): string[] {
+  if (!raw) return [];
+  try {
+    const v: unknown = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getFlavorBoard(tenantId: string): Promise<BoardRow> {
+  const row = await prisma.flavorBoard.findFirst({ where: { tenantId } });
+  if (!row) return { slugs: [], extras: [], note: null, updatedAt: null };
+  return {
+    slugs: parseList(row.slugs),
+    extras: parseList(row.extras),
+    note: row.note,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function saveFlavorBoard(
+  tenantId: string,
+  data: { slugs: string[]; extras: string[]; note: string | null },
+) {
+  const payload = {
+    slugs: JSON.stringify(data.slugs),
+    extras: JSON.stringify(data.extras),
+    note: data.note,
+  };
+  await prisma.flavorBoard.upsert({
+    where: { tenantId },
+    create: { tenantId, ...payload },
+    update: payload,
+  });
+}

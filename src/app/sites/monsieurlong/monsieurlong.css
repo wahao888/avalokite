@@ -1,0 +1,2099 @@
+/* ═══════════════════════════════════════════════════════════════
+   Monsieur Long 隆先生 — Design System
+   只在本站的 root layout 載入，與主站／其他客戶站完全隔離。
+
+   色彩取自品牌 Logo 的實際像素（#FFC732）與店面（白磁磚、黃欄杆）。
+   刻意單一亮色主題：品牌本身就是「米白紙 + 正黃 + 墨黑」，
+   做深色反轉只會削弱識別，不是遺漏。
+   ═══════════════════════════════════════════════════════════════ */
+
+.ml {
+  /* ── 色彩 ─────────────────────────────────────── */
+  --ml-yellow: #ffc732;
+  --ml-yellow-soft: #ffe0a0;
+  --ml-yellow-wash: #fff4d6;
+  /* 米白底上唯一通過 AA 的黃系文字色 */
+  --ml-yellow-deep: #8f5e00;
+
+  --ml-ink: #16130f;
+  --ml-ink-2: #4a4238;
+  /* ink-3 用在 10–12px 的等寬小標籤上，所以要壓到 4.5:1 以上。
+     原本的 #8b8172 在米白底只有 3.8:1，小字讀不動。 */
+  --ml-ink-3: #6f6759;
+
+  --ml-paper: #f7f2e7;
+  --ml-paper-2: #fffdf7;
+  --ml-stone: #b9b1a2;
+  --ml-rule: #e2d9c6;
+  --ml-night: #0e0c09;
+
+  /* 目前口味的顏色。由 JS 在 hover / 進入區塊時改寫，全站共用一個變數 */
+  --ml-accent: #ffc732;
+  --ml-accent-deep: #8f5e00;
+
+  /* ── 字體 ─────────────────────────────────────── */
+  /* 只有拉丁的兩套走 next/font（Instrument Serif、DM Mono，各幾十 KB）。
+     中文用系統字：next/font 的 CJK 家族會生出半 MB 的 @font-face CSS
+     擋在首次繪製前面（見 layout.tsx 的說明）。
+     堆疊順序刻意「拉丁字在前」——標題常有中英混排，讓拉丁字用真正的
+     襯線／無襯線字，中文才落到後面的 CJK 字體。 */
+  --ml-display: var(--ml-font-display), "Iowan Old Style", Georgia, serif;
+  --ml-han: "Iowan Old Style", Georgia, "Songti TC", "Noto Serif TC",
+    "Noto Serif CJK TC", "Source Han Serif TC", PMingLiU, serif;
+  --ml-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC",
+    "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif;
+  --ml-mono: var(--ml-font-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* ── 間距與圓角 ──────────────────────────────── */
+  --ml-gut: 20px;
+  --ml-max: 1240px;
+  --ml-r: 4px;
+  --ml-r-lg: 10px;
+
+  /* ── 動態 ─────────────────────────────────────── */
+  --ml-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ml-fast: 0.18s;
+  --ml-mid: 0.45s;
+  --ml-slow: 0.9s;
+
+  margin: 0;
+  background: var(--ml-paper);
+  color: var(--ml-ink);
+  font-family: var(--ml-sans);
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* clip 而不是 hidden：body 上的 overflow-x: hidden 會把 body 變成捲動容器，
+     連帶讓 position: sticky 的導覽列黏在 body 的 scrollport 而不是視窗，
+     捲動位置也會亂掉。clip 只裁切、不產生捲動容器。 */
+  overflow-x: clip;
+}
+
+@media (min-width: 720px) {
+  .ml {
+    --ml-gut: 40px;
+  }
+}
+
+.ml *,
+.ml *::before,
+.ml *::after {
+  box-sizing: border-box;
+}
+
+.ml h1,
+.ml h2,
+.ml h3,
+.ml h4,
+.ml p,
+.ml figure,
+.ml ul,
+.ml ol {
+  margin: 0;
+  padding: 0;
+}
+
+.ml ul,
+.ml ol {
+  list-style: none;
+}
+
+.ml img,
+.ml svg {
+  max-width: 100%;
+  display: block;
+}
+
+.ml a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ml button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ml :focus-visible {
+  outline: 2px solid var(--ml-ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* 跳到主要內容 */
+.ml-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--ml-ink);
+  color: var(--ml-paper);
+  padding: 12px 18px;
+  border-radius: 0 0 var(--ml-r) 0;
+}
+.ml-skip:focus {
+  left: 0;
+}
+
+/* ═══ 版面 ═══════════════════════════════════════ */
+
+.ml-wrap {
+  width: 100%;
+  max-width: var(--ml-max);
+  margin: 0 auto;
+  padding-inline: var(--ml-gut);
+}
+
+.ml-sec {
+  padding-block: clamp(72px, 11vw, 148px);
+  position: relative;
+}
+
+.ml-sec--tight {
+  padding-block: clamp(52px, 7vw, 92px);
+}
+
+/* 緊接在融化邊緣下面的區塊要多留一點頭部空間，
+   否則最長那一滴會貼到內容上 */
+.ml-sec--after-melt {
+  padding-top: clamp(76px, 9vw, 132px);
+}
+
+.ml-sec--paper2 {
+  background: var(--ml-paper-2);
+}
+
+.ml-sec--ink {
+  background: var(--ml-night);
+  color: var(--ml-paper);
+}
+
+/* 區塊標頭：mono 眉標 + 大標 + 說明 */
+.ml-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: clamp(32px, 5vw, 60px);
+}
+
+.ml-eyebrow {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ml-yellow-deep);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ml-sec--ink .ml-eyebrow {
+  color: var(--ml-yellow);
+}
+
+.ml-eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  flex: none;
+}
+
+.ml-h2 {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(28px, 4.6vw, 50px);
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.ml-h3 {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 27px);
+  line-height: 1.4;
+}
+
+.ml-lede {
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.9;
+  color: var(--ml-ink-2);
+  max-width: 46ch;
+}
+
+.ml-sec--ink .ml-lede {
+  color: #c9c0ad;
+}
+
+.ml-en {
+  font-family: var(--ml-display);
+  font-weight: 400;
+}
+
+.ml-mono {
+  font-family: var(--ml-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ml-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* ═══ 按鈕 ═══════════════════════════════════════ */
+
+.ml-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  border: 1.5px solid var(--ml-ink);
+  transition:
+    transform var(--ml-fast) var(--ml-ease),
+    background-color var(--ml-fast) var(--ml-ease),
+    color var(--ml-fast) var(--ml-ease);
+  will-change: transform;
+}
+
+/* 按鈕文字不斷行；裡面的箭頭 SVG 是 flex item，沒有 flex: none 會被拉大 */
+.ml-btn {
+  white-space: nowrap;
+}
+
+.ml-btn svg,
+.ml-link svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+
+.ml-btn:hover {
+  transform: translateY(-2px);
+}
+
+.ml-btn:active {
+  transform: translateY(0);
+}
+
+.ml .ml-btn--primary {
+  background: var(--ml-ink);
+  color: var(--ml-paper);
+}
+
+.ml .ml-btn--primary:hover {
+  background: var(--ml-yellow);
+  color: var(--ml-ink);
+}
+
+.ml .ml-btn--ghost {
+  background: transparent;
+  color: var(--ml-ink);
+}
+
+.ml .ml-btn--ghost:hover {
+  background: var(--ml-ink);
+  color: var(--ml-paper);
+}
+
+.ml .ml-btn--yellow {
+  background: var(--ml-yellow);
+  color: var(--ml-ink);
+  border-color: var(--ml-ink);
+}
+
+.ml .ml-sec--ink .ml-btn--ghost {
+  color: var(--ml-paper);
+  border-color: var(--ml-paper);
+}
+
+.ml .ml-sec--ink .ml-btn--ghost:hover {
+  background: var(--ml-paper);
+  color: var(--ml-ink);
+}
+
+.ml-btn[disabled],
+.ml-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* 文字連結（帶箭頭） */
+.ml-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  border-bottom: 1.5px solid currentColor;
+  padding-bottom: 2px;
+  transition: gap var(--ml-fast) var(--ml-ease);
+}
+
+.ml-link:hover {
+  gap: 14px;
+}
+
+/* ═══ 標籤 ═══════════════════════════════════════ */
+
+.ml-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ml-rule);
+  color: var(--ml-ink-2);
+  background: var(--ml-paper-2);
+  white-space: nowrap;
+}
+
+.ml-tag--new {
+  background: var(--ml-ink);
+  border-color: var(--ml-ink);
+  color: var(--ml-paper);
+}
+
+.ml-tag--limited {
+  background: var(--ml-yellow);
+  border-color: var(--ml-ink);
+  color: var(--ml-ink);
+  font-weight: 500;
+}
+
+.ml-tag--today {
+  background: var(--ml-yellow-wash);
+  border-color: var(--ml-yellow);
+  color: var(--ml-yellow-deep);
+}
+
+.ml-tag--off {
+  color: var(--ml-ink-3);
+  background: transparent;
+}
+
+/* ═══ 導覽列 ═════════════════════════════════════ */
+
+.ml-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  transition:
+    background-color var(--ml-mid) var(--ml-ease),
+    box-shadow var(--ml-mid) var(--ml-ease);
+}
+
+.ml-nav[data-stuck="true"] {
+  background: rgba(247, 242, 231, 0.86);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  box-shadow: 0 1px 0 var(--ml-rule);
+}
+
+.ml-nav-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 68px;
+}
+
+.ml-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+}
+
+.ml-logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: var(--ml-yellow);
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: transform var(--ml-mid) var(--ml-ease);
+}
+
+.ml-logo:hover .ml-logo-mark {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+.ml-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.ml-logo-text b {
+  font-family: var(--ml-display);
+  font-weight: 400;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+}
+
+.ml-logo-text span {
+  font-family: var(--ml-mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--ml-ink-3);
+  text-transform: uppercase;
+}
+
+.ml-nav-links {
+  display: none;
+  align-items: center;
+  gap: 30px;
+}
+
+.ml-nav-links a {
+  font-size: 14.5px;
+  font-weight: 500;
+  position: relative;
+  padding-block: 4px;
+}
+
+.ml-nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: 0;
+  height: 2px;
+  background: var(--ml-yellow);
+  transition: right var(--ml-mid) var(--ml-ease);
+}
+
+.ml-nav-links a:hover::after,
+.ml-nav-links a[aria-current="page"]::after {
+  right: 0;
+}
+
+.ml-nav-cta {
+  display: none;
+}
+
+@media (min-width: 940px) {
+  .ml-nav-links,
+  .ml-nav-cta {
+    display: flex;
+  }
+  .ml-burger {
+    display: none;
+  }
+}
+
+.ml-burger {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1.5px solid var(--ml-ink);
+  flex: none;
+}
+
+.ml-burger span {
+  display: block;
+  width: 17px;
+  height: 1.6px;
+  background: var(--ml-ink);
+  transition: transform var(--ml-mid) var(--ml-ease), opacity var(--ml-fast);
+}
+
+.ml-burger span + span {
+  margin-top: 4px;
+}
+
+.ml-burger[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(5.6px) rotate(45deg);
+}
+.ml-burger[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+.ml-burger[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-5.6px) rotate(-45deg);
+}
+
+.ml-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: var(--ml-paper);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 90px var(--ml-gut) 40px;
+}
+
+.ml-drawer a {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(28px, 8vw, 42px);
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.ml-drawer a small {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--ml-ink-3);
+  text-transform: uppercase;
+}
+
+.ml-drawer-foot {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ═══ Hero ═══════════════════════════════════════ */
+
+.ml-hero {
+  position: relative;
+  min-height: min(92svh, 860px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 40px 0;
+  overflow: hidden;
+}
+
+/* 融化色塊層：goo 濾鏡讓幾個圓互相黏合，像軟化中的冰 */
+.ml-goo {
+  position: absolute;
+  inset: -12% -8% auto -8%;
+  height: 108%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.88;
+}
+
+.ml-hero-in {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3vw, 34px);
+}
+
+.ml-hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ml-ink-2);
+}
+
+.ml-hero-kicker b {
+  font-weight: 400;
+  color: var(--ml-yellow-deep);
+}
+
+/* 手機上這一行會斷成兩行，中間那顆分隔點會被留在第一行尾巴。
+   窄螢幕直接改成兩行、拿掉分隔點。 */
+@media (max-width: 719px) {
+  .ml-hero-kicker {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .ml-hero-kicker > span[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+.ml-hero-title {
+  font-family: var(--ml-display);
+  font-weight: 400;
+  font-size: clamp(58px, 15.5vw, 216px);
+  line-height: 0.86;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.ml-hero-title .l2 {
+  display: block;
+  padding-left: 0.06em;
+}
+
+.ml-hero-title em {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+/* 第二行：被冰淇淋灌滿的字。
+   下層是描邊空心字，上層是實心品牌黃，用 clip-path 當液面。
+   黃色在米白底上對比不足，靠 2.5px 墨色描邊撐住字形，
+   所以無論液面高低都讀得到字。 */
+.ml-liquid {
+  position: relative;
+  display: inline-block;
+  padding-left: 0.06em;
+}
+
+.ml-liquid-out,
+.ml-liquid-in,
+.ml-liquid-shadow {
+  display: block;
+  -webkit-text-stroke: 2.5px var(--ml-ink);
+  paint-order: stroke fill;
+}
+
+/* 墊在最底下的墨色影本，往右下偏移。
+   黃 #FFC732 落在米白 #F7F2E7 上明度差不夠，光靠描邊會顯得虛；
+   加一層實心陰影，字就從紙上「跳」起來（也是貼紙／海報的作法）。 */
+.ml-liquid-shadow {
+  position: absolute;
+  inset: 0;
+  transform: translate(0.022em, 0.028em);
+  color: var(--ml-ink);
+  z-index: -1;
+}
+
+.ml-liquid-out {
+  color: transparent;
+}
+
+.ml-liquid-in {
+  position: absolute;
+  inset: 0;
+  color: var(--ml-yellow);
+  /* 起點：液面在最下緣（完全沒填） */
+  clip-path: inset(100% 0 0 0);
+  animation: ml-liquid-fill 2.1s cubic-bezier(0.33, 1, 0.68, 1) 0.95s forwards;
+}
+
+/* 灌到滿、微微溢出再落回——液體才有重量 */
+@keyframes ml-liquid-fill {
+  0% {
+    clip-path: inset(100% 0 0 0);
+  }
+  70% {
+    clip-path: inset(0% 0 0 0);
+  }
+  84% {
+    clip-path: inset(9% 0 0 0);
+  }
+  100% {
+    clip-path: inset(0% 0 0 0);
+  }
+}
+
+/* 減少動態效果時：直接呈現滿的狀態，不要留一半空心 */
+.ml-liquid[data-still="true"] .ml-liquid-in {
+  animation: none;
+  clip-path: inset(0% 0 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-liquid-in {
+    animation: none;
+    clip-path: inset(0% 0 0 0);
+  }
+}
+
+/* 描邊在小螢幕上要細一點，否則字會糊成一團 */
+@media (max-width: 719px) {
+  .ml-liquid-out,
+  .ml-liquid-in {
+    -webkit-text-stroke-width: 1.6px;
+  }
+}
+
+/* 每個字母獨立包一層，好讓 Motion 逐字進場 */
+.ml-ch {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.ml-hero-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.ml-hero-zh {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(19px, 2.6vw, 30px);
+  line-height: 1.5;
+  max-width: 26ch;
+}
+
+.ml-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ml-hero-scroll {
+  margin-top: clamp(28px, 5vw, 56px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+}
+
+.ml-hero-scroll i {
+  display: block;
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(var(--ml-ink-3), transparent);
+  animation: ml-drip 2.4s var(--ml-ease) infinite;
+}
+
+@keyframes ml-drip {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  56% {
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+/* ═══ 跑馬燈（今日口味）═════════════════════════ */
+
+.ml-marquee {
+  --ml-marquee-dur: 34s;
+  position: relative;
+  overflow: hidden;
+  border-block: 1.5px solid var(--ml-ink);
+  background: var(--ml-yellow);
+  padding-block: 14px;
+}
+
+.ml-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: ml-scroll var(--ml-marquee-dur) linear infinite;
+}
+
+.ml-marquee:hover .ml-marquee-track {
+  animation-play-state: paused;
+}
+
+.ml-marquee-group {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.ml-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding-inline: 18px;
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(17px, 2.2vw, 25px);
+  white-space: nowrap;
+}
+
+.ml-marquee-item::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ml-ink);
+  flex: none;
+}
+
+.ml-marquee-item small {
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+@keyframes ml-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ═══ 融化的邊緣 ═════════════════════════════════
+   黃色色帶下緣掛著會伸縮的滴垂，偶爾掉一滴。
+   只動 transform，交給合成器；不用 SVG 濾鏡（滿版每幀重算會掉幀）。 */
+
+.ml-melt {
+  /* 預設長度與寬度倍率住在 CSS 而不是元件的行內樣式，media query 才壓得過去 */
+  --ml-melt-depth: 72px;
+  --ml-melt-w: 1;
+  position: relative;
+  width: 100%;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.ml-melt-drip {
+  position: absolute;
+  top: -1px; /* 蓋住與色帶之間的次像素縫 */
+  /* 形狀由裡面的 SVG 路徑決定（見 MeltEdge.tsx 的 DRIP_PATH）。
+     這裡只負責定位、上色與伸縮——顏色透過 currentColor 傳給 path。 */
+  color: var(--ml-melt-color);
+  transform-origin: top center;
+  transform: scaleY(var(--ml-pull, 1));
+  animation-name: ml-melt-breathe;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.ml-melt-drip svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes ml-melt-breathe {
+  from {
+    transform: scaleY(calc(var(--ml-pull, 1) * 0.72));
+  }
+  to {
+    transform: scaleY(calc(var(--ml-pull, 1) * 1.12));
+  }
+}
+
+.ml-melt-drop {
+  position: absolute;
+  top: 0;
+  background: var(--ml-melt-color);
+  border-radius: 50%;
+  opacity: 0;
+  animation-name: ml-melt-fall;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+/* 前 8% 還黏在色帶上（不透明度 0，被滴垂蓋住），
+   之後才落下——時間差就是「斷開」的錯覺。 */
+@keyframes ml-melt-fall {
+  0%,
+  6% {
+    transform: translateY(calc(var(--ml-melt-depth) * 0.55)) scaleY(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  62% {
+    transform: translateY(calc(var(--ml-melt-depth) * 2.6)) scaleY(1.35);
+    opacity: 1;
+  }
+  76%,
+  100% {
+    transform: translateY(calc(var(--ml-melt-depth) * 3.2)) scaleY(1.35);
+    opacity: 0;
+  }
+}
+
+/* 手機：滴垂縮短，水滴收掉——小螢幕上它們只會擠在一起 */
+@media (max-width: 719px) {
+  .ml-melt {
+    --ml-melt-depth: 38px;
+    --ml-melt-w: 0.58;
+  }
+  .ml-melt-drip:nth-child(2n) {
+    display: none;
+  }
+  .ml-melt-drop {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-melt-drip {
+    animation: none;
+    transform: scaleY(0.9);
+  }
+  .ml-melt-drop {
+    display: none;
+  }
+}
+
+/* ═══ 今日供應板 ═════════════════════════════════ */
+
+.ml-board {
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  background: var(--ml-paper-2);
+  overflow: hidden;
+}
+
+.ml-board-top {
+  background: var(--ml-yellow);
+  border-bottom: 1.5px solid var(--ml-ink);
+  padding: 16px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ml-board-top h2 {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.ml-board-top span {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ml-board-list {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 620px) {
+  .ml-board-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ml-board-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 22px;
+  border-bottom: 1px dashed var(--ml-rule);
+  transition: background-color var(--ml-fast) var(--ml-ease);
+}
+
+.ml-board-row:hover {
+  background: var(--ml-yellow-wash);
+}
+
+.ml-board-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ml-ink);
+  flex: none;
+}
+
+.ml-board-name {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.ml-board-en {
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+  display: block;
+}
+
+.ml-board-foot {
+  padding: 14px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ml-ink-3);
+  background: var(--ml-paper);
+  border-top: 1px solid var(--ml-rule);
+}
+
+.ml-board-empty {
+  padding: 34px 22px;
+  color: var(--ml-ink-2);
+  text-align: center;
+}
+
+/* ═══ 口味卡 ═════════════════════════════════════ */
+
+.ml-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .ml-grid {
+    grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+    gap: 18px;
+  }
+}
+
+.ml-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  background: var(--ml-paper-2);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ml-card-art {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 1.5px solid var(--ml-ink);
+}
+
+/* 卡片背景的口味色，hover 時往外擴 */
+.ml-card-wash {
+  position: absolute;
+  inset: 0;
+  background: var(--ml-card-color, var(--ml-yellow-wash));
+  opacity: 0.34;
+  transition:
+    opacity var(--ml-mid) var(--ml-ease),
+    transform var(--ml-slow) var(--ml-ease);
+}
+
+.ml-card:hover .ml-card-wash,
+.ml-card:focus-within .ml-card-wash {
+  opacity: 0.72;
+  transform: scale(1.08);
+}
+
+.ml-card-art svg {
+  position: relative;
+  z-index: 1;
+  width: 74%;
+  height: auto;
+  transition: transform var(--ml-slow) var(--ml-ease);
+}
+
+.ml-card:hover .ml-card-art svg,
+.ml-card:focus-within .ml-card-art svg {
+  transform: translateY(-6px) scale(1.05) rotate(-2deg);
+}
+
+.ml-card-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.ml-card-name {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.ml-card-en {
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+}
+
+.ml-card-ex {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ml-ink-2);
+  margin-top: 4px;
+}
+
+.ml-card-tags {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.ml-card-arrow {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ml-ink);
+  display: grid;
+  place-items: center;
+  background: var(--ml-paper-2);
+  transition: transform var(--ml-mid) var(--ml-ease), background-color var(--ml-fast);
+}
+
+.ml-card:hover .ml-card-arrow {
+  transform: translate(2px, -2px);
+  background: var(--ml-yellow);
+}
+
+/* 篩選列 */
+.ml-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.ml-chip {
+  font-family: var(--ml-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ml-rule);
+  color: var(--ml-ink-2);
+  transition:
+    background-color var(--ml-fast) var(--ml-ease),
+    border-color var(--ml-fast) var(--ml-ease),
+    color var(--ml-fast) var(--ml-ease);
+}
+
+.ml-chip:hover {
+  border-color: var(--ml-ink);
+}
+
+.ml-chip[aria-pressed="true"] {
+  background: var(--ml-ink);
+  border-color: var(--ml-ink);
+  color: var(--ml-paper);
+}
+
+.ml-count {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ml-ink-3);
+  text-transform: uppercase;
+}
+
+/* ═══ 口味詳頁 ═══════════════════════════════════ */
+
+.ml-fhero {
+  position: relative;
+  padding-top: 26px;
+  padding-bottom: clamp(48px, 7vw, 88px);
+  overflow: hidden;
+}
+
+.ml-fhero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 78%;
+  background: radial-gradient(
+    120% 100% at 70% 0%,
+    var(--ml-accent) 0%,
+    transparent 68%
+  );
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.ml-fhero-in {
+  position: relative;
+  display: grid;
+  gap: clamp(24px, 4vw, 52px);
+  align-items: center;
+}
+
+@media (min-width: 860px) {
+  .ml-fhero-in {
+    grid-template-columns: 1fr 0.92fr;
+  }
+}
+
+.ml-fhero-art {
+  order: -1;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+
+@media (min-width: 860px) {
+  .ml-fhero-art {
+    order: 1;
+  }
+}
+
+.ml-fhero-art svg {
+  width: min(100%, 420px);
+  height: auto;
+  filter: drop-shadow(0 24px 40px rgba(22, 19, 15, 0.13));
+}
+
+.ml-fhero-title {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(34px, 6.6vw, 66px);
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+}
+
+.ml-fhero-en {
+  font-family: var(--ml-display);
+  font-size: clamp(18px, 2.4vw, 26px);
+  letter-spacing: 0.02em;
+  color: var(--ml-ink-2);
+  margin-top: 6px;
+}
+
+.ml-crumb {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ml-crumb a:hover {
+  color: var(--ml-ink);
+}
+
+.ml-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.ml-note-chip {
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--ml-paper-2);
+  border: 1px solid var(--ml-rule);
+}
+
+.ml-prose {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 40ch;
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 2;
+  color: var(--ml-ink-2);
+}
+
+.ml-facts {
+  display: grid;
+  gap: 0;
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  overflow: hidden;
+  background: var(--ml-paper-2);
+}
+
+.ml-fact {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ml-rule);
+  font-size: 14.5px;
+}
+
+.ml-fact:last-child {
+  border-bottom: 0;
+}
+
+.ml-fact dt {
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+  padding-top: 4px;
+}
+
+.ml-fact dd {
+  margin: 0;
+  color: var(--ml-ink-2);
+}
+
+/* ═══ 活動 ═══════════════════════════════════════ */
+
+.ml-works {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1.5px solid currentColor;
+}
+
+.ml-work {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: clamp(22px, 3.4vw, 40px) 0;
+  border-bottom: 1.5px solid currentColor;
+  overflow: hidden;
+}
+
+@media (min-width: 800px) {
+  .ml-work {
+    grid-template-columns: 92px 1fr 230px;
+    gap: 28px;
+    align-items: baseline;
+  }
+}
+
+.ml-work-date {
+  font-family: var(--ml-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.ml-work-title {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(22px, 3.4vw, 40px);
+  line-height: 1.25;
+  transition: transform var(--ml-mid) var(--ml-ease);
+}
+
+.ml-work-en {
+  font-family: var(--ml-display);
+  font-size: clamp(14px, 1.5vw, 17px);
+  opacity: 0.6;
+  display: block;
+  margin-top: 4px;
+}
+
+.ml-work-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  opacity: 0.78;
+}
+
+.ml-work:hover .ml-work-title {
+  transform: translateX(10px);
+}
+
+/* hover 時從左邊漫過來的品牌色 */
+.ml-work-sweep {
+  position: absolute;
+  inset: 0;
+  background: var(--ml-work-color, var(--ml-yellow));
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0.12;
+  transition: transform var(--ml-slow) var(--ml-ease);
+  pointer-events: none;
+}
+
+.ml-work:hover .ml-work-sweep {
+  transform: scaleX(1);
+}
+
+.ml-work-kind {
+  font-family: var(--ml-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  align-self: flex-start;
+  opacity: 0.85;
+}
+
+.ml-ehero {
+  padding-top: 26px;
+  padding-bottom: clamp(40px, 6vw, 72px);
+  position: relative;
+  overflow: hidden;
+}
+
+.ml-ehero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--ml-accent) 0%, transparent 62%);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.ml-ehero-in {
+  position: relative;
+}
+
+.ml-ehero-title {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(30px, 6vw, 62px);
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+  max-width: 16ch;
+}
+
+.ml-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin-top: 26px;
+  font-family: var(--ml-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ml-ink-2);
+}
+
+.ml-meta-row b {
+  font-weight: 500;
+  color: var(--ml-ink-3);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  display: block;
+}
+
+/* ═══ 店舖 ═══════════════════════════════════════ */
+
+.ml-store {
+  display: grid;
+  gap: clamp(28px, 4vw, 52px);
+}
+
+@media (min-width: 900px) {
+  .ml-store {
+    grid-template-columns: 1fr 1.05fr;
+    align-items: start;
+  }
+}
+
+.ml-hours {
+  display: grid;
+  gap: 0;
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  overflow: hidden;
+  background: var(--ml-paper-2);
+}
+
+.ml-hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--ml-rule);
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ml-hours-row:last-child {
+  border-bottom: 0;
+}
+
+.ml-hours-row[data-today="true"] {
+  background: var(--ml-yellow-wash);
+  font-weight: 700;
+}
+
+.ml-hours-row[data-closed="true"] span:last-child {
+  color: var(--ml-ink-3);
+}
+
+.ml-hours-day {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--ml-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+}
+
+.ml-hours-row[data-today="true"] .ml-hours-day {
+  color: var(--ml-ink);
+}
+
+.ml-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ml-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ml-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ml-ink-3);
+  flex: none;
+}
+
+.ml-status[data-open="true"] {
+  background: var(--ml-yellow);
+}
+
+.ml-status[data-open="true"] i {
+  background: #1c7a3e;
+  box-shadow: 0 0 0 3px rgba(28, 122, 62, 0.22);
+}
+
+.ml-map {
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  overflow: hidden;
+  background: #efe8d8;
+}
+
+/* 只針對地圖本體。用 `.ml-map svg` 的話，會連 .ml-map-foot 裡按鈕的
+   箭頭圖示一起放大成 100% 寬（兩者特異度相同，後寫的贏）。 */
+.ml-map > svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ml-map-foot {
+  border-top: 1.5px solid var(--ml-ink);
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ml-paper-2);
+}
+
+.ml-transit {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 20px;
+}
+
+.ml-transit li {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px dashed var(--ml-rule);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ml-ink-2);
+}
+
+.ml-transit li:last-child {
+  border-bottom: 0;
+}
+
+.ml-transit b {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ml-ink-3);
+  padding-top: 4px;
+  font-weight: 400;
+}
+
+/* ═══ 表單 ═══════════════════════════════════════ */
+
+.ml-form {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .ml-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ml-f-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.ml-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ml-field label {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ml-ink-2);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ml-field label em {
+  font-style: normal;
+  color: var(--ml-yellow-deep);
+}
+
+.ml-field input,
+.ml-field select,
+.ml-field textarea {
+  font: inherit;
+  font-size: 16px; /* < 16px 會讓 iOS 自動放大整頁 */
+  color: var(--ml-ink);
+  background: var(--ml-paper-2);
+  border: 1.5px solid var(--ml-rule);
+  border-radius: var(--ml-r);
+  padding: 12px 14px;
+  width: 100%;
+  transition: border-color var(--ml-fast) var(--ml-ease);
+}
+
+.ml-field textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.ml-field select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ml-ink-2) 50%),
+    linear-gradient(135deg, var(--ml-ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 19px) 50%, calc(100% - 14px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 40px;
+}
+
+.ml-field input:focus,
+.ml-field select:focus,
+.ml-field textarea:focus {
+  border-color: var(--ml-ink);
+  outline: none;
+}
+
+.ml-field[data-invalid="true"] input,
+.ml-field[data-invalid="true"] select,
+.ml-field[data-invalid="true"] textarea {
+  border-color: #a8322c;
+}
+
+.ml-err {
+  font-size: 12.5px;
+  color: #a8322c;
+  line-height: 1.6;
+}
+
+.ml-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ml-form-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.ml-form-note {
+  font-size: 13px;
+  color: var(--ml-ink-3);
+  line-height: 1.7;
+  max-width: 44ch;
+}
+
+.ml-result {
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r-lg);
+  padding: clamp(28px, 5vw, 48px);
+  background: var(--ml-paper-2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.ml-result[data-tone="error"] {
+  border-color: #a8322c;
+}
+
+.ml-result h3 {
+  font-family: var(--ml-han);
+  font-weight: 700;
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+/* ═══ 頁尾 ═══════════════════════════════════════ */
+
+.ml-foot {
+  background: var(--ml-night);
+  color: var(--ml-paper);
+  padding-block: clamp(52px, 7vw, 88px) 34px;
+}
+
+.ml-foot-top {
+  display: grid;
+  gap: 34px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(247, 242, 231, 0.16);
+}
+
+@media (min-width: 800px) {
+  .ml-foot-top {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+}
+
+.ml-foot-word {
+  font-family: var(--ml-display);
+  font-size: clamp(34px, 7vw, 76px);
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--ml-yellow);
+}
+
+.ml-foot h4 {
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ml-stone);
+  margin-bottom: 14px;
+  font-weight: 400;
+}
+
+.ml-foot li {
+  line-height: 2.1;
+  font-size: 14.5px;
+}
+
+.ml-foot a:hover {
+  color: var(--ml-yellow);
+}
+
+.ml-foot-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  justify-content: space-between;
+  padding-top: 26px;
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ml-stone);
+}
+
+.ml-foot-bottom a:hover {
+  color: var(--ml-yellow);
+}
+
+/* ═══ 通用小元件 ═════════════════════════════════ */
+
+.ml-quote {
+  display: grid;
+  gap: 10px;
+  padding: 22px 24px;
+  border-left: 3px solid var(--ml-yellow);
+  background: var(--ml-paper-2);
+  border-radius: 0 var(--ml-r-lg) var(--ml-r-lg) 0;
+}
+
+.ml-quote p {
+  font-family: var(--ml-han);
+  font-size: clamp(16px, 1.8vw, 19px);
+  line-height: 1.8;
+}
+
+.ml-quote cite {
+  font-family: var(--ml-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+  font-style: normal;
+}
+
+.ml-split {
+  display: grid;
+  gap: clamp(26px, 4vw, 56px);
+}
+
+@media (min-width: 860px) {
+  .ml-split {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+  }
+  .ml-split--wide {
+    grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+.ml-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px;
+  background: var(--ml-rule);
+  border: 1px solid var(--ml-rule);
+  border-radius: var(--ml-r-lg);
+  overflow: hidden;
+}
+
+.ml-stat {
+  background: var(--ml-paper-2);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ml-stat b {
+  font-family: var(--ml-display);
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1;
+  font-weight: 400;
+}
+
+.ml-stat span {
+  font-family: var(--ml-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ml-ink-3);
+}
+
+/* 游標跟隨的一勺（僅桌機、且非 reduced-motion） */
+.ml-scoop-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 40;
+  mix-blend-mode: multiply;
+  filter: blur(34px);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* 社群圖磚（自架圖片；沒有圖時用口味色與字撐版） */
+.ml-social {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 720px) {
+  .ml-social {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+  }
+}
+
+.ml-social-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1.5px solid var(--ml-ink);
+  border-radius: var(--ml-r);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  transition: transform var(--ml-mid) var(--ml-ease);
+}
+
+.ml-social-tile:hover {
+  transform: translateY(-4px) rotate(-1.5deg);
+}
+
+.ml-social-tile svg {
+  width: 70%;
+  height: auto;
+}
+
+.ml-notfound {
+  min-height: 62svh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-block: 80px;
+}
+
+/* ═══ 動態偏好 ═══════════════════════════════════
+   MotionConfig reducedMotion="user" 管住 JS 動畫，
+   這裡管住純 CSS 的那幾個。 */
+@media (prefers-reduced-motion: reduce) {
+  .ml *,
+  .ml *::before,
+  .ml *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ml-marquee-track {
+    animation: none;
+    transform: none;
+  }
+  .ml-scoop-cursor {
+    display: none;
+  }
+}
+
+/* ── Hero 的融化色塊場 ───────────────────────────
+   模糊的圓互相重疊就會產生「黏在一起、正在融化」的邊緣。
+   刻意不用 filter: contrast() 的 goo 疊法——那在整個 viewport 大小的
+   區域上要每幀重算，中階手機直接掉幀。只動 transform，GPU 就吃得下。 */
+.ml-goo-field {
+  position: absolute;
+  inset: 0;
+  filter: blur(26px);
+  will-change: transform;
+}
+
+@media (min-width: 900px) {
+  .ml-goo-field {
+    filter: blur(40px);
+  }
+}
+
+.ml-blob {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate3d(0, 0, 0);
+  animation-name: ml-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform;
+}
+
+/* 手機只留三團，省下兩層大面積模糊 */
+@media (max-width: 719px) {
+  .ml-blob:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@keyframes ml-float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4vw, -3vh, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(-3vw, 4vh, 0) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-blob {
+    animation: none;
+  }
+}
+
+/* ── 原生 View Transitions（口味卡 → 詳頁的那球冰）──
+   React 的 <ViewTransition share="morph"> 會給這組轉場一個 morph class。
+   中途補一點模糊，蓋掉像素級補間的毛邊。 */
+::view-transition-group(.morph) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-image-pair(.morph) {
+  animation-name: ml-morph-blur;
+}
+
+@keyframes ml-morph-blur {
+  30% {
+    filter: blur(3px);
+  }
+}
+
+/* 瀏覽器的 View Transitions 不會自己看 prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-image-pair(*) {
+    animation: none !important;
+  }
+}

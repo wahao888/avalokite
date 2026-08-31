@@ -9,18 +9,18 @@ datasource db {
 
 // 訂單：免會員結帳，一張訂單可同時含一次性品項與訂閱品項
 model Order {
-  id          String   @id // AVL + timestamp36 + random，亦作為綠界 MerchantTradeNo 前綴
-  email       String
-  name        String
-  phone       String
-  company     String?
-  taxId       String? // 統編
-  note        String?
-  locale      String   @default("zh-TW")
-  items       String // JSON: [{ sku, qty }]
-  oneTimeTotal Int     @default(0) // 一次性小計（未稅，TWD）
-  monthlyTotal Int     @default(0) // 月費小計（未稅，TWD/月）
-  status      String   @default("pending") // pending | paid | partial | failed | cancelled
+  id                 String         @id // AVL + timestamp36 + random，亦作為綠界 MerchantTradeNo 前綴
+  email              String
+  name               String
+  phone              String
+  company            String?
+  taxId              String? // 統編
+  note               String?
+  locale             String         @default("zh-TW")
+  items              String // JSON: [{ sku, qty }]
+  oneTimeTotal       Int            @default(0) // 一次性小計（未稅，TWD）
+  monthlyTotal       Int            @default(0) // 月費小計（未稅，TWD/月）
+  status             String         @default("pending") // pending | paid | partial | failed | cancelled
   // 契約同意的留證：客戶結帳時同意的條款版本、內容雜湊、時間與來源 IP。
   // 條款會隨部署改版，沒有這四個欄位就無法證明客戶當初同意的是什麼。
   // 雜湊由伺服器以自己的條款內容計算（見 lib/legal-consent.ts），不接受前端傳值。
@@ -28,65 +28,65 @@ model Order {
   agreedTermsHash    String?
   agreedAt           DateTime?
   agreedIp           String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  payments    Payment[]
-  subscriptions Subscription[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  payments           Payment[]
+  subscriptions      Subscription[]
 }
 
 // 一次綠界交易（一次性付款一筆；定期定額授權一筆）
 model Payment {
-  id               Int      @id @default(autoincrement())
-  orderId          String
-  order            Order    @relation(fields: [orderId], references: [id])
-  merchantTradeNo  String   @unique // 送綠界的交易編號
-  kind             String // onetime | period
-  amount           Int // 含稅總額（TWD）
+  id              Int       @id @default(autoincrement())
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id])
+  merchantTradeNo String    @unique // 送綠界的交易編號
+  kind            String // onetime | period
+  amount          Int // 含稅總額（TWD）
   // pending | paid | failed | cancelled（換方案／重新授權後作廢的舊授權，不計入訂單狀態）
-  status           String   @default("pending")
-  ecpayTradeNo     String?
-  paymentType      String? // Credit_CreditCard / ATM_xxx / CVS_xxx
-  paidAt           DateTime?
-  rawReturn        String? // 綠界回傳原始參數 JSON
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  status          String    @default("pending")
+  ecpayTradeNo    String?
+  paymentType     String? // Credit_CreditCard / ATM_xxx / CVS_xxx
+  paidAt          DateTime?
+  rawReturn       String? // 綠界回傳原始參數 JSON
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 // 月費訂閱（綠界信用卡定期定額授權）
 model Subscription {
-  id              Int      @id @default(autoincrement())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id])
-  merchantTradeNo String   @unique
-  sku             String
-  monthlyAmount   Int // 含稅每期扣款額（TWD）
+  id                Int       @id @default(autoincrement())
+  orderId           String
+  order             Order     @relation(fields: [orderId], references: [id])
+  merchantTradeNo   String    @unique
+  sku               String
+  monthlyAmount     Int // 含稅每期扣款額（TWD）
   // pending | active | failed | cancelled | replaced（換方案或重新授權後的舊訂閱）
-  status          String   @default("pending")
-  startsAt        DateTime? // 訂閱起算時間（＝結帳當下）；維護自第一個月起計費，亦為 cron 追授權的基準
-  authLinkSentAt  DateTime? // 最近一次寄出授權連結給客戶的時間
-  remindersSent   Int      @default(0) // 已寄出的授權/續約提醒次數（上限 2）
-  totalSuccessTimes Int    @default(0)
-  lastChargeAt    DateTime?
-  gwsr            String? // 綠界授權單號，後台停扣用
-  cancelledAt     DateTime? // 終止扣款的時間（後台或客戶自助）
-  cancelResult    String? // 綠界終止 API 回傳原始內容
-  rawReturn       String?
+  status            String    @default("pending")
+  startsAt          DateTime? // 訂閱起算時間（＝結帳當下）；維護自第一個月起計費，亦為 cron 追授權的基準
+  authLinkSentAt    DateTime? // 最近一次寄出授權連結給客戶的時間
+  remindersSent     Int       @default(0) // 已寄出的授權/續約提醒次數（上限 2）
+  totalSuccessTimes Int       @default(0)
+  lastChargeAt      DateTime?
+  gwsr              String? // 綠界授權單號，後台停扣用
+  cancelledAt       DateTime? // 終止扣款的時間（後台或客戶自助）
+  cancelResult      String? // 綠界終止 API 回傳原始內容
+  rawReturn         String?
   // 追完提醒仍未授權時，通知站方人工處理的時間（只通知一次）
-  escalatedAt     DateTime?
+  escalatedAt       DateTime?
   // 促銷方案的最短承諾期。一般月費方案為 null＝無綁約。
   // 換方案／重新授權時會沿用到新訂閱，承諾期不因換方案重新起算。
-  termMonths      Int?
-  commitEndsAt    DateTime?
+  termMonths        Int?
+  commitEndsAt      DateTime?
   // 綠界定期定額無法改金額或換卡，換方案／重新授權一律是「終止舊的、開新的」。
   // 這裡記錄新訂閱是從哪一筆換過來的，才追得回同一個客戶的訂閱史。
-  previousMtn     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  previousMtn       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 // 聯絡 / 客製需求詢問單。同時承載客戶站（多租戶）的表單提交。
 model Inquiry {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   // 客戶站 slug（見 src/lib/tenants.ts）。null = Avalo 主站自己的詢問單。
   // 刻意存字串而非 FK：租戶登錄表住在程式碼裡，沒有 Tenant table。
   // 必須 nullable —— SQLite 的 ALTER TABLE ADD COLUMN 只有加 nullable 欄位時
@@ -98,15 +98,29 @@ model Inquiry {
   company   String?
   service   String? // 表單名稱（例：線上估價單）
   budget    String?
-  message   String  // 人類可讀全文
+  message   String // 人類可讀全文
   payload   String? // JSON：結構化欄位，各家表單形狀不同就靠這個
-  locale    String   @default("zh-TW")
-  handled   Boolean  @default(false)
+  locale    String    @default("zh-TW")
+  handled   Boolean   @default(false)
   handledAt DateTime?
-  notified  Boolean  @default(false) // 通知信是否真的寄出（sendMail 回傳值）
-  createdAt DateTime @default(now())
+  notified  Boolean   @default(false) // 通知信是否真的寄出（sendMail 回傳值）
+  createdAt DateTime  @default(now())
 
   // 服務 portal 的「本租戶依時間倒序」列表與 CSV 匯出。
   // handled 不另建索引：單租戶幾百到幾千列，SQLite 全掃比走索引還快。
   @@index([tenantId, createdAt])
+}
+
+// 客戶站的「今日供應」看板。目前只有 Monsieur Long 用（Tenant.flavorBoard）。
+//
+// 為什麼口味目錄留在程式碼、只有「今天賣哪幾款」進資料庫：
+// 口味的插畫、風味描述、色票幾個月才動一次，屬於設計資產，適合走版控與部署；
+// 但「今天出哪幾桶」每天都變，不可能每天重新部署。兩者分開，各自用對的工具。
+// 一個租戶一列（覆寫式），不留每日歷史——店家要的是「現在牆上寫什麼」。
+model FlavorBoard {
+  tenantId  String   @id // 見 src/lib/tenants.ts 的 slug，非 FK
+  slugs     String   @default("[]") // JSON 陣列：口味目錄裡的 slug
+  extras    String   @default("[]") // JSON 陣列：目錄還沒收錄的臨時口味名稱
+  note      String? // 一句公告，例：今日提早售完
+  updatedAt DateTime @updatedAt
 }

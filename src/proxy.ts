@@ -26,8 +26,10 @@ export default function proxy(req: NextRequest) {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
-    // 同理：不攔的話子網域會拿到主站的 sitemap（滿滿 avalokite.xyz 的網址）
-    if (path === "/sitemap.xml") {
+    // 同理：不攔的話子網域會拿到主站的 sitemap（滿滿 avalokite.xyz 的網址）。
+    // ownSitemap 的租戶例外：讓請求往下走到一般改寫，由站內的 app/sites/<slug>/sitemap.ts
+    // 產生（它讀得到 _data 裡的口味與活動，proxy 讀不到也不該讀）。
+    if (path === "/sitemap.xml" && !tenant.ownSitemap) {
       const xml = sitemapFor(tenant);
       if (!xml) return new NextResponse("Not Found", { status: 404 });
       return new NextResponse(xml, {
