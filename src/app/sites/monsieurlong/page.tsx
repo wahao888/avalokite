@@ -13,9 +13,11 @@ import { listFeatured } from "./_data/events";
 import { listHighlights, listSignature } from "./_data/flavors";
 import { ML, SITE } from "./_data/site";
 
-// 今日供應板住在資料庫，店家隨時會改。ISR 60 秒：
-// 讀 DB 的頁面若不宣告 revalidate，會在 build 當下被靜態烤死。
-export const revalidate = 60;
+// 今日供應板住在資料庫，而部署是「在本機 build 再把產物送上去」——
+// 預先產生的話，HTML 裡包的會是開發機 dev.db 的看板，rsync 上去就成了初始快取，
+// 店家改過的口味會在部署後短暫倒退回開發者電腦裡的那份（2026-08-31 實際踩到）。
+// 這頁的重點就是「今天賣什麼」，寧可每次讀一下 SQLite 也不能給過期資料。
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [board, highlights, signature, events] = await Promise.all([

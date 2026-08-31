@@ -5,7 +5,11 @@ import OpenStatus from "../_components/OpenStatus";
 import { getTodayBoard } from "../_data/board";
 import { flagsOf, listFlavors } from "../_data/flavors";
 
-export const revalidate = 60;
+// 今日供應板住在資料庫，而部署是「在本機 build 再把產物送上去」——
+// 預先產生的話，HTML 裡包的會是開發機 dev.db 的看板，rsync 上去就成了初始快取，
+// 店家改過的口味會在部署後短暫倒退回開發者電腦裡的那份（2026-08-31 實際踩到）。
+// 這頁的重點就是「今天賣什麼」，寧可每次讀一下 SQLite 也不能給過期資料。
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "冰淇淋口味",
