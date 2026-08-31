@@ -280,9 +280,12 @@ export const PRODUCTS: Product[] = [
       },
     },
   },
-  // ─── 首波創始客戶計畫（限量促銷）───
+  // ─── 限時零元啟動（限量促銷）───
   // 「0 元建置」不是獨立 SKU：單購 launch-care（無一次性品項）時，
   // checkout 的 hasBuild=false 分支會讓定期定額當月起扣，正是該方案要的行為。
+  //
+  // launch-setup 已不對外銷售（定價頁只剩零元啟動一種付法），保留於此僅為了讓
+  // 既有訂單仍能以 getProduct() 解析出品名與價格，勿刪。
   {
     sku: "launch-setup",
     type: "onetime",
@@ -291,8 +294,8 @@ export const PRODUCTS: Product[] = [
     recommendedCareSku: "launch-care",
     badge: { "zh-TW": "限量 10 席", en: "10 seats only" },
     promoNote: {
-      "zh-TW": "首波創始客戶名額；創始價於訂閱存續期間鎖定，不隨日後定價調整。",
-      en: "Founding-client seats. Your rate stays locked for as long as the subscription runs.",
+      "zh-TW": "限時檔期名額；此價於訂閱存續期間鎖定，不隨日後定價調整。",
+      en: "Limited-run seats. Your rate stays locked for as long as the subscription runs.",
     },
     marketRange: {
       "zh-TW": "Avalo 標準形象官網 NT$39,000",
@@ -300,7 +303,7 @@ export const PRODUCTS: Product[] = [
     },
     i18n: {
       "zh-TW": {
-        label: "創始客戶計畫",
+        label: "限時啟動方案",
         name: "Launch 快啟官網",
         desc: "託管式形象官網：建置、主機、表單後台一次到位，10 個工作天上線。",
         features: [
@@ -313,7 +316,7 @@ export const PRODUCTS: Product[] = [
         unit: "一次性",
       },
       en: {
-        label: "Founding Client Program",
+        label: "Limited-Time Launch Offer",
         name: "Launch Website",
         desc: "A managed brand site: build, hosting and a form dashboard, live in 10 business days.",
         features: [
@@ -332,15 +335,15 @@ export const PRODUCTS: Product[] = [
     type: "monthly",
     price: 2000,
     group: "promo",
-    badge: { "zh-TW": "創始價鎖定", en: "Rate locked" },
+    badge: { "zh-TW": "限時價鎖定", en: "Rate locked" },
     promoNote: {
-      "zh-TW": "亦可 0 元建置啟動，需承諾 24 個月；單購此方案即為該路徑。",
-      en: "Also available with zero build fee on a 24-month term — subscribe to this plan alone.",
+      "zh-TW": "零元啟動：免建置費，承諾 24 個月，月費自當月起扣。",
+      en: "Zero setup: no build fee, 24-month term, billing starts this month.",
     },
     marketRange: { "zh-TW": "行情 NT$1,500–5,000/月", en: "Market NT$1.5k–5k/mo" },
     i18n: {
       "zh-TW": {
-        label: "創始客戶計畫",
+        label: "限時啟動方案",
         name: "Launch 託管維護",
         desc: "網站上線之後的一切：主機、備份、監控、改稿與表單後台。",
         features: [
@@ -353,7 +356,7 @@ export const PRODUCTS: Product[] = [
         unit: "每月",
       },
       en: {
-        label: "Founding Client Program",
+        label: "Limited-Time Launch Offer",
         name: "Launch Care",
         desc: "Everything after launch: hosting, backups, monitoring, edits and your form dashboard.",
         features: [
@@ -503,7 +506,7 @@ export const careRequired = (skus: string[]) => buildsNeedingCare(skus).length >
 
 /**
  * 車上建置方案可選的維護方案。促銷建置（Launch）綁定促銷維護，
- * 不與正式月費方案混選，否則創始價會被一般方案的價格帶稀釋。
+ * 不與正式月費方案混選，否則限時價會被一般方案的價格帶稀釋。
  */
 export const careOptionsFor = (skus: string[]): Product[] => {
   const builds = buildsNeedingCare(skus);
@@ -531,11 +534,11 @@ export const mixedBuildConflict = (skus: string[]) => {
 export const recommendedCareFor = (skus: string[]): string | undefined =>
   buildsNeedingCare(skus).sort((a, b) => b.price - a.price)[0]?.recommendedCareSku;
 
-// ─── 首波創始客戶計畫：方案組合 ───
+// ─── 限時零元啟動：方案組合 ───
 //
-// launch-setup 與 launch-care 是「結帳用的 SKU」，不是「客戶看到的方案」。
-// 客戶要選的是付款方式（付建置費綁短約 vs 零元建置綁長約），交付內容完全相同，
-// 所以定價區把共通內容列一次，再讓客戶二選一——而不是渲染成兩張獨立商品卡。
+// launch-care 是「結帳用的 SKU」，不是「客戶看到的方案」。定價區呈現的是一個
+// 完整方案（交付內容 ＋ 付款條件），選擇後才把對應 SKU 丟進購物車。
+// PROMO_PLANS 保留陣列結構：日後要再開第二種付法時，加一筆即可自動並排。
 export interface PromoPlan {
   id: string;
   skus: string[]; // 選擇此方案時要加進購物車的 SKU
@@ -549,7 +552,7 @@ export interface PromoPlan {
   };
 }
 
-/** 兩個方案共通的交付內容（只列一次，避免看起來像兩個不同產品） */
+/** 方案交付內容（與付款條件分開列，讓「拿到什麼」先於「怎麼付」被讀到） */
 export const PROMO_INCLUDES: { "zh-TW": string[]; en: string[] } = {
   "zh-TW": [
     "5 頁以內形象官網，全客製設計",
@@ -575,43 +578,16 @@ export const PROMO_INCLUDES: { "zh-TW": string[]; en: string[] } = {
 
 export const PROMO_PLANS: PromoPlan[] = [
   {
-    id: "founding",
-    skus: ["launch-setup", "launch-care"],
-    setup: 10000,
-    monthly: 2000,
-    termMonths: 12,
-    featured: true,
-    i18n: {
-      "zh-TW": {
-        name: "創始價",
-        tagline: "建置費一次付清，綁約期較短",
-        terms: [
-          "最短承諾 12 個月",
-          "建置費一次付清，維護月費自第一個月起扣",
-          "期滿轉月繳，30 天前通知即可終止",
-        ],
-      },
-      en: {
-        name: "Founding Rate",
-        tagline: "Pay the build fee up front, shorter commitment",
-        terms: [
-          "12-month minimum term",
-          "Build fee paid up front; care billing starts in month one",
-          "Rolls to monthly after; cancel with 30 days' notice",
-        ],
-      },
-    },
-  },
-  {
     id: "zero-setup",
     skus: ["launch-care"],
     setup: 0,
     monthly: 2000,
     termMonths: 24,
+    featured: true,
     i18n: {
       "zh-TW": {
         name: "零元啟動",
-        tagline: "開辦成本為零，以較長的承諾期交換",
+        tagline: "免付建置費，官網直接開起來",
         terms: [
           "最短承諾 24 個月",
           "無建置費，月費自當月起扣",
@@ -620,7 +596,7 @@ export const PROMO_PLANS: PromoPlan[] = [
       },
       en: {
         name: "Zero Setup",
-        tagline: "No upfront cost, in exchange for a longer term",
+        tagline: "No build fee — get the site live now",
         terms: [
           "24-month minimum term",
           "No build fee; billing starts this month",
@@ -635,8 +611,8 @@ export const promoPlanTotal = (p: PromoPlan) => p.setup + p.monthly * p.termMont
 
 /**
  * 反查訂單屬於哪個促銷方案，用來把「最短承諾期」寫進訂閱紀錄。
- * 兩個方案共用 launch-care，差別在有沒有 launch-setup，
- * 故取「所有 SKU 都在訂單裡」之中條件最嚴格（SKU 最多）的那個。
+ * 取「所有 SKU 都在訂單裡」之中條件最嚴格（SKU 最多）的那個，
+ * 這樣既有的 launch-setup + launch-care 舊訂單也仍能正確對應。
  */
 export const promoPlanForSkus = (skus: string[]): PromoPlan | undefined =>
   PROMO_PLANS.filter((p) => p.skus.every((s) => skus.includes(s))).sort(

@@ -133,6 +133,21 @@
     "viewCase": "View full case →",
     "items": [
       {
+        "id": "monsieurlong",
+        "category": "web",
+        "type": "Brand Website · Food & Beverage",
+        "year": "2026",
+        "name": "Monsieur Long",
+        "label": "LONG",
+        "desc": "A brand site for an artisan gelato shop in Taipei's Dadaocheng: oversized type with a melting motif, 16 procedurally drawn flavour illustrations, shared-element transitions from card to detail, and a phone-friendly back office where the shop ticks off today's flavours — change what's in the case, the site changes with it.",
+        "tags": [
+          "Brand website",
+          "Motion design",
+          "Daily content CMS"
+        ],
+        "url": "/cases/monsieurlong"
+      },
+      {
         "id": "wenshan",
         "category": "web",
         "type": "Brand Website · Local Business",
@@ -377,9 +392,9 @@
     "careRequiredNote": "Once your site is live it needs hosting, backups, security updates and monitoring — so every build comes with a care plan, billed from month one. Pick one; you can change or cancel it any time.",
     "careRecommended": "Recommended",
     "careRequiredBlocked": "Please choose a care plan to continue to checkout.",
-    "mixedBuildsBlocked": "Founding Client Program plans cannot share an order with standard build plans — they come with different care plans and rates. Please check out separately, or remove one of them.",
+    "mixedBuildsBlocked": "The Zero Setup offer cannot share an order with standard build plans — they come with different care plans and rates. Please check out separately, or remove one of them.",
     "careCommitNote": "✦ Orders that include a build carry a {months}-month minimum care term, starting from the first care charge. After that it continues month to month and can be cancelled anytime. Build work is priced well below market on the basis of ongoing care.",
-    "careCommitPromo": "✦ The Founding Client Program term depends on the plan you picked (12 months with the build fee, 24 months with zero setup). See the plan terms on the pricing page."
+    "careCommitPromo": "✦ The Zero Setup plan has a 24-month minimum term, counted from the first care charge. See the plan terms on the pricing page."
   },
   "checkout": {
     "title": "Checkout",
@@ -459,10 +474,10 @@
     "viewCurrent": "View current version"
   },
   "promo": {
-    "badge": "10 seats only",
-    "title": "Founding Client Program",
-    "intro": "Avalo is building a managed website service for small businesses in Taiwan. We're opening 10 founding-client seats at the founding rate, which stays locked for as long as the subscription runs. We host the site and the form dashboard; your data stays yours and can be exported at any time.",
-    "includesHeading": "Both options deliver exactly the same thing",
+    "badge": "Limited run · filling up",
+    "title": "Zero Setup — Limited Time",
+    "intro": "Your website, hosting, form dashboard and monthly care for NT$2,000/month, with no build fee. This run is capped; once the seats are gone or the clock runs out, standard pricing applies (brand websites start at NT$39,000 to build).",
+    "includesHeading": "What's included",
     "chooseHeading": "Choose how you'd like to pay",
     "recommended": "Most popular",
     "setupFee": "Build fee",
@@ -474,7 +489,17 @@
     "termTotal": "Total over the term ({n} months, pre-tax)",
     "choose": "Choose {name}",
     "inCart": "Selected ✓",
-    "foot": "✦ Prices exclude 5% VAT, added at checkout　✦ Early termination requires paying out the remaining months　✦ Source code belongs to Avalo during the subscription; handed over free after 24 months　✦ Custom domain, SEO and multilingual are à la carte below"
+    "foot": "✦ Prices exclude 5% VAT, added at checkout　✦ Early termination requires paying out the remaining months　✦ Source code belongs to Avalo during the subscription; handed over free after 24 months　✦ Custom domain, SEO and multilingual are à la carte below",
+    "seatsLabel": "Seats in this run",
+    "seatsLeft": "only {n} left",
+    "countdownLabel": "Offer ends in",
+    "cd": {
+      "d": "days",
+      "h": "hrs",
+      "m": "min",
+      "s": "sec"
+    },
+    "claim": "Claim your seat →"
   },
   "sub": {
     "title": "Manage your care subscription",

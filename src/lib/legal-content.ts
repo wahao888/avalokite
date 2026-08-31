@@ -11,7 +11,7 @@ import { COMPANY, SITE } from "./site";
  * 條款版本。客戶同意的版本會寫進訂單，日後爭議時據此還原當時的條款全文。
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
-export const LEGAL_VERSION = "2026-08-20";
+export const LEGAL_VERSION = "2026-08-31";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -55,7 +55,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           body: [
             "含建置服務之訂單，其維護方案自維護首次扣款日起算，有 12 個月之最短承諾期。這是因為建置服務以遠低於市場行情之價格交付，並以後續維護作為對價之一部分。",
             "單獨訂購維護方案（未含建置服務）無最短承諾期，得隨時終止。",
-            "促銷方案（如首波創始客戶計畫）另訂有承諾期與專屬條件，以該方案於定價頁公告之條款為準，其效力優先於本條。",
+            "促銷方案另訂有承諾期與專屬條件，以該方案於定價頁公告之條款為準，其效力優先於本條。",
             "承諾期屆滿後自動轉為按月計費，您得隨時終止，停扣自次一期生效。",
             "承諾期內提前終止者，本公司得請求給付承諾期剩餘月份之月費，或雙方另行協議；實際處理方式以退款政策為準。",
           ],
@@ -189,7 +189,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           body: [
             "For orders that include a Build Service, the Care Plan carries a 12-month minimum term starting from the first care charge. This reflects that build work is delivered well below market rates, with ongoing care forming part of the consideration.",
             "A Care Plan purchased on its own (without a Build Service) has no minimum term and may be cancelled at any time.",
-            "Promotional plans (such as the Founding Client Program) carry their own terms and conditions as published on the pricing page, which prevail over this section.",
+            "Promotional plans carry their own terms and conditions as published on the pricing page, which prevail over this section.",
             "After the minimum term the plan continues month to month and may be cancelled at any time, effective from the next billing cycle.",
             "If you cancel within the minimum term, the Company may claim the remaining months' fees or agree otherwise with you; the Refund Policy governs how this is handled in practice.",
           ],

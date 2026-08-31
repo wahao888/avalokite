@@ -615,9 +615,9 @@ button { font-family: inherit; }
   border-color: rgba(240, 235, 227, 0.2);
   color: rgba(240, 235, 227, 0.6);
 }
-/* ─── 首波創始客戶計畫 ───
-   刻意用一個外框把整段包起來：這是「一個方案、兩種付法」，
-   拆成兩張並排的商品卡會被讀成兩個不同產品。 */
+/* ─── 限時零元啟動 ───
+   刻意用一個外框把整段包起來：交付內容、限時資訊與付款條件是同一個提案，
+   散成一般商品卡就讀不出「這一檔不一樣」。 */
 .promo-box {
   position: relative;
   border: 2px solid var(--ink);
@@ -657,6 +657,94 @@ button { font-family: inherit; }
   font-size: 0.92rem;
   line-height: 1.9;
 }
+
+/* 限時區塊：左名額、右倒數。中間那條分隔線在窄螢幕改成橫線。 */
+.promo-urgency {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 42rem;
+  margin: 1.8rem auto 0;
+  padding: 1.1rem 1.4rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+}
+.promo-urgency::before {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  width: 1px;
+  background: var(--border);
+}
+.promo-seats { grid-column: 1; grid-row: 1; }
+.promo-countdown { grid-column: 3; grid-row: 1; }
+.promo-urgency-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+.promo-seats-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.promo-seats-count b { font-size: 1.6rem; font-weight: 400; }
+.promo-seats-of { font-size: 0.95rem; color: var(--muted); }
+.promo-seats-left {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--walnut);
+}
+.promo-seats-bar {
+  margin-top: 0.6rem;
+  height: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+.promo-seats-bar span {
+  display: block;
+  height: 100%;
+  background: var(--moss);
+}
+.promo-clock { display: flex; align-items: baseline; gap: 0.55rem; }
+.promo-clock-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 2.1rem;
+}
+.promo-clock-cell b {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.promo-clock-cell span {
+  margin-top: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.promo-clock-sep {
+  position: absolute;
+  top: 0.1rem;
+  right: -0.4rem;
+  font-style: normal;
+  color: var(--muted);
+}
+.promo-clock-sep::before { content: ":"; }
 
 .promo-includes {
   position: relative;
@@ -708,6 +796,8 @@ button { font-family: inherit; }
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
+/* 只剩一個方案時不撐滿整列：一張過寬的卡片會把價格拉得稀疏 */
+.promo-plans.single { grid-template-columns: minmax(0, 30rem); justify-content: center; }
 .promo-plan {
   background: var(--paper);
   border: 1px solid var(--border);
@@ -810,6 +900,14 @@ button { font-family: inherit; }
   .promo-box { padding: 2rem 1.2rem 1.5rem; }
   .promo-includes ul { grid-template-columns: 1fr; }
   .promo-plans { grid-template-columns: 1fr; }
+  .promo-urgency {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+    text-align: left;
+  }
+  .promo-urgency::before { grid-column: 1; grid-row: 2; width: auto; height: 1px; }
+  .promo-seats { grid-column: 1; grid-row: 1; }
+  .promo-countdown { grid-column: 1; grid-row: 3; }
 }
 
 .price-promo-note {
@@ -909,6 +1007,7 @@ button { font-family: inherit; }
   color: var(--muted);
 }
 
+.case-img.brand-monsieurlong { background: linear-gradient(135deg, #2A2318 0%, #8A6414 100%); }
 .case-img.brand-wenshan { background: linear-gradient(135deg, #2E241C 0%, #7A5C3C 100%); }
 .case-img.brand-finance { background: linear-gradient(135deg, #1E2A22 0%, #3B5A43 100%); }
 .case-img.brand-formula-kart { background: linear-gradient(135deg, #221E1C 0%, #7A4A34 100%); }

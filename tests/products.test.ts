@@ -35,7 +35,7 @@ describe("withTax（5% 營業稅，四捨五入）", () => {
   });
 });
 
-describe("促銷方案（首波創始客戶計畫）", () => {
+describe("促銷方案（限時零元啟動）", () => {
   it("兩個 SKU 都存在且標為 promo", () => {
     for (const sku of ["launch-setup", "launch-care"]) {
       const p = getProduct(sku);
@@ -69,7 +69,7 @@ describe("促銷方案（首波創始客戶計畫）", () => {
 
 describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => {
   it("每個方案的 SKU 都存在且是 promo 群組", () => {
-    expect(PROMO_PLANS.length).toBe(2);
+    expect(PROMO_PLANS.length).toBeGreaterThan(0);
     for (const plan of PROMO_PLANS) {
       expect(plan.skus.length).toBeGreaterThan(0);
       for (const sku of plan.skus) {
@@ -95,11 +95,8 @@ describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => 
     }
   });
 
-  it("兩個方案：付建置費的綁約較短，零元建置的綁約較長", () => {
-    const paid = PROMO_PLANS.find((p) => p.setup > 0)!;
+  it("零元啟動不含一次性 SKU（checkout 的 hasBuild=false 分支才會當月起扣）", () => {
     const free = PROMO_PLANS.find((p) => p.setup === 0)!;
-    expect(paid.termMonths).toBeLessThan(free.termMonths);
-    // 零元方案不含一次性 SKU，checkout 的 hasBuild=false 分支才會當月起扣
     expect(free.skus.some((s) => getProduct(s)!.type === "onetime")).toBe(false);
     // 每個方案都要有月費，否則不是訂閱制
     for (const plan of PROMO_PLANS) {
@@ -107,12 +104,14 @@ describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => 
     }
   });
 
-  it("承諾期內合計金額正確，且零元方案總價較高（長約換免建置費）", () => {
-    const paid = PROMO_PLANS.find((p) => p.setup > 0)!;
+  it("launch-setup 已停售，但仍留在目錄供既有訂單解析品名", () => {
+    expect(getProduct("launch-setup")).toBeTruthy();
+    expect(PROMO_PLANS.some((p) => p.skus.includes("launch-setup"))).toBe(false);
+  });
+
+  it("承諾期內合計金額正確", () => {
     const free = PROMO_PLANS.find((p) => p.setup === 0)!;
-    expect(promoPlanTotal(paid)).toBe(10000 + 2000 * 12);
     expect(promoPlanTotal(free)).toBe(2000 * 24);
-    expect(promoPlanTotal(free)).toBeGreaterThan(promoPlanTotal(paid));
   });
 
   it("只有一個方案標為推薦，且中英文文案齊備", () => {
@@ -212,15 +211,16 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
 });
 
 describe("承諾期反查（promoPlanForSkus）", () => {
-  it("付建置費綁 12 個月，零元啟動綁 24 個月", () => {
-    expect(promoPlanForSkus(["launch-setup", "launch-care"])?.termMonths).toBe(12);
-    expect(promoPlanForSkus(["launch-care"])?.termMonths).toBe(24);
+  it("零元啟動綁 24 個月", () => {
+    const plan = promoPlanForSkus(["launch-care"]);
+    expect(plan?.id).toBe("zero-setup");
+    expect(plan?.termMonths).toBe(24);
   });
 
-  it("同時符合兩個方案時取條件較嚴格（SKU 較多）的那個", () => {
-    const plan = promoPlanForSkus(["launch-setup", "launch-care"]);
-    expect(plan?.id).toBe("founding");
-    expect(plan?.setup).toBe(10000);
+  it("含已停售 launch-setup 的組合仍反查得到現行方案，不會回 undefined", () => {
+    // 只在結帳當下用來決定要寫進訂閱的承諾期；既有訂閱的 termMonths 早已入庫，
+    // 不會被這裡的結果追溯改寫。
+    expect(promoPlanForSkus(["launch-setup", "launch-care"])?.id).toBe("zero-setup");
   });
 
   it("一般方案沒有綁約", () => {

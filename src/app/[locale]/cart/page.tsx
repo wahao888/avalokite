@@ -9,6 +9,7 @@ import {
   fmt,
   getProduct,
   mixedBuildConflict,
+  promoPlanForSkus,
   recommendedCareFor,
   withTax,
 } from "@/lib/products";
@@ -36,6 +37,9 @@ export default function CartPage() {
   const looseMonthly = monthly.filter(
     (i) => !careOptions.some((o) => o.sku === i.sku)
   );
+  // 零元啟動＝單購 launch-care，走不到下面的必選維護區塊，
+  // 但結帳仍會把 24 個月的承諾期寫進訂閱，所以承諾期得在月費區自己講。
+  const loosePromoPlan = careNeeded ? undefined : promoPlanForSkus(skus);
 
   if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
 
@@ -99,6 +103,9 @@ export default function CartPage() {
         <>
           <div className="cart-section-head">{t("monthlySection")}</div>
           {looseMonthly.map((i) => renderRow(i.sku, i.qty))}
+          {loosePromoPlan && (
+            <p className="care-commit-note">{t("careCommitPromo")}</p>
+          )}
         </>
       )}
 

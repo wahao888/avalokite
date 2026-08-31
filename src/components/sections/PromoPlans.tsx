@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
+import PromoUrgency from "@/components/sections/PromoUrgency";
 import {
   fmt,
   PROMO_INCLUDES,
@@ -18,12 +19,12 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
   const { add, has } = useCart();
   const router = useRouter();
 
-  // 兩個方案交付內容相同，差別只在付款方式，所以「已選擇」要看整組 SKU 是否都在購物車。
-  // 也因此 launch-care 單獨在購物車時只算方案 B 已選，不會兩張卡同時亮起。
+  // 整組 SKU 都在購物車才算已選；多方案並存時，另一個方案多出的 SKU 也要排除，
+  // 否則子集方案會跟著亮起（例：零元啟動只含 launch-care）。
+  const others = PROMO_PLANS.filter((p) => p.id !== plan.id).flatMap((p) => p.skus);
   const chosen =
     plan.skus.every((s) => has(s)) &&
-    // 方案 B 只含 launch-care，若購物車另有 launch-setup 就是方案 A
-    (plan.skus.includes("launch-setup") || !has("launch-setup"));
+    others.every((s) => plan.skus.includes(s) || !has(s));
 
   const choose = () => {
     // cart 的 add 用函式式更新，連續呼叫可安全累加
@@ -33,7 +34,9 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
 
   return (
     <div className={`promo-plan${plan.featured ? " featured" : ""}`}>
-      {plan.featured && <div className="promo-plan-flag">{t("recommended")}</div>}
+      {plan.featured && PROMO_PLANS.length > 1 && (
+        <div className="promo-plan-flag">{t("recommended")}</div>
+      )}
       <div className="promo-plan-name">{info.name}</div>
       <p className="promo-plan-tagline">{info.tagline}</p>
 
@@ -84,7 +87,7 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
         </button>
       ) : (
         <button className="btn-primary promo-cta" onClick={choose}>
-          {t("choose", { name: info.name })}
+          {t("claim")}
         </button>
       )}
     </div>
@@ -102,9 +105,10 @@ export default function PromoPlans() {
         <div className="promo-badge">{t("badge")}</div>
         <h3 id="promo-heading" className="promo-title">{t("title")}</h3>
         <p className="promo-intro">{t("intro")}</p>
+        <PromoUrgency />
       </div>
 
-      {/* 交付內容只列一次——兩個方案拿到的東西完全一樣，差別僅在怎麼付 */}
+      {/* 先講「拿到什麼」，付款條件才收進下方卡片——價格單看是月費，看起來會太薄 */}
       <div className="promo-includes">
         <div className="promo-includes-head">{t("includesHeading")}</div>
         <ul>
@@ -114,8 +118,10 @@ export default function PromoPlans() {
         </ul>
       </div>
 
-      <div className="promo-choose-head">{t("chooseHeading")}</div>
-      <div className="promo-plans">
+      {PROMO_PLANS.length > 1 && (
+        <div className="promo-choose-head">{t("chooseHeading")}</div>
+      )}
+      <div className={`promo-plans${PROMO_PLANS.length === 1 ? " single" : ""}`}>
         {PROMO_PLANS.map((p) => (
           <PlanCard key={p.id} plan={p} locale={locale} />
         ))}
