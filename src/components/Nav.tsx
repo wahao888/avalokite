@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
 import LogoMark from "./LogoMark";
+import PromoBar from "./PromoBar";
 
 export default function Nav() {
   const t = useTranslations("nav");
@@ -29,42 +30,47 @@ export default function Nav() {
   const anchor = (hash: string) => ({ pathname: "/", hash });
 
   return (
-    <nav className={`nav${scrolled ? " scrolled" : ""}`}>
-      <Link className="nav-logo" href="/">
-        <LogoMark size={34} />
-        <span>
-          <span className="nav-logo-text">AVALO</span>{" "}
-          <span className="nav-logo-sub">阿瓦羅</span>
-        </span>
-      </Link>
-      <button
-        className="nav-burger"
-        aria-label="Menu"
-        onClick={() => setOpen((v) => !v)}
-      >
-        MENU
-      </button>
-      <ul className={`nav-links${open ? " open" : ""}`}>
-        <li><Link href={anchor("services")}>{t("services")}</Link></li>
-        <li><Link href={anchor("pricing")}>{t("pricing")}</Link></li>
-        <li><Link href={anchor("cases")}>{t("cases")}</Link></li>
-        <li><Link href={anchor("about")}>{t("about")}</Link></li>
-        <li><Link href={anchor("contact")}>{t("contact")}</Link></li>
-        <li>
-          <Link href="/cart" className="nav-cart">
-            {t("cart")}
-            {count > 0 && <span className="nav-cart-badge">{count}</span>}
-          </Link>
-        </li>
-        <li>
-          <Link href={anchor("pricing")} className="nav-cta">{t("cta")}</Link>
-        </li>
-        <li>
-          <Link href={pathname} locale={otherLocale} className="lang-switch">
-            {locale === "zh-TW" ? "EN" : "中文"}
-          </Link>
-        </li>
-      </ul>
-    </nav>
+    // nav 與限時橫幅包在同一個 fixed 容器裡：橫幅因此自然跟著浮動，
+    // 不必為「nav 有多高」寫死一個 top 值（各斷點的 nav 高度並不一樣）。
+    <div className={`topbar${scrolled ? " scrolled" : ""}`}>
+      <nav className="nav">
+        <Link className="nav-logo" href="/">
+          <LogoMark size={34} />
+          <span>
+            <span className="nav-logo-text">AVALO</span>{" "}
+            <span className="nav-logo-sub">阿瓦羅</span>
+          </span>
+        </Link>
+        <button
+          className="nav-burger"
+          aria-label="Menu"
+          onClick={() => setOpen((v) => !v)}
+        >
+          MENU
+        </button>
+        <ul className={`nav-links${open ? " open" : ""}`}>
+          <li><Link href={anchor("services")}>{t("services")}</Link></li>
+          <li><Link href={anchor("pricing")}>{t("pricing")}</Link></li>
+          <li><Link href={anchor("cases")}>{t("cases")}</Link></li>
+          <li><Link href={anchor("about")}>{t("about")}</Link></li>
+          <li><Link href={anchor("contact")}>{t("contact")}</Link></li>
+          <li>
+            <Link href="/cart" className="nav-cart">
+              {t("cart")}
+              {count > 0 && <span className="nav-cart-badge">{count}</span>}
+            </Link>
+          </li>
+          <li>
+            <Link href={anchor("pricing")} className="nav-cta">{t("cta")}</Link>
+          </li>
+          <li>
+            <Link href={pathname} locale={otherLocale} className="lang-switch">
+              {locale === "zh-TW" ? "EN" : "中文"}
+            </Link>
+          </li>
+        </ul>
+      </nav>
+      <PromoBar />
+    </div>
   );
 }

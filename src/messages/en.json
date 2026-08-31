@@ -475,6 +475,8 @@
   },
   "promo": {
     "badge": "Limited run · filling up",
+    "barText": "No build fee — NT$2,000/mo covers site, hosting and monthly care",
+    "barCta": "See the offer →",
     "title": "Zero Setup — Limited Time",
     "intro": "Your website, hosting, form dashboard and monthly care for NT$2,000/month, with no build fee. This run is capped; once the seats are gone or the clock runs out, standard pricing applies (brand websites start at NT$39,000 to build).",
     "includesHeading": "What's included",

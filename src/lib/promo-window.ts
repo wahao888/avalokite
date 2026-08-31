@@ -34,6 +34,13 @@ export interface Remaining {
   seconds: number;
 }
 
+/** 補零到兩位，倒數的分秒不跳位才不會抖動 */
+export const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** 橫幅用的緊湊寫法：`2d 09:31:07`／`09:31:07`（不足一天就不顯示天） */
+export const compactClock = (r: Remaining, dayUnit: string) =>
+  `${r.days > 0 ? `${r.days}${dayUnit} ` : ""}${pad2(r.hours)}:${pad2(r.minutes)}:${pad2(r.seconds)}`;
+
 export function remainingFrom(now: number = Date.now()): Remaining {
   const ms = Math.max(0, currentDeadline(now) - now);
   const total = Math.floor(ms / 1000);

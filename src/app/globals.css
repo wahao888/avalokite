@@ -109,10 +109,16 @@ button { font-family: inherit; }
 }
 
 /* ── NAV ── */
-.nav {
+/* nav 與限時橫幅共用一個 fixed 容器，橫幅才會跟著一起浮動 */
+.topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
+  transition: box-shadow 0.2s;
+}
+.topbar.scrolled { box-shadow: 0 2px 20px rgba(47,43,38,0.08); }
+
+.nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -121,7 +127,61 @@ button { font-family: inherit; }
   border-bottom: 1px solid var(--border);
   transition: box-shadow 0.2s;
 }
-.nav.scrolled { box-shadow: 0 2px 20px rgba(47,43,38,0.08); }
+
+/* 限時橫幅：整條可點，導向首頁 #promo */
+.promo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 1.4rem;
+  padding: 0.55rem 4rem;
+  background: var(--moss);
+  color: var(--paper);
+  text-decoration: none;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  transition: background 0.2s;
+}
+.promo-bar:hover { background: var(--moss-deep); }
+.promo-bar-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+.promo-bar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--paper);
+  animation: promo-pulse 1.8s ease-in-out infinite;
+}
+@keyframes promo-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+.promo-bar-text { opacity: 0.92; }
+.promo-bar-seats,
+.promo-bar-clock {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+.promo-bar-seats { color: #F4E4C1; }
+.promo-bar-clock { font-variant-numeric: tabular-nums; }
+.promo-bar-go {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(240,235,227,0.5);
+  padding-bottom: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .promo-bar-dot { animation: none; }
+}
 
 .nav-logo {
   display: flex;
@@ -620,6 +680,7 @@ button { font-family: inherit; }
    散成一般商品卡就讀不出「這一檔不一樣」。 */
 .promo-box {
   position: relative;
+  scroll-margin-top: 9rem;
   border: 2px solid var(--ink);
   background: var(--cream);
   padding: 2.5rem 2rem 2rem;
@@ -664,10 +725,9 @@ button { font-family: inherit; }
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 1.5rem;
-  max-width: 42rem;
-  margin: 1.8rem auto 0;
-  padding: 1.1rem 1.4rem;
+  gap: 2.5rem;
+  margin: 0 0 2rem;
+  padding: 1.6rem 2.4rem;
   background: var(--paper);
   border: 1px solid var(--border);
 }
@@ -683,10 +743,10 @@ button { font-family: inherit; }
 .promo-countdown { grid-column: 3; grid-row: 1; }
 .promo-urgency-label {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
   color: var(--muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
 }
 .promo-seats-count {
   display: flex;
@@ -695,18 +755,20 @@ button { font-family: inherit; }
   font-family: var(--font-display);
   line-height: 1;
 }
-.promo-seats-count b { font-size: 1.6rem; font-weight: 400; }
-.promo-seats-of { font-size: 0.95rem; color: var(--muted); }
+.promo-seats-count b { font-size: clamp(2.2rem, 4.5vw, 3rem); font-weight: 400; }
+.promo-seats-of { font-size: 1.2rem; color: var(--muted); }
 .promo-seats-left {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   letter-spacing: 0.06em;
   color: var(--walnut);
+  border: 1px solid var(--walnut);
+  padding: 0.25rem 0.6rem;
 }
 .promo-seats-bar {
-  margin-top: 0.6rem;
-  height: 4px;
+  margin-top: 0.9rem;
+  height: 6px;
   background: var(--border);
   overflow: hidden;
 }
@@ -715,70 +777,65 @@ button { font-family: inherit; }
   height: 100%;
   background: var(--moss);
 }
-.promo-clock { display: flex; align-items: baseline; gap: 0.55rem; }
+.promo-clock { display: flex; align-items: baseline; gap: 0.9rem; }
 .promo-clock-cell {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 2.1rem;
+  min-width: 3rem;
 }
 .promo-clock-cell b {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: clamp(2.2rem, 4.5vw, 3rem);
   font-weight: 400;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .promo-clock-cell span {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   font-family: var(--font-mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
   color: var(--muted);
 }
 .promo-clock-sep {
   position: absolute;
-  top: 0.1rem;
-  right: -0.4rem;
+  top: 0.05rem;
+  right: -0.65rem;
   font-style: normal;
-  color: var(--muted);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  line-height: 1;
+  color: var(--border);
 }
 .promo-clock-sep::before { content: ":"; }
 
-.promo-includes {
-  position: relative;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  padding: 1.5rem 1.6rem;
-  margin-bottom: 2.2rem;
-}
 .promo-includes-head {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  color: var(--moss);
-  margin-bottom: 1rem;
+  letter-spacing: 0.16em;
+  color: var(--sage);
+  margin-bottom: 1.2rem;
 }
-.promo-includes ul {
+.promo-plan-includes ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.55rem 2rem;
+  gap: 0.75rem;
 }
-.promo-includes li {
-  font-size: 0.86rem;
-  line-height: 1.6;
-  padding-left: 1.3rem;
+.promo-plan-includes li {
+  font-size: 0.87rem;
+  line-height: 1.65;
+  padding-left: 1.4rem;
   position: relative;
+  color: rgba(240,235,227,0.88);
 }
-.promo-includes li::before {
+.promo-plan-includes li::before {
   content: "→";
   position: absolute;
   left: 0;
-  color: var(--wood);
+  color: var(--sage);
 }
 
 .promo-choose-head {
@@ -796,8 +853,8 @@ button { font-family: inherit; }
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
-/* 只剩一個方案時不撐滿整列：一張過寬的卡片會把價格拉得稀疏 */
-.promo-plans.single { grid-template-columns: minmax(0, 30rem); justify-content: center; }
+/* 只剩一個方案時就讓它撐滿整區：卡片內部自己分兩欄，版面才不會左右空一片 */
+.promo-plans.single { grid-template-columns: minmax(0, 1fr); }
 .promo-plan {
   background: var(--paper);
   border: 1px solid var(--border);
@@ -807,6 +864,18 @@ button { font-family: inherit; }
   position: relative;
   transition: transform 0.2s, box-shadow 0.2s;
 }
+/* 單一方案：左欄付款條件、右欄交付內容，中間一條分隔線 */
+.promo-plans.single .promo-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem;
+  padding: 2.6rem 3rem;
+}
+.promo-plans.single .promo-plan-includes {
+  border-left: 1px solid rgba(240,235,227,0.18);
+  padding-left: 3rem;
+}
+.promo-plan-main { display: flex; flex-direction: column; }
 .promo-plan:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(47,43,38,0.1); }
 .promo-plan.featured { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .promo-plan-flag {
@@ -821,7 +890,7 @@ button { font-family: inherit; }
 }
 .promo-plan-name {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   margin-bottom: 0.3rem;
 }
 .promo-plan-tagline {
@@ -849,7 +918,7 @@ button { font-family: inherit; }
   color: var(--muted);
 }
 .promo-plan.featured .promo-price-label { color: rgba(240,235,227,0.6); }
-.promo-price-value { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; }
+.promo-price-value { font-family: var(--font-display); font-size: 1.9rem; line-height: 1; }
 .promo-cur { font-size: 0.75rem; margin-right: 0.15rem; }
 .promo-per { font-size: 0.75rem; margin-left: 0.1rem; }
 .promo-free { font-style: normal; color: var(--moss); }
@@ -896,18 +965,41 @@ button { font-family: inherit; }
   text-align: center;
 }
 
+@media (max-width: 980px) {
+  /* 卡片兩欄併回單欄：交付內容排在付款條件下方，中線改成橫線 */
+  .promo-plans.single .promo-plan {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    padding: 2.2rem 1.8rem;
+  }
+  .promo-plans.single .promo-plan-includes {
+    border-left: 0;
+    border-top: 1px solid rgba(240,235,227,0.18);
+    padding-left: 0;
+    padding-top: 2rem;
+  }
+}
+
 @media (max-width: 780px) {
   .promo-box { padding: 2rem 1.2rem 1.5rem; }
-  .promo-includes ul { grid-template-columns: 1fr; }
   .promo-plans { grid-template-columns: 1fr; }
   .promo-urgency {
     grid-template-columns: 1fr;
-    gap: 1.1rem;
+    gap: 1.4rem;
+    padding: 1.4rem 1.3rem;
     text-align: left;
   }
   .promo-urgency::before { grid-column: 1; grid-row: 2; width: auto; height: 1px; }
   .promo-seats { grid-column: 1; grid-row: 1; }
   .promo-countdown { grid-column: 1; grid-row: 3; }
+  .promo-clock { gap: 0.7rem; }
+  .promo-clock-cell { min-width: 2.6rem; }
+}
+
+@media (max-width: 900px) {
+  /* 橫幅：手機收成「限時標籤＋席次＋倒數」，說明文字讓位給版面 */
+  .promo-bar { padding: 0.5rem 1.5rem; gap: 0 0.9rem; }
+  .promo-bar-text, .promo-bar-go { display: none; }
 }
 
 .price-promo-note {
