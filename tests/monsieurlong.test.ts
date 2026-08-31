@@ -12,6 +12,7 @@ import {
   listSignature,
 } from "../src/app/sites/monsieurlong/_data/flavors";
 import { isUpcoming, listPast, listUpcoming } from "../src/app/sites/monsieurlong/_data/events";
+import { boardUpdatedLabel } from "../src/app/sites/monsieurlong/_data/board";
 
 // Monsieur Long 客戶站。這裡守的是「改資料時最容易靜靜壞掉」的幾條線：
 // 租戶登錄與 robots／sitemap 的一致性，以及口味／活動那套日期自動判定。
@@ -161,5 +162,35 @@ describe("活動", () => {
     const noDate = (await listPast(Date.now())).find((e) => !e.start && !e.end);
     expect(noDate).toBeDefined();
     expect(isUpcoming(noDate!, Date.now())).toBe(false);
+  });
+});
+
+describe("今日供應板的時間戳", () => {
+  // 「更新於 8/31」在當天是新鮮感，過兩週就變成「這站沒人管」的證據。
+  // 免費方案的站不會有人天天更新，所以這條規則同時保護兩種客戶。
+  const at = (iso: string) => new Date(iso);
+
+  it("同一天更新過就顯示時間（台北時區）", () => {
+    const label = boardUpdatedLabel(
+      at("2026-08-31T05:24:00Z"), // 台北 13:24
+      at("2026-08-31T09:00:00Z"),
+    );
+    expect(label).toBe("13:24");
+  });
+
+  it("不是今天更新的一律不顯示，讓前台退回營業資訊", () => {
+    expect(boardUpdatedLabel(at("2026-08-30T05:00:00Z"), at("2026-08-31T09:00:00Z"))).toBeNull();
+    expect(boardUpdatedLabel(at("2026-07-01T05:00:00Z"), at("2026-08-31T09:00:00Z"))).toBeNull();
+  });
+
+  it("以台北日期為準，不是 UTC 日期", () => {
+    // UTC 還是 8/30，但台北已經是 8/31 早上 7 點
+    const updated = at("2026-08-30T23:00:00Z");
+    const now = at("2026-08-30T23:30:00Z");
+    expect(boardUpdatedLabel(updated, now)).toBe("07:00");
+  });
+
+  it("沒有資料時回 null", () => {
+    expect(boardUpdatedLabel(null)).toBeNull();
   });
 });

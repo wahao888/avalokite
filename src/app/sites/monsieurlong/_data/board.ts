@@ -82,13 +82,29 @@ export function boardHeadline(board: TodayBoard): string {
   return `今日供應 ${board.entries.length} 款・售完為止`;
 }
 
-export const boardUpdatedLabel = (d: Date | null): string | null =>
-  d
-    ? new Intl.DateTimeFormat("zh-TW", {
-        month: "numeric",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Taipei",
-      }).format(d)
-    : null;
+/** 台北時區的年月日，用來判斷「是不是今天」 */
+const taipeiDay = (d: Date) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+
+/**
+ * 只有「今天更新過」才回時間，否則回 null。
+ *
+ * 這是刻意的：看板顯示「更新於 8/31」在當天是新鮮感，過了兩週就變成
+ * 「這網站沒人在管」的證據。與其讓舊時間戳自曝其短，不如退回顯示營業資訊。
+ * 對每天更新的店家沒有任何影響，對暫時沒在更新的店家則不會扣分。
+ */
+export const boardUpdatedLabel = (d: Date | null, now: Date = new Date()): string | null => {
+  if (!d) return null;
+  if (taipeiDay(d) !== taipeiDay(now)) return null;
+  return new Intl.DateTimeFormat("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Taipei",
+  }).format(d);
+};

@@ -628,6 +628,31 @@ export interface Addon {
 }
 export const ADDONS: Addon[] = [
   {
+    // 代客申請而不是叫客戶自己去買：多數店家不會操作 DNS，也不該為了這件事卡住。
+    // 登記人一律填客戶本人——客戶站掛在 Avalo 的網域下，這條是「不綁架你」的具體
+    // 證明，不是漂亮話（搭配服務條款的資料主權與解約 6 個月轉址）。
+    price: 3000,
+    i18n: {
+      "zh-TW": {
+        name: "自有網域申請與綁定",
+        desc: "代為申請與設定，登記你名下；一般網域年費含在月費內",
+      },
+      en: {
+        name: "Custom domain setup",
+        desc: "We register and configure it, in your name; standard renewal fees covered by your plan",
+      },
+    },
+  },
+  {
+    // 方案本身已含 GA4／sitemap／結構化資料，這包是「再往上」的部分：
+    // 關鍵字怎麼選、頁面怎麼改、Search Console 怎麼看。
+    price: 8000,
+    i18n: {
+      "zh-TW": { name: "SEO 起步包", desc: "關鍵字規劃、頁面 meta 與結構優化、Search Console 設定" },
+      en: { name: "SEO starter", desc: "Keyword plan, on-page meta & structure, Search Console setup" },
+    },
+  },
+  {
     price: 12000,
     i18n: {
       "zh-TW": { name: "金流串接", desc: "綠界／藍新，含定期定額" },

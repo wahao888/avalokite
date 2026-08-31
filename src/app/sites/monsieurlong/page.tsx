@@ -49,7 +49,7 @@ export default async function HomePage() {
             <div className="ml-board">
               <div className="ml-board-top">
                 <h2>今日 Gelato 口味</h2>
-                <span>{updated ? `更新於 ${updated}` : "13:00 – 售完為止"}</span>
+                <span>{updated ? `今天 ${updated} 更新` : "13:00 開賣・售完為止"}</span>
               </div>
 
               {board.entries.length === 0 ? (
