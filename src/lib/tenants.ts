@@ -25,6 +25,11 @@ export type Tenant = {
   ownSitemap?: boolean;
   /** true = 後台多一頁「今日供應」，讓店家自己換每日口味（見 /portal/board） */
   flavorBoard?: boolean;
+  /**
+   * true = 該站有線上商店（購物車→訂單），後台多一區「訂單管理」（見 /portal/orders）。
+   * 訂單落在 ShopOrder，tenantId 就是這裡的 slug。
+   */
+  shop?: boolean;
 };
 
 /** 客戶站掛載的主網域 */
@@ -50,6 +55,16 @@ export const TENANTS: Tenant[] = [
     notifyEnv: "TENANT_NOTIFY_MONSIEURLONG",
     ownSitemap: true,
     flavorBoard: true,
+  },
+  {
+    slug: "rekat",
+    name: "REKAT ROASTERY 日卡地自然農莊",
+    indexable: false,
+    // 靜態路徑僅供參考；實際 sitemap 由站內 sitemap.ts 產生（含每一支豆子的單品頁）
+    paths: ["/", "/beans", "/craft", "/about", "/cart", "/checkout"],
+    notifyEnv: "TENANT_NOTIFY_REKAT",
+    ownSitemap: true,
+    shop: true,
   },
 ];
 

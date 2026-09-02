@@ -101,3 +101,60 @@ export async function saveFlavorBoard(
     update: payload,
   });
 }
+
+// ── 線上商店訂單（Tenant.shop 的租戶才用得到）─────────────────
+// 規則同本檔開頭：第一個參數一律是 tenantId，狀態變更走 updateMany
+// 把租戶條件放進 WHERE，讓「漏掉 scope」在型別層面就寫不出來。
+
+/** 出貨前的單。老闆每天真正要看的就是這幾張。 */
+const OPEN_STATUSES = ["pending", "confirmed"];
+
+export function listShopOrders(
+  tenantId: string,
+  opts?: { skip?: number; take?: number; onlyOpen?: boolean },
+) {
+  return prisma.shopOrder.findMany({
+    where: { tenantId, ...(opts?.onlyOpen ? { status: { in: OPEN_STATUSES } } : {}) },
+    orderBy: { createdAt: "desc" },
+    skip: opts?.skip ?? 0,
+    take: opts?.take ?? PAGE_SIZE,
+  });
+}
+
+export function countShopOrders(tenantId: string, opts?: { onlyOpen?: boolean }) {
+  return prisma.shopOrder.count({
+    where: { tenantId, ...(opts?.onlyOpen ? { status: { in: OPEN_STATUSES } } : {}) },
+  });
+}
+
+export function getShopOrder(tenantId: string, id: string) {
+  return prisma.shopOrder.findFirst({ where: { id, tenantId } });
+}
+
+/** 允許的狀態值。從表單來的字串一律先過這一關，不然後台可以把 status 寫成任何東西。 */
+export const SHOP_STATUSES = ["pending", "confirmed", "shipped", "done", "cancelled"] as const;
+export type ShopStatus = (typeof SHOP_STATUSES)[number];
+
+export const SHOP_STATUS_ZH: Record<ShopStatus, string> = {
+  pending: "待確認",
+  confirmed: "已確認",
+  shipped: "已出貨",
+  done: "已完成",
+  cancelled: "已取消",
+};
+
+export const isShopStatus = (v: unknown): v is ShopStatus =>
+  typeof v === "string" && (SHOP_STATUSES as readonly string[]).includes(v);
+
+/** @returns 是否確實更新到本租戶的一筆（false = 該 id 不屬於此租戶，等同未授權） */
+export async function setShopOrderStatus(tenantId: string, id: string, status: ShopStatus) {
+  const r = await prisma.shopOrder.updateMany({
+    where: { id, tenantId },
+    data: { status },
+  });
+  return r.count === 1;
+}
+
+export function allShopOrdersForExport(tenantId: string) {
+  return prisma.shopOrder.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" } });
+}

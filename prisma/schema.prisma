@@ -124,3 +124,51 @@ model FlavorBoard {
   note      String? // 一句公告，例：今日提早售完
   updatedAt DateTime @updatedAt
 }
+
+// 客戶站的線上訂單（目前只有 REKAT ROASTERY 用，見 Tenant.shop）。
+//
+// 為什麼不共用上面的 Order：那一張是 Avalo 自己的方案訂購單，綁著綠界金流、
+// 訂閱、條款留證，欄位形狀完全不同。客戶站的商店是「豆子 × 研磨度 × 數量」加上
+// 匯款／貨到付款兩種線下收款——硬塞進同一張表只會讓兩邊都長出用不到的欄位。
+//
+// 金額一律以「下單當下」的數字入庫（unitPrice / subtotal / total）。
+// 豆單改價之後，舊訂單還要能對得起帳，不能回頭去讀 _data/beans.ts 重算。
+model ShopOrder {
+  id       String @id // 人可讀的訂單編號：RK + yymmdd + 4 碼（見 lib/order-id.ts）
+  tenantId String // 見 src/lib/tenants.ts 的 slug，非 FK
+
+  name    String
+  phone   String
+  email   String?
+  address String
+  note    String?
+
+  // JSON: [{ slug, name, unitPrice, qty, amount }]
+  // amount = qty × unitPrice，不含優惠。本店只出原豆，沒有研磨度這個欄位。
+  items String
+  // JSON: [{ slug, name, label, per, sets, unitPrice, bundlePrice, saved }]
+  // 三包優惠的折抵明細。分開存而不攤回 items 的理由：老闆對帳時要看得出
+  // 「品項小計」與「實收」中間那一段差額是怎麼來的，攤進單價就查不回去了。
+  bundles String @default("[]")
+
+  payment     String // transfer 匯款 | linepay LINE Pay | cod 貨到付款
+  subtotal    Int // 品項小計（已扣掉三包優惠）
+  shippingFee Int
+  codFee      Int    @default(0) // 貨到付款手續費
+  total       Int
+
+  // pending 待確認 | confirmed 已確認 | shipped 已出貨 | done 已完成 | cancelled 取消
+  status String @default("pending")
+
+  // 付款回報：客人自己填的帳號／交易末五碼與時間（匯款與 LINE Pay 都用這組欄位）。
+  // 店家核帳後把 status 推進 confirmed。
+  remitLast5 String?
+  remitName  String?
+  remitAt    DateTime?
+
+  notified  Boolean  @default(false) // 通知信是否真的寄出
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, createdAt])
+}

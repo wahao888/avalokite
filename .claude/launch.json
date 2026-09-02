@@ -4,8 +4,11 @@
     {
       "name": "avalo-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000,
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3210,
       "autoPort": true
     }
   ]

@@ -50,6 +50,10 @@ export default async function PortalPage({
           {tenant.flavorBoard && (
             <a className="p-btn" href="/portal/board">今日口味</a>
           )}
+          {/* 有線上商店的租戶才顯示（見 src/lib/tenants.ts 的 shop） */}
+          {tenant.shop && (
+            <a className="p-btn" href="/portal/orders">訂單管理</a>
+          )}
           <a className="p-btn p-btn-ghost" href="/api/portal/export">下載 CSV</a>
           <form method="post" action="/api/portal/logout">
             <button type="submit" className="p-btn-link">登出</button>

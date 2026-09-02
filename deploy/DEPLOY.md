@@ -104,6 +104,7 @@ sudo certbot renew --dry-run
 | --- | --- | --- |
 | `wenshan` | 文山木材行 | 線上估價單 `/api/wenshan/quote` |
 | `monsieurlong` | Monsieur Long 隆先生 | 合作邀請／訂購表單 `/api/monsieurlong/inquiry`；後台多一頁 `/portal/board`（今日口味），需 `FlavorBoard` migration；`ownSitemap` 由站內 `sitemap.ts` 產生 |
+| `rekat` | REKAT ROASTERY 日卡地自然農莊 | 線上商店：購物車→訂單 `/api/rekat/order`（另有 `/lookup`、`/remit`），需 `ShopOrder` migration；後台多一區 `/portal/orders`；`ownSitemap` 由站內 `sitemap.ts` 產生 |
 
 Monsieur Long 首次部署的額外步驟（只做一次）：
 
@@ -114,6 +115,20 @@ Monsieur Long 首次部署的額外步驟（只做一次）：
 4. 內容定稿、店家確認可對外後，再把 `tenants.ts` 的 `indexable` 與
    `_data/site.ts` 的 `INDEXABLE` 一起改 `true`（在那之前 robots 是 Disallow，
    sitemap 也刻意回空）。
+
+REKAT ROASTERY 首次部署的額外步驟（只做一次）：
+
+1. `npx prisma migrate deploy` 會建立 `ShopOrder` 表（deploy.sh 已含）。
+2. 伺服器 `.env` 加 `PORTAL_PW_REKAT`（隨機強密碼，交給店家）與
+   `TENANT_NOTIFY_REKAT`（店家收訂單的信箱；未拿到前先填 Avalo 自己的收件匣），
+   然後 `sudo systemctl restart avalo`。
+3. certbot `--expand`（domains.txt 已加 `rekat.avalokite.xyz`）。
+4. **上線前務必先跟客戶核對 `src/app/sites/rekat/_data/shop.ts` 裡標了 TODO 的四項**：
+   匯款銀行帳號（`BANK`）、LINE Pay 收款方式（`LINEPAY`）、運費與免運門檻、
+   貨到付款手續費。前兩者留空時前台會退成「我們會與你聯絡」，不會顯示假帳號，
+   但客人也就無法自助付款。
+5. 內容定稿、店家確認可對外後，再把 `tenants.ts` 的 `indexable` 與
+   `_data/site.ts` 的 `INDEXABLE` 一起改 `true`。
 
 **客戶改綁自有網域**
 
