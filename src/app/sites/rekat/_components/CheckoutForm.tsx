@@ -13,6 +13,7 @@ import {
   type PaymentKey,
 } from "../_data/shop";
 import { RK, SITE } from "../_data/site";
+import CopyField from "./CopyField";
 import { useCart } from "./CartProvider";
 import BundleRows from "./BundleRows";
 
@@ -110,7 +111,9 @@ export default function CheckoutForm() {
                   </div>
                   <div>
                     <dt>帳號</dt>
-                    <dd>{BANK.account}</dd>
+                    <dd>
+                      <CopyField value={BANK.account!} label="帳號" />
+                    </dd>
                   </div>
                   <div>
                     <dt>戶名</dt>

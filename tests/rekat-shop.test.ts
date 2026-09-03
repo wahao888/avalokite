@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  BANK,
+  bankReady,
   bundleSetsFor,
   normalizeCart,
   priceCart,
@@ -366,5 +368,25 @@ describe("運費與付款（2026-09-02 客戶確認）", () => {
 
   it("Totals 不再有 codFee 欄位（欄位與資料庫欄都已移除）", () => {
     expect("codFee" in priceCart([line(PLAIN, 1)], "cod")).toBe(false);
+  });
+});
+
+describe("匯款帳號", () => {
+  // 客戶 2026-09-03 以印章照片提供，並口頭覆誦確認過。
+  // 釘在測試裡的理由跟豆單售價一樣：這串數字錯一位，客人的錢就進到別人戶頭，
+  // 而且錯了不會有任何程式報錯——只會有人打電話來問錢去哪了。
+  it("農會代號、帳號與戶名與客戶提供的一致", () => {
+    expect(BANK.bankCode).toBe("622");
+    expect(BANK.account).toBe("00077220928010");
+    expect(BANK.accountName).toBe("王龍楨");
+    expect(BANK.bankName).toContain("鹿野地區農會");
+  });
+
+  it("帳號是 14 碼純數字（農會格式）", () => {
+    expect(BANK.account).toMatch(/^\d{14}$/);
+  });
+
+  it("帳號齊全，訂單完成頁才會顯示匯款資訊而不是「我們會與您聯絡」", () => {
+    expect(bankReady()).toBe(true);
   });
 });

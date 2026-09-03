@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BANK, bankReady, isPayment, needsPaymentReport, twd } from "../_data/shop";
 import { RK, SITE } from "../_data/site";
+import CopyField from "./CopyField";
 
 type Item = { name: string; grindLabel: string; qty: number; freeQty: number; amount: number };
 type Order = {
@@ -288,7 +289,9 @@ export default function OrderLookup() {
               </div>
               <div>
                 <dt>帳號</dt>
-                <dd>{BANK.account}</dd>
+                <dd>
+                  <CopyField value={BANK.account!} label="帳號" />
+                </dd>
               </div>
               <div>
                 <dt>戶名</dt>

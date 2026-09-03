@@ -1,8 +1,6 @@
 // REKAT ROASTERY — 商店設定與購物車計價
 //
-// ⚠️ 運費與免運門檻已於 2026-09-02 經客戶確認。
-//    唯一還沒拿到的是匯款銀行帳號（BANK 全為 null）——留空時訂單完成頁會退成
-//    「我們會與您聯絡提供帳號」，不會顯示假帳號。
+// ⚠️ 運費、免運門檻與匯款帳號皆已經客戶確認（2026-09-02 / 09-03）。
 //
 // 計價全部是純函式，src/app/api/rekat/order 與 tests/rekat-shop.test.ts 共用同一份，
 // 前台顯示的金額與後端寫入資料庫的金額因此不可能算出不同答案。
@@ -48,12 +46,20 @@ export const needsPaymentReport = (p: PaymentKey): boolean => p !== "cod";
 export const SHIPPING_FEE = 160;
 export const FREE_SHIPPING_OVER = 2000;
 
-/** TODO(客戶確認)：匯款帳號。全部留空時，訂單完成頁會改成「我們會與您聯絡提供帳號」。 */
+/**
+ * 匯款帳號（客戶 2026-09-03 提供實體印章照片）。
+ *
+ * 戶名是「王龍楨」而不是站上其他地方用的「王龍」——那是本名，
+ * 轉帳時收款人姓名要對得起來，這一欄不要跟品牌上的稱呼統一。
+ *
+ * 全部留空時訂單完成頁會退成「我們會與您聯絡提供帳號」，
+ * 不會顯示假帳號——改動這裡前請再跟客戶核對一次數字。
+ */
 export const BANK = {
-  bankName: null as string | null,
-  bankCode: null as string | null,
-  account: null as string | null,
-  accountName: null as string | null,
+  bankName: "台東縣鹿野地區農會（本會）",
+  bankCode: "622",
+  account: "00077220928010",
+  accountName: "王龍楨",
 };
 
 export const bankReady = () => Boolean(BANK.bankName && BANK.account);

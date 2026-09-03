@@ -1880,3 +1880,20 @@
   padding: 6px 14px;
   white-space: nowrap;
 }
+
+/* 可複製的匯款帳號 */
+.rk-copy { display: inline-flex; align-items: center; gap: 8px; }
+.rk-copy__v { font-family: var(--rk-mono); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.rk-copy__btn {
+  font-family: var(--rk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border: 1px solid var(--rk-line);
+  border-radius: 999px;
+  background: var(--rk-paper-2);
+  color: var(--rk-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rk-copy__btn:hover { border-color: var(--rk-ink); color: var(--rk-ink); }
