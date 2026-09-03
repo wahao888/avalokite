@@ -5,6 +5,7 @@ import { ROAST } from "../_data/beans";
 import { RK, SITE } from "../_data/site";
 import BrewArt, { FreshnessArt, type BrewKey, type FreshKey } from "../_components/BrewArt";
 import BrewCalc from "../_components/BrewCalc";
+import LineButton from "../_components/LineButton";
 import GrindScale from "../_components/GrindScale";
 import Reveal from "../_components/Reveal";
 
@@ -225,16 +226,18 @@ export default function BrewingPage() {
             </Reveal>
 
             <p style={{ marginTop: 30, fontSize: 14.5, color: "var(--rk-ink-2)" }}>
-              還有其他問題？直接打給王龍：
-              <a className="rk-link" href={`tel:${SITE.phoneTel}`} style={{ marginLeft: 6 }}>
-                {SITE.phoneDisplay}
+              還有其他問題？沖不出想要的味道、不知道該挑哪一支，都可以直接問——
+              王龍會自己回。
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+              <LineButton className="rk-btn rk-btn--accent" />
+              <a className="rk-btn rk-btn--quiet" href={`tel:${SITE.phoneTel}`}>
+                來電 {SITE.phoneDisplay}
               </a>
-              　或
-              <Link className="rk-link" href={`${RK}/beans`} style={{ marginLeft: 6 }}>
+              <Link className="rk-btn rk-btn--quiet" href={`${RK}/beans`}>
                 回豆單挑一支
               </Link>
-              。
-            </p>
+            </div>
           </div>
         </div>
       </section>

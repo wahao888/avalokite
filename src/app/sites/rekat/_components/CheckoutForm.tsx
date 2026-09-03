@@ -14,6 +14,7 @@ import {
 } from "../_data/shop";
 import { RK, SITE } from "../_data/site";
 import CopyField from "./CopyField";
+import LineButton from "./LineButton";
 import { useCart } from "./CartProvider";
 import BundleRows from "./BundleRows";
 
@@ -153,10 +154,14 @@ export default function CheckoutForm() {
             <Link className="rk-btn rk-btn--solid" href={`${RK}/order/lookup`}>
               查詢這張訂單
             </Link>
+            <LineButton />
             <Link className="rk-btn rk-btn--quiet" href={`${RK}/beans`}>
               回豆單
             </Link>
           </div>
+          <p style={{ fontSize: 12.5, color: "var(--rk-mute)", marginTop: 14, lineHeight: 1.8 }}>
+            訂單有任何問題——想改地址、想加購、想問這支豆子怎麼沖——加 LINE 直接問最快。
+          </p>
         </div>
       </div>
     );

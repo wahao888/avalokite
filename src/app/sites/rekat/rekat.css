@@ -1897,3 +1897,26 @@
   white-space: nowrap;
 }
 .rk-copy__btn:hover { border-color: var(--rk-ink); color: var(--rk-ink); }
+
+/* 導覽列的 LINE 鈕。與購物車鈕同一個尺寸語言，
+   只有對話泡泡是 LINE 綠——辨識度夠，又不會變成整頁最吵的東西。 */
+.rk-linebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--rk-line);
+  border-radius: 999px;
+  background: var(--rk-paper-2);
+  font-family: var(--rk-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: border-color 0.25s ease;
+}
+.rk-linebtn:hover { border-color: #06c755; }
+/* 視窗窄的時候只留圖示，把空間讓給購物車 */
+@media (max-width: 1040px) {
+  .rk-linebtn span { display: none; }
+  .rk-linebtn { padding: 0 11px; }
+}

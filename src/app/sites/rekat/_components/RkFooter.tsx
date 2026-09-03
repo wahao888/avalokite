@@ -35,9 +35,14 @@ export default function RkFooter() {
           <div>
             <h4>Contact</h4>
             <ul>
-              <li>{SITE.region}</li>
+              <li>{SITE.addressFull}</li>
               <li>
                 <a href={`tel:${SITE.phoneTel}`}>{SITE.phoneDisplay}</a>
+              </li>
+              <li>
+                <a href={SITE.line} target="_blank" rel="noreferrer noopener">
+                  加 LINE 好友
+                </a>
               </li>
               <li>
                 <a href={SITE.facebook} target="_blank" rel="noreferrer noopener">

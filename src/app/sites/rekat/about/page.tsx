@@ -252,6 +252,14 @@ export default function AboutPage() {
                 <dd>{SITE.addressFull}</dd>
               </div>
               <div>
+                <dt>LINE</dt>
+                <dd>
+                  <a className="rk-link" href={SITE.line} target="_blank" rel="noreferrer noopener">
+                    加好友問問題
+                  </a>
+                </dd>
+              </div>
+              <div>
                 <dt>Facebook</dt>
                 <dd>
                   <a className="rk-link" href={SITE.facebook} target="_blank" rel="noreferrer noopener">

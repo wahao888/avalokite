@@ -53,7 +53,13 @@ export const SITE = {
 
   /** ⚠️ 待客戶提供，填了即全站啟用 */
   email: null as string | null,
-  lineId: null as string | null,
+
+  /**
+   * LINE 加好友連結（客戶 2026-09-03 提供）。
+   * 客人多半是在手機上逛，比起打電話更願意先傳一則訊息問——
+   * 所以導覽列、訂單完成頁、常見問題與頁尾都放。
+   */
+  line: "https://line.me/ti/p/3bQ9RJX2S7",
 
   facebook: "https://www.facebook.com/rekatfarm/",
   blog: "http://rekatfarm.blogspot.com/",
@@ -72,6 +78,6 @@ export const LIST_NOTE =
 export const BUNDLE_NOTE =
   "標示「三包」「特三包」的品項為同一支豆子三包一組的優惠價；湊不滿一組的餘數以原價計。全品項一律出原豆，不代客研磨。";
 
-// 客戶網域綁定與內容定稿前先不進索引，避免與未來正式網域重複內容。
+// 客戶 2026-09-03 確認內容定稿、同意對外，開放搜尋引擎索引。
 // 註：robots.txt 由 src/proxy.ts 依 tenants.ts 的 indexable 產生，兩處請一併調整。
-export const INDEXABLE = false;
+export const INDEXABLE = true;

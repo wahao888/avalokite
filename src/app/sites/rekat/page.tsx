@@ -9,6 +9,7 @@ import OriginMap from "./_components/OriginMap";
 import ProcessDiagram from "./_components/ProcessDiagram";
 import Reveal from "./_components/Reveal";
 import RoastCurve from "./_components/RoastCurve";
+import LineButton from "./_components/LineButton";
 import { getStock, visibleBeans } from "./_data/stock";
 
 /** 背景那幾條等高線畫的是「雨來則漲、雨停則乾」的那條溪——品牌名的由來 */
@@ -269,8 +270,9 @@ export default async function RekatHome() {
               <Link className="rk-btn rk-btn--solid" href={`${RK}/beans`}>
                 開始選豆
               </Link>
+              <LineButton className="rk-btn rk-btn--quiet" />
               <a className="rk-btn rk-btn--quiet" href={`tel:${SITE.phoneTel}`}>
-                來電詢問 {SITE.phoneDisplay}
+                來電 {SITE.phoneDisplay}
               </a>
             </div>
             <p className="rk-caveat" style={{ marginTop: 30, textAlign: "left" }}>

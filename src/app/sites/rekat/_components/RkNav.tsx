@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RK, SITE } from "../_data/site";
 import CartButton from "./CartButton";
+import { LineGlyph } from "./LineButton";
 
 const LINKS = [
   { href: `${RK}/beans`, label: "豆單" },
@@ -40,6 +41,17 @@ export default function RkNav() {
           ))}
         </nav>
 
+        <a
+          className="rk-linebtn"
+          href={SITE.line}
+          target="_blank"
+          rel="noreferrer noopener"
+          aria-label="加 LINE 好友問問題"
+        >
+          <LineGlyph size={16} />
+          <span>LINE</span>
+        </a>
+
         <CartButton />
 
         <button
@@ -63,6 +75,9 @@ export default function RkNav() {
               {l.label}
             </Link>
           ))}
+          <a href={SITE.line} target="_blank" rel="noreferrer noopener">
+            加 LINE 問問題
+          </a>
         </nav>
       )}
     </header>

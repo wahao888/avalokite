@@ -59,7 +59,7 @@ export const TENANTS: Tenant[] = [
   {
     slug: "rekat",
     name: "REKAT ROASTERY 日卡地自然農莊",
-    indexable: false,
+    indexable: true,
     // 靜態路徑僅供參考；實際 sitemap 由站內 sitemap.ts 產生（含每一支豆子的單品頁）
     paths: ["/", "/beans", "/craft", "/about", "/cart", "/checkout"],
     notifyEnv: "TENANT_NOTIFY_REKAT",

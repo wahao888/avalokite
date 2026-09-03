@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BANK, bankReady, isPayment, needsPaymentReport, twd } from "../_data/shop";
 import { RK, SITE } from "../_data/site";
 import CopyField from "./CopyField";
+import LineButton from "./LineButton";
 
 type Item = { name: string; grindLabel: string; qty: number; freeQty: number; amount: number };
 type Order = {
@@ -268,11 +269,12 @@ export default function OrderLookup() {
           英文字母不分大小寫。電話要跟下單時填的那一支一樣。
         </p>
         <p style={{ fontSize: 14, lineHeight: 1.9, color: "var(--rk-ink-2)", marginTop: 14 }}>
-          兩者都對還是查不到，直接打給我們：
+          兩者都對還是查不到，直接聯絡我們：
           <a className="rk-link" href={`tel:${SITE.phoneTel}`} style={{ marginLeft: 4 }}>
             {SITE.phoneDisplay}
           </a>
         </p>
+        <LineButton className="rk-btn rk-btn--quiet rk-btn--sm" style={{ marginTop: 12 }} />
 
         {bankReady() && (
           <div className="rk-bank" style={{ marginTop: 20 }}>
