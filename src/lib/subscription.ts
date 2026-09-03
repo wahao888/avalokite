@@ -211,6 +211,11 @@ export async function replaceSubscription(
         startsAt: new Date(),
         termMonths: sub.termMonths,
         commitEndsAt: sub.commitEndsAt,
+        // 上線日必須跟著搬過來。漏掉的話新訂閱看起來像「網站還沒上線」，
+        // 會被 /api/pay 的未上線閘門擋成 409——而此時舊授權已經在綠界被終止了，
+        // 客戶就卡在「舊的沒了、新的刷不了」而且自己救不回來。
+        // 2026-09-03 換卡實測踩到過，換方案／換卡都走這條路徑。
+        launchedAt: sub.launchedAt,
         previousMtn: sub.merchantTradeNo,
       },
     }),

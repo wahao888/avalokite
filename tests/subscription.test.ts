@@ -196,6 +196,46 @@ describe("replaceSubscription（換方案／換卡）", () => {
   });
 });
 
+describe("換卡／換方案必須帶著上線日（2026-09-03 實測踩過的死局）", () => {
+  // 漏帶 launchedAt 的後果：新訂閱看起來像「網站還沒上線」，被 /api/pay 的
+  // 未上線閘門擋成 409——而此時舊授權已經在綠界被終止，客戶卡在
+  // 「舊的沒了、新的刷不了」，而且自己救不回來。
+  const live = (over: Record<string, unknown> = {}) =>
+    sub({ launchedAt: new Date("2026-09-03T06:56:34.000Z"), ...over });
+
+  it("換卡：新訂閱沿用原本的上線日", async () => {
+    const { replaceSubscription } = await import("../src/lib/subscription");
+    const r = await replaceSubscription(live(), "care-basic", "reauth");
+    expect(r).toEqual({ ok: true, mtn: "AVLTEST0013" });
+
+    const created = h.db.subscription.create.mock.calls[0][0] as {
+      data: Record<string, unknown>;
+    };
+    expect(created.data.launchedAt).toEqual(new Date("2026-09-03T06:56:34.000Z"));
+  });
+
+  it("換方案：同樣沿用上線日，且不重新起算承諾期", async () => {
+    const { replaceSubscription } = await import("../src/lib/subscription");
+    await replaceSubscription(live(), "care-growth", "change");
+
+    const created = h.db.subscription.create.mock.calls[0][0] as {
+      data: Record<string, unknown>;
+    };
+    expect(created.data.launchedAt).toEqual(new Date("2026-09-03T06:56:34.000Z"));
+    expect(created.data.commitEndsAt).toEqual(new Date("2027-01-01"));
+  });
+
+  it("尚未上線的訂閱換方案，新訂閱同樣維持未上線（不會意外開始計費）", async () => {
+    const { replaceSubscription } = await import("../src/lib/subscription");
+    await replaceSubscription(sub({ launchedAt: null }), "care-growth", "change");
+
+    const created = h.db.subscription.create.mock.calls[0][0] as {
+      data: Record<string, unknown>;
+    };
+    expect(created.data.launchedAt).toBeNull();
+  });
+});
+
 describe("cancelSubscription", () => {
   it("客戶自助終止會寄確認信給客戶", async () => {
     const { cancelSubscription } = await import("../src/lib/subscription");

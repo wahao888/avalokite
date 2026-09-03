@@ -32,18 +32,25 @@ export async function POST(req: NextRequest) {
   const staleThreshold = new Date(now - STALE_DAYS * DAY);
   const resendThreshold = new Date(now - RESEND_GAP_DAYS * DAY);
 
-  // 待授權、已上線、未達提醒上限、已過緩衝期（且未過期太久）、且尚未寄或距上封已超過間隔。
+  // 待授權、已上線、未達提醒上限、且尚未寄或距上封已超過間隔。
   //
   // launchedAt 不可為 null 是這支 cron 最重要的一條：網站還沒上線就把授權連結寄出去，
   // 等於在客戶還沒拿到任何東西的時候開始收月費，正是這次改動要消滅的行為。
-  const due = await prisma.subscription.findMany({
+  //
+  // 天數門檻改在 JS 算（見 authBasis）：待授權的訂閱本來就只有個位數，
+  // 為了一個 max() 把條件塞進 SQL 只會讓它更難讀、也更容易再錯一次。
+  const candidates = await prisma.subscription.findMany({
     where: {
       status: "pending",
       remindersSent: { lt: MAX_REMINDERS },
-      launchedAt: { not: null, lte: graceThreshold, gte: staleThreshold },
+      launchedAt: { not: null },
       OR: [{ authLinkSentAt: null }, { authLinkSentAt: { lte: resendThreshold } }],
     },
     include: { order: { include: { payments: true } } },
+  });
+  const due = candidates.filter((s) => {
+    const basis = authBasis(s).getTime();
+    return basis <= graceThreshold.getTime() && basis >= staleThreshold.getTime();
   });
 
   const results: { orderId: string; sent: boolean; reason?: string }[] = [];
@@ -89,11 +96,11 @@ export async function POST(req: NextRequest) {
         status: "pending",
         remindersSent: { gte: MAX_REMINDERS },
         escalatedAt: null,
-        launchedAt: { not: null, gte: staleThreshold },
+        launchedAt: { not: null },
       },
       include: { order: { include: { payments: true } } },
     })
-  ).filter((s) => buildPaid(s.order.payments));
+  ).filter((s) => buildPaid(s.order.payments) && authBasis(s) >= staleThreshold);
 
   for (const sub of stuck) {
     await notifyOwner(
@@ -117,6 +124,21 @@ export async function POST(req: NextRequest) {
     escalated: stuck.length,
     results,
   });
+}
+
+/**
+ * 這筆授權「是從哪一刻開始等的」——取上線日與訂閱建立時間的較晚者。
+ *
+ * 兩種情況需要不同的基準，用 max 一次涵蓋：
+ * ・首次授權：startsAt 是下單日、launchedAt 是上線日，製作期可能長達數週，
+ *   用 startsAt 會讓訂單一上線就被判定為「陳年訂單」而永遠不追。
+ * ・換卡／換方案後的新訂閱：launchedAt 沿用原本的上線日（可能是半年前），
+ *   用 launchedAt 會讓這筆一建立就超過 STALE_DAYS 而永遠不追。
+ */
+function authBasis(s: { startsAt: Date | null; launchedAt: Date | null }): Date {
+  const started = s.startsAt?.getTime() ?? 0;
+  const launched = s.launchedAt?.getTime() ?? 0;
+  return new Date(Math.max(started, launched));
 }
 
 /** 訂單的建置款是否已付清；沒有一次性品項者視同已付 */
