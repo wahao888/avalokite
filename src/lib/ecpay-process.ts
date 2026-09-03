@@ -123,8 +123,19 @@ export async function processPeriodCharge(params: Record<string, string>) {
           lastChargeAt: new Date(),
           gwsr: params.Gwsr ?? params.gwsr ?? sub.gwsr,
           rawReturn: JSON.stringify(params),
+          // 收到錢就把催收整組歸零：客戶更新了卡片卻還繼續收到催繳信，
+          // 比沒催更傷關係。
+          pastDueSince: null,
+          dunningStage: 0,
         }
-      : { status: "failed", rawReturn: JSON.stringify(params) },
+      : {
+          status: "failed",
+          rawReturn: JSON.stringify(params),
+          // 只在「第一次」失敗時記時間。綠界不重試失敗的期別、下一期仍照排程扣，
+          // 所以連續欠費會一期一期回傳 failed；每次都覆寫的話，欠費天數永遠歸零，
+          // D+15／D+30 的門檻就再也不會到達。
+          pastDueSince: sub.pastDueSince ?? new Date(),
+        },
   });
 
   // 每期都要讓客戶收到憑據。訂閱制最怕的是客戶在信用卡帳單上看到一筆

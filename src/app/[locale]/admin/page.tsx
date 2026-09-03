@@ -4,6 +4,7 @@ import { isAdmin } from "@/lib/admin-auth";
 import { getProduct } from "@/lib/products";
 import { getTenant } from "@/lib/tenants";
 import CancelSubButton from "@/components/CancelSubButton";
+import LaunchSubButton from "@/components/LaunchSubButton";
 
 export { NOINDEX as metadata } from "@/lib/site-routes";
 
@@ -34,11 +35,11 @@ export default async function AdminPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string; suberr?: string }>;
+  searchParams: Promise<{ error?: string; suberr?: string; subok?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { error, suberr } = await searchParams;
+  const { error, suberr, subok } = await searchParams;
 
   if (!(await isAdmin())) {
     return (
@@ -211,13 +212,24 @@ export default async function AdminPage({
       )}
 
       <div className="cart-section-head">訂閱（{subscriptions.length}）</div>
+      {subok === "launched" && (
+        <div className="form-feedback ok" style={{ marginBottom: "0.8rem" }}>
+          已標記上線：授權連結已寄給客戶，承諾期自今天起算。
+        </div>
+      )}
       {suberr && (
         <div className="form-feedback err" style={{ marginBottom: "0.8rem" }}>
           {suberr === "ecpay"
             ? "綠界終止失敗，請查看該筆的 cancelResult 或改用綠界後台操作。"
-            : suberr === "exception"
-              ? "終止時發生錯誤，請查看伺服器 log。"
-              : "操作失敗，請確認訂閱是否存在。"}
+            : suberr === "build-unpaid"
+              ? "這筆訂單的一次性款項尚未付清，不能標記上線。"
+              : suberr === "already-launched"
+                ? "這筆已經標記過上線了。"
+                : suberr === "not-pending"
+                  ? "這筆訂閱不在待授權狀態，無法標記上線。"
+                  : suberr === "exception"
+                    ? "操作時發生錯誤，請查看伺服器 log。"
+                    : "操作失敗，請確認訂閱是否存在。"}
         </div>
       )}
       <div style={{ overflowX: "auto" }}>
@@ -229,7 +241,7 @@ export default async function AdminPage({
               <th style={headStyle}>方案</th>
               <th style={headStyle}>月費(含稅)</th>
               <th style={headStyle}>狀態</th>
-              <th style={headStyle}>起扣日 / 連結</th>
+              <th style={headStyle}>上線日 / 授權信</th>
               <th style={headStyle}>綁約</th>
               <th style={headStyle}>成功期數</th>
               <th style={headStyle}>最近扣款</th>
@@ -250,10 +262,14 @@ export default async function AdminPage({
                 <td style={cellStyle}>NT${s.monthlyAmount.toLocaleString()}</td>
                 <td style={cellStyle}><span className={`badge ${s.status}`}>{s.status}</span></td>
                 <td style={cellStyle}>
-                  {fmtDate(s.startsAt)}
+                  {s.launchedAt ? (
+                    fmtDate(s.launchedAt)
+                  ) : (
+                    <strong style={{ color: "#8a3b2a" }}>尚未上線・未計費</strong>
+                  )}
                   <br />
                   <span style={{ color: "var(--muted)" }}>
-                    {s.authLinkSentAt ? `連結已寄 ${fmtDate(s.authLinkSentAt)}` : "連結未寄"}
+                    {s.authLinkSentAt ? `授權信已寄 ${fmtDate(s.authLinkSentAt)}` : "授權信未寄"}
                   </span>
                 </td>
                 <td style={cellStyle}>
@@ -265,6 +281,12 @@ export default async function AdminPage({
                         至 {fmtDate(s.commitEndsAt)}
                         {s.commitEndsAt > new Date() ? "" : "（已期滿）"}
                       </span>
+                    </>
+                  ) : s.termMonths ? (
+                    <>
+                      {s.termMonths} 個月
+                      <br />
+                      <span style={{ color: "var(--muted)" }}>上線後起算</span>
                     </>
                   ) : (
                     "無"
@@ -278,6 +300,8 @@ export default async function AdminPage({
                     "已終止"
                   ) : s.status === "replaced" ? (
                     <span style={{ color: "var(--muted)" }}>已換方案</span>
+                  ) : s.status === "pending" && !s.launchedAt ? (
+                    <LaunchSubButton id={s.id} months={s.termMonths} />
                   ) : (
                     <CancelSubButton id={s.id} />
                   )}
@@ -296,6 +320,9 @@ export default async function AdminPage({
         </table>
       </div>
       <p className="form-note" style={{ marginTop: "0.8rem" }}>
+        ✦ 含建置的訂單，月費<strong>要按下「標記已上線」才會開始計費</strong>：系統會寫下上線日、以該日起算承諾期，並立刻寄出定期定額授權連結。在那之前客戶只付過席次保留金，不會有任何月費扣款。
+      </p>
+      <p className="form-note" style={{ marginTop: "0.4rem" }}>
         ✦ 「終止扣款」會呼叫綠界終止定期定額授權，<strong>終止後無法重啟</strong>，需重新下單。若 API 失敗，仍可登入綠界廠商後台 → 信用卡收單 → 定期定額查詢，以授權單號（gwsr）手動終止。
       </p>
 

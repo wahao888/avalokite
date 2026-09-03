@@ -11,7 +11,7 @@ import { COMPANY, SITE } from "./site";
  * 條款版本。客戶同意的版本會寫進訂單，日後爭議時據此還原當時的條款全文。
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
-export const LEGAL_VERSION = "2026-08-31";
+export const LEGAL_VERSION = "2026-09-03";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -45,7 +45,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "二、訂購與付款",
           body: [
             "網站上標示之價格均為新台幣未稅價，結帳時加計 5% 營業稅。付款透過綠界科技 ECPay 處理，一次性款項與維護月費均以信用卡支付。",
-            "建置服務須搭配一份維護方案，維護自第一個月起計費。建置款與維護月費為兩筆分開的授權：建置款於結帳時一次收取；維護採信用卡定期定額，於建置付款完成後另行授權，首期於授權當下扣款，其後每月自動扣款。",
+            "建置服務須搭配一份維護方案。建置款與維護月費為兩筆分開的授權：建置款（或促銷方案之席次保留金）於結帳時一次收取；維護月費自網站上線並經您驗收之日起計收，於該日後另行以信用卡定期定額授權，首期於授權當下扣款，其後每月自動扣款。網站製作期間不計收月費。",
+            "促銷方案之席次保留金於結帳時收取，用以保留名額並排入製作排程；網站上線驗收後全額折抵首期月費，不另計費。因可歸責於本公司之事由致未能交付者，全額退還。",
             "本公司採公開定價、不二價原則。客製專案於免費諮詢後提供書面固定報價，經雙方確認後始行開工。",
             "維護月費之價格於您的訂閱存續期間維持不變；如日後調整定價，僅適用於新訂單。",
           ],
@@ -53,11 +54,12 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "三、最短承諾期與續約",
           body: [
-            "含建置服務之訂單，其維護方案自維護首次扣款日起算，有 12 個月之最短承諾期。這是因為建置服務以遠低於市場行情之價格交付，並以後續維護作為對價之一部分。",
+            "含建置服務之訂單，其維護方案自網站上線驗收日起算，有 12 個月之最短承諾期。這是因為建置服務以遠低於市場行情之價格交付，並以後續維護作為對價之一部分。",
             "單獨訂購維護方案（未含建置服務）無最短承諾期，得隨時終止。",
             "促銷方案另訂有承諾期與專屬條件，以該方案於定價頁公告之條款為準，其效力優先於本條。",
             "承諾期屆滿後自動轉為按月計費，您得隨時終止，停扣自次一期生效。",
-            "承諾期內提前終止者，本公司得請求給付承諾期剩餘月份之月費，或雙方另行協議；實際處理方式以退款政策為準。",
+            "承諾期內提前終止者，本公司得請求補付「尚未攤提完畢之建置費」。促銷方案係將標準建置費 NT$39,000 分攤於承諾期內收取，提前終止即就未攤提部分補付，金額依已完成扣款期數採下列級距：已完成 0–5 期補付 NT$30,000；6–11 期 NT$20,000；12–17 期 NT$10,000；18–23 期 NT$5,000；滿 24 期起為 0 元。",
+            "前項為補付未攤提之建置費，非違約罰金，亦不包含尚未提供之月份月費——本公司不就未提供之服務收費。因可歸責於本公司之事由致終止者，不適用前項。",
           ],
         },
         {
@@ -110,7 +112,9 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "九、逾期繳款、暫停與終止",
           body: [
             "維護月費扣款失敗時，本公司將以 Email 通知並提供更新付款方式之連結。",
-            "自扣款失敗日起逾 15 日仍未完成付款者，本公司得暫停維護服務（網站維持上線，但停止備份、監控與修改服務）；逾 30 日者，本公司得終止契約並依前條處理資料。",
+            "扣款失敗後，本公司將依下列時程以 Email 通知：第 3 日提醒、第 7 日預告暫停、第 15 日暫停、第 30 日終止。",
+            "自扣款失敗日起逾 15 日仍未完成付款者，本公司得暫停服務，此期間網站不對外提供服務（顯示暫停頁面），備份、監控與修改服務一併停止；逾 30 日者，本公司得終止契約並依前條處理資料。",
+            "暫停期間您的資料完整保留，且仍可自客戶後台匯出，不因暫停而受限制（見第八條）。完成付款後，本公司一般於一個工作日內恢復服務。",
             "客戶得隨時終止維護訂閱：於「訂單查詢」找到訂單後點「管理訂閱」自助終止，或來信、LINE 告知。終止之效力與費用計算依退款政策。",
             "任一方重大違約且經催告後 14 日內未改正者，他方得終止契約。",
           ],
@@ -179,7 +183,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "2. Orders & Payment",
           body: [
             "Listed prices are in TWD excluding tax; 5% VAT is added at checkout. Payments are processed by ECPay; both one-time fees and care subscriptions are paid by credit card.",
-            "Build Services require an accompanying Care Plan, billed from month one. The build fee and the care subscription are two separate authorizations: the build fee is collected at checkout; the Care Plan is authorized as a recurring card payment afterwards, with the first charge made at authorization and monthly charges thereafter.",
+            "Build Services require an accompanying Care Plan. The build fee and the care subscription are two separate authorizations: the build fee (or, for promotional plans, the seat deposit) is collected at checkout; care is billed from the day your site goes live and is accepted by you, and is authorized as a recurring card payment after that date, with the first charge made at authorization and monthly charges thereafter. Nothing is billed monthly during production.",
+            "A promotional plan's seat deposit is collected at checkout to hold your seat and book production. It is credited in full to your first month once the site is live and accepted, and is refunded in full if we fail to deliver for reasons attributable to the Company.",
             "Pricing is published and non-negotiable. Custom projects receive a written fixed quote after a free consultation, and work begins only once both parties confirm it.",
             "Your care rate stays fixed for as long as your subscription runs; any future price change applies only to new orders.",
           ],
@@ -187,11 +192,12 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
         {
           h: "3. Minimum Term & Renewal",
           body: [
-            "For orders that include a Build Service, the Care Plan carries a 12-month minimum term starting from the first care charge. This reflects that build work is delivered well below market rates, with ongoing care forming part of the consideration.",
+            "For orders that include a Build Service, the Care Plan carries a 12-month minimum term starting from the date the site goes live and is accepted. This reflects that build work is delivered well below market rates, with ongoing care forming part of the consideration.",
             "A Care Plan purchased on its own (without a Build Service) has no minimum term and may be cancelled at any time.",
             "Promotional plans carry their own terms and conditions as published on the pricing page, which prevail over this section.",
             "After the minimum term the plan continues month to month and may be cancelled at any time, effective from the next billing cycle.",
-            "If you cancel within the minimum term, the Company may claim the remaining months' fees or agree otherwise with you; the Refund Policy governs how this is handled in practice.",
+            "If you cancel within the minimum term, the Company may claim the unamortized portion of the build fee. Promotional plans spread the standard NT$39,000 build fee across the term, so leaving early means settling what has not yet been amortized, by the number of periods charged: 0–5 periods NT$30,000; 6–11 NT$20,000; 12–17 NT$10,000; 18–23 NT$5,000; nil from period 24.",
+            "That amount is unamortized build work, not a penalty, and does not include fees for months not yet served — we do not charge for service we have not provided. It does not apply where termination is due to the Company's failure to perform.",
           ],
         },
         {
@@ -244,7 +250,9 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "9. Late Payment, Suspension & Termination",
           body: [
             "If a care charge fails, we notify you by email with a link to update your payment method.",
-            "If payment remains outstanding 15 days after the failed charge, the Company may suspend care (your site stays online, but backups, monitoring and edits stop). After 30 days, the Company may terminate the agreement and handle your data as described above.",
+            "After a failed charge we email you on the following schedule: a reminder on day 3, a suspension notice on day 7, suspension on day 15, and termination on day 30.",
+            "If payment remains outstanding 15 days after the failed charge, the Company may suspend service: the site stops serving visitors (a suspension page is shown) and backups, monitoring and edits stop. After 30 days, the Company may terminate the agreement and handle your data as described above.",
+            "During suspension your data is fully retained and remains exportable from your dashboard (see section 8). Service is normally restored within one business day of payment.",
             "You may cancel your care subscription at any time: find your order under \"Order Lookup\" and use \"Manage\", or email or LINE us. The effect and fees are governed by the Refund Policy.",
             "Either party may terminate if the other materially breaches these Terms and fails to remedy it within 14 days of notice.",
           ],
@@ -389,8 +397,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "二、月費維護訂閱",
           body: [
             "您可隨時取消訂閱：於「訂單查詢」找到您的訂單後點「管理訂閱」即可自助終止，或來信、LINE 告知亦可。已扣之當期費用不退，自次一期停止扣款。",
-            "首次訂閱 7 日內若服務尚未開始提供，可申請全額退款。",
-            "含建置服務之訂單有 12 個月最短承諾期（促銷方案依其公告條款）。承諾期內提前終止者，原則上不退還已扣款項，且本公司得請求剩餘月份之月費；惟因本公司未能履行服務致終止者，不在此限。實際情形歡迎先與我們聯繫，多數狀況都能協議解決。",
+            "首次訂閱 7 日內若服務尚未開始提供，可申請全額退款。促銷方案之席次保留金，於網站上線交付前均可申請全額退還（已進行之設計與開發工作依比例計費後退還餘額）。",
+            "含建置服務之訂單有 12 個月最短承諾期（促銷方案依其公告條款）。承諾期內提前終止者，原則上不退還已扣款項，且本公司得請求補付尚未攤提完畢之建置費（級距見服務條款第三條：0–5 期 NT$30,000／6–11 期 NT$20,000／12–17 期 NT$10,000／18–23 期 NT$5,000／滿 24 期 0 元）；本公司不就尚未提供之月份收費。因本公司未能履行服務致終止者，不在此限。實際情形歡迎先與我們聯繫，多數狀況都能協議解決。",
           ],
         },
         {
@@ -427,8 +435,8 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "2. Monthly Care Subscriptions",
           body: [
             "Cancel anytime: find your order under \"Order Lookup\" and use \"Manage\" to cancel it yourself, or just email or LINE us. The current billed month is non-refundable; charging stops from the next cycle.",
-            "Within 7 days of first subscribing, a full refund is available if service has not yet started.",
-            "Orders that include a Build Service carry a 12-month minimum term (promotional plans follow their published terms). Cancelling within the minimum term does not entitle you to a refund of amounts already charged, and the Company may claim the remaining months — except where termination is due to the Company's failure to perform. Talk to us first; most situations can be settled by agreement.",
+            "Within 7 days of first subscribing, a full refund is available if service has not yet started. A promotional plan's seat deposit is fully refundable any time before the site is delivered (less a pro-rata charge for design and development already carried out).",
+            "Orders that include a Build Service carry a 12-month minimum term (promotional plans follow their published terms). Cancelling within the minimum term does not entitle you to a refund of amounts already charged, and the Company may claim the unamortized build fee (tiers in Terms section 3: NT$30,000 for 0–5 periods / NT$20,000 for 6–11 / NT$10,000 for 12–17 / NT$5,000 for 18–23 / nil from 24). We do not charge for months not yet served. This does not apply where termination is due to the Company's failure to perform. Talk to us first; most situations can be settled by agreement.",
           ],
         },
         {

@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import createProxy from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { tenantFromHost, robotsFor, sitemapFor } from "./lib/tenants";
+import { isSuspended, suspendedPage } from "./lib/suspension";
+import { SITE } from "./lib/site";
 
 const intlProxy = createProxy(routing);
 
@@ -20,6 +22,25 @@ export default function proxy(req: NextRequest) {
   const tenant = tenantFromHost(req.headers.get("host"));
 
   if (tenant) {
+    // 欠費暫停：整站（含 sitemap 與所有頁面）停止對外服務。
+    // /portal 刻意放行——條款保證客戶隨時可匯出自己的資料，把後台一起關掉
+    // 就等於用扣留資料當籌碼，那是我們對客戶承諾過不會做的事。
+    if (isSuspended(tenant.slug) && !path.startsWith("/portal")) {
+      if (path === "/robots.txt") {
+        return new NextResponse("User-agent: *\nDisallow: /\n", {
+          status: 503,
+          headers: { "content-type": "text/plain; charset=utf-8", "retry-after": "86400" },
+        });
+      }
+      return new NextResponse(suspendedPage(tenant.name, SITE.email), {
+        status: 503,
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "retry-after": "86400",
+          "cache-control": "no-store",
+        },
+      });
+    }
     // 逐租戶產生 robots.txt；否則子網域會吃到主站那份
     if (path === "/robots.txt") {
       return new NextResponse(robotsFor(tenant), {

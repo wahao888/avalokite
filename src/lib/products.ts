@@ -330,6 +330,57 @@ export const PRODUCTS: Product[] = [
       },
     },
   },
+  // 席次保留金。零元啟動唯一的一次性品項，也是「建置費 0 元」與「先收錢」之間的解法。
+  //
+  // 為什麼不是零元下單：0 元建置代表本公司先墊 10 個工作天的工，下單零成本會招來
+  // 「先訂再說」然後失聯的人，做到一半血本無歸。保留金把承諾變成實物。
+  // 為什麼不是首月月費：月費買的是主機、備份、監控與改稿，網站還沒上線時這些服務
+  // 一項都還沒發生，把它記成月費就是收了沒有對價的錢——名目錯了，條款上站不住腳。
+  //
+  // 所以它是「保留席次」的對價，並於網站上線驗收後全額折抵首期月費：
+  // 承諾期 24 期 = 保留金 1 期 + 定期定額 23 期，總額仍是 2,000 × 24，一毛不多收。
+  {
+    sku: "launch-deposit",
+    type: "onetime",
+    price: 2000,
+    group: "promo",
+    recommendedCareSku: "launch-care",
+    badge: { "zh-TW": "折抵首期月費", en: "Credited to month one" },
+    promoNote: {
+      "zh-TW": "保留本檔名額；網站上線驗收後全額折抵首期月費。若本公司未能如期交付，全額退還。",
+      en: "Holds your seat and is credited in full to your first month. Fully refunded if we fail to deliver.",
+    },
+    marketRange: {
+      "zh-TW": "等同一期月費 NT$2,000，非額外費用",
+      en: "Equals one month (NT$2,000) — not an extra charge",
+    },
+    i18n: {
+      "zh-TW": {
+        label: "限時啟動方案",
+        name: "席次保留金",
+        desc: "保留本檔名額並排入製作排程；網站上線驗收後全額折抵首期月費。",
+        features: [
+          "建置費仍為 0 元，此筆全額折抵月費",
+          "下單後排入製作排程，資料齊全後 10 個工作天上線",
+          "網站上線驗收後才開始計收月費",
+          "若本公司未能如期交付，全額退還",
+        ],
+        unit: "一次性",
+      },
+      en: {
+        label: "Limited-Time Launch Offer",
+        name: "Seat deposit",
+        desc: "Holds your seat and books production; credited in full to your first month once the site is live and accepted.",
+        features: [
+          "Build fee stays at zero — this is credited to your monthly fee",
+          "Books production; live in 10 business days once content is ready",
+          "Monthly billing starts only after the site is live and accepted",
+          "Fully refunded if we fail to deliver",
+        ],
+        unit: "one-time",
+      },
+    },
+  },
   {
     sku: "launch-care",
     type: "monthly",
@@ -337,8 +388,8 @@ export const PRODUCTS: Product[] = [
     group: "promo",
     badge: { "zh-TW": "限時價鎖定", en: "Rate locked" },
     promoNote: {
-      "zh-TW": "零元啟動：免建置費，承諾 24 個月，月費自當月起扣。",
-      en: "Zero setup: no build fee, 24-month term, billing starts this month.",
+      "zh-TW": "零元啟動：免建置費，承諾 24 個月，月費自網站上線驗收後起扣。",
+      en: "Zero setup: no build fee, 24-month term, billing starts once the site is live.",
     },
     marketRange: { "zh-TW": "行情 NT$1,500–5,000/月", en: "Market NT$1.5k–5k/mo" },
     i18n: {
@@ -543,6 +594,12 @@ export interface PromoPlan {
   id: string;
   skus: string[]; // 選擇此方案時要加進購物車的 SKU
   setup: number; // 建置費（未稅）
+  /**
+   * 下單時收取的席次保留金（未稅）。與建置費是兩件事：
+   * 建置費是「做網站的錢」，保留金是「保留名額的錢」，且於上線驗收後折抵首期月費。
+   * 因此保留金不計入承諾期總額（promoPlanTotal）——它本來就是那 24 期裡的第 1 期。
+   */
+  deposit: number;
   monthly: number; // 月費（未稅）
   termMonths: number;
   featured?: boolean;
@@ -579,8 +636,9 @@ export const PROMO_INCLUDES: { "zh-TW": string[]; en: string[] } = {
 export const PROMO_PLANS: PromoPlan[] = [
   {
     id: "zero-setup",
-    skus: ["launch-care"],
+    skus: ["launch-deposit", "launch-care"],
     setup: 0,
+    deposit: 2000,
     monthly: 2000,
     termMonths: 24,
     featured: true,
@@ -590,7 +648,8 @@ export const PROMO_PLANS: PromoPlan[] = [
         tagline: "免付建置費，官網直接開起來",
         terms: [
           "最短承諾 24 個月",
-          "無建置費，月費自當月起扣",
+          "無建置費；下單付 NT$2,000 席次保留金",
+          "網站上線驗收後才開始月費，保留金全額折抵首期",
           "期滿免費移交網站原始碼",
         ],
       },
@@ -599,7 +658,8 @@ export const PROMO_PLANS: PromoPlan[] = [
         tagline: "No build fee — get the site live now",
         terms: [
           "24-month minimum term",
-          "No build fee; billing starts this month",
+          "No build fee; a NT$2,000 seat deposit at checkout",
+          "Monthly billing starts once the site is live; the deposit covers month one",
           "Source code handed over free at the end of term",
         ],
       },
@@ -607,6 +667,10 @@ export const PROMO_PLANS: PromoPlan[] = [
   },
 ];
 
+/**
+ * 承諾期內客戶實際付出的總額。
+ * 保留金刻意不加進來：它是那 24 期裡的第 1 期，加了就變成重複計算、對外多報一期。
+ */
 export const promoPlanTotal = (p: PromoPlan) => p.setup + p.monthly * p.termMonths;
 
 /**
@@ -618,6 +682,75 @@ export const promoPlanForSkus = (skus: string[]): PromoPlan | undefined =>
   PROMO_PLANS.filter((p) => p.skus.every((s) => skus.includes(s))).sort(
     (a, b) => b.skus.length - a.skus.length
   )[0];
+
+/**
+ * 促銷維護不得單獨結帳。
+ *
+ * launch-care 是 NT$2,000/月——遠低於同級的安心維護 NT$2,990——那個價差是用
+ * 24 個月承諾期換來的，而承諾期綁在促銷建置上。少了促銷建置，promoPlanForSkus
+ * 反查不到方案、termMonths 會是 null，等於用促銷價買到一份沒有綁約的維護。
+ * 前端一律成組加入購物車，這條是伺服器端擋繞過用的。
+ */
+export const promoCareNeedsBuild = (skus: string[]) => {
+  const has = (t: ProductType) =>
+    skus.map(getProduct).some((p) => p?.group === "promo" && p.type === t);
+  return has("monthly") && !has("onetime");
+};
+
+/**
+ * 促銷方案的席次保留金相當於幾期月費。
+ *
+ * 這個數字是「折抵首期」唯一的實作方式，也是最容易算錯的地方：
+ * 綠界定期定額在**授權當下就扣第一期**，所以上線後若照 24 個月授權，
+ * 客戶會被扣 24 期，加上下單時的保留金就變成 25 期——保留金等於沒折抵，
+ * 反而多收了一期。承諾期必須扣掉保留金已涵蓋的期數（見 markLaunched）。
+ *
+ * 用整除而非硬寫 1：日後若把保留金調成兩期，這裡不必再改。
+ */
+export const prepaidPeriodsFor = (skus: string[]): number => {
+  const plan = promoPlanForSkus(skus);
+  if (!plan || plan.monthly <= 0 || plan.deposit <= 0) return 0;
+  return Math.floor(plan.deposit / plan.monthly);
+};
+
+// ─── 承諾期內提前終止的補償 ───
+//
+// 為什麼不是「補付剩餘月份的月費」（原本的寫法）：客戶第 3 個月走人，那是 21 × 2,000
+// ＝ 42,000。這個數字大到你不會真的去請求、客戶也不會給，等於沒有條款。
+//
+// 換成「補付未分攤完的建置費」就講得通：零元啟動是把標準建置費 NT$39,000 攤進
+// 24 個月，提前走就補還沒攤完的那一段。金額小、開得了口、收得到，而且客戶一聽就懂。
+// 階梯化（而非逐月線性）是為了讓客戶自己能算、也讓條款寫得出具體數字。
+export const EARLY_EXIT_TIERS = [
+  { fromMonth: 0, fee: 30000 },
+  { fromMonth: 6, fee: 20000 },
+  { fromMonth: 12, fee: 10000 },
+  { fromMonth: 18, fee: 5000 },
+  { fromMonth: 24, fee: 0 },
+] as const;
+
+/** 已完成 monthsElapsed 期時提前終止，應補付的建置費差額（未稅 TWD） */
+export const earlyExitFee = (monthsElapsed: number): number => {
+  const m = Math.max(0, Math.floor(monthsElapsed));
+  // 由後往前找第一個門檻，避免忘記維護排序時算出比較貴的級距
+  return [...EARLY_EXIT_TIERS].reverse().find((t) => m >= t.fromMonth)!.fee;
+};
+
+/** 條款與客戶自助頁共用的級距說明，確保文案與計算永遠是同一組數字 */
+export const earlyExitTierLabels = (zh: boolean): string[] =>
+  EARLY_EXIT_TIERS.map((t, i) => {
+    const next = EARLY_EXIT_TIERS[i + 1];
+    const range = zh
+      ? next
+        ? `已完成 ${t.fromMonth}–${next.fromMonth - 1} 期`
+        : `已完成 ${t.fromMonth} 期以上`
+      : next
+        ? `Months ${t.fromMonth}–${next.fromMonth - 1}`
+        : `Month ${t.fromMonth} onwards`;
+    return zh
+      ? `${range}：補付 NT$${fmt(t.fee)}`
+      : `${range}: NT$${fmt(t.fee)}`;
+  });
 
 // ─── 單項功能參考價（à la carte）───
 // 客戶可自由挑選組合；因客製範圍會影響價格，最終以諮詢確認報價為準。

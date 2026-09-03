@@ -52,6 +52,7 @@ SMTP_USER="..."
 SMTP_PASS="..."
 MAIL_FROM="Avalo <no-reply@yourdomain.com>"
 MAIL_OWNER="<你自己的收件信箱>"
+SUSPENDED_TENANTS=""                            # 欠費暫停中的客戶站 slug，逗號分隔；平常留空
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
@@ -184,6 +185,76 @@ DMARC 報告多數郵件商不會寄：
    「From 固定自有網域＋顯示名做租戶品牌化＋Reply-To 指向提交者」的正確寫法。
 4. 用 mail-tester.com 確認 SPF/DKIM/DMARC 三項皆通過再切換。
 
+## 3.7 收款時點與欠費處理（客戶站營運）
+
+### 月費什麼時候開始收
+
+含建置的訂單（含零元啟動），**月費不是下單就開始扣的**：
+
+1. 客戶結帳 → 只刷一次性款項。零元啟動刷的是 **NT$2,000 席次保留金**
+   （含稅 2,100），保留名額並排入製作排程，上線後全額折抵首期月費。
+2. 網站做好、客戶驗收 → **到 `/admin` 訂閱列按「標記已上線」**。
+   這一按會做三件事：寫下上線日、以該日起算最短承諾期、立刻寄出定期定額授權連結。
+3. 客戶完成授權 → 首期當下扣款，之後每月自動扣。中離未授權的由
+   `/api/cron/dunning` 的姊妹 cron `care-links` 追兩封，再不理就通知站方人工處理。
+
+**沒有按那顆按鈕，系統一毛月費都不會收**（授權連結不會寄、客戶自助頁只顯示
+「網站尚未上線，月費尚未開始」）。交付後忘了按＝白做工，後台那一列會標紅字
+「尚未上線・未計費」提醒。
+
+理由寫在 `prisma/schema.prisma` 的 `Subscription.launchedAt`：月費買的是主機、備份、
+監控與改稿，網站沒上線時這些服務一項都還沒發生，先收就是收了沒有對價的錢。
+
+### 客戶欠費了怎麼辦
+
+綠界的定期定額**扣款失敗不會自動重試**，該期就是沒收到，下一期仍照排程扣。
+所以欠費的樣態是連續數期 `failed`，不是一次性事件。`/api/cron/dunning` 每天跑一次，
+依「首次扣款失敗日」推進催收階梯（與服務條款第九條逐字對應）：
+
+| 天數 | 系統做什麼 |
+|---|---|
+| D+0 | 扣款失敗信（更新付款方式連結） |
+| D+3 | 再次提醒 |
+| D+7 | 預告「第 15 日將暫停服務」 |
+| D+15 | 通知客戶服務已暫停，**並寄一封含指令的信給站方** |
+| D+30 | 通知客戶契約終止（含承諾期補償金額），並通知站方到 `/admin` 終止授權 |
+
+**D+15 的暫停是人工按的，不是 cron 自動關站。** 扣款失敗最常見的原因是卡片過期
+而不是賴帳，讓 cron 自動下線會把一次換卡的小麻煩變成一次公開事故。
+
+暫停一個客戶站（兩秒生效，不必重新部署）：
+
+```bash
+sudo nano /opt/avalo/app/.env      # 把 slug 加進 SUSPENDED_TENANTS（逗號分隔）
+sudo systemctl restart avalo
+```
+
+暫停後該站所有公開頁面、robots、sitemap 與表單／訂單 API 都回 503 暫停頁。
+**`/portal` 刻意仍然開著**——條款保證客戶隨時可匯出自己的資料，把後台一起關掉
+等於用扣留資料當籌碼。恢復服務就是把 slug 從那一行移除再 restart 一次。
+
+### 承諾期內提前終止要收多少
+
+不是「補付剩餘月份的月費」（那是第 3 個月走人就要 42,000，開不了口也收不到），
+而是**補付尚未攤提完畢的建置費**，級距定義在 `src/lib/products.ts` 的
+`EARLY_EXIT_TIERS`，條款第三條與退款政策引用同一組數字：
+
+| 已完成扣款期數 | 補付（未稅） |
+|---|---|
+| 0–5 | NT$30,000 |
+| 6–11 | NT$20,000 |
+| 12–17 | NT$10,000 |
+| 18–23 | NT$5,000 |
+| 24 起 | 0（並免費移交原始碼） |
+
+金額會直接顯示在客戶的訂閱管理頁，不是藏到爭議發生才拿出來的東西。
+
+### 客戶站與訂單的對應
+
+欠費通知信要指名「該暫停哪一個 slug」，靠的是 `src/lib/tenants.ts` 每個租戶的
+`orderId` 欄位。**新客戶轉正（開始收月費）時要記得補上這一行**，否則 D+15 那封信
+只會告訴你有人欠費，得自己回頭比對客戶名單。
+
 ## 4. 綠界正式環境切換清單
 
 特約商店申請已於 **2026-08-24 通過審核**，正式參數在綠界後台
@@ -287,11 +358,23 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 
 | 排程（avalo crontab） | 做什麼 |
 |---|---|
-| `15 3 * * *` `/opt/avalo/run-care-cron.sh` | 打 `/api/cron/care-links`：追回「建置已付但維護未授權」的訂單（最多 2 封信），追完仍未授權則通知站方人工處理。log 在 `/opt/avalo/cron-care.log` |
+| `15 3 * * *` `/opt/avalo/run-care-cron.sh` | 打兩支 cron：`/api/cron/care-links` 追回「已上線但維護未授權」的訂單（最多 2 封信），`/api/cron/dunning` 跑欠費催收階梯。log 在 `/opt/avalo/cron-care.log` |
 | `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
 
-`run-care-cron.sh` 刻意住在 repo 外（`/opt/avalo/`），內容只有兩行：從 `.env` 讀
-`CRON_SECRET` 再 curl 本機端點——秘密只存在 `.env` 一處，不會跟著 rsync 進 repo。
+`run-care-cron.sh` 刻意住在 repo 外（`/opt/avalo/`），內容是從 `.env` 讀 `CRON_SECRET`
+再 curl 本機端點——秘密只存在 `.env` 一處，不會跟著 rsync 進 repo。兩支 cron 共用這個腳本：
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+CRON_SECRET="$(grep -E '^CRON_SECRET=' /opt/avalo/app/.env | cut -d= -f2- | tr -d '"')"
+for ep in care-links dunning; do
+  echo "--- $(date -Is) $ep"
+  curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" "http://127.0.0.1:3000/api/cron/$ep" || true
+  echo
+done
+```
+
 **`CRON_SECRET` 只需要在伺服器的 `.env` 有**；本機沒有時該端點會回 401，這是預期行為
 （本機要測就自己加一個開發用的值，不必與正式站相同）。
 

@@ -8,6 +8,7 @@ import {
   careRequired,
   getProduct,
   mixedBuildConflict,
+  promoCareNeedsBuild,
   promoPlanForSkus,
   withTax,
 } from "@/lib/products";
@@ -99,7 +100,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "care plan required" }, { status: 400 });
     }
   }
-  // 有建置＝先付建置款，付款成功後於結果頁接著完成維護授權；無建置＝單購維護，當下即授權
+  // 促銷維護單獨結帳＝用促銷價買到沒有綁約的維護，擋掉（見 promoCareNeedsBuild）
+  if (promoCareNeedsBuild(skus)) {
+    return NextResponse.json({ error: "promo care requires the promo build" }, { status: 400 });
+  }
+  // 有建置＝先付一次性款項，網站上線驗收後才寄維護授權連結；
+  // 無建置＝單購維護（既有網站），服務當下就在提供，結帳當下即授權。
   const hasBuild = oneTimeTotal > 0;
 
   const orderId = genOrderId();
@@ -147,13 +153,16 @@ export async function POST(req: NextRequest) {
     // 單購維護則不綁約。
     const promo = promoPlanForSkus(skus);
     const termMonths = promo?.termMonths ?? (careRequired(skus) ? BUILD_COMMIT_MONTHS : null);
-    const commitEndsAt = termMonths
-      ? new Date(new Date().setMonth(new Date().getMonth() + termMonths))
-      : null;
 
-    // 維護自第一個月起計費，兩種路徑都是「當下授權、首期即時扣」：
-    // 有建置 → 建置付款成功後，結果頁接著引導完成維護授權；
-    // 單購維護 → 結帳當下直接導向授權。
+    // 含建置的訂單，承諾期與 launchedAt 一起在「標記已上線」時才寫入
+    //（見 lib/subscription.ts 的 markLaunched）。這裡先留 null 是刻意的：
+    // 條款第三條說承諾期自維護首次扣款日起算，而首次扣款要到上線之後才會發生，
+    // 在結帳當下就把 24 個月定下來，等於把製作期算進客戶買的服務裡。
+    const commitEndsAt =
+      !hasBuild && termMonths
+        ? new Date(new Date().setMonth(new Date().getMonth() + termMonths))
+        : null;
+
     await prisma.subscription.create({
       data: {
         orderId: order.id,
@@ -163,19 +172,20 @@ export async function POST(req: NextRequest) {
         startsAt: new Date(),
         termMonths,
         commitEndsAt,
-        // 有建置者若在結果頁中離未授權，交由 cron 寄連結追回；單購維護當下即授權，不需追
+        // 單購維護當下即授權，不需追；含建置者等站方標記上線後才由 cron 寄連結
+        launchedAt: hasBuild ? null : new Date(),
         authLinkSentAt: hasBuild ? null : new Date(),
         remindersSent: hasBuild ? 0 : 2,
       },
     });
   }
 
-  // 維護採定期定額，首期於授權當下即扣，自第一個月起計費。
+  // 維護採定期定額，首期於授權當下即扣；含建置者要到網站上線驗收後才授權。
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const careNote =
     monthlyTotal > 0
       ? hasBuild
-        ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n建置付款成功後，結果頁會引導客戶完成定期定額授權（第一期即時扣）。若客戶中離未授權，cron 會自動寄授權連結追回；連結為：\n${site}/api/pay/${orderId}2`
+        ? `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）— 尚未起算\n★ 網站上線驗收後，請到後台訂閱列按「標記已上線」：系統才會寄出定期定額授權連結、並自該日起算承諾期。\n在那之前不會向客戶收取任何月費。`
         : `\n\n【維護訂閱】NT$${monthlyTotal}/月（未稅）\n單購維護，客戶於結帳當下即完成定期定額授權、當月起扣，無需另寄連結。`
       : "";
   await notifyOwner(

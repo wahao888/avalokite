@@ -15,6 +15,11 @@ import {
   recommendedCareFor,
   promoPlanForSkus,
   mixedBuildConflict,
+  promoCareNeedsBuild,
+  prepaidPeriodsFor,
+  earlyExitFee,
+  earlyExitTierLabels,
+  EARLY_EXIT_TIERS,
   BUILD_COMMIT_MONTHS,
 } from "../src/lib/products";
 
@@ -44,6 +49,14 @@ describe("促銷方案（限時零元啟動）", () => {
     }
   });
 
+  it("零元啟動的一次性品項只有保留金，金額等於一期月費（＝折抵首期，總額不變）", () => {
+    const plan = PROMO_PLANS.find((p) => p.id === "zero-setup")!;
+    const onetime = plan.skus.map((s) => getProduct(s)!).filter((p) => p.type === "onetime");
+    expect(onetime.map((p) => p.sku)).toEqual(["launch-deposit"]);
+    expect(onetime[0].price).toBe(plan.monthly);
+    expect(plan.setup).toBe(0); // 建置費仍是 0 元，保留金不是建置費
+  });
+
   it("promo 與常規清單互斥（避免定價區並排互打）", () => {
     const promo = new Set(promoProducts().map((p) => p.sku));
     expect(promo.size).toBeGreaterThan(0);
@@ -61,9 +74,13 @@ describe("促銷方案（限時零元啟動）", () => {
     }
   });
 
-  it("launch-setup 指向 launch-care，反查也成立", () => {
+  it("兩個促銷一次性 SKU 都指向 launch-care，反查也成立", () => {
     expect(getProduct("launch-setup")!.recommendedCareSku).toBe("launch-care");
-    expect(plansUsingCare("launch-care").map((p) => p.sku)).toEqual(["launch-setup"]);
+    expect(getProduct("launch-deposit")!.recommendedCareSku).toBe("launch-care");
+    expect(plansUsingCare("launch-care").map((p) => p.sku).sort()).toEqual([
+      "launch-deposit",
+      "launch-setup",
+    ]);
   });
 });
 
@@ -82,7 +99,7 @@ describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => 
 
   it("方案標示的價格與實際 SKU 價格一致（避免文案與收費不符）", () => {
     for (const plan of PROMO_PLANS) {
-      const setup = plan.skus
+      const onetime = plan.skus
         .map((s) => getProduct(s)!)
         .filter((p) => p.type === "onetime")
         .reduce((n, p) => n + p.price, 0);
@@ -90,17 +107,19 @@ describe("促銷方案組合（客戶看到的是方案，不是 SKU）", () => 
         .map((s) => getProduct(s)!)
         .filter((p) => p.type === "monthly")
         .reduce((n, p) => n + p.price, 0);
-      expect(setup, `${plan.id} 建置費與 SKU 不符`).toBe(plan.setup);
+      // 結帳當下實際會刷的一次性金額 ＝ 卡片上寫的建置費 ＋ 保留金。
+      // 少了保留金這一項，卡片寫「0 元」而結帳跳出 2,100，那是行銷陷阱。
+      expect(onetime, `${plan.id} 一次性金額與 SKU 不符`).toBe(plan.setup + plan.deposit);
       expect(monthly, `${plan.id} 月費與 SKU 不符`).toBe(plan.monthly);
     }
   });
 
-  it("零元啟動不含一次性 SKU（checkout 的 hasBuild=false 分支才會當月起扣）", () => {
-    const free = PROMO_PLANS.find((p) => p.setup === 0)!;
-    expect(free.skus.some((s) => getProduct(s)!.type === "onetime")).toBe(false);
-    // 每個方案都要有月費，否則不是訂閱制
+  it("每個方案都含一次性品項與月費（前者讓 checkout 走 hasBuild=true 的延後計費路徑）", () => {
     for (const plan of PROMO_PLANS) {
-      expect(plan.skus.some((s) => getProduct(s)!.type === "monthly")).toBe(true);
+      // hasBuild=true 才會等「標記已上線」再寄授權連結；沒有一次性品項的話
+      // 結帳當下就會授權並扣首期，正是這次要消滅的行為。
+      expect(plan.skus.some((s) => getProduct(s)!.type === "onetime"), plan.id).toBe(true);
+      expect(plan.skus.some((s) => getProduct(s)!.type === "monthly"), plan.id).toBe(true);
     }
   });
 
@@ -211,16 +230,22 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
 });
 
 describe("承諾期反查（promoPlanForSkus）", () => {
-  it("零元啟動綁 24 個月", () => {
-    const plan = promoPlanForSkus(["launch-care"]);
+  it("零元啟動綁 24 個月（要整組 SKU 齊全）", () => {
+    const plan = promoPlanForSkus(["launch-deposit", "launch-care"]);
     expect(plan?.id).toBe("zero-setup");
     expect(plan?.termMonths).toBe(24);
+  });
+
+  it("只有 launch-care 反查不到方案（單獨結帳不該拿到促銷承諾期）", () => {
+    expect(promoPlanForSkus(["launch-care"])).toBeUndefined();
   });
 
   it("含已停售 launch-setup 的組合仍反查得到現行方案，不會回 undefined", () => {
     // 只在結帳當下用來決定要寫進訂閱的承諾期；既有訂閱的 termMonths 早已入庫，
     // 不會被這裡的結果追溯改寫。
-    expect(promoPlanForSkus(["launch-setup", "launch-care"])?.id).toBe("zero-setup");
+    expect(promoPlanForSkus(["launch-setup", "launch-deposit", "launch-care"])?.id).toBe(
+      "zero-setup"
+    );
   });
 
   it("一般方案沒有綁約", () => {
@@ -273,6 +298,75 @@ describe("承諾期（BUILD_COMMIT_MONTHS）", () => {
   });
 
   it("促銷方案的承諾期優先於一般建置的 12 個月", () => {
-    expect(promoPlanForSkus(["launch-care"])?.termMonths).toBe(24);
+    expect(promoPlanForSkus(["launch-deposit", "launch-care"])?.termMonths).toBe(24);
+  });
+});
+
+describe("促銷維護不得單獨結帳（promoCareNeedsBuild）", () => {
+  it("只有 launch-care 就擋下——否則等於用促銷價買到沒綁約的維護", () => {
+    expect(promoCareNeedsBuild(["launch-care"])).toBe(true);
+  });
+
+  it("成組購買、以及一般方案都放行", () => {
+    expect(promoCareNeedsBuild(["launch-deposit", "launch-care"])).toBe(false);
+    expect(promoCareNeedsBuild(["web-basic", "care-basic"])).toBe(false);
+    expect(promoCareNeedsBuild(["care-basic"])).toBe(false); // 一般維護本來就能單買
+    expect(promoCareNeedsBuild([])).toBe(false);
+  });
+});
+
+describe("提前終止補償（earlyExitFee）", () => {
+  it("依已完成期數落在正確級距", () => {
+    expect(earlyExitFee(0)).toBe(30000);
+    expect(earlyExitFee(5)).toBe(30000);
+    expect(earlyExitFee(6)).toBe(20000);
+    expect(earlyExitFee(11)).toBe(20000);
+    expect(earlyExitFee(12)).toBe(10000);
+    expect(earlyExitFee(17)).toBe(10000);
+    expect(earlyExitFee(18)).toBe(5000);
+    expect(earlyExitFee(23)).toBe(5000);
+  });
+
+  it("滿 24 期起不再補付（承諾期已履行完畢）", () => {
+    expect(earlyExitFee(24)).toBe(0);
+    expect(earlyExitFee(99)).toBe(0);
+  });
+
+  it("負數與小數不會掉出級距", () => {
+    expect(earlyExitFee(-3)).toBe(30000);
+    expect(earlyExitFee(5.9)).toBe(30000);
+  });
+
+  it("補償金額遞減且不超過標準建置費（否則比直接買還貴）", () => {
+    const fees = EARLY_EXIT_TIERS.map((t) => t.fee);
+    expect(fees).toEqual([...fees].sort((a, b) => b - a));
+    expect(Math.max(...fees)).toBeLessThan(getProduct("web-basic")!.price);
+  });
+
+  it("級距說明的條目數與級距一致（條款文案與計算同源）", () => {
+    for (const zh of [true, false]) {
+      expect(earlyExitTierLabels(zh).length).toBe(EARLY_EXIT_TIERS.length);
+    }
+  });
+});
+
+describe("保留金折抵期數（prepaidPeriodsFor）", () => {
+  it("零元啟動的保留金＝1 期月費", () => {
+    expect(prepaidPeriodsFor(["launch-deposit", "launch-care"])).toBe(1);
+  });
+
+  it("承諾期扣掉保留金後只需再扣 23 期，總額仍是月費 × 24", () => {
+    const plan = PROMO_PLANS.find((p) => p.id === "zero-setup")!;
+    const prepaid = prepaidPeriodsFor(plan.skus);
+    const recurring = plan.termMonths - prepaid;
+    expect(recurring).toBe(23);
+    // 綠界在授權當下就扣第一期；照 24 期授權會變成 25 期，保留金等於沒折抵。
+    expect(plan.deposit + recurring * plan.monthly).toBe(promoPlanTotal(plan));
+  });
+
+  it("一般方案與空車沒有預付期數", () => {
+    expect(prepaidPeriodsFor(["web-basic", "care-basic"])).toBe(0);
+    expect(prepaidPeriodsFor([])).toBe(0);
+    expect(prepaidPeriodsFor(["launch-care"])).toBe(0); // 反查不到方案
   });
 });

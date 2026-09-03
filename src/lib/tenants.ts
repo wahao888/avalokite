@@ -18,6 +18,13 @@ export type Tenant = {
   /** 表單通知收件人的環境變數名（值可為逗號分隔的多個信箱） */
   notifyEnv: string;
   /**
+   * 這個站對應的 Avalo 訂單編號（Order.id）。只用於欠費催收：
+   * cron 抓到欠費訂閱時，要能在通知信裡指名「該暫停哪一個 slug」，
+   * 否則站方收到的是一封還得自己回頭比對客戶名單的信。
+   * 免費樣品站與尚未轉正的站留空。
+   */
+  orderId?: string;
+  /**
    * true = 該站自己有 app/sites/<slug>/sitemap.ts，proxy 不代為產生。
    * 有動態子頁（口味、活動）的站需要這個——路徑清單住在站內的 _data，
    * 不該為了 sitemap 把它們拉進每個請求都會跑的 proxy bundle。
@@ -82,6 +89,10 @@ const BY_SLUG = new Map(TENANTS.map((t) => [t.slug, t]));
 
 export const getTenant = (slug: string | null | undefined): Tenant | null =>
   slug ? BY_SLUG.get(slug) ?? null : null;
+
+/** 反查某張訂單對應的客戶站；沒有登錄 orderId 的站回 null */
+export const tenantForOrder = (orderId: string): Tenant | null =>
+  TENANTS.find((t) => t.orderId === orderId) ?? null;
 
 // 錨定兩端，且 slug 不得以連字號開頭或結尾。
 // 少了 ^ $ 會讓 wenshan.avalokite.xyz.evil.com 或 notwenshan.avalokite.xyz 被誤判為租戶。

@@ -5,6 +5,7 @@ import { notifyTenant } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { normalizeOrderId } from "@/lib/shop-order-id";
 import { getTenant } from "@/lib/tenants";
+import { isSuspended } from "@/lib/suspension";
 import { isPayment, needsPaymentReport } from "@/app/sites/rekat/_data/shop";
 
 // 付款回報。客人轉完帳自己填帳號末五碼，老闆才對得起帳。
@@ -25,6 +26,12 @@ const MAX_PER_WINDOW = 10;
 const digits = (s: string) => s.replace(/\D/g, "");
 
 export async function POST(req: NextRequest) {
+  // 站台因欠費暫停時，表單／訂單 API 一起停：只關公開頁面而留著 API，
+  // 等於客人看不到店卻還能下單，訂單會落進一個沒人在服務的信箱。
+  if (isSuspended(TENANT.slug)) {
+    return NextResponse.json({ error: "service suspended" }, { status: 503 });
+  }
+
   if (rateLimited(`remit:${TENANT.slug}:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }

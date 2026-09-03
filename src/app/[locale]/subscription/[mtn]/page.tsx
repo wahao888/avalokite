@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { careOptionsFor, fmt, getProduct } from "@/lib/products";
+import { careOptionsFor, earlyExitFee, fmt, getProduct, prepaidPeriodsFor } from "@/lib/products";
 import { findSubscription } from "@/lib/subscription";
 import type { Locale } from "@/i18n/routing";
 import SubscriptionActions from "@/components/SubscriptionActions";
@@ -44,6 +44,10 @@ export default async function SubscriptionPage({
   // 換方案的可選範圍與購物車一致：促銷建置只能在促銷維護裡換
   const options = careOptionsFor(orderSkus).filter((p) => p.sku !== sub.sku);
   const ended = sub.status === "cancelled" || sub.status === "replaced";
+  // 補償金額看的是「已完成幾期」，不是日曆月：客戶付了幾期就攤掉了幾期的建置費。
+  // 下單時的席次保留金也是實付的一期，一併計入，否則客戶會被多算一期的補償。
+  const prepaid = prepaidPeriodsFor(orderSkus);
+  const exitFee = earlyExitFee(sub.totalSuccessTimes + prepaid);
   const fmtDate = (d: Date | null) =>
     d ? new Date(d).toLocaleDateString(lc === "en" ? "en-US" : "zh-TW", { timeZone: "Asia/Taipei" }) : "-";
 
@@ -83,8 +87,20 @@ export default async function SubscriptionPage({
           <div className="cart-summary-row">
             <span>{t("commitment")}</span>
             <span>
-              {t("commitUntil", { months: sub.termMonths ?? 0, date: fmtDate(sub.commitEndsAt) })}
+              {/* 保留金已付掉一期，扣款結束日會比「24 個月」早一個月。
+                  直接寫「24 個月・至 <23 個月後>」會被讀成算錯，所以分開講。 */}
+              {t(prepaid > 0 ? "commitUntilPrepaid" : "commitUntil", {
+                months: sub.termMonths ?? 0,
+                date: fmtDate(sub.commitEndsAt),
+              })}
             </span>
+          </div>
+        )}
+        {/* 承諾期內提前終止要補多少，先算給客戶看。藏起來只會換到一次爭議。 */}
+        {sub.commitEndsAt && sub.commitEndsAt > new Date() && exitFee > 0 && (
+          <div className="cart-summary-row">
+            <span>{t("earlyExit")}</span>
+            <span>NT${fmt(exitFee)}</span>
           </div>
         )}
         <div className="cart-monthly-note">✦ {t("taxNote")}</div>
@@ -94,6 +110,13 @@ export default async function SubscriptionPage({
         <p className="care-required-note" style={{ marginTop: "2rem" }}>
           {sub.status === "replaced" ? t("replacedNote") : t("cancelledNote")}
         </p>
+      ) : sub.status === "pending" && !sub.launchedAt ? (
+        // 網站還沒上線＝月費還沒開始，這頁不該出現任何「立即授權」的入口。
+        // 客戶自己找到這個連結時，要讀到的是「你還不用付」，不是一顆付款按鈕。
+        <div style={{ marginTop: "2.5rem" }}>
+          <div className="cart-section-head">{t("notLiveHeading")}</div>
+          <p className="care-required-note">{t("notLiveNote")}</p>
+        </div>
       ) : sub.status === "pending" ? (
         <div style={{ marginTop: "2.5rem" }}>
           <div className="cart-section-head">{t("pendingHeading")}</div>

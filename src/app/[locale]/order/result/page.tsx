@@ -19,23 +19,34 @@ export default async function OrderResultPage({
   const order = id
     ? await prisma.order.findUnique({
         where: { id: id.toUpperCase() },
-        include: { payments: true },
+        include: { payments: true, subscriptions: true },
       })
     : null;
 
   // 還有未完成的付款／授權 → 引導完成下一筆（cancelled 的舊授權不算）
   const nextPayment = order?.payments.find((p) => p.status === "pending");
-  // 建置已付、只剩維護授權：這是每一筆建置訂單的必經狀態，
+  // 一次性款項已付、只剩維護授權：這是每一筆建置訂單的必經狀態，
   // 不能沿用「等待付款確認」的文案——客戶剛刷卡成功，看到那句會以為刷失敗。
   const awaitingCare =
     !!order &&
     nextPayment?.kind === "period" &&
     order.payments.some((p) => p.kind === "onetime" && p.status === "paid");
 
+  // 網站還沒上線就不給授權連結——月費要到上線驗收後才開始，這頁是客戶唯一
+  // 會看到的收費說明，這裡若還擺一顆「完成月費授權」，等於整個改動白做。
+  const careSub = order?.subscriptions.find(
+    (x) => x.merchantTradeNo === nextPayment?.merchantTradeNo
+  );
+  const careDeferred = awaitingCare && !careSub?.launchedAt;
+  const payable = careDeferred ? undefined : nextPayment;
+
   let heading = t("failTitle");
   let desc = t("failDesc");
   if (!error && order) {
-    if (awaitingCare) {
+    if (careDeferred) {
+      heading = t("depositTitle");
+      desc = t("depositDesc");
+    } else if (awaitingCare) {
       heading = t("careAuthTitle");
       desc = t("careAuthDesc");
     } else if (order.status === "paid") {
@@ -63,18 +74,18 @@ export default async function OrderResultPage({
         </p>
       )}
 
-      {awaitingCare && (
+      {(careDeferred || awaitingCare) && (
         <p className="cart-monthly-note" style={{ marginBottom: "1.5rem" }}>
-          ✦ {t("careAuthNote")}
+          ✦ {careDeferred ? t("depositNote") : t("careAuthNote")}
         </p>
       )}
 
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-        {nextPayment && (
-          <a href={`/api/pay/${nextPayment.merchantTradeNo}`} className="btn-primary">
+        {payable && (
+          <a href={`/api/pay/${payable.merchantTradeNo}`} className="btn-primary">
             {locale === "en"
-              ? `Complete ${nextPayment.kind === "period" ? "subscription authorization" : "payment"} (NT$${nextPayment.amount}) →`
-              : `完成${nextPayment.kind === "period" ? "月費定期定額授權" : "付款"}（NT$${nextPayment.amount}）→`}
+              ? `Complete ${payable.kind === "period" ? "subscription authorization" : "payment"} (NT$${payable.amount}) →`
+              : `完成${payable.kind === "period" ? "月費定期定額授權" : "付款"}（NT$${payable.amount}）→`}
           </a>
         )}
         <Link href="/" className="btn-ghost">{t("backHome")}</Link>

@@ -58,6 +58,18 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
               )}
             </span>
           </div>
+          {/* 「建置費 0 元」與「結帳要付 2,000」必須擺在一起。
+              只寫 0 元、到結帳才冒出保留金，那是行銷陷阱不是促銷。 */}
+          {plan.deposit > 0 && (
+            <div className="promo-price-row">
+              <span className="promo-price-label">{t("depositFee")}</span>
+              <span className="promo-price-value">
+                <span className="promo-cur">NT$</span>
+                {fmt(plan.deposit)}
+                <span className="promo-credit">{t("depositCredit")}</span>
+              </span>
+            </div>
+          )}
           <div className="promo-price-row">
             <span className="promo-price-label">{t("monthlyFee")}</span>
             <span className="promo-price-value">
@@ -65,6 +77,10 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
               {fmt(plan.monthly)}
               <span className="promo-per">{t("perMonth")}</span>
             </span>
+          </div>
+          <div className="promo-price-row promo-term">
+            <span className="promo-price-label">{t("billingStart")}</span>
+            <span className="promo-price-value">{t("billingStartValue")}</span>
           </div>
           <div className="promo-price-row promo-term">
             <span className="promo-price-label">{t("term")}</span>

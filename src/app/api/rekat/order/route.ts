@@ -5,6 +5,7 @@ import { notifyTenant } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { makeOrderId } from "@/lib/shop-order-id";
 import { getTenant } from "@/lib/tenants";
+import { isSuspended } from "@/lib/suspension";
 import { getBeanStock } from "@/lib/tenant-data";
 import { getBean } from "@/app/sites/rekat/_data/beans";
 import {
@@ -48,6 +49,12 @@ const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 6;
 
 export async function POST(req: NextRequest) {
+  // 站台因欠費暫停時，表單／訂單 API 一起停：只關公開頁面而留著 API，
+  // 等於客人看不到店卻還能下單，訂單會落進一個沒人在服務的信箱。
+  if (isSuspended(TENANT.slug)) {
+    return NextResponse.json({ error: "service suspended" }, { status: 503 });
+  }
+
   // key 帶 tenant：一家客戶被灌爆不影響其他客戶站
   if (rateLimited(`order:${TENANT.slug}:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });

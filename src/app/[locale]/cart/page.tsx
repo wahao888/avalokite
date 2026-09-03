@@ -9,6 +9,7 @@ import {
   fmt,
   getProduct,
   mixedBuildConflict,
+  promoCareNeedsBuild,
   promoPlanForSkus,
   recommendedCareFor,
   withTax,
@@ -23,7 +24,7 @@ export default function CartPage() {
   const oneTime = cart.items.filter((i) => getProduct(i.sku)?.type === "onetime");
   const monthly = cart.items.filter((i) => getProduct(i.sku)?.type === "monthly");
 
-  // 車上有建置方案 → 必須擇一維護（自第一個月起計費），未選則不給結帳
+  // 車上有建置方案 → 必須擇一維護（月費自網站上線驗收後起計），未選則不給結帳
   const skus = cart.items.map((i) => i.sku);
   // 促銷建置與正式建置同車 → 維護選項會被促銷價汙染，請客戶分兩張單
   const mixedBuilds = mixedBuildConflict(skus);
@@ -37,9 +38,12 @@ export default function CartPage() {
   const looseMonthly = monthly.filter(
     (i) => !careOptions.some((o) => o.sku === i.sku)
   );
-  // 零元啟動＝單購 launch-care，走不到下面的必選維護區塊，
-  // 但結帳仍會把 24 個月的承諾期寫進訂閱，所以承諾期得在月費區自己講。
+  // 零元啟動現在含席次保留金（一次性），正常會走下面的必選維護區塊；
+  // 這裡留給「手動只留下 launch-care」的情況——結帳端會擋（見下面的 promoCareAlone），
+  // 但承諾期仍該在月費區講清楚，不能讓人以為單買就沒有綁約。
   const loosePromoPlan = careNeeded ? undefined : promoPlanForSkus(skus);
+  // 促銷維護被單獨留在車上：伺服器端會擋，前端也要擋，否則客戶按下結帳只會拿到一個 400
+  const promoCareAlone = promoCareNeedsBuild(skus);
 
   if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
 
@@ -86,7 +90,7 @@ export default function CartPage() {
 
   const oneTimeTax = withTax(cart.oneTimeSubtotal) - cart.oneTimeSubtotal;
   const dueNow = withTax(cart.oneTimeSubtotal);
-  const careBlocked = mixedBuilds || (careNeeded && !selectedCare);
+  const careBlocked = mixedBuilds || promoCareAlone || (careNeeded && !selectedCare);
 
   return (
     <main className="page-wrap page-wrap-narrow">
@@ -195,7 +199,11 @@ export default function CartPage() {
         )}
         {careBlocked && (
           <div className="cart-blocked-note">
-            {mixedBuilds ? t("mixedBuildsBlocked") : t("careRequiredBlocked")}
+            {mixedBuilds
+              ? t("mixedBuildsBlocked")
+              : promoCareAlone
+                ? t("promoCareAloneBlocked")
+                : t("careRequiredBlocked")}
           </div>
         )}
         <div style={{ display: "flex", gap: "1rem", marginTop: "2rem", flexWrap: "wrap" }}>

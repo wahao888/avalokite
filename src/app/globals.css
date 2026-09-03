@@ -924,6 +924,14 @@ button { font-family: inherit; }
 .promo-free { font-style: normal; color: var(--moss); }
 .promo-plan.featured .promo-free { color: var(--sage); }
 .promo-term .promo-price-value { font-family: var(--font-serif); font-size: 1rem; }
+/* 保留金後面那句「折抵首期月費」——金額與它的條件不該分開兩行讀 */
+.promo-credit {
+  font-family: var(--font-serif);
+  font-size: 0.72rem;
+  margin-left: 0.4rem;
+  color: var(--muted);
+}
+.promo-plan.featured .promo-credit { color: rgba(240,235,227,0.6); }
 
 .promo-plan-terms { list-style: none; margin: 1.2rem 0 0; padding: 0; }
 .promo-plan-terms li {

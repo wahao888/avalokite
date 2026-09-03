@@ -45,6 +45,100 @@ beforeEach(() => {
   h.db.payment.findMany.mockResolvedValue([]);
 });
 
+describe("markLaunched（網站上線＝月費開始計時）", () => {
+  const pending = (over: Record<string, unknown> = {}) =>
+    sub({ status: "pending", launchedAt: null, totalSuccessTimes: 0, commitEndsAt: null, ...over });
+
+  it("寫下上線日、自今天起算承諾期，並寄出授權連結", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    h.db.payment.findMany.mockResolvedValue([{ kind: "onetime", status: "paid" }] as never);
+
+    const before = Date.now();
+    const r = await markLaunched(pending());
+    expect(r).toEqual({ ok: true, mailed: true });
+
+    const upd = h.db.subscription.update.mock.calls[0][0] as { data: Record<string, Date> };
+    expect(upd.data.launchedAt.getTime()).toBeGreaterThanOrEqual(before);
+    // 承諾期 12 個月自「今天」起算，不是自下單日——製作期不算進客戶買的服務裡
+    const expected = new Date(new Date(upd.data.launchedAt).setMonth(upd.data.launchedAt.getMonth() + 12));
+    expect(upd.data.commitEndsAt.getTime()).toBe(expected.getTime());
+    expect(h.sendMail).toHaveBeenCalledTimes(1);
+    expect(h.sendMail.mock.calls[0][0].to).toBe("t@example.com");
+  });
+
+
+  it("零元啟動：保留金折抵一期，承諾期只再算 23 個月（否則會多扣一期）", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    h.db.payment.findMany.mockResolvedValue([{ kind: "onetime", status: "paid" }] as never);
+
+    await markLaunched(
+      pending({
+        sku: "launch-care",
+        termMonths: 24,
+        order: {
+          id: "AVLTEST001",
+          name: "測試",
+          email: "t@example.com",
+          locale: "zh-TW",
+          items: JSON.stringify([{ sku: "launch-deposit", qty: 1 }, { sku: "launch-care", qty: 1 }]),
+        },
+      })
+    );
+
+    const upd = h.db.subscription.update.mock.calls[0][0] as { data: Record<string, Date> };
+    const launched = upd.data.launchedAt;
+    // 綠界授權當下就扣第一期，所以 24 期＝保留金 1 期 ＋ 定期定額 23 期
+    const expected = new Date(new Date(launched).setMonth(launched.getMonth() + 23));
+    expect(upd.data.commitEndsAt.getTime()).toBe(expected.getTime());
+  });
+
+  it("一次性款項未付清就不能標記上線（否則免費交站又開始跑承諾期）", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    h.db.payment.findMany.mockResolvedValue([{ kind: "onetime", status: "pending" }] as never);
+
+    expect(await markLaunched(pending())).toEqual({ ok: false, error: "build-unpaid" });
+    expect(h.db.subscription.update).not.toHaveBeenCalled();
+    expect(h.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("重複標記無效（避免承諾期被按第二次往後推）", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    const r = await markLaunched(pending({ launchedAt: new Date("2026-09-01") }));
+    expect(r).toEqual({ ok: false, error: "already-launched" });
+    expect(h.db.subscription.update).not.toHaveBeenCalled();
+  });
+
+  it("非待授權狀態不能標記上線", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    expect(await markLaunched(pending({ status: "active" }))).toEqual({
+      ok: false,
+      error: "not-pending",
+    });
+  });
+
+  it("寄信失敗就不記提醒次數，留給 cron 隔天重試", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    h.db.payment.findMany.mockResolvedValue([] as never);
+    h.sendMail.mockResolvedValueOnce(false);
+
+    const r = await markLaunched(pending());
+    expect(r).toEqual({ ok: true, mailed: false });
+    const upd = h.db.subscription.update.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(upd.data.authLinkSentAt).toBeNull();
+    expect(upd.data.remindersSent).toBe(0);
+    // 但上線日仍然寫下：網站確實上線了，這件事不因寄信失敗而改變
+    expect(upd.data.launchedAt).toBeInstanceOf(Date);
+  });
+
+  it("無綁約方案（單購維護升級而來）不寫承諾期", async () => {
+    const { markLaunched } = await import("../src/lib/subscription");
+    h.db.payment.findMany.mockResolvedValue([] as never);
+    await markLaunched(pending({ termMonths: null }));
+    const upd = h.db.subscription.update.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(upd.data.commitEndsAt).toBeNull();
+  });
+});
+
 describe("replaceSubscription（換方案／換卡）", () => {
   it("終止舊授權後才建立新訂閱，並沿用原本的承諾期", async () => {
     const { replaceSubscription } = await import("../src/lib/subscription");

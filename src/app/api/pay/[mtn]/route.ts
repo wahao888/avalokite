@@ -30,6 +30,22 @@ export async function GET(
     return NextResponse.json({ error: "payment not found or already paid" }, { status: 404 });
   }
 
+  // 網站還沒上線就不受理定期定額授權。這是「月費自上線後起算」唯一真正的執行點：
+  // 前端可以藏按鈕，但交易編號會出現在通知信裡、也可能被翻舊信找出來——
+  // 少了這道檢查，客戶自己按下去就會被扣首期，而我們對他承諾過不會。
+  if (payment.kind === "period") {
+    const sub = await prisma.subscription.findUnique({
+      where: { merchantTradeNo: mtn },
+      select: { launchedAt: true },
+    });
+    if (sub && !sub.launchedAt) {
+      return NextResponse.json(
+        { error: "care billing starts after the site goes live" },
+        { status: 409 }
+      );
+    }
+  }
+
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const order = payment.order;
   const items = JSON.parse(order.items) as { sku: string; qty: number }[];
@@ -43,6 +59,21 @@ export async function GET(
     .join("#")
     .slice(0, 400);
 
+  // 帳單上寫「建置費用」而客戶買的是「建置費 0 元」的方案，那一行字就是自打嘴巴。
+  // 促銷方案的一次性品項是席次保留金，描述必須照實寫。
+  const promoDepositOnly =
+    payment.kind === "onetime" &&
+    items
+      .map((i) => getProduct(i.sku))
+      .filter((p) => p?.type === "onetime")
+      .every((p) => p?.group === "promo");
+  const kindDesc =
+    payment.kind === "period"
+      ? { zh: "維護月費 定期定額", en: "monthly care recurring" }
+      : promoDepositOnly
+        ? { zh: "席次保留金 單筆付款", en: "seat deposit one time payment" }
+        : { zh: "建置費用 單筆付款", en: "one time build payment" };
+
   const base = {
     merchantTradeNo: mtn,
     totalAmount: payment.amount,
@@ -53,8 +84,8 @@ export async function GET(
     // 就像重複扣款。不用特殊符號：綠界會擋。
     tradeDesc:
       order.locale === "en"
-        ? `Avalo ${payment.kind === "period" ? "monthly care recurring" : "one time build payment"} order ${order.id}`
-        : `Avalo ${payment.kind === "period" ? "維護月費 定期定額" : "建置費用 單筆付款"} 訂單 ${order.id}`,
+        ? `Avalo ${kindDesc.en} order ${order.id}`
+        : `Avalo ${kindDesc.zh} 訂單 ${order.id}`,
     clientBackUrl: `${site}/order/result?id=${order.id}`,
     orderResultUrl: `${site}/api/ecpay/client-return`,
     returnUrl: `${site}/api/ecpay/return`,

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { cancelPeriod } from "@/lib/ecpay";
-import { getProduct, withTax } from "@/lib/products";
+import { getProduct, prepaidPeriodsFor, withTax } from "@/lib/products";
 import { notifyOwner, sendMail } from "@/lib/mail";
 import { localePath } from "@/i18n/routing";
 
@@ -61,6 +61,89 @@ async function stopAtEcpay(sub: { merchantTradeNo: string; status: string }) {
   }
   const r = await cancelPeriod(sub.merchantTradeNo);
   return { success: r.success, raw: r.success ? r.raw : `FAIL ${r.rtnCode} ${r.rtnMsg}`, skipped: false };
+}
+
+/**
+ * 寄出「完成定期定額授權」的連結。首寄與跟催共用一份文案，
+ * 才不會出現兩套說法（cron 說已上線、後台說待付款之類）。
+ */
+export async function sendCareAuthMail(
+  sub: { merchantTradeNo: string; monthlyAmount: number; orderId: string },
+  order: { email: string; name: string; locale: string },
+  followUp: boolean
+) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const zh = order.locale !== "en";
+  const payUrl = `${site}/api/pay/${sub.merchantTradeNo}`;
+  const amount = sub.monthlyAmount.toLocaleString();
+
+  return sendMail({
+    to: order.email,
+    subject: zh
+      ? `[Avalo] ${followUp ? "再次提醒：" : ""}網站已上線，請完成維護授權（訂單 ${sub.orderId}）`
+      : `[Avalo] ${followUp ? "Reminder: " : ""}Your site is live — please authorize care (order ${sub.orderId})`,
+    text: zh
+      ? `${order.name} 您好，\n\n${followUp ? "先前寄給您的維護授權連結尚未完成，再次提醒。\n\n" : "您的網站已完成上線與驗收。\n\n"}依方案約定，維護月費自網站上線後起算。請點擊以下連結完成信用卡定期定額授權，每月自動扣款 NT$${amount}（含稅），可隨時取消：\n\n${payUrl}\n\n完成授權後，主機代管、備份、安全更新與監控會持續運作。\n\nAvalo 阿瓦羅`
+      : `Hi ${order.name},\n\n${followUp ? "This is a follow-up — the care authorization link we sent hasn't been completed yet.\n\n" : "Your site is live and accepted.\n\n"}Care is billed from the day the site goes live. Complete the recurring card authorization below for NT$${amount} (incl. tax) per month, cancellable anytime:\n\n${payUrl}\n\nHosting, backups, security updates and monitoring keep running once it's authorized.\n\nAvalo`,
+  });
+}
+
+/**
+ * 標記網站已上線驗收 —— 含建置的訂單，月費的計時器是從這裡才開始走的。
+ *
+ * 一次做完三件事，刻意不拆開：漏掉任何一件都會產生「已上線但沒人收錢」或
+ * 「開始收錢但承諾期算錯」的狀態，而這兩者都不會有人發現。
+ *   1. 寫下 launchedAt（cron 追授權的基準，也是「月費從哪天算」的唯一依據）
+ *   2. 以今天為起點寫下 commitEndsAt（條款第三條：承諾期自維護開始起算）
+ *   3. 立刻寄授權連結，不必等隔天的 cron
+ */
+export async function markLaunched(
+  sub: NonNullable<SubWithOrder>
+): Promise<{ ok: true; mailed: boolean } | { ok: false; error: string }> {
+  if (sub.launchedAt) return { ok: false, error: "already-launched" };
+  if (sub.status !== "pending") return { ok: false, error: "not-pending" };
+
+  // 一次性款項沒付清就標記上線，等於免費把站交出去又開始跑承諾期
+  const payments = await prisma.payment.findMany({ where: { orderId: sub.orderId } });
+  const onetime = payments.filter((p) => p.kind === "onetime");
+  if (onetime.length > 0 && !onetime.every((p) => p.status === "paid")) {
+    return { ok: false, error: "build-unpaid" };
+  }
+
+  const now = new Date();
+  // 承諾期要扣掉「保留金已預付的期數」。綠界在授權當下就扣第一期，
+  // 照 24 個月授權會扣滿 24 期，加上下單時的保留金就是 25 期——
+  // 那樣保留金不但沒折抵，還變成多收一期。零元啟動的正解是：
+  // 保留金＝第 1 期，上線後只再扣 23 期，總額仍是 2,000 × 24。
+  const orderSkus = (JSON.parse(sub.order.items) as { sku: string }[]).map((i) => i.sku);
+  const prepaid = prepaidPeriodsFor(orderSkus);
+  const remainingMonths = sub.termMonths ? Math.max(1, sub.termMonths - prepaid) : null;
+  const commitEndsAt = remainingMonths
+    ? new Date(new Date(now).setMonth(now.getMonth() + remainingMonths))
+    : null;
+
+  const mailed = await sendCareAuthMail(sub, sub.order, false);
+  await prisma.subscription.update({
+    where: { id: sub.id },
+    data: {
+      launchedAt: now,
+      commitEndsAt,
+      // 寄失敗就別記次數，交給 cron 隔天重試（同 care-links 的處理）
+      authLinkSentAt: mailed ? now : null,
+      remindersSent: mailed ? 1 : 0,
+    },
+  });
+
+  await notifyOwner(
+    `[Avalo] 網站已上線，維護開始計費 ${sub.orderId}`,
+    `客戶：${sub.order.name} <${sub.order.email}>\n` +
+      `方案：${sub.sku} NT$${sub.monthlyAmount}/月（含稅）\n` +
+      `上線日：${fmtDate(now, true)}\n` +
+      `承諾期：${commitEndsAt ? `共 ${sub.termMonths} 期（保留金已付 ${prepaid} 期，尚須扣 ${remainingMonths} 期），至 ${fmtDate(commitEndsAt, true)}` : "無"}\n` +
+      `授權連結${mailed ? "已寄給客戶" : "寄送失敗（cron 會重試）"}：${process.env.NEXT_PUBLIC_SITE_URL}/api/pay/${sub.merchantTradeNo}`
+  );
+
+  return { ok: true, mailed };
 }
 
 export type SubWithOrder = Awaited<ReturnType<typeof findSubscription>>;
