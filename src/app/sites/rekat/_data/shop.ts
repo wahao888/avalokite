@@ -18,7 +18,7 @@ export const WHOLE_BEAN_ONLY = "一律出原豆，不代客研磨";
 // ── 付款方式 ──────────────────────────────────────────────────
 // 三種都是線下收款：本站不串任何金流 API，也不經手信用卡或金融帳號資料。
 
-export type PaymentKey = "transfer" | "linepay" | "cod";
+export type PaymentKey = "transfer" | "cod";
 
 export const PAYMENT: { key: PaymentKey; label: string; desc: string }[] = [
   {
@@ -27,34 +27,26 @@ export const PAYMENT: { key: PaymentKey; label: string; desc: string }[] = [
     desc: "下單後顯示匯款帳號，轉帳完成再回填末五碼，我們核對後出貨。",
   },
   {
-    key: "linepay",
-    label: "LINE Pay",
-    desc: "訂單確認後，我們會傳 LINE Pay 收款連結給你；付款完成後回填交易末五碼即可。",
-  },
-  {
     key: "cod",
     label: "貨到付款",
-    desc: "宅配到府時直接付現給宅配人員，另加收手續費。",
+    desc: "宅配到府時直接付現給宅配人員，不另收手續費。",
   },
 ];
 
 export const PAYMENT_LABEL: Record<PaymentKey, string> = {
   transfer: "銀行匯款 / ATM 轉帳",
-  linepay: "LINE Pay",
   cod: "貨到付款",
 };
 
-export const isPayment = (v: unknown): v is PaymentKey =>
-  v === "transfer" || v === "cod" || v === "linepay";
+export const isPayment = (v: unknown): v is PaymentKey => v === "transfer" || v === "cod";
 
 /** 需要客人自行回報付款的方式（貨到付款不用——錢是當面給宅配的） */
 export const needsPaymentReport = (p: PaymentKey): boolean => p !== "cod";
 
 // ── 運費 ──────────────────────────────────────────────────────
-// TODO(客戶確認)：以下三個數字是依台灣常溫宅配行情設的預設值，非客戶提供。
+// 客戶確認（2026-09-02）：運費 160，滿 2000 免運，貨到付款不另收手續費。
 export const SHIPPING_FEE = 160;
 export const FREE_SHIPPING_OVER = 2000;
-export const COD_FEE = 30;
 
 /** TODO(客戶確認)：匯款帳號。全部留空時，訂單完成頁會改成「我們會與您聯絡提供帳號」。 */
 export const BANK = {
@@ -65,18 +57,6 @@ export const BANK = {
 };
 
 export const bankReady = () => Boolean(BANK.bankName && BANK.account);
-
-/**
- * TODO(客戶確認)：LINE Pay 的收款方式。
- * 填了 lineId 或 payLink，訂單完成頁就會直接顯示；否則顯示「我們會與你聯絡」。
- * 注意：這裡放的是「請客人來付款」的公開資訊，不是任何金流 API 憑證。
- */
-export const LINEPAY = {
-  lineId: null as string | null,
-  payLink: null as string | null,
-};
-
-export const linePayReady = () => Boolean(LINEPAY.lineId || LINEPAY.payLink);
 
 // ── 購物車 ────────────────────────────────────────────────────
 
@@ -119,7 +99,6 @@ export type Totals = {
   discount: number;
   subtotal: number;
   shippingFee: number;
-  codFee: number;
   total: number;
   /** 總支數 */
   count: number;
@@ -160,6 +139,12 @@ export function normalizeCart(lines: CartLine[]): CartLine[] {
  * 購物車結算。前台與 API 共用——金額只有這一個真實來源。
  * 未知的 slug 會被安靜丟掉（豆單下架後，客人瀏覽器裡的舊購物車不該讓結帳整個爆掉）。
  */
+/*
+ * payment 目前不影響任何金額（兩種付款方式都不加收費用），但保留這個參數：
+ * 「付款方式會不會改變總額」是結帳頁的核心問題，簽章留著，
+ * 日後客戶要加手續費時只需要改這一支，不必再把參數穿回所有呼叫端。
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function priceCart(rawLines: CartLine[], payment: PaymentKey): Totals {
   const lines: PricedLine[] = [];
   const bundles: BundleSaving[] = [];
@@ -206,7 +191,6 @@ export function priceCart(rawLines: CartLine[], payment: PaymentKey): Totals {
 
   const subtotal = listTotal - discount;
   const shippingFee = subtotal === 0 || subtotal >= FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE;
-  const codFee = subtotal > 0 && payment === "cod" ? COD_FEE : 0;
 
   return {
     lines,
@@ -215,8 +199,7 @@ export function priceCart(rawLines: CartLine[], payment: PaymentKey): Totals {
     discount,
     subtotal,
     shippingFee,
-    codFee,
-    total: subtotal + shippingFee + codFee,
+    total: subtotal + shippingFee,
     count,
   };
 }

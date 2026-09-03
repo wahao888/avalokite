@@ -92,8 +92,10 @@ const jsonLd = {
   telephone: SITE.phoneTel,
   address: {
     "@type": "PostalAddress",
-    addressRegion: "臺東縣",
-    addressLocality: "鹿野鄉",
+    postalCode: SITE.address.postalCode,
+    addressRegion: SITE.address.region,
+    addressLocality: SITE.address.locality,
+    streetAddress: SITE.address.street,
     addressCountry: "TW",
   },
   sameAs: [SITE.facebook, SITE.blog],

@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
       `訂購人：${order.name}（${order.phone}）`,
       `應付金額：NT$${order.total.toLocaleString("en-US")}`,
       "",
-      `付款方式：${order.payment === "linepay" ? "LINE Pay" : "銀行匯款 / ATM"}`,
       `末五碼：${parsed.data.last5}`,
       parsed.data.remitName ? `付款人：${parsed.data.remitName}` : null,
       "",

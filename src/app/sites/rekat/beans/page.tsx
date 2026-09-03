@@ -4,6 +4,7 @@ import type { FamilyKey } from "../_data/flavor-wheel";
 import { FAMILY } from "../_data/flavor-wheel";
 import { BUNDLE_NOTE, LIST_NOTE, SITE } from "../_data/site";
 import { twd } from "../_data/shop";
+import { getStock, stockProps, visibleBeans } from "../_data/stock";
 import BeanBrowser from "../_components/BeanBrowser";
 import Reveal from "../_components/Reveal";
 
@@ -14,13 +15,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/beans" },
 };
 
+// 供應狀態住在資料庫，而部署是「在本機 build 再把產物送上去」——
+// 預先產生的話，HTML 裡會包住開發機的狀態（見 _data/stock.ts 的說明）。
+export const dynamic = "force-dynamic";
+
 export default async function BeansPage({
   searchParams,
 }: {
   searchParams: Promise<{ family?: string; process?: string; country?: string }>;
 }) {
   const sp = await searchParams;
-  const beans = listBeans();
+  const stock = await getStock();
+  const beans = visibleBeans(stock);
   const [lo, hi] = priceRange();
 
   // 從網址帶進來的初值（風味輪、處理法圖解、地圖上的連結會帶）。
@@ -45,9 +51,20 @@ export default async function BeansPage({
         </Reveal>
       </section>
 
+      {stock.note && (
+        <p className="rk-alert" style={{ marginBottom: 4 }}>
+          {stock.note}
+        </p>
+      )}
+
       <hr className="rk-rule" />
 
-      <BeanBrowser initialFamily={family} initialProcess={process} initialCountry={country} />
+      <BeanBrowser
+        initialFamily={family}
+        initialProcess={process}
+        initialCountry={country}
+        {...stockProps(stock)}
+      />
 
       <p className="rk-caveat" style={{ marginTop: 34, marginBottom: 20 }}>
         {BUNDLE_NOTE}

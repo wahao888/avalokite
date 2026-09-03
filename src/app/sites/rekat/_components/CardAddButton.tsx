@@ -12,7 +12,7 @@ import { useCart } from "./CartProvider";
  * 每加一次就被抽屜打斷會很煩。改成按鈕自己變成「已加入 ✓」兩秒，
  * 數量要調整到購物車再說。
  */
-export default function CardAddButton({ slug }: { slug: string }) {
+export default function CardAddButton({ slug, soldOut = false }: { slug: string; soldOut?: boolean }) {
   const { add, lines } = useCart();
   const [hit, setHit] = useState(false);
   const bean = getBean(slug);
@@ -25,6 +25,14 @@ export default function CardAddButton({ slug }: { slug: string }) {
   }, [hit]);
 
   if (!bean) return null;
+
+  if (soldOut) {
+    return (
+      <div className="rk-cardbuy">
+        <span className="rk-cardbuy__out">本期售完</span>
+      </div>
+    );
+  }
 
   return (
     <div className="rk-cardbuy">

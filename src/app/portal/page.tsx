@@ -52,7 +52,10 @@ export default async function PortalPage({
           )}
           {/* 有線上商店的租戶才顯示（見 src/lib/tenants.ts 的 shop） */}
           {tenant.shop && (
-            <a className="p-btn" href="/portal/orders">訂單管理</a>
+            <>
+              <a className="p-btn" href="/portal/orders">訂單管理</a>
+              <a className="p-btn" href="/portal/beans">本期供應</a>
+            </>
           )}
           <a className="p-btn p-btn-ghost" href="/api/portal/export">下載 CSV</a>
           <form method="post" action="/api/portal/logout">

@@ -18,12 +18,11 @@ const twd = (n: number) => `NT$${n.toLocaleString("en-US")}`;
 // 後台是跨租戶共用的，不該跟任何一家客戶站的資料模組綁在一起。
 const PAY_ZH: Record<string, string> = {
   transfer: "銀行匯款 / ATM",
-  linepay: "LINE Pay",
   cod: "貨到付款",
 };
 
-/** 需要客人自行回報付款的方式（貨到付款不用） */
-const NEEDS_REPORT = (p: string) => p === "transfer" || p === "linepay";
+/** 需要客人自行回報付款的方式（貨到付款不用——錢是當面給宅配的） */
+const NEEDS_REPORT = (p: string) => p === "transfer";
 
 type Item = { name?: string; qty?: number; unitPrice?: number; amount?: number };
 
@@ -162,7 +161,6 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <dl style={{ margin: 0 }}>
           <Field label="品項小計" value={twd(o.subtotal)} />
           <Field label="運費" value={o.shippingFee === 0 ? "免運" : twd(o.shippingFee)} />
-          {o.codFee > 0 && <Field label="貨到付款手續費" value={twd(o.codFee)} />}
           <Field label="應收總額" value={<b>{twd(o.total)}</b>} />
           <Field label="訂購人" value={o.name} />
           <Field label="電話" value={<a href={`tel:${o.phone}`}>{o.phone}</a>} />

@@ -5,10 +5,7 @@ import Link from "next/link";
 import {
   BANK,
   bankReady,
-  COD_FEE,
   FREE_SHIPPING_OVER,
-  LINEPAY,
-  linePayReady,
   needsPaymentReport,
   PAYMENT,
   priceCart,
@@ -56,10 +53,17 @@ export default function CheckoutForm() {
       const data: unknown = await res.json().catch(() => null);
 
       if (!res.ok || !data || typeof data !== "object" || !("id" in data)) {
+        // 409 = 購物車裡有豆子在下單前被店家標為售完或下架
+        const gone =
+          res.status === 409 && data && typeof data === "object" && "items" in data
+            ? (data as { items?: unknown }).items
+            : null;
         setErr(
-          res.status === 429
-            ? "送出太頻繁，請稍等幾分鐘再試。"
-            : "訂單送出失敗，請再試一次，或直接來電 " + SITE.phoneDisplay + "。",
+          Array.isArray(gone) && gone.length > 0
+            ? `${gone.join("、")}目前無法訂購（本期售完或已下架）。請先從購物車移除再送出。`
+            : res.status === 429
+              ? "送出太頻繁，請稍等幾分鐘再試。"
+              : "訂單送出失敗，請再試一次，或直接來電 " + SITE.phoneDisplay + "。",
         );
         setBusy(false);
         return;
@@ -89,43 +93,6 @@ export default function CheckoutForm() {
           <p style={{ marginTop: 10, fontSize: 14, color: "var(--rk-mute)" }}>
             請記下這個編號。查詢進度與回報匯款都需要「訂單編號 + 下單電話」。
           </p>
-
-          {done.payment === "linepay" && (
-            <div className="rk-bank">
-              <span className="rk-eyebrow" style={{ marginBottom: 10 }}>
-                LINE Pay
-              </span>
-              {linePayReady() ? (
-                <dl>
-                  {LINEPAY.lineId && (
-                    <div>
-                      <dt>LINE ID</dt>
-                      <dd>{LINEPAY.lineId}</dd>
-                    </div>
-                  )}
-                  {LINEPAY.payLink && (
-                    <div>
-                      <dt>收款連結</dt>
-                      <dd>
-                        <a className="rk-link" href={LINEPAY.payLink} target="_blank" rel="noreferrer noopener">
-                          開啟 LINE Pay
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt>金額</dt>
-                    <dd>{twd(done.total)}</dd>
-                  </div>
-                </dl>
-              ) : (
-                <p style={{ fontSize: 14, lineHeight: 1.9 }}>
-                  我們確認訂單後會把 LINE Pay 收款連結傳給你。
-                  也可以直接來電 <a className="rk-link" href={`tel:${SITE.phoneTel}`}>{SITE.phoneDisplay}</a> 詢問。
-                </p>
-              )}
-            </div>
-          )}
 
           {done.payment === "transfer" && (
             <div className="rk-bank">
@@ -167,14 +134,14 @@ export default function CheckoutForm() {
             <li>我們收到訂單後會與你確認品項與金額。</li>
             {needsPaymentReport(done.payment) ? (
               <li>
-                完成{done.payment === "linepay" ? "付款" : "轉帳"}後，到
+                完成轉帳後，到
                 <Link className="rk-link" href={`${RK}/order/lookup`} style={{ margin: "0 4px" }}>
                   訂單查詢
                 </Link>
-                填寫{done.payment === "linepay" ? "交易" : "帳號"}末五碼，我們核對後安排出貨。
+                填寫帳號末五碼，我們核對後安排出貨。
               </li>
             ) : (
-              <li>宅配到府時直接付現給宅配人員，含貨到付款手續費 {twd(COD_FEE)}。</li>
+              <li>宅配到府時直接付現給宅配人員，不另收手續費。</li>
             )}
             <li>訂單確認後才進滾筒烘焙，約 2–3 個工作天出貨。</li>
           </ol>
@@ -286,14 +253,7 @@ export default function CheckoutForm() {
                   onChange={() => setPayment(p.key)}
                 />
                 <span style={{ display: "block" }}>
-                  <b>
-                    {p.label}
-                    {p.key === "cod" && (
-                      <span className="rk-mute" style={{ fontWeight: 400, fontSize: 13, marginLeft: 8 }}>
-                        + 手續費 {twd(COD_FEE)}
-                      </span>
-                    )}
-                  </b>
+                  <b>{p.label}</b>
                   <span>{p.desc}</span>
                 </span>
               </label>
@@ -342,12 +302,6 @@ export default function CheckoutForm() {
             <span>運費{totals.shippingFee === 0 ? `（滿 ${twd(FREE_SHIPPING_OVER)}）` : ""}</span>
             <b>{totals.shippingFee === 0 ? "免運" : twd(totals.shippingFee)}</b>
           </div>
-          {totals.codFee > 0 && (
-            <div>
-              <span>貨到付款手續費</span>
-              <b>{twd(totals.codFee)}</b>
-            </div>
-          )}
           <div className="total">
             <span>應付</span>
             <b>{twd(totals.total)}</b>

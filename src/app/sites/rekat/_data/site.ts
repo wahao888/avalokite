@@ -35,8 +35,17 @@ export const SITE = {
   },
 
   region: "台東縣鹿野鄉永安村・日卡地部落",
-  /** ⚠️ 完整門牌待客戶提供。目前全站只顯示到部落層級，不編造地址。 */
-  addressFull: null as string | null,
+  /**
+   * 客戶提供（2026-09-02）。郵遞區號 955 為鹿野鄉，經中華郵政資料查證；
+   * 別跟海端鄉的 957 搞混（第一次就寫錯過）。
+   */
+  addressFull: "955 台東縣鹿野鄉永安村永安路 43 號",
+  address: {
+    postalCode: "955",
+    region: "臺東縣",
+    locality: "鹿野鄉",
+    street: "永安村永安路 43 號",
+  },
 
   /** 豆單頁尾印的電話 */
   phoneDisplay: "0935-156000",

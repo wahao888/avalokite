@@ -158,3 +158,40 @@ export async function setShopOrderStatus(tenantId: string, id: string, status: S
 export function allShopOrdersForExport(tenantId: string) {
   return prisma.shopOrder.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" } });
 }
+
+// ── 本期供應狀態（Tenant.shop 的租戶才用得到）─────────────────
+// 一個租戶一列，主鍵就是 tenantId，所以 where 天生帶租戶範圍。
+
+export type StockRow = {
+  soldOut: string[];
+  hidden: string[];
+  note: string | null;
+  updatedAt: Date | null;
+};
+
+export async function getBeanStock(tenantId: string): Promise<StockRow> {
+  const row = await prisma.beanStock.findFirst({ where: { tenantId } });
+  if (!row) return { soldOut: [], hidden: [], note: null, updatedAt: null };
+  return {
+    soldOut: parseList(row.soldOut),
+    hidden: parseList(row.hidden),
+    note: row.note,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function saveBeanStock(
+  tenantId: string,
+  data: { soldOut: string[]; hidden: string[]; note: string | null },
+) {
+  const payload = {
+    soldOut: JSON.stringify(data.soldOut),
+    hidden: JSON.stringify(data.hidden),
+    note: data.note,
+  };
+  await prisma.beanStock.upsert({
+    where: { tenantId },
+    create: { tenantId, ...payload },
+    update: payload,
+  });
+}

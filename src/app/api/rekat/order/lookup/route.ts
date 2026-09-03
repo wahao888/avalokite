@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
       paymentZh: PAYMENT_LABEL[order.payment as PaymentKey] ?? order.payment,
       subtotal: order.subtotal,
       shippingFee: order.shippingFee,
-      codFee: order.codFee,
       total: order.total,
       items,
       remitLast5: order.remitLast5,

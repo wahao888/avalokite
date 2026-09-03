@@ -23,13 +23,13 @@ import BeanCard from "../../_components/BeanCard";
 import FlavorRadar from "../../_components/FlavorRadar";
 import Reveal from "../../_components/Reveal";
 import RoastBar from "../../_components/RoastBar";
+import { getStock } from "../../_data/stock";
 
 const ORIGIN = tenantOrigin(getTenant("rekat")!);
 
-/** 豆單住在程式碼裡、沒有資料庫查詢，全部預先產生。 */
-export function generateStaticParams() {
-  return beanSlugs().map((slug) => ({ slug }));
-}
+// 供應狀態住在資料庫，所以不能預先產生（見 _data/stock.ts 的說明）。
+// 豆單本身仍在程式碼裡，這裡每次請求只多讀一列 SQLite。
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -65,6 +65,11 @@ export default async function BeanDetail({ params }: { params: Promise<{ slug: s
   const bean = getBean(slug);
   if (!bean) notFound();
 
+  // 店家下架的豆子等同不存在，不透露它曾經在
+  const stock = await getStock();
+  if (stock.hidden.has(bean.slug)) notFound();
+  const soldOut = stock.soldOut.has(bean.slug);
+
   const fam = FAMILY[bean.families[0]!];
   const proc = PROCESS[bean.process];
   const roast = ROAST[bean.roast];
@@ -90,7 +95,9 @@ export default async function BeanDetail({ params }: { params: Promise<{ slug: s
       url: `${ORIGIN}/beans/${bean.slug}`,
       priceCurrency: "TWD",
       price: bean.price,
-      availability: "https://schema.org/InStock",
+      availability: soldOut
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
     },
   };
@@ -209,7 +216,20 @@ export default async function BeanDetail({ params }: { params: Promise<{ slug: s
               )}
             </dl>
 
-            <AddToCart bean={bean} />
+            {soldOut ? (
+              <div className="rk-buy">
+                <p className="rk-h3" style={{ marginBottom: 8 }}>本期售完</p>
+                <p className="rk-buy__note">
+                  這一支這批已經賣完了。補到貨會在豆單上恢復販售，
+                  想先預留可以來電 {SITE.phoneDisplay}。
+                </p>
+                <Link className="rk-btn rk-btn--quiet" href={`${RK}/beans`} style={{ marginTop: 16 }}>
+                  看其他豆子
+                </Link>
+              </div>
+            ) : (
+              <AddToCart bean={bean} />
+            )}
           </div>
         </article>
       </div>

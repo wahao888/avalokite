@@ -7,11 +7,11 @@ import BeanArt from "./BeanArt";
 import CardAddButton from "./CardAddButton";
 
 /** 豆單卡片。可以直接加一包進購物車，數量到購物車再調。 */
-export default function BeanCard({ bean }: { bean: Bean }) {
+export default function BeanCard({ bean, soldOut = false }: { bean: Bean; soldOut?: boolean }) {
   const fam = FAMILY[bean.families[0]!];
 
   return (
-    <article className="rk-card">
+    <article className={`rk-card${soldOut ? " rk-card--out" : ""}`}>
       <div className="rk-card__no">
         NO.{String(bean.no).padStart(2, "0")}
         <span style={{ margin: "0 8px", opacity: 0.4 }}>/</span>
@@ -40,7 +40,7 @@ export default function BeanCard({ bean }: { bean: Bean }) {
           {twd(bean.price)}
           <small>半磅 227G</small>
         </div>
-        <CardAddButton slug={bean.slug} />
+        <CardAddButton slug={bean.slug} soldOut={soldOut} />
       </div>
 
       {/* 整張卡片可點進單品頁。z-index 低於 foot，所以加入鍵不會被它蓋住。 */}

@@ -248,8 +248,8 @@ export default function AboutPage() {
                 </dd>
               </div>
               <div>
-                <dt>所在地</dt>
-                <dd>{SITE.region}</dd>
+                <dt>地址</dt>
+                <dd>{SITE.addressFull}</dd>
               </div>
               <div>
                 <dt>Facebook</dt>

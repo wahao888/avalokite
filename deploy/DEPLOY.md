@@ -104,7 +104,7 @@ sudo certbot renew --dry-run
 | --- | --- | --- |
 | `wenshan` | 文山木材行 | 線上估價單 `/api/wenshan/quote` |
 | `monsieurlong` | Monsieur Long 隆先生 | 合作邀請／訂購表單 `/api/monsieurlong/inquiry`；後台多一頁 `/portal/board`（今日口味），需 `FlavorBoard` migration；`ownSitemap` 由站內 `sitemap.ts` 產生 |
-| `rekat` | REKAT ROASTERY 日卡地自然農莊 | 線上商店：購物車→訂單 `/api/rekat/order`（另有 `/lookup`、`/remit`），需 `ShopOrder` migration；後台多一區 `/portal/orders`；`ownSitemap` 由站內 `sitemap.ts` 產生 |
+| `rekat` | REKAT ROASTERY 日卡地自然農莊 | 線上商店：購物車→訂單 `/api/rekat/order`（另有 `/lookup`、`/remit`），需 `ShopOrder` migration；後台多兩區 `/portal/orders`（訂單）與 `/portal/beans`（本期供應，需 `BeanStock` migration）；`ownSitemap` 由站內 `sitemap.ts` 產生 |
 
 Monsieur Long 首次部署的額外步驟（只做一次）：
 
@@ -123,12 +123,24 @@ REKAT ROASTERY 首次部署的額外步驟（只做一次）：
    `TENANT_NOTIFY_REKAT`（店家收訂單的信箱；未拿到前先填 Avalo 自己的收件匣），
    然後 `sudo systemctl restart avalo`。
 3. certbot `--expand`（domains.txt 已加 `rekat.avalokite.xyz`）。
-4. **上線前務必先跟客戶核對 `src/app/sites/rekat/_data/shop.ts` 裡標了 TODO 的四項**：
-   匯款銀行帳號（`BANK`）、LINE Pay 收款方式（`LINEPAY`）、運費與免運門檻、
-   貨到付款手續費。前兩者留空時前台會退成「我們會與你聯絡」，不會顯示假帳號，
-   但客人也就無法自助付款。
+4. **上線前務必先跟客戶核對匯款銀行帳號**（`src/app/sites/rekat/_data/shop.ts` 的 `BANK`）。
+   留空時前台會退成「我們會與您聯絡提供帳號」，不會顯示假帳號，但客人也就無法自助付款。
+   運費（160／滿 2000 免運／貨到付款免手續費）與地址已於 2026-09-02 客戶確認。
 5. 內容定稿、店家確認可對外後，再把 `tenants.ts` 的 `indexable` 與
    `_data/site.ts` 的 `INDEXABLE` 一起改 `true`。
+
+**豆單的兩種變動節奏（REKAT）**
+
+| 要改什麼 | 誰做 | 怎麼做 | 生效 |
+| --- | --- | --- | --- |
+| 某支售完／補貨／暫時下架 | 店家自己 | `/portal/beans` 選狀態按儲存 | 立即 |
+| 官網公告一句話 | 店家自己 | 同上，表單最下方 | 立即 |
+| 換整份豆單（新品項、改價、改優惠） | Avalo | 改 `_data/beans.ts`＋`site.ts` 的 `listVersion`＋`tests/rekat-shop.test.ts` 的 `SHEET` 對照表，部署 | 部署後 |
+
+為什麼售價不開放後台改：`priceCart()` 是前後台共用的**同步**純函式，客人的瀏覽器要能
+自己算出跟伺服器一樣的金額，這才讓「前端偽造價格無效」在結構上成立。把售價搬進資料庫
+會讓那條路變成非同步，等於拆掉這個保證。所以 `BeanStock` 只承載「狀態」，不承載
+「身分與價格」。同理，風味家族、插畫母題、產區背景與文案是設計與編輯資產，留在版控裡。
 
 **客戶改綁自有網域**
 

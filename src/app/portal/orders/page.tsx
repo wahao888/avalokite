@@ -22,7 +22,6 @@ const twd = (n: number) => `NT$${n.toLocaleString("en-US")}`;
 
 const PAY_ZH: Record<string, string> = {
   transfer: "匯款",
-  linepay: "LINE Pay",
   cod: "貨到付款",
 };
 
@@ -71,6 +70,9 @@ export default async function OrdersPage({
           <p className="p-sub">網站送出的訂單都會列在這裡，並即時寄到你的信箱。</p>
         </div>
         <div className="p-actions">
+          <a className="p-btn" href="/portal/beans">
+            本期供應
+          </a>
           <a className="p-btn p-btn-ghost" href="/portal">
             表單管理
           </a>

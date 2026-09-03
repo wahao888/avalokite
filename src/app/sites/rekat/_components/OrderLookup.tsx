@@ -14,7 +14,6 @@ type Order = {
   payment: string;
   subtotal: number;
   shippingFee: number;
-  codFee: number;
   total: number;
   items: Item[];
   remitLast5: string | null;
@@ -190,12 +189,6 @@ export default function OrderLookup() {
                 <span>運費</span>
                 <b>{order.shippingFee === 0 ? "免運" : twd(order.shippingFee)}</b>
               </div>
-              {order.codFee > 0 && (
-                <div>
-                  <span>貨到付款手續費</span>
-                  <b>{twd(order.codFee)}</b>
-                </div>
-              )}
               <div className="total">
                 <span>應付（{order.paymentZh}）</span>
                 <b>{twd(order.total)}</b>
@@ -207,7 +200,7 @@ export default function OrderLookup() {
               <div style={{ marginTop: 34 }}>
                 <span className="rk-eyebrow">Payment</span>
                 <h2 className="rk-h3" style={{ marginTop: 6, marginBottom: 12 }}>
-                  回報{order.payment === "linepay" ? "付款" : "匯款"}
+                  回報匯款
                 </h2>
 
                 {order.remitAt ? (
@@ -220,7 +213,7 @@ export default function OrderLookup() {
                     <div className="rk-fields rk-fields--2">
                       <label className="rk-field">
                         <span>
-                          {order.payment === "linepay" ? "交易序號末五碼" : "匯款帳號末五碼"} <b>*</b>
+                          匯款帳號末五碼 <b>*</b>
                         </span>
                         <input
                           className="rk-input"

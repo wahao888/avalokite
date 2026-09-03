@@ -5,6 +5,8 @@ import { notifyTenant } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { makeOrderId } from "@/lib/shop-order-id";
 import { getTenant } from "@/lib/tenants";
+import { getBeanStock } from "@/lib/tenant-data";
+import { getBean } from "@/app/sites/rekat/_data/beans";
 import {
   isPayment,
   MAX_LINES,
@@ -76,6 +78,22 @@ export async function POST(req: NextRequest) {
   // 前端送過來的只有 slug / 研磨度 / 數量，沒有任何金額欄位。
   // priceCart 是前後台共用的同一支純函式（見 _data/shop.ts），
   // 所以「客人改了 devtools 裡的價格」這件事在結構上不可能發生。
+  // 店家標為售完／下架的豆子不能成立訂單。
+  // 一定要在伺服器擋：客人的購物車可能是幾天前加的，那時還有貨。
+  const stockRow = await getBeanStock(TENANT.slug);
+  const unavailable = new Set([...stockRow.soldOut, ...stockRow.hidden]);
+  const blocked = d.items.filter((i) => unavailable.has(i.slug));
+  if (blocked.length > 0) {
+    return NextResponse.json(
+      {
+        error: "unavailable",
+        // 回品名而不是 slug：這串會直接顯示給客人看
+        items: blocked.map((i) => getBean(i.slug)?.nameZh ?? i.slug),
+      },
+      { status: 409 },
+    );
+  }
+
   const lines: CartLine[] = d.items.map((i) => ({ slug: i.slug, qty: i.qty }));
 
   const totals = priceCart(lines, d.payment);
@@ -113,7 +131,6 @@ export async function POST(req: NextRequest) {
       payment: d.payment,
       subtotal: totals.subtotal,
       shippingFee: totals.shippingFee,
-      codFee: totals.codFee,
       total: totals.total,
     },
   });
@@ -146,7 +163,6 @@ export async function POST(req: NextRequest) {
       totals.discount > 0 ? `優惠折抵：−${twd(totals.discount)}` : null,
       `小計：${twd(totals.subtotal)}`,
       `運費：${totals.shippingFee === 0 ? "免運" : twd(totals.shippingFee)}`,
-      totals.codFee > 0 ? `貨到付款手續費：${twd(totals.codFee)}` : null,
       `合計：${twd(totals.total)}`,
       "",
       "【收件】",

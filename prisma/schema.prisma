@@ -151,10 +151,9 @@ model ShopOrder {
   // 「品項小計」與「實收」中間那一段差額是怎麼來的，攤進單價就查不回去了。
   bundles String @default("[]")
 
-  payment     String // transfer 匯款 | linepay LINE Pay | cod 貨到付款
+  payment     String // transfer 匯款 | cod 貨到付款
   subtotal    Int // 品項小計（已扣掉三包優惠）
   shippingFee Int
-  codFee      Int    @default(0) // 貨到付款手續費
   total       Int
 
   // pending 待確認 | confirmed 已確認 | shipped 已出貨 | done 已完成 | cancelled 取消
@@ -171,4 +170,23 @@ model ShopOrder {
   updatedAt DateTime @updatedAt
 
   @@index([tenantId, createdAt])
+}
+
+// 客戶站的「本期供應狀態」。目前只有 REKAT ROASTERY 用（Tenant.shop）。
+//
+// 為什麼豆單目錄留在程式碼、只有「現在賣不賣」進資料庫（同 FlavorBoard 的取捨）：
+// 品名、售價、風味家族、插畫母題、產區背景與文案，一季才動一次，屬於設計與編輯資產，
+// 適合走版控與部署；但「這支賣完了」隨時會發生，不可能為它重新部署一次。
+//
+// 更關鍵的是價格：priceCart() 是前後台共用的同步純函式，客人的瀏覽器要能自己算出
+// 同一個金額，這才讓「前端偽造價格無效」在結構上成立。把售價搬進資料庫會讓這條路
+// 變成非同步，等於拆掉那個保證。所以資料庫只承載「狀態」，不承載「身分與價格」。
+//
+// 一個租戶一列（覆寫式），不留歷史——店家要的是「現在櫃上有什麼」。
+model BeanStock {
+  tenantId  String   @id // 見 src/lib/tenants.ts 的 slug，非 FK
+  soldOut   String   @default("[]") // JSON 陣列：標為售完的 slug（仍列出，但不能下單）
+  hidden    String   @default("[]") // JSON 陣列：暫時下架的 slug（前台完全不出現）
+  note      String? // 一句公告，例：本週出貨順延
+  updatedAt DateTime @updatedAt
 }

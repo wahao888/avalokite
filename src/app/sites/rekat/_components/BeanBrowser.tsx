@@ -1,14 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  listBeans,
-  usedCountries,
-  usedFamilies,
-  usedProcesses,
-  type Bean,
-  type ProcessKey,
-} from "../_data/beans";
+import { listBeans, usedProcesses, type Bean, type ProcessKey } from "../_data/beans";
 import { FAMILY, type FamilyKey } from "../_data/flavor-wheel";
 import BeanCard from "./BeanCard";
 
@@ -37,15 +30,45 @@ export default function BeanBrowser({
   initialFamily,
   initialProcess,
   initialCountry,
+  soldOut = [],
+  hidden = [],
 }: {
   initialFamily?: FamilyKey;
   initialProcess?: ProcessKey;
   initialCountry?: string;
+  /** 由伺服器讀取後傳進來的本期供應狀態（見 _data/stock.ts） */
+  soldOut?: string[];
+  hidden?: string[];
 }) {
-  const all = useMemo(() => listBeans(), []);
-  const families = useMemo(() => usedFamilies(), []);
-  const processes = useMemo(() => usedProcesses(), []);
-  const countries = useMemo(() => usedCountries(), []);
+  const out = useMemo(() => new Set(soldOut), [soldOut]);
+  // 下架的豆子在這一層就濾掉，篩選器的計數才不會把它們算進去
+  const all = useMemo(() => {
+    const off = new Set(hidden);
+    return listBeans().filter((b) => !off.has(b.slug));
+  }, [hidden]);
+
+
+
+
+  // 篩選項目的計數要跟著「目前看得到的豆子」走，不是整份目錄
+  const families = useMemo(() => {
+    const m = new Map<FamilyKey, number>();
+    for (const b of all) for (const f of b.families) m.set(f, (m.get(f) ?? 0) + 1);
+    return [...m.entries()].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count);
+  }, [all]);
+  const processes = useMemo(
+    () => usedProcesses().filter((p) => all.some((b) => b.process === p.key)),
+    [all],
+  );
+  const countries = useMemo(() => {
+    const m = new Map<string, { code: string; name: string; count: number }>();
+    for (const b of all) {
+      const cur = m.get(b.countryCode);
+      if (cur) cur.count += 1;
+      else m.set(b.countryCode, { code: b.countryCode, name: b.country, count: 1 });
+    }
+    return [...m.values()].sort((a, b) => b.count - a.count);
+  }, [all]);
 
   const [fam, setFam] = useState<FamilyKey[]>(initialFamily ? [initialFamily] : []);
   const [proc, setProc] = useState<ProcessKey[]>(initialProcess ? [initialProcess] : []);
@@ -235,7 +258,7 @@ export default function BeanBrowser({
       ) : (
         <div className="rk-grid">
           {shown.map((b) => (
-            <BeanCard key={b.slug} bean={b} />
+            <BeanCard key={b.slug} bean={b} soldOut={out.has(b.slug)} />
           ))}
         </div>
       )}

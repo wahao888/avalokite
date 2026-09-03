@@ -7,7 +7,6 @@ import {
   needsPaymentReport,
   FREE_SHIPPING_OVER,
   SHIPPING_FEE,
-  COD_FEE,
   MAX_QTY_PER_LINE,
   type CartLine,
 } from "../src/app/sites/rekat/_data/shop";
@@ -196,11 +195,10 @@ describe("三包優惠", () => {
 });
 
 describe("購物車結算", () => {
-  it("空車不收運費、不收貨到付款手續費", () => {
+  it("空車不收運費", () => {
     const t = priceCart([], "cod");
     expect(t.total).toBe(0);
     expect(t.shippingFee).toBe(0);
-    expect(t.codFee).toBe(0);
   });
 
   it("未達免運門檻要收運費", () => {
@@ -226,15 +224,10 @@ describe("購物車結算", () => {
     expect(t.total).toBe(1500 + SHIPPING_FEE);
   });
 
-  it("貨到付款加收手續費；匯款與 LINE Pay 不加", () => {
+  it("兩種付款方式都不加收費用（貨到付款免手續費）", () => {
     const cod = priceCart([line(PLAIN, 1)], "cod");
     const tr = priceCart([line(PLAIN, 1)], "transfer");
-    const lp = priceCart([line(PLAIN, 1)], "linepay");
-    expect(cod.codFee).toBe(COD_FEE);
-    expect(tr.codFee).toBe(0);
-    expect(lp.codFee).toBe(0);
-    expect(cod.total - tr.total).toBe(COD_FEE);
-    expect(lp.total).toBe(tr.total);
+    expect(cod.total).toBe(tr.total);
   });
 
   it("金額一律取自豆單，不信任外部傳入的價格", () => {
@@ -248,17 +241,16 @@ describe("購物車結算", () => {
 });
 
 describe("付款方式", () => {
-  it("只認得三種，其餘一律拒絕", () => {
+  it("只認得兩種，其餘一律拒絕（LINE Pay 已於 2026-09-02 移除）", () => {
     expect(isPayment("transfer")).toBe(true);
-    expect(isPayment("linepay")).toBe(true);
     expect(isPayment("cod")).toBe(true);
+    expect(isPayment("linepay")).toBe(false);
     expect(isPayment("free")).toBe(false);
     expect(isPayment(null)).toBe(false);
   });
 
-  it("匯款與 LINE Pay 要回報末五碼，貨到付款不用", () => {
+  it("匯款要回報末五碼，貨到付款不用", () => {
     expect(needsPaymentReport("transfer")).toBe(true);
-    expect(needsPaymentReport("linepay")).toBe(true);
     expect(needsPaymentReport("cod")).toBe(false);
   });
 });
@@ -358,5 +350,21 @@ describe("風味輪", () => {
         expect(c.en).toBeTruthy();
       }
     }
+  });
+});
+
+describe("運費與付款（2026-09-02 客戶確認）", () => {
+  it("運費 160、滿 2000 免運、貨到付款免手續費", () => {
+    expect(SHIPPING_FEE).toBe(160);
+    expect(FREE_SHIPPING_OVER).toBe(2000);
+    // 兩種付款方式的總額必須一致——貨到付款不再加收
+    const a = priceCart([line(PLAIN, 1)], "cod");
+    const b = priceCart([line(PLAIN, 1)], "transfer");
+    expect(a.total).toBe(b.total);
+    expect(a.total).toBe(400 + 160);
+  });
+
+  it("Totals 不再有 codFee 欄位（欄位與資料庫欄都已移除）", () => {
+    expect("codFee" in priceCart([line(PLAIN, 1)], "cod")).toBe(false);
   });
 });

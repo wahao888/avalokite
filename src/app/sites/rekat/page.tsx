@@ -9,6 +9,7 @@ import OriginMap from "./_components/OriginMap";
 import ProcessDiagram from "./_components/ProcessDiagram";
 import Reveal from "./_components/Reveal";
 import RoastCurve from "./_components/RoastCurve";
+import { getStock, visibleBeans } from "./_data/stock";
 
 /** 背景那幾條等高線畫的是「雨來則漲、雨停則乾」的那條溪——品牌名的由來 */
 function Creek() {
@@ -36,8 +37,11 @@ const arrow = (
   </svg>
 );
 
-export default function RekatHome() {
-  const beans = listBeans();
+export const dynamic = "force-dynamic";
+
+export default async function RekatHome() {
+  const stock = await getStock();
+  const beans = visibleBeans(stock);
   const bundled = beans.filter((b) => b.bundle).length;
   const [lo, hi] = priceRange();
   const countries = usedCountries();
@@ -135,7 +139,7 @@ export default function RekatHome() {
         <div className="rk-wrap--wide">
           <Reveal className="rk-grid" delay={80}>
             {beans.map((b) => (
-              <BeanCard key={b.slug} bean={b} />
+              <BeanCard key={b.slug} bean={b} soldOut={stock.soldOut.has(b.slug)} />
             ))}
           </Reveal>
         </div>
