@@ -133,6 +133,21 @@
     "viewCase": "View full case →",
     "items": [
       {
+        "id": "rekat",
+        "category": "web",
+        "type": "Brand Site + Online Shop · Food",
+        "year": "2026",
+        "name": "REKAT ROASTERY",
+        "label": "REKAT",
+        "desc": "A brand site and online shop for a single-origin roastery in Taitung: a clickable SCA flavour wheel, a cherry cross-section that shows what each processing method removes, a roast curve marking first crack and development time, fifteen procedurally drawn bean illustrations, and a phone-friendly back office where the roaster marks a bean sold out himself — turning thirty years of judgement into something a customer can actually read.",
+        "tags": [
+          "Brand Site",
+          "Online Shop",
+          "Interactive Explainers"
+        ],
+        "url": "/cases/rekat"
+      },
+      {
         "id": "monsieurlong",
         "category": "web",
         "type": "Brand Website · Food & Beverage",

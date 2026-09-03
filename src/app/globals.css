@@ -1099,6 +1099,7 @@ button { font-family: inherit; }
   color: var(--muted);
 }
 
+.case-img.brand-rekat { background: linear-gradient(135deg, #1E1913 0%, #8A5230 100%); }
 .case-img.brand-monsieurlong { background: linear-gradient(135deg, #2A2318 0%, #8A6414 100%); }
 .case-img.brand-wenshan { background: linear-gradient(135deg, #2E241C 0%, #7A5C3C 100%); }
 .case-img.brand-finance { background: linear-gradient(135deg, #1E2A22 0%, #3B5A43 100%); }
