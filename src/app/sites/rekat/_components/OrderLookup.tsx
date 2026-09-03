@@ -195,7 +195,7 @@ export default function OrderLookup() {
               </div>
             </div>
 
-            {/* 付款回報：匯款與 LINE Pay 需要，貨到付款不需要（錢當面給宅配） */}
+            {/* 付款回報：只有匯款需要，貨到付款不需要（錢當面給宅配） */}
             {isPayment(order.payment) && needsPaymentReport(order.payment) && (
               <div style={{ marginTop: 34 }}>
                 <span className="rk-eyebrow">Payment</span>

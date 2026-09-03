@@ -55,7 +55,7 @@ export default function AddToCart({ bean }: { bean: Bean }) {
 
       <p className="rk-buy__note">
         {WHOLE_BEAN_ONLY}。訂單確認後才烘焙，約 2–3 個工作天出貨。
-        付款方式：銀行匯款 / ATM 轉帳、LINE Pay、貨到付款。
+        付款方式：銀行匯款 / ATM 轉帳、貨到付款。
       </p>
     </div>
   );

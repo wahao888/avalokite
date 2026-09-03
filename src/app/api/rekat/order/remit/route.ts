@@ -7,7 +7,7 @@ import { normalizeOrderId } from "@/lib/shop-order-id";
 import { getTenant } from "@/lib/tenants";
 import { isPayment, needsPaymentReport } from "@/app/sites/rekat/_data/shop";
 
-// 付款回報。客人轉完帳／付完 LINE Pay，自己填末五碼，老闆才對得起帳。
+// 付款回報。客人轉完帳自己填帳號末五碼，老闆才對得起帳。
 // 貨到付款不適用——錢是當面給宅配的，沒有東西要回報。
 // 與查詢同樣需要「編號 + 電話」相符，避免有人替別人的訂單亂填。
 const TENANT = getTenant("rekat")!;

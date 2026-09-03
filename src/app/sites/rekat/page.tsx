@@ -263,7 +263,7 @@ export default async function RekatHome() {
             </h2>
             <p className="rk-lede" style={{ marginTop: 14, marginInline: "auto" }}>
               全品項半磅裝、一律出原豆，不代客研磨。本期 {bundled} 支有三包優惠。
-              付款方式為銀行匯款 / ATM 轉帳、LINE Pay、貨到付款，約 2–3 個工作天出貨。
+              付款方式為銀行匯款 / ATM 轉帳與貨到付款，約 2–3 個工作天出貨。
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 28 }}>
               <Link className="rk-btn rk-btn--solid" href={`${RK}/beans`}>
