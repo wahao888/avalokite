@@ -346,6 +346,29 @@ a { color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
+/* ── 多檔連線 ───────────────────────────────────────
+   她可能同時開韓國／日本／歐洲。每一檔有自己的識別色（見 _data/batch-tone.ts），
+   購物車也依檔期分組——那是三個包裹、三筆運費、三張結單。 */
+.am-batch { margin-bottom: 2rem; }
+.am-batch:last-child { margin-bottom: 0; }
+
+.am-card__batch {
+  align-self: flex-start;
+  padding: 0.1rem 0.45rem; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em;
+}
+
+.am-cartgroup { margin-bottom: 1.2rem; }
+.am-cartgroup__head {
+  font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em;
+  padding-bottom: 0.35rem; margin-bottom: 0.2rem;
+  border-bottom: 1px solid currentColor;
+}
+
+/* 檔期橫幅在有 tone 的時候，倒數與時間跟著那一檔的色 */
+.am-banner[style*="--am-tone"] .am-banner__time,
+.am-banner[style*="--am-tone"] .am-banner__left { color: var(--am-tone); }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --a-ink: #f0ebe5;

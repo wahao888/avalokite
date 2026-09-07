@@ -1,5 +1,6 @@
 import { formatTaipei } from "@/lib/tw-time";
 import { Countdown } from "./Countdown";
+import type { Tone } from "../_data/batch-tone";
 
 // 檔期橫幅。客戶需求第 7 項：「商品頁上方希望直接明顯顯示 收單時間：2026/09/20 23:00」。
 //
@@ -13,15 +14,24 @@ export function DeadlineBar({
   now,
   closed,
   closedLabel,
+  tone,
 }: {
   title: string;
   deadline: Date | null;
   now: Date;
   closed: boolean;
   closedLabel?: string;
+  /** 多檔同開時，橫幅用這一檔自己的色 */
+  tone?: Tone;
 }) {
+  // 已收單的檔期一律轉灰——用它自己的顏色會讓「還能買」的訊號變得模稜兩可
+  const style =
+    tone && !closed
+      ? { background: tone.soft, borderColor: tone.line, ["--am-tone" as string]: tone.ink }
+      : undefined;
+
   return (
-    <div className={`am-banner${closed ? " am-banner--closed" : ""}`}>
+    <div className={`am-banner${closed ? " am-banner--closed" : ""}`} style={style}>
       <span className="am-banner__title">{title}</span>
       {deadline ? (
         <span className="am-banner__time">

@@ -72,6 +72,20 @@ export async function currentBatch(tenantId: string) {
   });
 }
 
+/**
+ * 所有進行中的檔期。
+ *
+ * ⚠ 前台一定要用這一支，不能用 currentBatch。
+ * 她可能同時開韓國、日本、歐洲三檔——currentBatch 只回最新的那一檔，
+ * 另外兩檔的商品在前台等於沒上架。（2026-09-07 發現的缺口。）
+ */
+export async function openBatches(tenantId: string) {
+  return prisma.dgBatch.findMany({
+    where: { tenantId, status: "open", deletedAt: null },
+    orderBy: { openAt: "asc" },
+  });
+}
+
 export async function createBatch(
   tenantId: string,
   input: {
@@ -267,7 +281,7 @@ export async function createProduct(tenantId: string, input: CreateProductInput)
         note: input.note ?? null,
         optionAxis: input.optionAxis ?? null,
         deadlineAt: input.deadlineAt ?? null,
-        preorder: input.preorder ?? false,
+        preorder: input.preorder ?? true,
         showStock: input.showStock ?? false,
         stock: input.stock ?? null,
         status: input.status ?? "live",
@@ -799,6 +813,8 @@ export async function loadPricing(tenantId: string, keys: PricingKey[]) {
       productId: p.id,
       optionId: opt?.id ?? null,
       batchId: p.batchId,
+      batchTitle: p.batch.title,
+      batchTone: p.batch.tone,
       name: p.name,
       optionLabel: opt?.label ?? null,
       unitPrice: opt?.price ?? p.price,

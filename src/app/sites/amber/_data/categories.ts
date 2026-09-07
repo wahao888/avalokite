@@ -14,9 +14,13 @@ export type Category = {
   alwaysOpen?: boolean;
 };
 
+// ⚠ 這裡刻意**沒有國家**（韓國／日本／歐洲）。
+// 那是「檔期」的層級：一趟連線 = 一個檔期，各自有自己的收單時間、
+// 預計到貨日與運費。把國家同時做成分類會出現兩套真實來源——
+// 客人看到「韓國連線」分類裡有日本檔期的商品，誰也說不清楚。
+//
+// 分類只回答「這是什麼東西」，檔期回答「這是哪一趟」。
 export const CATEGORIES: Category[] = [
-  { key: "korea", name: "韓國連線" },
-  { key: "japan", name: "日本連線" },
   { key: "women", name: "女裝" },
   { key: "men", name: "男裝" },
   { key: "shoes", name: "鞋款" },

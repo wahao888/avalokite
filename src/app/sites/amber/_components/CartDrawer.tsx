@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import { useCart } from "./CartProvider";
-import { LINE_STATUS_ZH, twd, MAX_QTY_PER_LINE, type PricedLine } from "../_data/cart";
+import { LINE_STATUS_ZH, twd, MAX_QTY_PER_LINE, groupByBatch, type PricedLine } from "../_data/cart";
 import { thumbUrl } from "@/lib/media-url";
+import { batchTone } from "../_data/batch-tone";
 
 // 購物車抽屜。
 //
@@ -97,6 +98,7 @@ export function CartDrawer() {
   if (!open) return null;
 
   const totals = pricing.state === "ok" ? pricing.totals : null;
+  const groups = groupByBatch(totals?.lines ?? []);
   const blocked = totals?.blocked ?? [];
   // 商品被刪除的那種不必特別解釋，其餘一定要讓她看到
   const explain = blocked.filter((b) => b.status !== "gone");
@@ -128,14 +130,37 @@ export function CartDrawer() {
             </div>
           )}
 
-          {totals?.lines.map((l) => (
-            <Line
-              key={`${l.productId}:${l.optionId ?? ""}`}
-              line={l}
-              onQty={(q) => setQty(l.productId, l.optionId, q)}
-              onRemove={() => remove(l.productId, l.optionId)}
-            />
-          ))}
+          {/* 依檔期分組。她可能同時開三檔連線——那是三個包裹、三筆運費、
+              三張結單，加成一個總額會讓客人以為只付一次運費。 */}
+          {groups.map((g) => {
+            const tone = batchTone(g.batchId, g.batchTone);
+            return (
+              <section key={g.batchId} className="am-cartgroup">
+                {groups.length > 1 && (
+                  <header
+                    className="am-cartgroup__head"
+                    style={{ color: tone.ink, borderColor: tone.line }}
+                  >
+                    {g.batchTitle}
+                  </header>
+                )}
+                {g.lines.map((l) => (
+                  <Line
+                    key={`${l.productId}:${l.optionId ?? ""}`}
+                    line={l}
+                    onQty={(q) => setQty(l.productId, l.optionId, q)}
+                    onRemove={() => remove(l.productId, l.optionId)}
+                  />
+                ))}
+                {groups.length > 1 && (
+                  <div className="am-total" style={{ marginTop: "0.5rem" }}>
+                    <span>小計</span>
+                    <b>{twd(g.itemsTotal)}</b>
+                  </div>
+                )}
+              </section>
+            );
+          })}
 
           {explain.length > 0 && (
             <div className="am-blocked">
@@ -162,18 +187,29 @@ export function CartDrawer() {
               <b>{twd(totals.itemsTotal)}</b>
             </div>
             <p className="am-field__hint" style={{ marginBottom: "0.6rem" }}>
-              運費在結單時才計算，同一檔連線下幾次單都只收一次。
+              {groups.length > 1
+                ? "不同連線分開出貨，運費各收一次，所以要分開結帳。"
+                : "運費在結單時才計算，同一檔連線下幾次單都只收一次。"}
             </p>
-            <a
-              className={`am-btn am-btn--accent am-btn--full${canCheckout ? "" : " am-btn--ghost"}`}
-              href={canCheckout ? "/checkout" : undefined}
-              aria-disabled={!canCheckout}
-              onClick={(e) => {
-                if (!canCheckout) e.preventDefault();
-              }}
-            >
-              {canCheckout ? "去結帳" : "請先移除無法下單的商品"}
-            </a>
+
+            {!canCheckout ? (
+              <span className="am-btn am-btn--ghost am-btn--full" aria-disabled>
+                請先移除無法下單的商品
+              </span>
+            ) : (
+              groups.map((g) => (
+                <a
+                  key={g.batchId}
+                  className="am-btn am-btn--accent am-btn--full"
+                  style={{ marginBottom: "0.4rem" }}
+                  href={`/checkout?b=${encodeURIComponent(g.batchId)}`}
+                >
+                  {groups.length > 1
+                    ? `結「${g.batchTitle}」 ${twd(g.itemsTotal)}`
+                    : "去結帳"}
+                </a>
+              ))
+            )}
           </div>
         )}
       </aside>

@@ -22,8 +22,10 @@ import {
   priceLabel,
   MAX_QTY_PER_LINE,
   MAX_LINES,
+  groupByBatch,
   type LineSnapshot,
 } from "@/app/sites/amber/_data/cart";
+import { batchTone, TONES, isToneKey } from "@/app/sites/amber/_data/batch-tone";
 import {
   settleLine,
   settleTotals,
@@ -283,6 +285,8 @@ describe("購物車計價", () => {
     productId: "p1",
     optionId: null,
     batchId: "b1",
+    batchTitle: "9 月韓國連線",
+    batchTone: null,
     name: "冰絲襪",
     optionLabel: null,
     unitPrice: 250,
@@ -803,19 +807,30 @@ describe("規格輸入", () => {
 });
 
 describe("分類", () => {
-  it("九個分類，key 不重複", () => {
-    expect(CATEGORIES).toHaveLength(9);
-    expect(new Set(CATEGORIES.map((c) => c.key)).size).toBe(9);
+  it("七個分類，key 不重複", () => {
+    expect(CATEGORIES).toHaveLength(7);
+    expect(new Set(CATEGORIES.map((c) => c.key)).size).toBe(7);
+  });
+
+  it("⚠ 分類裡不能有國家——那是檔期的層級", () => {
+    // 國家同時做成分類會有兩套真實來源：客人會看到「韓國連線」分類裡
+    // 混著日本檔期的商品。分類只回答「這是什麼」，檔期回答「這是哪一趟」。
+    const names = CATEGORIES.map((c) => c.name).join(",");
+    for (const country of ["韓國", "日本", "歐洲", "美國"]) {
+      expect(names, country).not.toContain(country);
+    }
   });
   it("現貨標為隨時可買", () => {
     expect(CATEGORIES.find((c) => c.key === "instock")!.alwaysOpen).toBe(true);
   });
   it("認不得的 key 退成「未分類」而不是爆掉", () => {
-    expect(isCategoryKey("korea")).toBe(true);
+    expect(isCategoryKey("women")).toBe(true);
     expect(isCategoryKey("nope")).toBe(false);
+    // 國家已經移到檔期層級，舊資料裡的 korea/japan 現在會退成未分類
+    expect(isCategoryKey("korea")).toBe(false);
     expect(categoryName("nope")).toBe("未分類");
     expect(categoryName(null)).toBe("未分類");
-    expect(categoryName("korea")).toBe("韓國連線");
+    expect(categoryName("women")).toBe("女裝");
   });
 });
 
@@ -1217,5 +1232,111 @@ describe("訂單編號短碼", () => {
     // 客人是照著截圖打的，那幾個字最容易認錯。
     const codes = Array.from({ length: 300 }, () => shortOrderCode(makeOrderId("AM")));
     expect(codes.every((c) => /^[23456789ACDEFGHJKMNPQRSTVWXYZ]{4}$/.test(c))).toBe(true);
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// 多檔同時連線
+//
+// 她可能同時開韓國／日本／歐洲。那是三個包裹、三筆運費、三張結單——
+// 購物車把它們加成一個總額，客人就會以為只付一次運費。
+// ────────────────────────────────────────────────────────────
+describe("購物車依檔期分組", () => {
+  const NOW = new Date("2026-09-15T00:00:00Z");
+  const openBatch = { defaultDeadlineAt: new Date("2026-09-20T15:00:00Z"), status: "open" };
+
+  const snap = (over: Partial<LineSnapshot>): LineSnapshot => ({
+    productId: "p1",
+    optionId: null,
+    batchId: "b-kr",
+    batchTitle: "韓國連線",
+    batchTone: null,
+    name: "冰絲襪",
+    optionLabel: null,
+    unitPrice: 250,
+    imageKey: null,
+    stock: null,
+    preorder: true,
+    product: { deadlineAt: null, status: "live" },
+    batch: openBatch,
+    ...over,
+  });
+
+  it("同一檔的行歸在一起，各自有自己的小計", () => {
+    const cart = [
+      { productId: "p1", optionId: null, qty: 2 },
+      { productId: "p2", optionId: null, qty: 1 },
+      { productId: "p3", optionId: null, qty: 1 },
+    ];
+    const snaps = [
+      snap({ productId: "p1", unitPrice: 250 }),
+      snap({ productId: "p2", unitPrice: 300 }),
+      snap({ productId: "p3", batchId: "b-jp", batchTitle: "日本連線", unitPrice: 800 }),
+    ];
+    const groups = groupByBatch(priceLines(cart, snaps, NOW).lines);
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0].batchTitle).toBe("韓國連線");
+    expect(groups[0].itemsTotal).toBe(800); // 250×2 + 300
+    expect(groups[0].count).toBe(3);
+    expect(groups[1].batchTitle).toBe("日本連線");
+    expect(groups[1].itemsTotal).toBe(800);
+  });
+
+  it("順序照第一次出現的檔期，不重新排序", () => {
+    const cart = [
+      { productId: "p3", optionId: null, qty: 1 },
+      { productId: "p1", optionId: null, qty: 1 },
+    ];
+    const snaps = [
+      snap({ productId: "p1" }),
+      snap({ productId: "p3", batchId: "b-jp", batchTitle: "日本連線" }),
+    ];
+    // 客人先加日本，日本就排前面——那是她心裡的順序
+    expect(groupByBatch(priceLines(cart, snaps, NOW).lines)[0].batchTitle).toBe("日本連線");
+  });
+
+  it("空購物車回空陣列", () => {
+    expect(groupByBatch([])).toEqual([]);
+  });
+
+  it("只有一檔時就是一組（不會多包一層）", () => {
+    const groups = groupByBatch(
+      priceLines([{ productId: "p1", optionId: null, qty: 1 }], [snap({})], NOW).lines,
+    );
+    expect(groups).toHaveLength(1);
+  });
+});
+
+describe("檔期色彩", () => {
+  it("同一個檔期永遠是同一個色（重新整理不會換）", () => {
+    const a = batchTone("AB260920-K7QX");
+    const b = batchTone("AB260920-K7QX");
+    expect(a.key).toBe(b.key);
+  });
+
+  it("不同檔期通常會拿到不同的色", () => {
+    const keys = new Set(
+      ["AB1", "AB2", "AB3", "AB4", "AB5", "AB6"].map((id) => batchTone(id).key),
+    );
+    expect(keys.size).toBeGreaterThan(1);
+  });
+
+  it("她指定了就用她挑的", () => {
+    expect(batchTone("AB1", "sage").key).toBe("sage");
+  });
+
+  it("指定了不存在的色就退回自動推導，不會爆", () => {
+    expect(batchTone("AB1", "nope").key).toBe(batchTone("AB1").key);
+    expect(isToneKey("nope")).toBe(false);
+    expect(isToneKey("sage")).toBe(true);
+  });
+
+  it("底色與框線用半透明——深色模式下才不會整片死白", () => {
+    for (const t of TONES) {
+      expect(t.soft).toMatch(/^rgba\(/);
+      expect(t.line).toMatch(/^rgba\(/);
+      expect(t.ink).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    }
   });
 });

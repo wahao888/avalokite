@@ -66,9 +66,6 @@ export default async function AmberHome({
           <a className="p-btn p-btn-ghost" href="/portal/amber/products">
             所有商品
           </a>
-          <a className="p-btn p-btn-ghost" href="/portal">
-            表單管理
-          </a>
           <form method="post" action="/api/portal/logout">
             <button type="submit" className="p-btn-link">
               登出

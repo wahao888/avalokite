@@ -3,6 +3,7 @@ import { orderState, effectiveDeadline } from "@/lib/daigou-deadline";
 import { priceLabel } from "../_data/cart";
 import { Countdown } from "./Countdown";
 import { QuickAdd } from "./QuickAdd";
+import type { Tone } from "../_data/batch-tone";
 
 // 商品卡。伺服器元件——只有「＋1」與倒數那兩塊需要 JS。
 
@@ -17,6 +18,9 @@ export type CardProduct = {
   options: { price: number | null }[];
   images: { key: string }[];
   batch: { defaultDeadlineAt: Date | null; status: string };
+  /** 多檔同開時才顯示；只有一檔的話標了只是雜訊 */
+  batchTitle?: string | null;
+  batchTone?: Tone;
 };
 
 export function ProductCard({ p, now }: { p: CardProduct; now: Date }) {
@@ -52,6 +56,14 @@ export function ProductCard({ p, now }: { p: CardProduct; now: Date }) {
       </a>
 
       <div className="am-card__body">
+        {p.batchTitle && p.batchTone && (
+          <span
+            className="am-card__batch"
+            style={{ color: p.batchTone.ink, background: p.batchTone.soft }}
+          >
+            {p.batchTitle}
+          </span>
+        )}
         <a className="am-card__link am-card__name" href={href}>
           {p.name}
         </a>

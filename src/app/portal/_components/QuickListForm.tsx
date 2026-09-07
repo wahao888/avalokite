@@ -68,7 +68,9 @@ const emptyDraft = (): Draft => ({
   optionsText: "",
   categoryKey: "",
   deadlineLocal: "",
-  preorder: false,
+  // 代購本來就是預購制——客人先訂、她才去買。客戶的出貨說明也寫明
+  // 「採預購制，下單付款後才會安排採買」，所以預設就該是開的。
+  preorder: true,
   showStock: false,
   stock: "",
   savedAt: 0,
@@ -90,12 +92,11 @@ export function QuickListForm({
     axis: prefill?.optionAxis ?? "",
     optionsText: (prefill?.optionLabels ?? []).join(","),
     categoryKey: prefill?.categoryKey ?? "",
-    preorder: prefill?.preorder ?? false,
+    preorder: prefill?.preorder ?? true,
     showStock: prefill?.showStock ?? false,
   }));
 
   const [photos, setPhotos] = useState<PhotoSlot[]>([]);
-  const [more, setMore] = useState(false);
   const [editDeadline, setEditDeadline] = useState(false);
   const [crossA, setCrossA] = useState("");
   const [crossB, setCrossB] = useState("");
@@ -401,9 +402,10 @@ export function QuickListForm({
         />
       </div>
 
-      {/* 7. 其餘設定收起來，90% 的路徑看不到 */}
-      <details className="p-dg-more" open={more} onToggle={(e) => setMore(e.currentTarget.open)}>
-        <summary>更多設定</summary>
+      {/* 7. 其餘設定。刻意不摺疊——摺起來她就不會發現「允許預購」是開的，
+             而那個設定會直接影響庫存 0 的商品能不能下單。 */}
+      <div className="p-dg-field">
+        <label>更多設定</label>
         <label className="p-check">
           <input
             type="checkbox"
@@ -434,7 +436,7 @@ export function QuickListForm({
             />
           </div>
         )}
-      </details>
+      </div>
 
       {error && <p className="p-dg-error">{error}</p>}
 

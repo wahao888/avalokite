@@ -25,9 +25,12 @@ export type CartLine = {
 export type LineSnapshot = {
   productId: string;
   optionId: string | null;
-  /** 這件商品屬於哪一檔連線。下單時用來確認整車沒有跨檔期
-   *  （一張結單綁一個檔期，運費與預計到貨日都是檔期的）。 */
+  /** 這件商品屬於哪一檔連線。一張結單綁一個檔期（運費與預計到貨日都是
+   *  檔期的），所以購物車要依檔期分組、分開結帳。 */
   batchId: string;
+  batchTitle: string;
+  /** 檔期的識別色 key（見 _data/batch-tone.ts）。null = 由 id 推導 */
+  batchTone: string | null;
   name: string;
   optionLabel: string | null;
   unitPrice: number;
@@ -54,6 +57,9 @@ export const LINE_STATUS_ZH: Record<LineStatus, string> = {
 export type PricedLine = {
   productId: string;
   optionId: string | null;
+  batchId: string;
+  batchTitle: string;
+  batchTone: string | null;
   name: string;
   optionLabel: string | null;
   unitPrice: number;
@@ -143,6 +149,9 @@ export function priceLines(cart: CartLine[], snaps: LineSnapshot[], now: Date): 
       blocked.push({
         productId: line.productId,
         optionId: line.optionId,
+        batchId: "",
+        batchTitle: "",
+        batchTone: null,
         name: "已移除的商品",
         optionLabel: null,
         unitPrice: 0,
@@ -158,6 +167,9 @@ export function priceLines(cart: CartLine[], snaps: LineSnapshot[], now: Date): 
     const priced: PricedLine = {
       productId: snap.productId,
       optionId: snap.optionId,
+      batchId: snap.batchId,
+      batchTitle: snap.batchTitle,
+      batchTone: snap.batchTone,
       name: snap.name,
       optionLabel: snap.optionLabel,
       unitPrice: snap.unitPrice,
@@ -218,3 +230,41 @@ export const priceLabel = (basePrice: number, optionPrices: (number | null)[]): 
   const { min, ranged } = priceFrom(basePrice, optionPrices);
   return ranged ? `${twd(min)} 起` : twd(min);
 };
+
+export type CartGroup = {
+  batchId: string;
+  batchTitle: string;
+  batchTone: string | null;
+  lines: PricedLine[];
+  itemsTotal: number;
+  count: number;
+};
+
+/**
+ * 把可下單的行依檔期分組。
+ *
+ * 她可能同時開韓國、日本、歐洲三檔。**那是三個包裹、三筆運費、三張結單**，
+ * 所以購物車要分開顯示、分開結帳——把它們加成一個總額會讓客人以為只付一次運費。
+ * 順序照第一次出現的檔期，不重新排序（客人加東西的順序就是她心裡的順序）。
+ */
+export function groupByBatch(lines: PricedLine[]): CartGroup[] {
+  const out: CartGroup[] = [];
+  for (const l of lines) {
+    let g = out.find((x) => x.batchId === l.batchId);
+    if (!g) {
+      g = {
+        batchId: l.batchId,
+        batchTitle: l.batchTitle,
+        batchTone: l.batchTone,
+        lines: [],
+        itemsTotal: 0,
+        count: 0,
+      };
+      out.push(g);
+    }
+    g.lines.push(l);
+    g.itemsTotal += l.amount;
+    g.count += l.qty;
+  }
+  return out;
+}

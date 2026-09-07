@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
-import { twd } from "../_data/cart";
+import { twd, groupByBatch } from "../_data/cart";
 import { CVS_BRANDS, SHIP_KIND_ZH, type ShipKind } from "../_data/site";
 import { shortOrderCode } from "@/lib/shop-order-id";
 import { ShareCopy } from "./ShareLine";
@@ -50,8 +50,13 @@ const empty: Profile = {
 
 type Rejected = { name: string; reasonZh: string };
 
-export function CheckoutForm() {
-  const { lines, pricing, clear, ready, refresh } = useCart();
+/**
+ * @param batchId 只結這一檔。她可能同時開三檔連線——那是三個包裹、
+ *   三筆運費、三張結單，所以結帳一次只處理一檔（購物車那邊分好組了）。
+ *   沒帶的話就結購物車裡的第一檔。
+ */
+export function CheckoutForm({ batchId }: { batchId?: string }) {
+  const { lines, pricing, clear, remove, ready, refresh } = useCart();
 
   const [p, setP] = useState<Profile>(empty);
   const [loaded, setLoaded] = useState(false);
@@ -83,7 +88,11 @@ export function CheckoutForm() {
 
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setP((s) => ({ ...s, [k]: v }));
 
-  const totals = pricing.state === "ok" ? pricing.totals : null;
+  const all = pricing.state === "ok" ? pricing.totals : null;
+  const groups = groupByBatch(all?.lines ?? []);
+  // 指定的那一檔；沒指定就第一檔
+  const group = (batchId ? groups.find((g) => g.batchId === batchId) : groups[0]) ?? null;
+  const totals = all && group ? { ...all, lines: group.lines, itemsTotal: group.itemsTotal } : null;
 
   const submit = async () => {
     setError(null);
@@ -94,7 +103,14 @@ export function CheckoutForm() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          items: lines,
+          // 只送這一檔的行——下單 API 也會擋跨檔期，但前台不該讓它走到那一步
+          items: group
+            ? group.lines.map((l) => ({
+                productId: l.productId,
+                optionId: l.optionId,
+                qty: l.qty,
+              }))
+            : lines,
           ...p,
           // 收件人留空就沿用訂購人，少填兩個欄位
           recipient: p.recipient || p.name,
@@ -136,7 +152,12 @@ export function CheckoutForm() {
       } catch {
         /* 忽略 */
       }
-      clear();
+      // 只移除剛結完的那一檔，其他檔期留在購物車裡讓她繼續結
+      if (group && groups.length > 1) {
+        for (const l of group.lines) remove(l.productId, l.optionId);
+      } else {
+        clear();
+      }
       setDone(out);
     } catch {
       setError("網路不穩，請確認訊號後再送出一次。");
@@ -193,6 +214,13 @@ export function CheckoutForm() {
         <p className="am-field__hint">
           也可以用「訂單編號 + 下單手機」查詢，編號打後 4 碼就好。
         </p>
+        {groups.length > 0 && (
+          <div className="am-note">
+            購物車裡還有其他連線的商品，記得也去結一下 👉{" "}
+            <a href="/cart">看購物車</a>
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem" }}>
           <a className="am-btn am-btn--accent" href="/">
             繼續選購
@@ -230,6 +258,11 @@ export function CheckoutForm() {
   return (
     <div>
       <h1 className="am-h1">結帳</h1>
+      {group && groups.length > 1 && (
+        <p className="am-sub">
+          這次結的是「{group.batchTitle}」。其他連線的商品會留在購物車，可以分開結。
+        </p>
+      )}
 
       {error && <div className="am-err">{error}</div>}
       {rejected.length > 0 && (

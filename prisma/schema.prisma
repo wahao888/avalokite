@@ -238,6 +238,11 @@ model DgBatch {
   /// 預計到貨日的預設值，開結單時帶入 DgSettlement.etaAt
   defaultEtaAt      DateTime?
 
+  /// 這一檔的識別色（見 _data/batch-tone.ts）。null = 由 id 自動推導，
+  /// 所以她開檔期時可以完全不用管顏色，但想指定時也指定得了。
+  /// nullable → metadata-only ALTER。
+  tone             String?
+
   /// 運費方案。standard / economy = 依 7-11 交貨便的申報價值級距自動算，
   /// fixed（或 null）= 用底下的 shippingFee 固定金額。
   ///
@@ -301,7 +306,10 @@ model DgProduct {
   /// 兩者都 null＝不設收單（「現貨」分類需要這個），永遠開放。
   deadlineAt DateTime?
 
-  preorder  Boolean @default(false) // 允許預購：庫存 0 也能下單
+  /// 允許預購：庫存 0 也能下單。
+  /// 預設 true——代購本來就是預購制（客人先訂、她才去買），
+  /// 客戶的出貨說明也寫明「採預購制，下單付款後才會安排採買」。
+  preorder  Boolean @default(true)
   showStock Boolean @default(false) // 前台顯示剩餘數量
   /// 無規格商品的庫存。null＝不限量。有規格時以 DgOption.stock 為準。
   stock     Int?
