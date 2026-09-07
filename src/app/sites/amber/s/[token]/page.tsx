@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { getSettlementByToken } from "@/lib/daigou-data";
 import { formatTaipei } from "@/lib/tw-time";
+import { shortOrderCode } from "@/lib/shop-order-id";
 import { thumbUrl } from "@/lib/media-url";
 import { twd } from "../../_data/cart";
 import {
@@ -63,9 +64,13 @@ export default async function SettlementPage({
   return (
     <div className="am-wrap">
       <h1 className="am-h1">{s.batch.title}</h1>
-      <p className="am-sub">
-        結單編號 {s.id}・{SETTLEMENT_STATUS_ZH[status] ?? status}
-      </p>
+      <p className="am-sub">{SETTLEMENT_STATUS_ZH[status] ?? status}</p>
+
+      <div className="am-code">
+        <span className="am-code__label">訂單編號</span>
+        <span className="am-code__value">{shortOrderCode(s.id)}</span>
+        <span className="am-code__full">{s.id}</span>
+      </div>
 
       {open && (
         <div className="am-note">

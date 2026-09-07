@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
 import { twd } from "../_data/cart";
-import { CVS_BRANDS, SHIP_KIND_ZH, SITE, type ShipKind } from "../_data/site";
-import { ShareLine, ShareCopy } from "./ShareLine";
+import { CVS_BRANDS, SHIP_KIND_ZH, type ShipKind } from "../_data/site";
+import { shortOrderCode } from "@/lib/shop-order-id";
+import { ShareCopy } from "./ShareLine";
 import { rememberMyLink } from "./MyOrdersLink";
-import { keepForMeText } from "@/lib/line-share";
 import { Terms } from "./Terms";
 
 // 結帳。
@@ -150,11 +150,15 @@ export function CheckoutForm() {
     return (
       <div>
         <h1 className="am-h1">訂單成立 🎉</h1>
+        {/* 編號要一眼看得到——多數人會直接截圖。
+            顯示後 4 碼就好，查詢時完整或後 4 碼都收。 */}
+        <div className="am-code">
+          <span className="am-code__label">訂單編號</span>
+          <span className="am-code__value">{shortOrderCode(done.id)}</span>
+          <span className="am-code__full">{done.id}</span>
+        </div>
         <div className="am-note">
-          <p style={{ margin: 0 }}>
-            訂單編號 <strong>{done.id}</strong>
-          </p>
-          <p style={{ margin: "0.3rem 0 0" }}>商品小計 {twd(done.itemsTotal)}</p>
+          <p style={{ margin: 0 }}>商品小計 {twd(done.itemsTotal)}</p>
         </div>
         <div className="am-note">
           <strong>接下來會這樣進行</strong>
@@ -167,22 +171,19 @@ export function CheckoutForm() {
         {/* 「不用簡訊、不用密碼」的身分方案：給她一條專屬連結，
             傳給自己就好。比記住「編號＋手機」實際得多——
             連線期間下三次單就有三個編號，一定會弄丟。 */}
+        {/* 刻意不放「用 LINE 傳給自己」——那要先登入 LINE，多一道很煩。
+            截圖與複製連結才是大家實際會做的事。 */}
         {done.memberPath && (
           <div className="am-note">
-            <strong>把你的專屬連結留起來 👇</strong>
+            <strong>把這一頁留起來 👇</strong>
             <p style={{ margin: "0.3rem 0 0.6rem" }}>
-              之後查訂單、看金額、回報匯款都從這裡進去，不用記訂單編號。
+              直接<strong>螢幕截圖</strong>，或複製下面的連結傳給自己。
+              之後查訂單、看金額、回報匯款都從那裡進去。
               這台手機下次會直接出現在上面的選單裡。
             </p>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              <ShareLine
-                text={keepForMeText(SITE.shortName)}
-                url={`${location.origin}${done.memberPath}`}
-                label="用 LINE 傳給自己"
-                className="am-btn am-btn--accent"
-              />
               <ShareCopy url={`${location.origin}${done.memberPath}`} />
-              <a className="am-btn am-btn--ghost" href={done.memberPath}>
+              <a className="am-btn am-btn--accent" href={done.memberPath}>
                 看我的訂單
               </a>
             </div>
@@ -190,7 +191,7 @@ export function CheckoutForm() {
         )}
 
         <p className="am-field__hint">
-          也可以用「訂單編號 + 下單手機」查詢：訂單編號是 {done.id}。
+          也可以用「訂單編號 + 下單手機」查詢，編號打後 4 碼就好。
         </p>
         <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem" }}>
           <a className="am-btn am-btn--accent" href="/">

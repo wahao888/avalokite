@@ -3,19 +3,24 @@ import { z } from "zod";
 
 import { getTenant } from "@/lib/tenants";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
-import { normalizeOrderId } from "@/lib/shop-order-id";
-import { getOrderForLookup, getSettlementForLookup } from "@/lib/daigou-data";
+import { orderCodeInput, shortOrderCode } from "@/lib/shop-order-id";
+import { lookupForCustomer } from "@/lib/daigou-data";
 import { normalizePhone } from "@/app/sites/amber/_data/member";
-import { settleTotals, LINE_STATUS_ZH, type LineItemStatus } from "@/app/sites/amber/_data/settle";
+import {
+  settlementTotalsFor,
+  LINE_STATUS_ZH,
+  type LineItemStatus,
+} from "@/app/sites/amber/_data/settle";
 
 // 查訂單 / 查結單。
 //
-// 雙因子：編號 + 下單手機，兩者相符才給資料。
-// ⚠ 查無此編號與電話不符**回同一個 404**——否則這支 API 就變成一台
-// 編號探測器（試出哪些編號存在，再去猜電話）。同 REKAT 的做法。
+// 雙因子：手機 + 編號。編號可以是完整的（AM260907-P3SA），也可以只打**後 4 碼**——
+// 前面那段日期是給店家對帳用的，客人不需要，而且在手機上打 13 個字很累。
 //
-// 回應刻意不含完整地址與 email：這一頁憑「編號＋手機」就看得到，
-// 而編號會出現在包裹上。
+// 安全性沒有因此變差：日期本來就高度可猜（就是最近幾天），真正的亂度一直都在
+// 那 4 碼；而且比對只在「這支手機對應的那位會員自己的單」裡進行。
+//
+// ⚠ 查無此編號與電話不符**回同一個 404**——否則這支 API 就變成一台編號探測器。
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +28,7 @@ const TENANT = getTenant("amber")!;
 const RATE = { windowMs: 10 * 60_000, max: 10 };
 
 const Schema = z.object({
-  id: z.string().trim().min(4).max(40),
+  id: z.string().trim().min(3).max(40),
   phone: z.string().trim().min(6).max(30),
 });
 
@@ -44,13 +49,17 @@ export async function POST(req: NextRequest) {
   const phoneDigits = normalizePhone(parsed.data.phone);
   if (!phoneDigits) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const id = normalizeOrderId(parsed.data.id);
+  const code = orderCodeInput(parsed.data.id);
+  if (!code) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  // 編號可能是訂單（AM…）也可能是結單（AS…）——客人手上有哪一個都能查。
-  const settlement = await getSettlementForLookup(TENANT.slug, id, phoneDigits);
-  if (settlement) {
-    const lines = settlement.orders.flatMap((o) => o.lines);
-    const totals = settleTotals({
+  const hit = await lookupForCustomer(TENANT.slug, phoneDigits, code);
+  if (!hit) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  if (hit.kind === "settlement") {
+    const s = hit.settlement;
+    const lines = s.orders.flatMap((o) => o.lines);
+    const totals = settlementTotalsFor({
+      ...s,
       lines: lines.map((l) => ({
         unitPrice: l.unitPrice,
         qty: l.qty,
@@ -58,29 +67,25 @@ export async function POST(req: NextRequest) {
         gotQty: l.gotQty,
         status: l.status as LineItemStatus,
       })),
-      shippingFee: settlement.shippingFee,
-      adjustAmount: settlement.adjustAmount,
-      creditApplied: settlement.creditApplied,
-      paidAmount: settlement.paidAmount,
     });
     return NextResponse.json({
       ok: true,
       kind: "settlement",
       // 給連結而不是把整份明細塞進這個回應——/s/<token> 那一頁本來就要做這件事
-      url: `/s/${settlement.lookupToken}`,
-      id: settlement.id,
-      status: settlement.status,
+      url: `/s/${s.lookupToken}`,
+      id: s.id,
+      code: shortOrderCode(s.id),
+      status: s.status,
       payable: totals.payableAmount,
     });
   }
 
-  const order = await getOrderForLookup(TENANT.slug, id, phoneDigits);
-  if (!order) return NextResponse.json({ error: "not found" }, { status: 404 });
-
+  const order = hit.order;
   return NextResponse.json({
     ok: true,
     kind: "order",
     id: order.id,
+    code: shortOrderCode(order.id),
     createdAt: order.createdAt,
     itemsTotal: order.itemsTotal,
     status: order.status,

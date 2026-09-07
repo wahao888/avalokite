@@ -36,10 +36,13 @@ export function ShareCopy({
   text,
   url,
   label = "複製連結",
+  className = "am-btn am-btn--ghost",
 }: {
   text?: string;
   url: string;
   label?: string;
+  /** 它是該區塊唯一的動作時要用 accent——ghost 在深色模式下幾乎看不見 */
+  className?: string;
 }) {
   const [state, setState] = useState<"idle" | "ok" | "manual">("idle");
   const payload = text ? `${text}\n${url}` : url;
@@ -68,7 +71,7 @@ export function ShareCopy({
   }
 
   return (
-    <button type="button" className="am-btn am-btn--ghost" onClick={() => void copy()}>
+    <button type="button" className={className} onClick={() => void copy()}>
       {state === "ok" ? "已複製 ✓" : label}
     </button>
   );

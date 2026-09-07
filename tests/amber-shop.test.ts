@@ -55,6 +55,7 @@ import {
 import { parseOptions, crossOptions, MAX_OPTIONS } from "@/app/sites/amber/_data/spec-presets";
 import { CATEGORIES, isCategoryKey, categoryName } from "@/app/sites/amber/_data/categories";
 import { lineShareUrl, keepForMeText, LINE_TEXT_MAX } from "@/lib/line-share";
+import { shortOrderCode, orderCodeInput, makeOrderId } from "@/lib/shop-order-id";
 import {
   cvsShippingFee,
   settlementShipping,
@@ -1180,5 +1181,41 @@ describe("結單後的缺貨退款", () => {
 
   it("現在該收的比凍結時多也不會變成負數（那是補款，不是退款）", () => {
     expect(refundDueAfterFreeze({ frozenPayable: 1000, currentPayable: 1500 })).toBe(0);
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// 訂單編號的短碼
+//
+// 客人多半直接截圖，要打的時候 13 個字太長。前面那段是日期（店家對帳用），
+// 客人只需要後 4 碼——配上手機仍然是雙因子，而且亂度本來就都在那 4 碼。
+// ────────────────────────────────────────────────────────────
+describe("訂單編號短碼", () => {
+  it("取出連字號後面那段", () => {
+    expect(shortOrderCode("AM260920-K7QX")).toBe("K7QX");
+    expect(shortOrderCode("AS260907-6J25")).toBe("6J25");
+  });
+
+  it("沒有連字號時原樣回傳（不要吃掉整個編號）", () => {
+    expect(shortOrderCode("K7QX")).toBe("K7QX");
+  });
+
+  it("客人整串貼上、只打後 4 碼、大小寫、前後空白都要接得住", () => {
+    for (const raw of [
+      "AM260920-K7QX",
+      "am260920-k7qx",
+      "  AM260920-K7QX  ",
+      "K7QX",
+      "k7qx",
+      " k7qx ",
+    ]) {
+      expect(orderCodeInput(raw), raw).toBe("K7QX");
+    }
+  });
+
+  it("短碼用的字母表不含容易看錯的字（0/O/1/I/L/U）", () => {
+    // 客人是照著截圖打的，那幾個字最容易認錯。
+    const codes = Array.from({ length: 300 }, () => shortOrderCode(makeOrderId("AM")));
+    expect(codes.every((c) => /^[23456789ACDEFGHJKMNPQRSTVWXYZ]{4}$/.test(c))).toBe(true);
   });
 });

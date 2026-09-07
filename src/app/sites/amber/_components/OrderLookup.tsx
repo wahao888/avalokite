@@ -55,14 +55,16 @@ export function OrderLookup() {
   return (
     <div>
       <div className="am-field">
-        <label htmlFor="l-id">訂單或結單編號</label>
+        <label htmlFor="l-id">訂單編號（後 4 碼就好）</label>
         <input
           id="l-id"
           value={id}
           onChange={(e) => setId(e.target.value)}
-          placeholder="AM260920-K7QX"
+          placeholder="K7QX"
           autoCapitalize="characters"
+          autoComplete="off"
         />
+        <p className="am-field__hint">整串貼上也可以（例：AM260920-K7QX）。</p>
       </div>
       <div className="am-field">
         <label htmlFor="l-phone">下單時填的手機</label>

@@ -326,6 +326,26 @@ a { color: inherit; }
 .am-terms__list--warn { color: var(--a-accent); }
 .am-terms__note { margin: 0.6rem 0 0; color: var(--a-sub); }
 
+/* ── 訂單編號 ───────────────────────────────────────
+   客人多半是直接截圖，所以編號要一眼看得到、字要夠大。
+   顯示的是後 4 碼——完整編號的前半段是店家對帳用的日期，
+   客人要打的時候 13 個字太長。完整編號小字附在旁邊給對帳用。 */
+.am-code {
+  display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+  padding: 0.5rem 0.7rem; margin: 0.5rem 0;
+  background: var(--a-paper); border: 1px solid var(--a-line);
+  border-radius: var(--a-radius);
+}
+.am-code__label { font-size: 0.78rem; color: var(--a-sub); }
+.am-code__value {
+  font-size: 1.5rem; font-weight: 800; letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+.am-code__full {
+  margin-inline-start: auto; font-size: 0.72rem; color: var(--a-sub);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --a-ink: #f0ebe5;

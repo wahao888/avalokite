@@ -32,3 +32,23 @@ export function makeOrderId(prefix: string, now: Date = new Date()): string {
 export function normalizeOrderId(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
+
+/**
+ * 編號的後 4 碼。給客人看、給客人打的就是這個。
+ *
+ * 完整編號是 AM260907-P3SA：前面的日期是給店家對帳用的（「今天的單」），
+ * 客人不需要，而且在手機上要打 13 個字很累。後 4 碼配上手機仍然是雙因子——
+ * 而且安全性其實沒有變差：日期高度可猜（就是最近幾天），
+ * 真正的亂度本來就只在這 4 碼（29^4 ≈ 70 萬組，配上限流就夠了）。
+ */
+export const shortOrderCode = (id: string): string => {
+  const i = id.indexOf("-");
+  return i >= 0 ? id.slice(i + 1) : id;
+};
+
+/**
+ * 客人輸入的編號正規化成「用來比對的後綴」。
+ * 她可能整串貼上（AM260907-P3SA）、也可能只打後 4 碼（p3sa），兩種都要接。
+ */
+export const orderCodeInput = (raw: string): string =>
+  shortOrderCode(normalizeOrderId(raw));

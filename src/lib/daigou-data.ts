@@ -1027,6 +1027,53 @@ export async function getOrder(tenantId: string, id: string) {
   });
 }
 
+/**
+ * 客人查詢：手機 + 編號（完整或後 4 碼皆可）。
+ *
+ * 先用手機定位到會員，再在**這位會員自己的**單裡比對編號後綴——
+ * 所以短碼不會撞到別人的單，而「查無」與「電話不符」在呼叫端回同一個 404，
+ * 這支 API 不會變成編號探測器。
+ *
+ * 結單優先於訂單：客人真正想看的是「我要付多少」，那在結單上。
+ */
+export async function lookupForCustomer(
+  tenantId: string,
+  phoneDigits: string,
+  code: string,
+) {
+  const member = await prisma.dgMember.findFirst({
+    where: { tenantId, phoneDigits },
+    select: { id: true },
+  });
+  if (!member) return null;
+
+  const settlement = await prisma.dgSettlement.findFirst({
+    where: {
+      tenantId,
+      memberId: member.id,
+      OR: [{ id: code }, { id: { endsWith: `-${code}` } }],
+    },
+    include: {
+      member: true,
+      batch: true,
+      orders: { where: { status: "open" }, include: { lines: true } },
+    },
+  });
+  if (settlement) return { kind: "settlement" as const, settlement };
+
+  const order = await prisma.dgOrder.findFirst({
+    where: {
+      tenantId,
+      memberId: member.id,
+      OR: [{ id: code }, { id: { endsWith: `-${code}` } }],
+    },
+    include: { lines: true, member: true, settlement: true },
+  });
+  if (order) return { kind: "order" as const, order };
+
+  return null;
+}
+
 /** 查訂單：編號 + 手機雙因子，兩者不符與查無一律回 null（不做編號探測器） */
 export async function getOrderForLookup(
   tenantId: string,

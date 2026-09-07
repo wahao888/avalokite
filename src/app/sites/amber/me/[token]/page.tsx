@@ -14,10 +14,10 @@ import {
   type SettlementStatus,
 } from "../../_data/settle";
 import { maskName, maskPhone } from "../../_data/member";
-import { SITE, TENANT_SLUG } from "../../_data/site";
+import { TENANT_SLUG } from "../../_data/site";
+import { shortOrderCode } from "@/lib/shop-order-id";
 import { RememberMe } from "../../_components/RememberMe";
-import { ShareLine, ShareCopy } from "../../_components/ShareLine";
-import { keepForMeText } from "@/lib/line-share";
+import { ShareCopy } from "../../_components/ShareLine";
 
 // 「我的訂單」。
 //
@@ -62,21 +62,15 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
         {maskName(member.name)}　{maskPhone(member.phoneDigits)}
       </p>
 
+      {/* 刻意不放「用 LINE 傳給自己」——那要先登入 LINE，多一道很煩。
+          複製連結＋截圖才是大家實際會做的事。 */}
       <div className="am-note">
         <strong>把這個頁面留起來</strong>
         <p style={{ margin: "0.3rem 0 0.6rem" }}>
-          用 LINE 傳給自己，或加入手機主畫面。之後查訂單、看金額、回報匯款都從這裡進去，
-          不用記訂單編號。
+          直接<strong>螢幕截圖</strong>，或複製連結傳給自己。
+          之後查訂單、看金額、回報匯款都從這裡進去。
         </p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <ShareLine
-            text={keepForMeText(SITE.shortName)}
-            url={myUrl}
-            label="用 LINE 傳給自己"
-            className="am-btn am-btn--accent"
-          />
-          <ShareCopy url={myUrl} />
-        </div>
+        <ShareCopy url={myUrl} className="am-btn am-btn--accent" />
       </div>
 
       {credit > 0 && (
@@ -110,6 +104,16 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
                 </span>
                 <span>{SETTLEMENT_STATUS_ZH[s.status as SettlementStatus] ?? s.status}</span>
               </div>
+
+              {/* 訂單編號要明顯——截圖起來的人，看的就是這個。
+                  只顯示後 4 碼：前面那段日期是店家對帳用的，
+                  客人要打的時候 13 個字太長。查詢時兩種都收。 */}
+              <div className="am-code">
+                <span className="am-code__label">訂單編號</span>
+                <span className="am-code__value">{shortOrderCode(s.id)}</span>
+                <span className="am-code__full">{s.id}</span>
+              </div>
+
               <div className="am-sum__row">
                 <span>{s.orders.length} 筆訂單・{lines.length} 個品項</span>
                 <span>{formatTaipei(s.createdAt, { withTime: false })}</span>
@@ -155,7 +159,8 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
 
       <p className="am-field__hint">
         為了保護個資，這一頁只顯示部分資料。
-        <a href="/order/lookup">用訂單編號＋手機查詢</a>可以看到完整內容。
+        <a href="/order/lookup">用訂單編號＋手機查詢</a>可以看到完整內容
+        （編號打後 4 碼就好）。
       </p>
     </div>
   );
