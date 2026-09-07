@@ -37,6 +37,15 @@ export type Tenant = {
    * 訂單落在 ShopOrder，tenantId 就是這裡的 slug。
    */
   shop?: boolean;
+  /**
+   * true = 該站是「代購連線」型商店，後台掛上 /portal/<slug>/* 那一整套
+   * （檔期、商品上架、採購清單、結單）。訂單落在 Dg* 系列表。
+   *
+   * 為什麼不沿用 shop：shop 開的是 /portal/orders，那頁是 REKAT 的形狀
+   * （一列＝一次結帳＝一次收款）。代購的一列是「這位客人在這檔期又加了什麼」，
+   * 收款與運費在結單上，兩者共用一個旗標只會讓兩邊都顯示錯的東西。
+   */
+  daigou?: boolean;
 };
 
 /** 客戶站掛載的主網域 */
@@ -72,6 +81,17 @@ export const TENANTS: Tenant[] = [
     notifyEnv: "TENANT_NOTIFY_REKAT",
     ownSitemap: true,
     shop: true,
+  },
+  {
+    slug: "amber",
+    name: "Amber 代購連線",
+    indexable: false,
+    // 靜態路徑僅供參考；實際 sitemap 由站內 sitemap.ts 產生。
+    // 商品頁刻意不進 sitemap：連線商品幾天後就截止，收錄了只會累積死連結。
+    paths: ["/", "/cart", "/checkout", "/order/lookup"],
+    notifyEnv: "TENANT_NOTIFY_AMBER",
+    ownSitemap: true,
+    daigou: true,
   },
 ];
 

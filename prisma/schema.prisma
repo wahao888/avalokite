@@ -201,3 +201,452 @@ model BeanStock {
   note      String? // 一句公告，例：本週出貨順延
   updatedAt DateTime @updatedAt
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 代購連線（Dg = 代購 daigou）。目前只有 amber 用，見 Tenant.daigou。
+//
+// 為什麼不共用 ShopOrder：兩者的「一列」意義不同。ShopOrder 一列＝一次結帳
+// ＝一次收款；代購一列只是「這位客人在這檔期又加了什麼」，收款與運費落在
+// 結單（DgSettlement）上。而且代購要逐品項標「已買到／缺貨」，那必須是
+// 可索引、可 updateMany 的資料列，塞進 items JSON 就查不動也改不動。
+//
+// tenantId 一律存 src/lib/tenants.ts 的 slug（字串，非 FK；理由同 Inquiry）。
+// 每一張子表都自帶 tenantId——子表的租戶其實可以從父表推得，但
+// tests/tenant-isolation.test.ts 掃的規則是「每個 where 都要出現 tenantId」，
+// 子表少一欄就會出現一種「合法但沒帶 scope」的寫法。多存 8 bytes 換掉那個破口。
+//
+// 所有 @@unique 都以 tenantId 開頭。兩個理由：
+//   ① 跨租戶撞名在結構上不可能
+//   ② upsert 的 where 只吃唯一鍵；唯一鍵本身帶 tenantId，
+//      upsert 才不會變成繞過租戶範圍的後門。
+//
+// 金額一律 Int（台幣整數），且下單當下的數字全部快照入庫。
+// ═══════════════════════════════════════════════════════════════════
+
+/// 連線檔期。商品掛在檔期底下並繼承它的預設收單時間。
+model DgBatch {
+  id       String @id // AB260920-K7QX（lib/shop-order-id.ts）
+  tenantId String
+  slug     String // 網址用：korea-0920
+  title    String // 「9 月韓國連線」
+  note     String?
+
+  /// 檔期預設收單時間（絕對瞬間）。商品的 deadlineAt 為 null 時繼承這個。
+  /// 存絕對時間而不是「台北的牆上時間字串」：Amber 人在首爾時她手機的時區是
+  /// KST，只有由伺服器換算才不會差一小時（見 src/lib/tw-time.ts）。
+  defaultDeadlineAt DateTime?
+  /// 預計到貨日的預設值，開結單時帶入 DgSettlement.etaAt
+  defaultEtaAt      DateTime?
+
+  /// 這一檔的預設運費，開結單時帶入 DgSettlement.shippingFee（之後可個別改）
+  shippingFee      Int  @default(0)
+  freeShippingOver Int?
+
+  status   String    @default("open") // draft 草稿 | open 進行中 | closed 已收單 | archived 封存
+  openAt   DateTime  @default(now())
+  closedAt DateTime?
+
+  /// 大圖清除時間。檔期關閉滿 N 天後只清大圖、保留縮圖——縮圖是歷史訂單、
+  /// 結單畫面與「複製上一件」唯一會用到的，佔用極小；大圖只有商品還在賣時才有人看。
+  imagesPurgedAt DateTime?
+
+  deletedAt DateTime? // 軟刪除。本專案不做實體 delete，見 lib/daigou-data.ts
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products    DgProduct[]
+  orders      DgOrder[]
+  settlements DgSettlement[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, openAt])
+}
+
+/// 商品。這是本專案第一個「目錄住在 DB 而不是 _data/*.ts」的租戶——
+/// Amber 站在韓國店裡 30 秒上一件，重新部署不在選項內。
+model DgProduct {
+  id       String  @id
+  tenantId String
+  batchId  String
+  batch    DgBatch @relation(fields: [batchId], references: [id])
+
+  slug String // 網址用：流水號 + 亂數，中文品名不會撞號
+  name String
+
+  /// 分類 key。九大分類住在 _data/categories.ts（固定清單、要圖示與排序，
+  /// 屬設計資產）。寫入時比對程式碼裡的清單；讀取時認不得就當「未分類」，
+  /// 髒資料不該讓列表 500。
+  categoryKey String?
+  note        String?
+
+  /// 售價（TWD，整數）。規格若有自己的價格，以規格的為準（見 DgOption.price）。
+  price Int
+
+  /// 規格軸名稱，例：顏色／尺寸／款式。null＝這件商品沒有規格。
+  /// 刻意只有一軸：二維矩陣在手機上填不快，跟 30 秒的目標直接衝突，
+  /// 而且代購的每個組合本來就是一件要各別去買的實體，矩陣的壓縮沒有營運價值。
+  /// 「顏色 × 尺寸」用前端的交叉產生器展開成扁平選項（黑-S、黑-M…）。
+  /// 日後真要兩軸：加 nullable 的 optionAxis2 與 DgOption.value2 即可
+  /// （SQLite 加 nullable 欄位是 metadata-only，不重建表）。
+  optionAxis String?
+
+  /// 這件商品自己的收單時間。null＝繼承 batch.defaultDeadlineAt。
+  /// 兩者都 null＝不設收單（「現貨」分類需要這個），永遠開放。
+  deadlineAt DateTime?
+
+  preorder  Boolean @default(false) // 允許預購：庫存 0 也能下單
+  showStock Boolean @default(false) // 前台顯示剩餘數量
+  /// 無規格商品的庫存。null＝不限量。有規格時以 DgOption.stock 為準。
+  stock     Int?
+
+  /// 冪等鍵：手機 4G 逾時重送不會變成兩件商品。
+  /// 這是整個上架流程最重要的健壯性設計——沒有它，一次重試會無聲地把目錄
+  /// 汙染成兩件一樣的商品，客人從兩邊各下單，直到結單才會發現。
+  clientRef String?
+
+  status    String    @default("draft") // draft | live | hidden
+  sortOrder Int       @default(0)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  options DgOption[]
+  images  DgImage[]
+  lines   DgLine[]
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, clientRef])
+  @@index([tenantId, batchId, status, sortOrder])
+  @@index([tenantId, deadlineAt])
+}
+
+/// 規格選項（單軸）。一列＝一個真的要去店裡買的東西。
+model DgOption {
+  id        String    @id
+  tenantId  String
+  productId String
+  product   DgProduct @relation(fields: [productId], references: [id])
+
+  label String // 「Kitty」「黑 / M」
+
+  /// 覆寫價。null＝用商品的 price。前台的「NT$250 起」靠這欄算出來。
+  /// 存絕對值而非差額：Amber 想的是絕對價格，而差額打錯一個字就會生出負單價。
+  price     Int?
+  stock     Int? // null＝不限量
+  sortOrder Int       @default(0)
+  active    Boolean   @default(true)
+  deletedAt DateTime?
+
+  lines DgLine[]
+
+  @@index([tenantId, productId, sortOrder])
+}
+
+/// 商品照片。檔案本身在 /opt/avalo/uploads（deploy 的 rsync --delete 掃不到的
+/// 地方——2026-07-30 曾整個刪掉 prod.db，同一類錯誤不能再犯一次），
+/// 這張表只存 key 與尺寸。
+/// 生命週期：active → deletedAt（前台看不到）→ purgedAt（檔案已 unlink）。
+/// 列永遠不刪：留稽核軌跡，也讓「不做實體 delete」這條規則沒有例外。
+model DgImage {
+  id        String     @id
+  tenantId  String
+  productId String? // null＝已上傳但還沒接到商品（草稿／被放棄的上傳）
+  product   DgProduct? @relation(fields: [productId], references: [id])
+
+  key    String // 儲存介面回傳的 key，例：amber/2026/09/xxxxxxxx.jpg
+  width  Int
+  height Int
+  bytes  Int
+
+  sortOrder Int @default(0)
+
+  /// 冪等鍵：4G 逾時重送不會產生兩張一樣的圖
+  uploadId String?
+
+  /// 只清了大圖、縮圖仍在（檔期關閉滿 N 天後的常態）
+  fullPurgedAt DateTime?
+  deletedAt    DateTime?
+  purgedAt     DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([tenantId, uploadId])
+  @@index([tenantId, productId, sortOrder])
+  @@index([tenantId, purgedAt, deletedAt]) // 清掃程序用
+}
+
+/// 會員。同一個人可能用兩條路進來：
+///   ① 手機號碼 —— 不必登入就能下單，同號碼＝同一人
+///   ② LINE Login —— 第一期就接好線，環境變數沒設時整條路徑關閉
+/// 兩條路指向同一列，所以 LINE 開通那天不必改資料模型，也不會生出
+/// 兩個「在 Amber 眼中是同一位」的客人。
+///
+/// ⚠ 手機是「歸戶鍵」，不是「憑證」。知道別人的手機號碼不等於看得到別人的資料：
+///   ・查訂單／結單要「編號 + 手機」兩者相符（同 REKAT，查無與不符回同一個 404）
+///   ・個資自動帶入只發生在同一台裝置的 localStorage，不是伺服器認人
+///   ・真正的「登入後看得到全部歷史」要等 LINE Login
+model DgMember {
+  id       String @id
+  tenantId String
+
+  /// 只留數字的手機（0912345678）。歸戶就靠這一欄，所以正規化必須是純函式
+  /// 且有測試——這裡錯一個字元就是「合併了兩個人」或「切開了一個人」。
+  phoneDigits String?
+
+  /// LINE Login 的 sub。未綁定為 null；SQLite 的 UNIQUE 視 NULL 互異，
+  /// 所以 (tenantId, lineUserId) 仍可設唯一。
+  lineUserId      String?
+  lineDisplayName String?
+  lineId          String? // 客人自己填的 LINE ID（給 Amber 找人用，不是登入用）
+
+  name  String?
+  email String?
+  note  String? // Amber 自己的備註
+
+  defaultAddressId String?
+  blocked          Boolean @default(false)
+
+  /// 同一個人用兩支手機下過單時，把 A 併進 B：A 這列標上 B 的 id，
+  /// A 的訂單改掛 B，A 自己保留（不刪，才查得出「當初併過」）。
+  /// 這一定會發生——老客人換號碼、幫家人代訂、打錯一碼。
+  mergedIntoId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses   DgAddress[]
+  orders      DgOrder[]
+  settlements DgSettlement[]
+  ledger      DgLedger[]
+
+  @@unique([tenantId, phoneDigits])
+  @@unique([tenantId, lineUserId])
+  @@index([tenantId, createdAt])
+}
+
+/// 收件資料。宅配與超商取貨的欄位形狀不同，用 kind 分辨，各自的欄位都 nullable。
+model DgAddress {
+  id       String   @id
+  tenantId String
+  memberId String
+  member   DgMember @relation(fields: [memberId], references: [id])
+
+  kind      String // home 宅配 | cvs 超商取貨
+  label     String? // 「家」「公司」
+  recipient String
+  phone     String
+
+  address String? // home
+
+  cvsBrand     String? // seven | family | hilife | okmart
+  cvsStoreId   String?
+  cvsStoreName String?
+  cvsAddress   String?
+
+  isDefault Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([tenantId, memberId])
+}
+
+/// 一次結帳。代購的「訂單」只是「這位客人在這個檔期這一次加了什麼」，
+/// 不是一次收款——收款與運費落在 DgSettlement（結單）。
+model DgOrder {
+  id       String @id // AM260920-K7QX
+  tenantId String
+
+  batchId String
+  batch   DgBatch @relation(fields: [batchId], references: [id])
+
+  memberId String
+  member   DgMember @relation(fields: [memberId], references: [id])
+
+  /// 所屬結單。下單當下自動歸到「本檔期 × 本會員」那張開著的結單；
+  /// Amber 也可以手動把單挪進別張（跨檔期併成一次出貨）。
+  settlementId String?
+  settlement   DgSettlement? @relation(fields: [settlementId], references: [id])
+
+  /// 下單當下的收件資料快照。會員之後改地址，這張單仍看得到當時填的
+  /// （結單的出貨資料以最新的為準，但要看得出客人中途改過）。
+  shipKind         String
+  shipRecipient    String
+  shipPhone        String
+  shipAddress      String?
+  shipCvsBrand     String?
+  shipCvsStoreId   String?
+  shipCvsStoreName String?
+  shipCvsAddress   String?
+
+  note String?
+
+  /// 品項小計（＝所有 DgLine.amount 的和，下單當下）。
+  /// 之後不論行狀態怎麼變，這個數字都不動——它是對帳鏈的起點。
+  itemsTotal Int
+
+  /// null＝客人自己下的；"manual"＝Amber 在後台代打的（LINE 社群 +1 轉進來）。
+  /// 沒有這個欄位，她就得同時維護 LINE 記事本與網站兩套帳，
+  /// 採購清單與結單金額就都會是錯的。
+  source String?
+
+  clientRef String? // 冪等鍵：送出逾時重送不會變成兩張單
+
+  status    String   @default("open") // open | void 整張作廢（她的測試單）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines DgLine[]
+
+  @@unique([tenantId, clientRef])
+  @@index([tenantId, batchId, createdAt])
+  @@index([tenantId, memberId, createdAt])
+  @@index([tenantId, settlementId])
+}
+
+/// 訂單的一行。狀態逐行走：五件裡缺一件只取消那一件，其餘照出。
+///
+/// ⚠ 金額不可就地修改。unitPrice / qty / amount 是下單當下的快照，永遠不動；
+/// 「缺貨要扣多少」由 status 與 gotQty 推導（見 _data/settle.ts 的 settleLines）。
+/// REKAT 的教訓：把折扣攤回單價，事後就查不出那筆差額是怎麼來的。
+model DgLine {
+  id       String  @id
+  tenantId String
+  orderId  String
+  order    DgOrder @relation(fields: [orderId], references: [id])
+
+  /// 關聯只為了後台回查與統計；顯示與金額一律走下面的快照欄位。
+  productId String?
+  product   DgProduct? @relation(fields: [productId], references: [id])
+  optionId  String?
+  option    DgOption?  @relation(fields: [optionId], references: [id])
+
+  // ── 下單當下的快照（不可變）─────────────────────────────
+  name        String
+  optionLabel String?
+  unitPrice   Int
+  qty         Int
+  amount      Int // qty × unitPrice
+  imageKey    String? // 縮圖，讓結單畫面與通知文字不必回查商品
+
+  // ── 出貨狀態（可變，但絕不動金額）───────────────────────
+  /// ordered 待採購 | bought 已買到 | oos 缺貨（現場沒貨）
+  /// | cancelled 取消（客人要求）| refunded 已退款
+  status String @default("ordered")
+
+  /// 實際買到的數量。null＝與 qty 相同。五件只買到三件就填 3，qty 仍是 5。
+  gotQty     Int?
+  statusNote String?
+  statusAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, orderId])
+  @@index([tenantId, productId, status])
+}
+
+/// 結單／出貨單。一位會員 × 一個檔期 ＝ 一張（自動歸戶）；
+/// Amber 也可以把別檔期的單手動挪進來一起出。運費只在這裡收一次。
+///
+/// 對帳鏈（Amber 隨時要看得到這幾段）：
+///     grossAmount   原始金額
+///   − deductAmount  缺貨／取消／少買扣除
+///   + adjustAmount  手動調整（匯差、湊整…，帶 adjustNote，可正可負）
+///   + shippingFee   運費（一張結單只收一次）
+///   − creditApplied 折抵（上一檔缺貨留下的餘額）
+///   = payableAmount 應收
+///   − paidAmount    實收   →  差額為正＝應補，為負＝應退
+///
+/// status = open 時上面的數字全部由 settleTotals() 即時算、不入庫；
+/// 按下「結單」轉 awaiting 時才凍結寫入。凍結之後行狀態再變動，
+/// 一律走 adjustAmount ＋ adjustNote，不回頭改 grossAmount——
+/// 金額已經通知出去了，改了就不可稽核。
+model DgSettlement {
+  id       String   @id // AS260920-K7QX
+  tenantId String
+  memberId String
+  member   DgMember @relation(fields: [memberId], references: [id])
+
+  /// 這張結單「起源」的檔期。手動併進來的別檔期訂單不改這一欄。
+  batchId String
+  batch   DgBatch @relation(fields: [batchId], references: [id])
+
+  /// 同一會員在同一檔期理論上只有一張結單，但「已出貨後又開新一輪」要開得出
+  /// 第二張。SQLite / Prisma 表達不了 partial unique index（「至多一張 open」），
+  /// 所以用 seq 讓重複在唯一鍵層面擋掉，「至多一張 open」則由
+  /// daigou-data.ts 的 pickSettlement() 保證並有純函式測試。
+  seq Int @default(1)
+
+  /// open 收單中 | awaiting 待付款（金額已凍結）| paid 已付款
+  /// | shipped 已出貨 | done 完成 | cancelled 取消
+  status String @default("open")
+
+  // 凍結的金額。status=open 時全為 0，畫面顯示的是即時計算值。
+  grossAmount   Int     @default(0)
+  deductAmount  Int     @default(0)
+  adjustAmount  Int     @default(0)
+  adjustNote    String?
+  shippingFee   Int     @default(0)
+  creditApplied Int     @default(0)
+  payableAmount Int     @default(0)
+  paidAmount    Int     @default(0)
+
+  /// transfer 匯款 | linepay LINE Pay。刻意存字串而非固定兩值：
+  /// 日後加 ecpay 只是多一個 key，不需要動 schema（同 ShopOrder.payment）。
+  payment    String?
+  remitLast5 String?
+  remitName  String?
+  remitAt    DateTime?
+
+  /// 不可猜的分享 token（22 字元 base64url）。結單通知文字裡的 /s/<token>
+  /// 連結靠這個——客人一點就看到明細與應付金額，不必輸入編號＋手機。
+  /// 頁面上的個資做遮罩（連結可能被轉貼到群組）；要看完整內容仍要走
+  /// 「編號＋手機」的驗證路徑。同主站 /subscription/[mtn] 已驗證過的模式。
+  lookupToken String
+
+  /// 預計到貨日。開單時從 batch.defaultEtaAt 帶入，可個別覆寫。
+  etaAt     DateTime?
+  shipNo    String?
+  closedAt  DateTime?
+  paidAt    DateTime?
+  shippedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders DgOrder[]
+  ledger DgLedger[]
+
+  @@unique([tenantId, memberId, batchId, seq])
+  @@unique([tenantId, lookupToken])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, memberId])
+}
+
+/// 收退款流水。錢的進出唯一真實來源。
+///
+/// 做成流水帳而不是訂單上的欄位，是為了讓「先收款」與「後收款」共用同一套：
+/// 先收款只是分錄早一點產生，結單頁一律顯示「應收 / 已收 / 差額」。
+/// 部分收款也是合法的（客人分兩次匯），所以不能是布林值。
+model DgLedger {
+  id       String @id
+  tenantId String
+
+  memberId String
+  member   DgMember @relation(fields: [memberId], references: [id])
+
+  settlementId String?
+  settlement   DgSettlement? @relation(fields: [settlementId], references: [id])
+
+  kind   String // payment 收款 | refund 退款 | credit 折抵下一單 | credit_use 折抵已使用
+  amount Int // 一律正數，方向看 kind
+  method String // transfer | linepay | cash | credit
+
+  last5     String? // 客人自己回報的匯款末五碼
+  payerName String?
+  note      String?
+
+  at        DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, settlementId])
+  @@index([tenantId, memberId, at])
+}
