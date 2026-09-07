@@ -13,26 +13,6 @@ export const NAV = [
   { href: `${ML}/custom`, zh: "伴手禮・蛋糕", en: "Gifts" },
 ];
 
-export function LogoMark({ size = 38 }: { size?: number }) {
-  // 品牌 Logo 的排字替身。拿到店家的 SVG 原檔後，直接把這個元件換掉即可。
-  return (
-    <span className="ml-logo-mark" style={{ width: size, height: size }} aria-hidden="true">
-      <span
-        style={{
-          fontFamily: "var(--ml-display)",
-          fontStyle: "italic",
-          fontSize: size * 0.5,
-          lineHeight: 1,
-          color: "#16130F",
-          transform: "translateY(-1px)",
-        }}
-      >
-        l.
-      </span>
-    </span>
-  );
-}
-
 export default function MlNav() {
   const pathname = usePathname();
   const [stuck, setStuck] = useState(false);
@@ -70,11 +50,17 @@ export default function MlNav() {
       <header className="ml-nav" data-stuck={stuck}>
         <div className="ml-wrap ml-nav-in">
           <Link href={`${ML}/`} className="ml-logo" aria-label={`${SITE.name} 首頁`}>
-            <LogoMark />
-            <span className="ml-logo-text">
-              <b>Monsieur Long</b>
-              <span>隆先生・大稻埕</span>
-            </span>
+            {/* 店家提供的標準組合，去背後的 PNG（見 scripts/monsieurlong-logo.mjs）。
+                本專案不用 next/image，維持與其他站一致的 <img>；
+                寫死 width/height 讓瀏覽器先保留位置，載入時不會跳版。 */}
+            <img
+              className="ml-logo-img"
+              src="/sites/monsieurlong/logo.png"
+              alt={SITE.name}
+              width={863}
+              height={348}
+            />
+            <span className="ml-logo-sub">隆先生・大稻埕</span>
           </Link>
 
           <nav className="ml-nav-links" aria-label="主要導覽">

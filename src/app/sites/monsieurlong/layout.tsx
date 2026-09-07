@@ -44,9 +44,15 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(ORIGIN),
-  // favicon 放 public/ 而非 app/ 內：app/ 內的 icon.svg 會產生帶內部路徑
-  // （/sites/monsieurlong/icon.svg）的 <link>，把改寫前的實作路徑洩進 HTML。
-  icons: { icon: "/sites/monsieurlong/icon.svg" },
+  // favicon 放 public/ 而非 app/ 內：app/ 內的 icon 檔會產生帶內部路徑
+  // （/sites/monsieurlong/icon.png）的 <link>，把改寫前的實作路徑洩進 HTML。
+  // 兩種尺寸：32px 那份只放手寫字，整組標準組合在分頁上會糊成一團。
+  icons: {
+    icon: [
+      { url: "/sites/monsieurlong/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/sites/monsieurlong/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
   title: {
     default: "Monsieur Long 隆先生｜大稻埕手工 Gelato 義式冰淇淋",
     template: "%s｜Monsieur Long 隆先生",

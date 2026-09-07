@@ -419,44 +419,42 @@
 .ml-logo {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   flex: none;
 }
 
-.ml-logo-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 7px;
-  background: var(--ml-yellow);
-  display: grid;
-  place-items: center;
-  flex: none;
+/* 標準組合是橫式的（MONSIEUR 在上、long. 在下），塞不進方形徽章。
+   固定寬度、高度自動，比例由圖片本身決定。 */
+.ml-logo-img {
+  width: 116px;
+  height: auto;
   transition: transform var(--ml-mid) var(--ml-ease);
 }
 
-.ml-logo:hover .ml-logo-mark {
-  transform: rotate(-6deg) scale(1.06);
+.ml-logo:hover .ml-logo-img {
+  transform: rotate(-1.5deg) scale(1.04);
 }
 
-.ml-logo-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.ml-logo-text b {
-  font-family: var(--ml-display);
-  font-weight: 400;
-  font-size: 19px;
-  letter-spacing: 0.01em;
-}
-
-.ml-logo-text span {
+/* logo 已經把品牌名講完了，這裡只補中文名與所在地 */
+.ml-logo-sub {
   font-family: var(--ml-mono);
-  font-size: 9px;
-  letter-spacing: 0.24em;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
   color: var(--ml-ink-3);
   text-transform: uppercase;
+  padding-left: 12px;
+  border-left: 1px solid var(--ml-rule);
+  white-space: nowrap;
+}
+
+/* 窄螢幕只留 logo，副標會把導覽列擠爆 */
+@media (max-width: 419px) {
+  .ml-logo-sub {
+    display: none;
+  }
+  .ml-logo-img {
+    width: 100px;
+  }
 }
 
 .ml-nav-links {

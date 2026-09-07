@@ -6,6 +6,12 @@
 //
 // 內容有更動時重跑：  node scripts/monsieurlong-og.mjs
 import sharp from "sharp";
+import { readFileSync } from "fs";
+
+// 用 data URI 內嵌而不是事後 composite：內嵌的 <image> 會跟著 SVG 的座標系走，
+// 位置與縮放跟其他元素用同一套單位，不必另外換算。
+const LOGO = readFileSync("public/sites/monsieurlong/logo.png").toString("base64");
+const LOGO_W = 863, LOGO_H = 348;
 
 const OUT = "public/sites/monsieurlong/og.png";
 
@@ -24,7 +30,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" v
   <path d="M0,0 H1200 V148 C1080,148 1060,232 960,232 C860,232 840,148 740,148
            C640,148 620,216 520,216 C420,216 400,148 300,148
            C200,148 180,228 80,228 C40,228 20,192 0,174 Z" fill="#FFC732"/>
-  <circle cx="300" cy="258" r="13" fill="#FFC732"/>
+  <circle cx="628" cy="266" r="12" fill="#FFC732"/>
 
   ${scoops
     .map(
@@ -33,14 +39,14 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" v
     )
     .join("\n  ")}
 
-  <text x="80" y="368" font-family="Georgia, 'Times New Roman', serif" font-size="104" fill="#16130F" letter-spacing="-1">MONSIEUR LONG</text>
-  <text x="84" y="420" font-family="'PingFang TC', 'Heiti TC', Helvetica, Arial, sans-serif" font-size="28" fill="#4A4238" letter-spacing="4">隆先生・大稻埕貴德街 59 號</text>
+  <image href="data:image/png;base64,${LOGO}" x="76" y="286" width="470" height="${(470 * LOGO_H / LOGO_W).toFixed(1)}"/>
+  <text x="84" y="510" font-family="'PingFang TC', 'Heiti TC', Helvetica, Arial, sans-serif" font-size="27" fill="#4A4238" letter-spacing="4">隆先生・大稻埕貴德街 59 號</text>
 
-  <rect x="80" y="458" width="132" height="46" rx="23" fill="#16130F"/>
-  <text x="101" y="488" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FFC732" letter-spacing="2">GELATO</text>
-  <text x="232" y="488" font-family="'PingFang TC', Helvetica, Arial, sans-serif" font-size="21" fill="#4A4238" letter-spacing="1">每天現做，每天不一樣</text>
+  <rect x="80" y="536" width="132" height="44" rx="22" fill="#16130F"/>
+  <text x="101" y="565" font-family="Helvetica, Arial, sans-serif" font-size="19" fill="#FFC732" letter-spacing="2">GELATO</text>
+  <text x="232" y="565" font-family="'PingFang TC', Helvetica, Arial, sans-serif" font-size="21" fill="#4A4238" letter-spacing="1">每天現做，每天不一樣</text>
 
-  <text x="80" y="576" font-family="Georgia, serif" font-size="27" fill="#8F5E00" letter-spacing="3">YOUR MOOD YOUR SCOOP</text>
+  <text x="672" y="600" font-family="Georgia, serif" font-size="24" fill="#8F5E00" letter-spacing="3">YOUR MOOD YOUR SCOOP</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(OUT);

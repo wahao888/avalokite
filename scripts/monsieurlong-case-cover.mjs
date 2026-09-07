@@ -6,6 +6,11 @@
 //
 // 內容有更動時重跑：  node scripts/monsieurlong-case-cover.mjs
 import sharp from "sharp";
+import { readFileSync } from "fs";
+
+// 內嵌真 logo：SVG 的 <image> 會跟著外層那個傾斜的 transform 一起轉，
+// 事後 composite 做不到這件事。
+const LOGO = readFileSync("public/sites/monsieurlong/logo.png").toString("base64");
 
 const OUT = "public/cases/monsieurlong.jpg";
 
@@ -107,11 +112,10 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" v
           <ellipse cx="742" cy="322" rx="168" ry="140" fill="url(#blobB)"/>
         </g>
 
-        <!-- 站內導覽 -->
-        <rect x="34" y="62" width="30" height="30" rx="6" fill="${YELLOW}"/>
-        <text x="43" y="84" font-family="Georgia,serif" font-style="italic" font-size="16" fill="${INK}">l.</text>
-        <text x="74" y="79" font-family="Georgia,serif" font-size="16" fill="${INK}">Monsieur Long</text>
-        <text x="74" y="92" font-family="'PingFang TC',sans-serif" font-size="9" letter-spacing="2" fill="#8B8172">隆先生・大稻埕</text>
+        <!-- 站內導覽：真的 logo，尺寸與網站上一致 -->
+        <image href="data:image/png;base64,${LOGO}" x="34" y="60" width="116" height="46.8"/>
+        <line x1="162" y1="64" x2="162" y2="100" stroke="#E2D9C6" stroke-width="1"/>
+        <text x="174" y="86" font-family="'PingFang TC',sans-serif" font-size="9" letter-spacing="2" fill="#6F6759">隆先生・大稻埕</text>
         <g font-family="'PingFang TC',sans-serif" font-size="12.5" fill="${INK}">
           <text x="470" y="83">口味</text>
           <text x="524" y="83">活動與合作</text>
