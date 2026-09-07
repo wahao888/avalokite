@@ -84,7 +84,7 @@ export const TENANTS: Tenant[] = [
   },
   {
     slug: "amber",
-    name: "Amber 代購連線",
+    name: "AmberPick",
     indexable: false,
     // 靜態路徑僅供參考；實際 sitemap 由站內 sitemap.ts 產生。
     // 商品頁刻意不進 sitemap：連線商品幾天後就截止，收錄了只會累積死連結。

@@ -34,6 +34,9 @@ export function MyOrdersLink() {
     }
   }, []);
 
-  if (!path) return null;
+  // 下過單的人 → 直接進自己的頁；沒下過的 → 查訂單。
+  // 兩個都放的話標誌變寬之後導覽列會擠到換行，而且對已下單的人來說
+  // 「查訂單」是多餘的（她自己的頁面裡就有查詢連結）。
+  if (!path) return <a href="/order/lookup">查訂單</a>;
   return <a href={path}>我的訂單</a>;
 }

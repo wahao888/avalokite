@@ -97,10 +97,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       )}
 
       <h1 className="am-h1">{p.name}</h1>
-      <p className="am-sub">
-        {categoryName(p.categoryKey)}
-        {p.preorder ? "・可預購" : ""}
-      </p>
+      {/* 沒分類就不要印「未分類」——那是給後台看的狀態，對客人是雜訊 */}
+      {(p.categoryKey || p.preorder) && (
+        <p className="am-sub">
+          {[p.categoryKey ? categoryName(p.categoryKey) : null, p.preorder ? "可預購" : null]
+            .filter(Boolean)
+            .join("・")}
+        </p>
+      )}
       <p className="am-price">{twd(p.price)}</p>
 
       {p.note && <p className="am-desc">{p.note}</p>}

@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
+import { Outfit } from "next/font/google";
 import { getTenant, tenantOrigin } from "@/lib/tenants";
 import { SITE, TENANT_SLUG } from "./_data/site";
 import { CartProvider } from "./_components/CartProvider";
 import { CartButton } from "./_components/CartButton";
 import { CartDrawer } from "./_components/CartDrawer";
 import { MyOrdersLink } from "./_components/MyOrdersLink";
+import { AmberWordmark } from "./_components/Logo";
 import "./amber.css";
 
 // 代購站的 root layout（本 repo 第四個：主站 [locale]、其他客戶站、portal、這裡）。
 //
-// 刻意不載入任何 web font。客人幾乎都是從 LINE 點連結進來的——那是行動網路、
-// 而且 LINE 的內建瀏覽器每次都是冷啟動。一份中文 web font 動輒數百 KB，
-// 會直接吃掉「連線商品要能立刻看到」這件事。系統字堆疊在手機上本來就好看。
+// 字體只載**拉丁子集**（約 20KB，next/font 會自我託管、沒有第三方請求）。
+// 中文一律走系統字——幾百 KB 的是中文字型，那才是會拖垮 LINE 冷啟動的東西。
+// 但價格、倒數、品牌名這些拉丁字與數字是被看最多次的，值得那 20KB。
+//
+// display: "swap" 讓文字先用系統字畫出來，字體到了再換——
+// 客人在 4G 上不該為了字型盯著空白畫面。
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 
 const tenant = getTenant(TENANT_SLUG)!;
 
@@ -21,10 +32,14 @@ export const metadata: Metadata = {
   description: SITE.tagline,
   // 未對外前不進索引。上線時要跟 tenants.ts 的 indexable 一起翻。
   robots: SITE.indexable ? undefined : { index: false, follow: false },
+  // app/ 目錄下的 icon 會產生帶「改寫前內部路徑」的 <link>，會洩漏站台結構，
+  // 所以放 public/ 並在這裡明寫（同 REKAT 的做法）。
+  icons: { icon: "/sites/amber/icon.svg" },
   openGraph: {
     type: "website",
     siteName: SITE.name,
     locale: "zh_TW",
+    images: ["/sites/amber/og.png"],
   },
 };
 
@@ -37,17 +52,17 @@ export const viewport = {
 
 export default function AmberLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-Hant">
+    <html lang="zh-Hant" className={outfit.variable}>
       <body className="am">
         <CartProvider>
           <header className="am-nav">
-            <a className="am-nav__brand" href="/">
-              {SITE.shortName}
+            <a className="am-logo" href="/" aria-label={SITE.name}>
+              <AmberWordmark />
             </a>
             <nav className="am-nav__links">
-              {/* 下過單的人才會看到——連結存在他自己的裝置上 */}
+              {/* 一個訂單入口就好：下過單的人看到「我的訂單」，
+                  沒下過的看到「查訂單」。兩個都放會擠到換行。 */}
               <MyOrdersLink />
-              <a href="/order/lookup">查訂單</a>
               <CartButton />
             </nav>
           </header>

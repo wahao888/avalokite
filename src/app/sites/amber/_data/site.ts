@@ -8,10 +8,9 @@ import { getTenant, tenantOrigin } from "@/lib/tenants";
 export const TENANT_SLUG = "amber";
 
 export const SITE = {
-  name: "Amber 代購連線",
-  shortName: "Amber",
-  tagline: "韓國・日本連線代購",
-  /** TODO(客戶確認)：正式的品牌名與 slogan */
+  name: "AmberPick",
+  shortName: "AmberPick",
+  tagline: "各國連線代購・正品直送",
   lineId: "@004vrybx",
   /** 加好友連結（客戶提供的正式網址） */
   lineAddUrl: "https://page.line.me/004vrybx",

@@ -4,16 +4,23 @@
    沒有 web font、沒有動畫庫、沒有任何會擋住首次繪製的東西。 */
 
 :root {
-  --a-ink: #1c1917;
-  --a-sub: #6b625b;
-  --a-paper: #fdfbf8;
+  /* 日雜清爽：暖白底、柔黑字、髮絲級的線。
+     對比刻意不拉到最滿——純黑配純白是海報的做法，不是雜誌的。 */
+  --a-ink: #2b2925;
+  --a-sub: #8c867d;
+  --a-paper: #faf9f6;
   --a-card: #ffffff;
-  --a-line: #e8e1d9;
-  --a-accent: #c1462f; /* 主色。價格、主要按鈕、截止提示 */
-  --a-accent-soft: #fbeeea;
-  --a-ok: #3f6b4a;
-  --a-radius: 10px;
-  --a-shadow: 0 1px 2px rgba(28, 25, 23, 0.06), 0 4px 14px rgba(28, 25, 23, 0.05);
+  --a-line: #e9e5de;
+
+  /* 琥珀。價格、快截止、主要動作。
+     壓到 #9c6c33 是為了對比度——淺一階（#a8763a）配白底只有約 4.2:1，
+     而價格是加粗的內文尺寸，那個數字在 AA 標準的邊緣。 */
+  --a-accent: #9c6c33;
+  --a-accent-soft: #f6efe4;
+  --a-ok: #5f7a5c;
+
+  --a-radius: 12px;
+  --a-shadow: 0 1px 2px rgba(43, 41, 37, 0.04), 0 8px 24px rgba(43, 41, 37, 0.05);
 }
 
 * { box-sizing: border-box; }
@@ -22,8 +29,11 @@ body.am {
   margin: 0;
   background: var(--a-paper);
   color: var(--a-ink);
-  font-family: system-ui, -apple-system, "Noto Sans TC", "PingFang TC",
-    "Microsoft JhengHei", sans-serif;
+  /* 拉丁字與數字用 Outfit（只載 latin 子集，約 20KB），中文一律走系統字。
+     幾百 KB 的是中文字型——那才是會拖垮 LINE 冷啟動的東西。
+     價格與倒數是這個站被看最多次的數字，字對了質感差很多。 */
+  font-family: var(--font-outfit), system-ui, -apple-system, "Noto Sans TC",
+    "PingFang TC", "Microsoft JhengHei", sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
@@ -48,8 +58,16 @@ a { color: inherit; }
   font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em;
   text-decoration: none;
 }
-.am-nav__links { display: flex; align-items: center; gap: 0.9rem; font-size: 0.85rem; }
-.am-nav__links a { text-decoration: none; color: var(--a-sub); }
+.am-nav__links { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; }
+.am-nav__links a { text-decoration: none; color: var(--a-sub); white-space: nowrap; }
+/* 標誌變寬之後，375px 下三個項目會擠到換行。訂單那一格永遠只有一個連結
+   （有下過單就是「我的訂單」，否則是「查訂單」），這樣就穩定放得下。 */
+/* 品牌名是 AmberPick，「Pick」不能砍——導覽列的擁擠已經靠
+   「訂單入口只留一個」解決了，這裡只需要再收一點間距。 */
+@media (max-width: 380px) {
+  .am-nav__links { gap: 0.6rem; font-size: 0.8rem; }
+  .am-logo__text b, .am-logo__text i { font-size: 0.95rem; }
+}
 
 /* 購物車鈕。連線期間她的客人會一直加，所以數字要明顯 */
 .am-cartbtn {
@@ -71,9 +89,22 @@ a { color: inherit; }
 .am-cartbtn__n.bump { animation: am-bump 260ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .am-cartbtn__n.bump { animation: none; } }
 
+/* ── 標誌 ───────────────────────────────────────────── */
+.am-logo {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  text-decoration: none; color: var(--a-ink);
+}
+.am-logo__mark { color: var(--a-accent); flex: none; }
+.am-logo__text { display: inline-flex; align-items: baseline; letter-spacing: 0.01em; }
+.am-logo__text b { font-weight: 600; font-size: 1.02rem; }
+.am-logo__text i {
+  font-style: normal; font-weight: 300; font-size: 1.02rem;
+  letter-spacing: 0.06em; color: var(--a-sub);
+}
+
 /* ── 版面 ───────────────────────────────────────────── */
-.am-wrap { max-width: 960px; margin: 0 auto; padding: 1rem 1rem 5rem; }
-.am-h1 { font-size: 1.35rem; font-weight: 800; margin: 0.6rem 0 0.2rem; letter-spacing: 0.01em; }
+.am-wrap { max-width: 960px; margin: 0 auto; padding: 1.2rem 1rem 5rem; }
+.am-h1 { font-size: 1.3rem; font-weight: 600; margin: 0.8rem 0 0.3rem; letter-spacing: 0.02em; }
 .am-sub { margin: 0 0 1rem; color: var(--a-sub); font-size: 0.9rem; }
 .am-empty {
   padding: 3rem 1rem; text-align: center; color: var(--a-sub);
@@ -112,13 +143,15 @@ a { color: inherit; }
 
 /* ── 商品格 ─────────────────────────────────────────── */
 .am-grid {
-  display: grid; gap: 0.8rem;
+  display: grid; gap: 0.9rem;
   grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
 }
 .am-card {
   display: flex; flex-direction: column;
   background: var(--a-card); border: 1px solid var(--a-line);
   border-radius: var(--a-radius); overflow: hidden;
+  /* 極淡的陰影。日雜的卡片是靠留白與髮絲線分開的，不是靠厚重的框 */
+  box-shadow: var(--a-shadow);
 }
 .am-card__link { text-decoration: none; display: block; }
 .am-card__img {
@@ -131,12 +164,12 @@ a { color: inherit; }
 .am-card__img--none {
   display: grid; place-items: center; color: var(--a-sub); font-size: 0.8rem;
 }
-.am-card__body { padding: 0.6rem 0.7rem 0.7rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+.am-card__body { padding: 0.7rem 0.8rem 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
 .am-card__name {
-  font-size: 0.9rem; line-height: 1.4; font-weight: 600;
+  font-size: 0.88rem; line-height: 1.5; font-weight: 500;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.am-card__price { font-weight: 800; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+.am-card__price { font-weight: 600; font-size: 1.02rem; color: var(--a-accent); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
 .am-card__foot { margin-top: auto; padding-top: 0.35rem; }
 
 /* 倒數標籤。快截止的用主色，其餘用灰——全部標紅就等於沒有標。 */
@@ -371,19 +404,24 @@ a { color: inherit; }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --a-ink: #f0ebe5;
-    --a-sub: #a49a90;
-    --a-paper: #16140f;
-    --a-card: #1f1c17;
-    --a-line: #332e27;
-    --a-accent: #e8785f;
-    --a-accent-soft: #2a1d19;
-    --a-ok: #8fbb98;
+    /* 深色也要暖。冷灰會讓商品照的膚色與布料看起來髒 */
+    --a-ink: #efebe3;
+    --a-sub: #9e968a;
+    --a-paper: #17150f;
+    --a-card: #201d18;
+    --a-line: #302b24;
+    --a-accent: #d9a15c;
+    --a-accent-soft: #2a2118;
+    --a-ok: #8fae8b;
   }
-  .am-cats a.on { color: #16140f; }
-  .am-btn { color: #16140f; }
-  .am-btn--accent { color: #16140f; }
-  .am-card__img, .am-line img, .am-gallery img { background: #262119; }
-  .am-tag { background: #262119; }
-  .am-tag--closed { background: #241f19; color: #6f665d; }
+  .am-cats a.on { color: #17150f; }
+  .am-btn { color: #17150f; }
+  .am-btn--accent { color: #17150f; }
+  /* ⚠ 這一行不可省。上面的 .am-btn 與 .am-btn--ghost 同權重，
+     但它排在後面 → ghost 會拿到近黑的字，在深色底上等於隱形。
+     2026-09-07 從截圖裡發現：「選規格」與「複製連結」都看不見。 */
+  .am-btn--ghost { color: var(--a-ink); }
+  .am-card__img, .am-line img, .am-gallery img { background: #272219; }
+  .am-tag { background: #272219; }
+  .am-tag--closed { background: #221e18; color: #6f665d; }
 }
