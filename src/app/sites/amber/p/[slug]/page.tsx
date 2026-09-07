@@ -6,9 +6,12 @@ import { mediaUrl, thumbUrl } from "@/lib/media-url";
 import { orderState, effectiveDeadline, ORDER_STATE_ZH } from "@/lib/daigou-deadline";
 import { twd } from "../../_data/cart";
 import { categoryName } from "../../_data/categories";
-import { TENANT_SLUG } from "../../_data/site";
+import { TENANT_SLUG, SITE } from "../../_data/site";
+import { getTenant, tenantOrigin } from "@/lib/tenants";
 import { DeadlineBar } from "../../_components/DeadlineBar";
 import { AddToCart, type OptionView } from "../../_components/AddToCart";
+import { ShareLine, ShareCopy } from "../../_components/ShareLine";
+import { formatTaipei } from "@/lib/tw-time";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +116,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         showStock={p.showStock}
         productStock={p.stock}
       />
+
+      {/* 分享。Amber 開賣時貼群組，客人也可能轉給朋友——
+          手機上點一下就開 LINE 的「傳送給…」，比複製貼上少三步。 */}
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1.2rem" }}>
+        <ShareLine
+          text={[
+            `${p.name}　${twd(p.price)}`,
+            deadline ? `⏰ ${formatTaipei(deadline)} 截止` : null,
+            `【${SITE.shortName}】${p.batch.title}`,
+          ]
+            .filter(Boolean)
+            .join("\n")}
+          url={`${tenantOrigin(getTenant(TENANT_SLUG)!)}/p/${p.slug}`}
+        />
+        <ShareCopy url={`${tenantOrigin(getTenant(TENANT_SLUG)!)}/p/${p.slug}`} />
+      </div>
 
       <p className="am-field__hint" style={{ marginTop: "1.2rem" }}>
         連線期間可以一直加購，同一檔的訂單最後會合併成一張出貨單，運費只收一次。

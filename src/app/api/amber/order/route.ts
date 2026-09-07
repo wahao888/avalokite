@@ -8,6 +8,7 @@ import {
   loadPricing,
   upsertMemberByPhone,
   createDaigouOrder,
+  ensureMemberToken,
   OrderRejected,
 } from "@/lib/daigou-data";
 import { normalizeCart, priceLines, twd, MAX_LINES } from "@/app/sites/amber/_data/cart";
@@ -214,9 +215,14 @@ export async function POST(req: NextRequest) {
     replyTo: input.email || undefined,
   });
 
+  // 「我的訂單」連結。客人拿它傳給自己或存進 LINE 記事本，之後不必記編號。
+  // 連線期間下三次單就有三個訂單編號，一定會弄丟——這條連結取代那件事。
+  const memberToken = await ensureMemberToken(TENANT.slug, member.id);
+
   return NextResponse.json({
     ok: true,
     id: order.id,
     itemsTotal: totals.itemsTotal,
+    memberPath: memberToken ? `/me/${memberToken}` : null,
   });
 }

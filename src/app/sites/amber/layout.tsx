@@ -4,6 +4,7 @@ import { SITE, TENANT_SLUG } from "./_data/site";
 import { CartProvider } from "./_components/CartProvider";
 import { CartButton } from "./_components/CartButton";
 import { CartDrawer } from "./_components/CartDrawer";
+import { MyOrdersLink } from "./_components/MyOrdersLink";
 import "./amber.css";
 
 // 代購站的 root layout（本 repo 第四個：主站 [locale]、其他客戶站、portal、這裡）。
@@ -44,6 +45,8 @@ export default function AmberLayout({ children }: { children: React.ReactNode })
               {SITE.shortName}
             </a>
             <nav className="am-nav__links">
+              {/* 下過單的人才會看到——連結存在他自己的裝置上 */}
+              <MyOrdersLink />
               <a href="/order/lookup">查訂單</a>
               <CartButton />
             </nav>

@@ -410,6 +410,21 @@ model DgMember {
   /// 這一定會發生——老客人換號碼、幫家人代訂、打錯一碼。
   mergedIntoId String?
 
+  /// 「我的訂單」連結用的不可猜 token（22 字元 base64url）。
+  ///
+  /// 這是「不用簡訊、不用密碼、不用 LINE Login」的身分方案：
+  /// 客人第一次下單完成後拿到一條 /me/<token>，把它傳給自己或存進 LINE 記事本，
+  /// 之後隨時查得到自己所有的單。連線期間下三次單就有三個訂單編號，
+  /// 一定會弄丟——這條連結取代「記住編號＋手機」。
+  ///
+  /// ⚠ 連結即憑證：誰拿到誰看得到。所以 /me 頁面上的個資一律遮罩
+  /// （王＊明／0912-***-678／地址只到區），萬一被轉貼到群組，
+  /// 外洩的是「有下單」這件事，不是完整住址。
+  ///
+  /// 可為 null：既有會員是懶生成的（第一次需要時才產），
+  /// 而且 nullable 欄位在 SQLite 是 metadata-only 的 ALTER，不重建表。
+  lookupToken String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -420,6 +435,7 @@ model DgMember {
 
   @@unique([tenantId, phoneDigits])
   @@unique([tenantId, lineUserId])
+  @@unique([tenantId, lookupToken])
   @@index([tenantId, createdAt])
 }
 

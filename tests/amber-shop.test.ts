@@ -52,6 +52,7 @@ import {
 } from "@/app/sites/amber/_data/purchase-list";
 import { parseOptions, crossOptions, MAX_OPTIONS } from "@/app/sites/amber/_data/spec-presets";
 import { CATEGORIES, isCategoryKey, categoryName } from "@/app/sites/amber/_data/categories";
+import { lineShareUrl, keepForMeText, LINE_TEXT_MAX } from "@/lib/line-share";
 import {
   settlementRequestText,
   shortageSummaryText,
@@ -958,5 +959,51 @@ describe("通知文字", () => {
     // 金額區塊要被空行與品項清單隔開
     const idx = text.indexOf("商品金額");
     expect(text.slice(0, idx)).toMatch(/\n\n/);
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// 分享到 LINE
+// ────────────────────────────────────────────────────────────
+describe("LINE 分享連結", () => {
+  const decode = (u: string) => decodeURIComponent(u.replace("https://line.me/R/msg/text/?", ""));
+
+  it("組出 LINE 的分享 scheme，文字與網址都經過編碼", () => {
+    const u = lineShareUrl("9 月韓國連線 開跑囉！", "https://amber.avalokite.xyz/");
+    expect(u.startsWith("https://line.me/R/msg/text/?")).toBe(true);
+    expect(decode(u)).toBe("9 月韓國連線 開跑囉！\nhttps://amber.avalokite.xyz/");
+  });
+
+  it("換行、# 與 & 都要編碼掉，否則連結會在 LINE 裡被截斷", () => {
+    const u = lineShareUrl("a\nb&c#d", "https://x/?q=1&r=2");
+    expect(u).not.toContain("\n");
+    expect(u).not.toMatch(/[&#](?!.*text)/);
+    expect(decode(u)).toBe("a\nb&c#d\nhttps://x/?q=1&r=2");
+  });
+
+  it("⚠ 太長時截的是文字，連結一定要留住", () => {
+    // 連結放在最後，天真的截斷會把它切掉——那則訊息就完全失去意義。
+    const url = "https://amber.avalokite.xyz/p/some-long-product-slug";
+    const u = lineShareUrl("字".repeat(2000), url);
+    const out = decode(u);
+    expect(out.endsWith(url)).toBe(true);
+    expect(out).toContain("…");
+    expect(out.length).toBeLessThanOrEqual(LINE_TEXT_MAX);
+  });
+
+  it("剛好等於上限時不截斷", () => {
+    const url = "https://x/y";
+    const body = "字".repeat(LINE_TEXT_MAX - url.length - 1);
+    const out = decode(lineShareUrl(body, url));
+    expect(out).not.toContain("…");
+    expect(out.endsWith(url)).toBe(true);
+  });
+
+  it("沒有網址時只送文字", () => {
+    expect(decode(lineShareUrl("嗨"))).toBe("嗨");
+  });
+
+  it("「傳給自己」的文字帶站名，客人在 LINE 裡才認得出是誰", () => {
+    expect(keepForMeText("Amber")).toContain("Amber");
   });
 });

@@ -11,6 +11,9 @@ import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { categoryName } from "@/app/sites/amber/_data/categories";
 import { priceLabel } from "@/app/sites/amber/_data/cart";
 import { thumbUrl } from "@/lib/media-url";
+import { ShareBatch } from "../../../_components/ShareBatch";
+import { batchOpenText, deadlineReminderText } from "@/app/sites/amber/_data/notify-text";
+import { tenantOrigin } from "@/lib/tenants";
 import LoginForm from "../../../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +88,34 @@ export default async function BatchPage({
       </div>
 
       {sp.error && <div className="p-error">操作失敗，請再試一次。</div>}
+
+      {/* 分享到 LINE。開賣貼一次、快截止再貼一次，就是她整檔連線的行銷。
+          文字由 _data/notify-text.ts 的純函式產生，有測試守著格式。 */}
+      {isOpen && (
+        <div style={{ margin: "1rem 0" }}>
+          <ShareBatch
+            label="分享開賣到 LINE"
+            text={batchOpenText({
+              batchTitle: batch.title,
+              deadline: batch.defaultDeadlineAt,
+              url: tenantOrigin(tenant),
+            })}
+          />
+          {batch.defaultDeadlineAt && (
+            <div style={{ marginTop: "0.5rem" }}>
+              <ShareBatch
+                label="分享收單提醒"
+                text={deadlineReminderText({
+                  batchTitle: batch.title,
+                  deadline: batch.defaultDeadlineAt,
+                  now: new Date(),
+                  url: tenantOrigin(tenant),
+                })}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-stats">
         <div className="p-stat">

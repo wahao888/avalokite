@@ -567,6 +567,43 @@ export async function upsertMemberByPhone(
   });
 }
 
+/**
+ * 取得（必要時產生）這位會員的「我的訂單」連結 token。
+ *
+ * 懶生成：既有會員沒有 token，第一次需要時才補。
+ * 這是「不用簡訊、不用密碼、不用 LINE Login」的身分方案——
+ * 客人拿到一條 /me/<token> 傳給自己，之後隨時查得到所有的單。
+ * 連線期間下三次單就有三個訂單編號，一定會弄丟。
+ */
+export async function ensureMemberToken(tenantId: string, memberId: string): Promise<string | null> {
+  const m = await prisma.dgMember.findFirst({
+    where: { tenantId, id: memberId },
+    select: { lookupToken: true },
+  });
+  if (!m) return null;
+  if (m.lookupToken) return m.lookupToken;
+
+  const token = newLookupToken();
+  // where 帶 lookupToken: null：兩個並行請求時只有一個寫得進去，
+  // 另一個 count 會是 0，再讀一次就拿到先寫進去的那個。
+  const r = await prisma.dgMember.updateMany({
+    where: { tenantId, id: memberId, lookupToken: null },
+    data: { lookupToken: token },
+  });
+  if (r.count === 1) return token;
+
+  const again = await prisma.dgMember.findFirst({
+    where: { tenantId, id: memberId },
+    select: { lookupToken: true },
+  });
+  return again?.lookupToken ?? null;
+}
+
+/** 客人從「我的訂單」連結進來。token 是 22 字元亂數，不可猜 */
+export async function getMemberByToken(tenantId: string, lookupToken: string) {
+  return prisma.dgMember.findFirst({ where: { tenantId, lookupToken } });
+}
+
 export async function getMember(tenantId: string, id: string) {
   return prisma.dgMember.findFirst({ where: { tenantId, id } });
 }
@@ -1124,7 +1161,9 @@ export async function listSettlements(
     orderBy: { createdAt: "desc" },
     skip: opts.skip ?? 0,
     take: opts.take ?? PAGE_SIZE,
-    include: { member: true, orders: { include: { lines: true } } },
+    // batch 一起帶：客人的「我的訂單」頁要顯示是哪一檔連線，
+    // 而那一頁是跨檔期列出的（不像後台的列表已經先選好檔期）。
+    include: { member: true, batch: true, orders: { include: { lines: true } } },
   });
 }
 

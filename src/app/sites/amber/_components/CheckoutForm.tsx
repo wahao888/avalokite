@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
 import { twd } from "../_data/cart";
-import { CVS_BRANDS, SHIP_KIND_ZH, type ShipKind } from "../_data/site";
+import { CVS_BRANDS, SHIP_KIND_ZH, SITE, type ShipKind } from "../_data/site";
+import { ShareLine, ShareCopy } from "./ShareLine";
+import { rememberMyLink } from "./MyOrdersLink";
+import { keepForMeText } from "@/lib/line-share";
 
 // 結帳。
 //
@@ -55,7 +58,7 @@ export function CheckoutForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rejected, setRejected] = useState<Rejected[]>([]);
-  const [done, setDone] = useState<{ id: string; itemsTotal: number } | null>(null);
+  const [done, setDone] = useState<{ id: string; itemsTotal: number; memberPath: string | null } | null>(null);
 
   /** 冪等鍵：送出逾時重送不會變成兩張單 */
   const clientRef = useRef(crypto.randomUUID());
@@ -120,7 +123,13 @@ export function CheckoutForm() {
         return;
       }
 
-      const out = (await res.json()) as { id: string; itemsTotal: number };
+      const out = (await res.json()) as {
+        id: string;
+        itemsTotal: number;
+        memberPath: string | null;
+      };
+      // 記住這台裝置的「我的訂單」連結，之後頁首直接有入口
+      if (out.memberPath) rememberMyLink(out.memberPath);
       try {
         localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
       } catch {
@@ -154,8 +163,33 @@ export function CheckoutForm() {
             <li>結單時用 LINE 通知你總金額與匯款方式</li>
           </ol>
         </div>
+        {/* 「不用簡訊、不用密碼」的身分方案：給她一條專屬連結，
+            傳給自己就好。比記住「編號＋手機」實際得多——
+            連線期間下三次單就有三個編號，一定會弄丟。 */}
+        {done.memberPath && (
+          <div className="am-note">
+            <strong>把你的專屬連結留起來 👇</strong>
+            <p style={{ margin: "0.3rem 0 0.6rem" }}>
+              之後查訂單、看金額、回報匯款都從這裡進去，不用記訂單編號。
+              這台手機下次會直接出現在上面的選單裡。
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <ShareLine
+                text={keepForMeText(SITE.shortName)}
+                url={`${location.origin}${done.memberPath}`}
+                label="用 LINE 傳給自己"
+                className="am-btn am-btn--accent"
+              />
+              <ShareCopy url={`${location.origin}${done.memberPath}`} />
+              <a className="am-btn am-btn--ghost" href={done.memberPath}>
+                看我的訂單
+              </a>
+            </div>
+          </div>
+        )}
+
         <p className="am-field__hint">
-          請記下訂單編號，用「編號 + 下單手機」就能查詢進度。
+          也可以用「訂單編號 + 下單手機」查詢：訂單編號是 {done.id}。
         </p>
         <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem" }}>
           <a className="am-btn am-btn--accent" href="/">
