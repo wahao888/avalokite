@@ -58,7 +58,7 @@ export default function AmberLayout({ children }: { children: React.ReactNode })
             <p>{SITE.name}</p>
             <p className="am-foot__links">
               <a href="/order/lookup">查訂單</a>
-              {SITE.lineId ? <a href={`https://line.me/R/ti/p/${SITE.lineId}`}>LINE 客服</a> : null}
+              {SITE.lineAddUrl ? <a href={SITE.lineAddUrl}>LINE 客服 {SITE.lineId}</a> : null}
             </p>
           </footer>
 
