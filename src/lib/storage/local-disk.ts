@@ -17,14 +17,13 @@ import fs from "fs/promises";
 import path from "path";
 import type { Storage } from "./types";
 import { isValidKey } from "./keys";
+import { mediaUrl } from "../media-url";
 
 const DEFAULT_ROOT = "/opt/avalo/uploads";
-const DEFAULT_BASE_URL = "/u";
+
 
 export const uploadRoot = (): string =>
   path.resolve(process.env.UPLOAD_DIR || DEFAULT_ROOT);
-
-const baseUrl = (): string => (process.env.UPLOAD_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
 
 /**
  * key → 絕對路徑，並確認結果真的落在根目錄底下。
@@ -69,8 +68,10 @@ export const localDiskStorage: Storage = {
     }
   },
 
+  // 網址由 media-url.ts 組（那個檔不含 node 模組，客戶端元件也用得到）。
+  // 這裡保留在介面上只是為了讓伺服器端的呼叫點不必多 import 一個模組。
   url(key) {
-    return `${baseUrl()}/${key}`;
+    return mediaUrl(key);
   },
 
   async size(key) {

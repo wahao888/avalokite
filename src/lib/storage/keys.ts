@@ -12,6 +12,11 @@
 //      刪掉一個商品就會弄壞另一個商品的圖。亂數沒有這個耦合。
 
 import crypto from "crypto";
+import { thumbKey } from "../media-url";
+
+// thumbKey / isThumbKey 住在 media-url.ts —— 那個檔不匯入任何 node 模組，
+// 所以客戶端元件也用得到。本檔會拉進 crypto，進不了瀏覽器的 bundle。
+export { thumbKey, isThumbKey, mediaUrl, thumbUrl, MEDIA_BASE } from "../media-url";
 
 const RANDOM_BYTES = 16; // → base64url 22 字元
 export const KEY_RE = /^[a-z0-9-]+\/\d{4}\/\d{2}\/[A-Za-z0-9_-]{16,}\.jpg$/;
@@ -26,16 +31,6 @@ export function storageKey(tenantSlug: string, now: Date = new Date()): string {
   const rand = crypto.randomBytes(RANDOM_BYTES).toString("base64url");
   return `${tenantSlug}/${tpe.getUTCFullYear()}/${pad2(tpe.getUTCMonth() + 1)}/${rand}.jpg`;
 }
-
-/**
- * 主圖 key → 縮圖 key。
- * 單射（不同主圖不會撞到同一個縮圖），且不會跳出原本的目錄。
- */
-export function thumbKey(key: string): string {
-  return key.replace(/\.jpg$/, "_t.jpg");
-}
-
-export const isThumbKey = (key: string): boolean => /_t\.jpg$/.test(key);
 
 /**
  * key 是否合法。

@@ -5,7 +5,7 @@ import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { CATEGORIES } from "@/app/sites/amber/_data/categories";
 import { twd } from "@/app/sites/amber/_data/cart";
 import { orderState, effectiveDeadline } from "@/lib/daigou-deadline";
-import { storage, thumbKey } from "@/lib/storage";
+import { mediaUrl, thumbUrl } from "@/lib/media-url";
 import LoginForm from "../../../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -93,7 +93,7 @@ export default async function ProductPage({
             <div key={img.id} className="p-dg-photo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={storage.url(img.fullPurgedAt ? thumbKey(img.key) : img.key)}
+                src={img.fullPurgedAt ? thumbUrl(img.key) : mediaUrl(img.key)}
                 alt=""
                 width={120}
                 height={120}

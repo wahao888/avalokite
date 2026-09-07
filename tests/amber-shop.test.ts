@@ -271,6 +271,7 @@ describe("購物車計價", () => {
   const snap = (over: Partial<LineSnapshot> = {}): LineSnapshot => ({
     productId: "p1",
     optionId: null,
+    batchId: "b1",
     name: "冰絲襪",
     optionLabel: null,
     unitPrice: 250,
@@ -583,6 +584,15 @@ describe("手機正規化（會員歸戶鍵）", () => {
   it("分得出手機與市話", () => {
     expect(isMobile("0912345678")).toBe(true);
     expect(isMobile("0212345678")).toBe(false);
+  });
+
+  it("⚠ 遮罩前一定要先正規化——直接去符號會讓 +886 顯示成 8869-***-678", () => {
+    // 2026-09-07 實測踩到：結單頁原本寫 maskPhone(raw.replace(/\D/g,""))，
+    // 客人用 +886912345678 下單時就顯示成 8869-***-678，看起來像壞掉。
+    // 收件電話存的是客人當下打的原字串，所以遮罩前必須經過 normalizePhone。
+    for (const raw of ["0912345678", "0912-345-678", "+886912345678", "886912345678"]) {
+      expect(maskPhone(normalizePhone(raw)), raw).toBe("0912-***-678");
+    }
   });
 
   it("遮罩（/s/<token> 頁面可能被轉貼到群組）", () => {

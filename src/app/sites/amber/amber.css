@@ -1,0 +1,320 @@
+/* 代購連線站。
+   設計目標只有兩個：在 LINE 內建瀏覽器上「立刻」看得到商品，
+   以及連線期間能一直加購物車而不被打斷。
+   沒有 web font、沒有動畫庫、沒有任何會擋住首次繪製的東西。 */
+
+:root {
+  --a-ink: #1c1917;
+  --a-sub: #6b625b;
+  --a-paper: #fdfbf8;
+  --a-card: #ffffff;
+  --a-line: #e8e1d9;
+  --a-accent: #c1462f; /* 主色。價格、主要按鈕、截止提示 */
+  --a-accent-soft: #fbeeea;
+  --a-ok: #3f6b4a;
+  --a-radius: 10px;
+  --a-shadow: 0 1px 2px rgba(28, 25, 23, 0.06), 0 4px 14px rgba(28, 25, 23, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+body.am {
+  margin: 0;
+  background: var(--a-paper);
+  color: var(--a-ink);
+  font-family: system-ui, -apple-system, "Noto Sans TC", "PingFang TC",
+    "Microsoft JhengHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  /* iOS 上捲動到底時的橡皮筋不要露出白底 */
+  overscroll-behavior-y: none;
+}
+
+img { max-width: 100%; }
+a { color: inherit; }
+
+/* ── 頁首 ───────────────────────────────────────────── */
+.am-nav {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  background: color-mix(in srgb, var(--a-paper) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--a-line);
+}
+.am-nav__brand {
+  font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em;
+  text-decoration: none;
+}
+.am-nav__links { display: flex; align-items: center; gap: 0.9rem; font-size: 0.85rem; }
+.am-nav__links a { text-decoration: none; color: var(--a-sub); }
+
+/* 購物車鈕。連線期間她的客人會一直加，所以數字要明顯 */
+.am-cartbtn {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  min-height: 40px; padding: 0.3rem 0.7rem;
+  border: 1px solid var(--a-line); border-radius: 999px;
+  background: var(--a-card); color: var(--a-ink);
+  font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.am-cartbtn__n {
+  min-width: 20px; height: 20px; padding: 0 5px;
+  display: inline-grid; place-items: center;
+  border-radius: 999px; background: var(--a-accent); color: #fff;
+  font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+/* 加入購物車時輕輕跳一下。唯一的動畫，因為它是唯一需要回饋的動作。 */
+@keyframes am-bump { 50% { transform: scale(1.25); } }
+.am-cartbtn__n.bump { animation: am-bump 260ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .am-cartbtn__n.bump { animation: none; } }
+
+/* ── 版面 ───────────────────────────────────────────── */
+.am-wrap { max-width: 960px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+.am-h1 { font-size: 1.35rem; font-weight: 800; margin: 0.6rem 0 0.2rem; letter-spacing: 0.01em; }
+.am-sub { margin: 0 0 1rem; color: var(--a-sub); font-size: 0.9rem; }
+.am-empty {
+  padding: 3rem 1rem; text-align: center; color: var(--a-sub);
+  border: 1px dashed var(--a-line); border-radius: var(--a-radius);
+}
+
+/* ── 檔期橫幅：收單時間要「明顯顯示在上方」（客戶需求第 7 項）── */
+.am-banner {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem;
+  padding: 0.8rem 1rem; margin-bottom: 1rem;
+  background: var(--a-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--a-accent) 25%, transparent);
+  border-radius: var(--a-radius);
+}
+.am-banner__title { font-weight: 800; }
+.am-banner__time { font-weight: 700; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+.am-banner__left { margin-inline-start: auto; font-size: 0.85rem; color: var(--a-accent); font-weight: 700; }
+.am-banner--closed { background: #f3f1ee; border-color: var(--a-line); }
+.am-banner--closed .am-banner__time,
+.am-banner--closed .am-banner__left { color: var(--a-sub); }
+
+/* ── 分類列 ─────────────────────────────────────────── */
+.am-cats {
+  display: flex; gap: 0.45rem; overflow-x: auto;
+  padding: 0 0 0.9rem; scrollbar-width: none;
+}
+.am-cats::-webkit-scrollbar { display: none; }
+.am-cats a {
+  flex: none; padding: 0.4rem 0.85rem; min-height: 36px;
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--a-line); border-radius: 999px;
+  background: var(--a-card); font-size: 0.85rem; text-decoration: none;
+  white-space: nowrap;
+}
+.am-cats a.on { background: var(--a-ink); border-color: var(--a-ink); color: var(--a-paper); }
+
+/* ── 商品格 ─────────────────────────────────────────── */
+.am-grid {
+  display: grid; gap: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+}
+.am-card {
+  display: flex; flex-direction: column;
+  background: var(--a-card); border: 1px solid var(--a-line);
+  border-radius: var(--a-radius); overflow: hidden;
+}
+.am-card__link { text-decoration: none; display: block; }
+.am-card__img {
+  /* height:auto 不可省。<img> 上有 width/height 屬性（那是為了避免版位跳動），
+     而那個 height 屬性會蓋過 aspect-ratio——少了這一行，直式商品照會被
+     拉成 163×400 的長條。2026-09-07 量出來的。 */
+  aspect-ratio: 1; width: 100%; height: auto; object-fit: cover; display: block;
+  background: #f1ece6;
+}
+.am-card__img--none {
+  display: grid; place-items: center; color: var(--a-sub); font-size: 0.8rem;
+}
+.am-card__body { padding: 0.6rem 0.7rem 0.7rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+.am-card__name {
+  font-size: 0.9rem; line-height: 1.4; font-weight: 600;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.am-card__price { font-weight: 800; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+.am-card__foot { margin-top: auto; padding-top: 0.35rem; }
+
+/* 倒數標籤。快截止的用主色，其餘用灰——全部標紅就等於沒有標。 */
+.am-tag {
+  display: inline-block; padding: 0.15rem 0.5rem;
+  border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+  background: #f3f1ee; color: var(--a-sub);
+}
+.am-tag--soon { background: var(--a-accent-soft); color: var(--a-accent); }
+.am-tag--closed { background: #efedea; color: #9a938c; }
+.am-tag--pre { background: #eef2ee; color: var(--a-ok); }
+
+/* ── 按鈕 ───────────────────────────────────────────── */
+.am-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 44px; padding: 0.55rem 1rem;
+  border: 1px solid var(--a-ink); border-radius: var(--a-radius);
+  background: var(--a-ink); color: var(--a-paper);
+  font: inherit; font-size: 0.95rem; font-weight: 700;
+  text-decoration: none; cursor: pointer;
+}
+.am-btn--accent { background: var(--a-accent); border-color: var(--a-accent); color: #fff; }
+.am-btn--ghost { background: transparent; color: var(--a-ink); border-color: var(--a-line); }
+.am-btn--sm { min-height: 36px; padding: 0.3rem 0.7rem; font-size: 0.82rem; }
+.am-btn--full { width: 100%; }
+.am-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── 數量加減 ───────────────────────────────────────── */
+.am-step { display: inline-flex; align-items: center; border: 1px solid var(--a-line); border-radius: var(--a-radius); overflow: hidden; }
+.am-step button {
+  width: 44px; height: 44px; border: none; background: var(--a-card);
+  color: var(--a-ink); font: inherit; font-size: 1.2rem; cursor: pointer;
+}
+.am-step button:disabled { opacity: 0.35; cursor: not-allowed; }
+.am-step__n {
+  min-width: 48px; text-align: center; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 規格晶片 ───────────────────────────────────────── */
+.am-specs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.am-spec {
+  min-height: 40px; padding: 0.35rem 0.8rem;
+  border: 1px solid var(--a-line); border-radius: 999px;
+  background: var(--a-card); color: var(--a-ink);
+  font: inherit; font-size: 0.88rem; cursor: pointer;
+}
+.am-spec[aria-pressed="true"] { border-color: var(--a-ink); background: var(--a-ink); color: var(--a-paper); }
+.am-spec:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+/* ── 商品頁 ─────────────────────────────────────────── */
+.am-gallery { display: flex; gap: 0.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.am-gallery::-webkit-scrollbar { display: none; }
+.am-gallery img {
+  /* 同上：商品頁的圖帶著資料庫存的實際寬高，height:auto 才輪得到 aspect-ratio */
+  flex: none; width: 100%; max-width: 420px; aspect-ratio: 1; height: auto;
+  object-fit: cover; scroll-snap-align: center;
+  border-radius: var(--a-radius); background: #f1ece6;
+}
+.am-price { font-size: 1.5rem; font-weight: 800; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+.am-desc { white-space: pre-wrap; color: var(--a-sub); font-size: 0.92rem; }
+
+/* 商品頁底部的固定購買列。lemai 也是這個形狀，因為它是對的：
+   規格與數量選完之後，主要動作不該需要再捲一次。 */
+.am-buybar {
+  position: sticky; bottom: 0; z-index: 15;
+  display: flex; align-items: center; gap: 0.7rem;
+  margin: 1.2rem -1rem 0; padding: 0.7rem 1rem;
+  background: color-mix(in srgb, var(--a-paper) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--a-line);
+}
+.am-buybar__sum { font-size: 0.8rem; color: var(--a-sub); }
+.am-buybar__sum b { display: block; font-size: 1.1rem; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+.am-buybar .am-btn { flex: 1; }
+
+/* ── 購物車抽屜 ─────────────────────────────────────── */
+.am-drawer__scrim {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(28, 25, 23, 0.4);
+  border: none; padding: 0; cursor: pointer;
+}
+.am-drawer {
+  position: fixed; z-index: 41; inset-block: 0; inset-inline-end: 0;
+  width: min(420px, 100%);
+  display: flex; flex-direction: column;
+  background: var(--a-paper);
+  border-inline-start: 1px solid var(--a-line);
+}
+.am-drawer__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1rem; border-bottom: 1px solid var(--a-line);
+}
+.am-drawer__head h2 { margin: 0; font-size: 1rem; }
+.am-drawer__body { flex: 1; overflow-y: auto; padding: 0.8rem 1rem; }
+.am-drawer__foot { padding: 0.8rem 1rem; border-top: 1px solid var(--a-line); }
+
+.am-line { display: flex; gap: 0.7rem; padding: 0.7rem 0; border-bottom: 1px solid var(--a-line); }
+.am-line img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; flex: none; background: #f1ece6; }
+.am-line__main { flex: 1; min-width: 0; }
+.am-line__name { font-size: 0.9rem; font-weight: 600; }
+.am-line__spec { font-size: 0.78rem; color: var(--a-sub); }
+.am-line__amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.am-line--blocked { opacity: 0.6; }
+.am-line--blocked .am-line__name { text-decoration: line-through; }
+
+/* 被擋下的行（已截止／庫存不足）刻意留在畫面上。
+   她放進購物車時是開放的，默默移除等於在她不知情下改掉即將付的金額。 */
+.am-blocked {
+  margin-top: 1rem; padding: 0.7rem 0.8rem;
+  background: var(--a-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--a-accent) 25%, transparent);
+  border-radius: var(--a-radius); font-size: 0.85rem;
+}
+
+.am-total { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.7rem; }
+.am-total b { font-size: 1.2rem; color: var(--a-accent); font-variant-numeric: tabular-nums; }
+
+/* ── 表單 ───────────────────────────────────────────── */
+.am-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+.am-field > label { font-size: 0.82rem; font-weight: 700; color: var(--a-sub); }
+.am-field input, .am-field textarea, .am-field select {
+  width: 100%; min-height: 46px; padding: 0.6rem 0.75rem;
+  border: 1px solid var(--a-line); border-radius: var(--a-radius);
+  background: var(--a-card); color: var(--a-ink);
+  font: inherit; font-size: 1rem;
+}
+.am-field textarea { min-height: 90px; resize: vertical; }
+.am-field__hint { font-size: 0.78rem; color: var(--a-sub); margin: 0; }
+.am-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.am-note {
+  padding: 0.7rem 0.85rem; border-radius: var(--a-radius);
+  background: var(--a-card); border: 1px solid var(--a-line);
+  font-size: 0.88rem; margin-bottom: 1rem;
+}
+.am-err {
+  padding: 0.7rem 0.85rem; border-radius: var(--a-radius);
+  background: var(--a-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--a-accent) 30%, transparent);
+  color: var(--a-accent); font-size: 0.88rem; margin-bottom: 1rem;
+}
+
+/* ── 對帳表（結單頁與訂單頁共用）───────────────────── */
+.am-sum { border: 1px solid var(--a-line); border-radius: var(--a-radius); background: var(--a-card); padding: 0.8rem 0.9rem; }
+.am-sum__row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.25rem 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.am-sum__row--total { border-top: 1px solid var(--a-line); margin-top: 0.4rem; padding-top: 0.6rem; font-weight: 800; font-size: 1.05rem; }
+.am-sum__row--total span:last-child { color: var(--a-accent); }
+.am-sum__row--minus span:last-child { color: var(--a-ok); }
+
+.am-copy {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  min-height: 36px; padding: 0.25rem 0.6rem;
+  border: 1px solid var(--a-line); border-radius: 8px;
+  background: var(--a-card); font: inherit; font-size: 0.82rem; cursor: pointer;
+}
+
+.am-foot {
+  border-top: 1px solid var(--a-line); padding: 1.5rem 1rem 2.5rem;
+  text-align: center; color: var(--a-sub); font-size: 0.82rem;
+}
+.am-foot__links { display: flex; gap: 1rem; justify-content: center; }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --a-ink: #f0ebe5;
+    --a-sub: #a49a90;
+    --a-paper: #16140f;
+    --a-card: #1f1c17;
+    --a-line: #332e27;
+    --a-accent: #e8785f;
+    --a-accent-soft: #2a1d19;
+    --a-ok: #8fbb98;
+  }
+  .am-cats a.on { color: #16140f; }
+  .am-btn { color: #16140f; }
+  .am-btn--accent { color: #16140f; }
+  .am-card__img, .am-line img, .am-gallery img { background: #262119; }
+  .am-tag { background: #262119; }
+  .am-tag--closed { background: #241f19; color: #6f665d; }
+}

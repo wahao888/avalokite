@@ -3,7 +3,8 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 
-import { storageKey, thumbKey, isThumbKey, isValidKey, tenantOfKey, KEY_RE } from "@/lib/storage/keys";
+import { storageKey, isValidKey, tenantOfKey, KEY_RE } from "@/lib/storage/keys";
+import { thumbKey, isThumbKey, mediaUrl, thumbUrl } from "@/lib/media-url";
 import { localDiskStorage, resolveKeyPath, uploadRoot } from "@/lib/storage/local-disk";
 
 describe("儲存 key", () => {
@@ -114,11 +115,11 @@ describe("本機磁碟儲存", () => {
     expect(resolveKeyPath(key).startsWith(uploadRoot() + path.sep)).toBe(true);
   });
 
-  it("對外網址由 UPLOAD_BASE_URL 決定（正式站由 nginx 直送，不經 Node）", () => {
+  it("對外網址走 media-url（正式站由 nginx 直送，不經 Node）", () => {
     const key = storageKey("amber");
     expect(localDiskStorage.url(key)).toBe(`/u/${key}`);
-    process.env.UPLOAD_BASE_URL = "https://cdn.example.com/";
-    expect(localDiskStorage.url(key)).toBe(`https://cdn.example.com/${key}`);
+    expect(mediaUrl(key)).toBe(`/u/${key}`);
+    expect(thumbUrl(key)).toBe(`/u/${thumbKey(key)}`);
   });
 });
 

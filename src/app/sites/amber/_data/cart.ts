@@ -25,6 +25,9 @@ export type CartLine = {
 export type LineSnapshot = {
   productId: string;
   optionId: string | null;
+  /** 這件商品屬於哪一檔連線。下單時用來確認整車沒有跨檔期
+   *  （一張結單綁一個檔期，運費與預計到貨日都是檔期的）。 */
+  batchId: string;
   name: string;
   optionLabel: string | null;
   unitPrice: number;

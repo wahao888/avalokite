@@ -10,7 +10,7 @@ import {
 import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { categoryName } from "@/app/sites/amber/_data/categories";
 import { priceLabel } from "@/app/sites/amber/_data/cart";
-import { storage, thumbKey } from "@/lib/storage";
+import { thumbUrl } from "@/lib/media-url";
 import LoginForm from "../../../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -132,7 +132,7 @@ export default async function BatchPage({
                       // 而且尺寸在上傳時就產好了。
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={storage.url(thumbKey(p.images[0].key))}
+                        src={thumbUrl(p.images[0].key)}
                         alt=""
                         width={44}
                         height={44}

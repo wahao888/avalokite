@@ -758,6 +758,7 @@ export async function loadPricing(tenantId: string, keys: PricingKey[]) {
     out.push({
       productId: p.id,
       optionId: opt?.id ?? null,
+      batchId: p.batchId,
       name: p.name,
       optionLabel: opt?.label ?? null,
       unitPrice: opt?.price ?? p.price,

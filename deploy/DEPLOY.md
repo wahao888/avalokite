@@ -57,7 +57,7 @@ SUSPENDED_TENANTS=""                            # 欠費暫停中的客戶站 sl
 # ── 代購站（amber）專用 ──
 MEMBER_SESSION_SECRET="<openssl rand -hex 32>"  # 會員 session 的 HMAC 金鑰
 UPLOAD_DIR="/opt/avalo/uploads"                 # 商品照存放處，必須在 repo 樹之外
-UPLOAD_BASE_URL="/u"                            # 對外圖片網址前綴，由 nginx 直送
+NEXT_PUBLIC_MEDIA_BASE="/u"                     # 對外圖片網址前綴，由 nginx 直送
 LINE_CHANNEL_ID=""                              # 留空 = 前台不顯示 LINE 登入
 LINE_CHANNEL_SECRET=""
 ```
@@ -66,6 +66,12 @@ LINE_CHANNEL_SECRET=""
 
 **`MEMBER_SESSION_SECRET` 必須與 `PORTAL_SESSION_SECRET`／`ADMIN_SESSION_SECRET` 不同。**
 三套身分刻意用三把金鑰：一個外洩的會員 token 不該有機會換成後台身分。
+
+**`NEXT_PUBLIC_MEDIA_BASE` 是 `NEXT_PUBLIC_`，會在 build 當下被烤進 bundle**
+（deploy.sh 已經會在 build 前把伺服器那份 .env 的值抓回來，見 §2 的踩雷紀錄）。
+它必須是 `NEXT_PUBLIC_` 而不是普通環境變數，因為購物車抽屜與購物車頁是
+客戶端元件、也要組圖片網址；伺服器端的 storage 模組會拉進 `fs`，
+進不了瀏覽器的 bundle。搬 S3／CloudFront 時把這個值指向 CDN 網域即可。
 
 **`LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET` 留空時，LINE 登入會自動停用**（前台不顯示按鈕，
 手機號碼那條路照常運作），所以不必為了上線硬等客戶交金鑰。

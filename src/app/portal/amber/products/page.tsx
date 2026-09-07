@@ -4,7 +4,7 @@ import { listProducts, countProducts, PAGE_SIZE } from "@/lib/daigou-data";
 import { formatTaipei } from "@/lib/tw-time";
 import { CATEGORIES, categoryName } from "@/app/sites/amber/_data/categories";
 import { priceLabel } from "@/app/sites/amber/_data/cart";
-import { storage, thumbKey } from "@/lib/storage";
+import { thumbUrl } from "@/lib/media-url";
 import LoginForm from "../../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +92,7 @@ export default async function ProductsPage({
                     {p.images[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={storage.url(thumbKey(p.images[0].key))}
+                        src={thumbUrl(p.images[0].key)}
                         alt=""
                         width={44}
                         height={44}
