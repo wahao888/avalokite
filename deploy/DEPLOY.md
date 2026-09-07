@@ -53,9 +53,55 @@ SMTP_PASS="..."
 MAIL_FROM="Avalo <no-reply@yourdomain.com>"
 MAIL_OWNER="<你自己的收件信箱>"
 SUSPENDED_TENANTS=""                            # 欠費暫停中的客戶站 slug，逗號分隔；平常留空
+
+# ── 代購站（amber）專用 ──
+MEMBER_SESSION_SECRET="<openssl rand -hex 32>"  # 會員 session 的 HMAC 金鑰
+UPLOAD_DIR="/opt/avalo/uploads"                 # 商品照存放處，必須在 repo 樹之外
+UPLOAD_BASE_URL="/u"                            # 對外圖片網址前綴，由 nginx 直送
+LINE_CHANNEL_ID=""                              # 留空 = 前台不顯示 LINE 登入
+LINE_CHANNEL_SECRET=""
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
+
+**`MEMBER_SESSION_SECRET` 必須與 `PORTAL_SESSION_SECRET`／`ADMIN_SESSION_SECRET` 不同。**
+三套身分刻意用三把金鑰：一個外洩的會員 token 不該有機會換成後台身分。
+
+**`LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET` 留空時，LINE 登入會自動停用**（前台不顯示按鈕，
+手機號碼那條路照常運作），所以不必為了上線硬等客戶交金鑰。
+⚠ 建 Channel 時，**Provider 必須開在客戶自己的 LINE Business ID 底下**，再把我們加為
+管理者。LINE Login 的 `userId`（sub）是綁 Provider 的——建錯擁有者、日後要搬，
+等於全體會員的 LINE 綁定作廢，只能請每一位客人重新綁一次，救不回來。
+Login Channel 與未來的 Messaging API Channel 也要在同一個 Provider 底下，
+之後才能把「官方帳號好友」跟「登入使用者」對起來。
+
+### 使用者上傳的檔案（代購站的商品照）
+
+存在 **`/opt/avalo/uploads`，刻意在 repo 樹之外**。
+
+理由是部署流程：`deploy.sh` 與 `server-update.sh` 都用 `rsync --delete`，
+**任何寫進 repo 樹的執行期檔案都會在下一次部署時被刪光**。2026-07-30 就是這樣把
+`prod.db` 整個刪掉過一次；而商品照片沒有 `.db` 那種每日備份，掉了就真的沒了。
+`src/lib/storage/local-disk.ts` 是唯一知道這個路徑的檔案（有結構性測試守著，
+日後換 S3 只要改那一個檔）。
+
+nginx 以 `location ^~ /u/` 直接送這個目錄，**完全不經過 Node**——一台 t3.micro
+沒有多餘的 CPU 拿去轉發靜態圖片。檔名是 16 bytes 亂數且內容永不改寫，
+所以帶 `immutable` 快取；也因為這些檔案無認證直送，**不可猜的檔名就是它們唯一的存取控制**。
+
+`client_max_body_size` 維持 `2m` 不要調高。前端會先把照片壓到長邊 1600px、
+約 300KB，而且**一次只傳一張**；真的傳不動一定是前端壓縮壞了，不是這個數字太小。
+（有測試守住這個值。）
+
+**⚠ 尚未納入備份。** `backup-db.sh` 只備 SQLite。EBS 掛掉的話商品照片全沒。
+上線前要決定：把 `/opt/avalo/uploads` 的 `aws s3 sync` 加進那支腳本
+（它已經是 S3-aware，由 `BACKUP_S3_BUCKET` 控制），或明確接受這個風險。
+折衷做法是**只備縮圖**——全站縮圖總量小到可以每日全量上傳，而歷史結單畫面
+只用得到縮圖。
+
+容量參考：一檔連線約 20 件 × 5 張 ≈ 28MB，其中九成是大圖。
+檔期關閉滿 30 天後會自動只清大圖、保留縮圖（約 3MB／檔），回收九成空間。
+清掃是機會式的（她上傳或開後台時順手掃一點），**沒有 cron**。
 
 ## 3. HTTPS（Let's Encrypt，自動續期）
 

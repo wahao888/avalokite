@@ -8,6 +8,11 @@
 // repo 樹的執行期檔案都會在下一次部署時被刪光。2026-07-30 就是這樣把
 // prod.db 整個刪掉過一次；商品照片沒有 .db 那樣的每日備份，掉了就真的沒了。
 
+// Turbopack 會對本檔發出兩個 "Dynamic filesystem access causes tracing of the
+// whole project" 警告。那是預期的——儲存介面本來就是用執行期算出來的路徑讀寫檔案。
+// 它影響的是 standalone output 的相依追蹤，而本專案的部署是 rsync 整包 + next start，
+// 沒有用 standalone，所以沒有實際影響。看到警告不必修。
+
 import fs from "fs/promises";
 import path from "path";
 import type { Storage } from "./types";

@@ -14,6 +14,11 @@ const AMBER_HOST = "amber\\.(avalokite\\.xyz|localhost(:\\d+)?)";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // sharp 帶原生二進位檔（libvips），不能被打包器處理。
+  // 代購站的圖片上傳端點用它重新編碼——那一步同時是安全控制：
+  // polyglot 檔案活不過重新編碼，而且 sharp 預設會剝掉 EXIF
+  // （iPhone 照片帶著韓國那家店與客戶住家的 GPS 座標）。
+  serverExternalPackages: ["sharp"],
   async redirects() {
     // 文山木材行原掛在 avalokite.xyz/wenshan（子目錄），已改為 wenshan.avalokite.xyz。
     // 子目錄會讓客戶內容累積到主域，既稀釋 Avalo 自己的主題，也落入 Google 的

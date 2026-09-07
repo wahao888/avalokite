@@ -132,6 +132,125 @@ body.portal {
   border: 1px solid var(--p-border);
 }
 
+/* ── 代購站的上架流程（僅 daigou 租戶）──────────────────
+   行動優先，而且是真的行動優先：使用者站在韓國的店裡、單手、4G。
+   點擊目標一律 ≥ 44px（Apple HIG 的下限），主要動作固定在畫面底部
+   讓拇指構得到，欄位順序照「照片先、其餘跟著打字並行」排。 */
+
+.p-dg-photos { margin: 0.4rem 0 0.2rem; }
+
+.p-dg-photogrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.5rem;
+}
+
+.p-dg-photo {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--p-border);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--p-card);
+}
+
+.p-dg-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 還沒傳完的照片壓暗，一眼看得出哪幾張還在路上 */
+.p-dg-photo--pending img,
+.p-dg-photo--working img { opacity: 0.45; }
+.p-dg-photo--error { border-color: var(--p-warn); }
+.p-dg-photo--error img { opacity: 0.35; }
+
+.p-dg-photo__badge {
+  position: absolute; inset-inline: 0; bottom: 0;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.68rem; text-align: center;
+  background: rgba(0, 0, 0, 0.55); color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.p-dg-photo__actions {
+  position: absolute; top: 0.25rem; right: 0.25rem;
+  display: flex; gap: 0.25rem;
+}
+.p-dg-photo__actions button {
+  min-width: 28px; min-height: 28px;
+  border: none; border-radius: 2px;
+  background: rgba(0, 0, 0, 0.6); color: #fff;
+  font: inherit; font-size: 0.72rem; line-height: 1;
+  cursor: pointer;
+}
+
+.p-dg-photo--add {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  align-items: center; justify-content: center;
+  border-style: dashed; cursor: pointer;
+  color: var(--p-muted); font: inherit; font-size: 0.78rem;
+}
+.p-dg-photo--add span[aria-hidden] { font-size: 1.6rem; line-height: 1; }
+.p-dg-photo--add:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.p-dg-hint { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--p-muted); }
+.p-dg-error { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--p-warn); }
+
+/* 規格與分類的晶片列。橫向捲動而不是換行——換行會把送出鈕推到螢幕外 */
+.p-dg-chips {
+  display: flex; gap: 0.4rem; overflow-x: auto;
+  padding: 0.15rem 0 0.4rem; margin: 0;
+  scrollbar-width: none;
+}
+.p-dg-chips::-webkit-scrollbar { display: none; }
+.p-dg-chip {
+  flex: none; min-height: 36px;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--p-border); border-radius: 999px;
+  background: var(--p-card); color: var(--p-ink);
+  font: inherit; font-size: 0.85rem; white-space: nowrap; cursor: pointer;
+}
+.p-dg-chip[aria-pressed="true"] {
+  background: var(--p-accent); border-color: var(--p-accent); color: var(--p-paper);
+}
+
+/* 置底動作列。她抱著八件商品，主要按鈕必須永遠在拇指下面 */
+.p-dg-sticky {
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 1.2rem -1rem 0; padding: 0.7rem 1rem;
+  background: var(--p-paper);
+  border-top: 1px solid var(--p-border);
+  display: flex; gap: 0.6rem;
+}
+.p-dg-sticky .p-btn { flex: 1; min-height: 48px; font-size: 1rem; }
+
+/* 上架表單的欄位。inputMode=numeric 的價格欄不要用 type=number——
+   iOS 會給帶小數點的鍵盤，而且 spinner 會劫持捲動。 */
+.p-dg-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+.p-dg-field > label { font-size: 0.8rem; font-weight: 700; color: var(--p-muted); }
+.p-dg-field input[type="text"],
+.p-dg-field input[type="datetime-local"],
+.p-dg-field textarea {
+  width: 100%; min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink);
+  font: inherit; font-size: 1rem;
+}
+
+/* 截止時間平常是一個唯讀晶片（「跟檔期一樣：9/20 23:00」），
+   常見情況下她一次都不用碰它。需求 6 與 7 在每件商品上的成本因此是零。 */
+.p-dg-inherit {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.7rem; min-height: 44px;
+  border: 1px dashed var(--p-border); border-radius: 2px;
+  font-size: 0.9rem; color: var(--p-muted);
+}
+.p-dg-inherit button {
+  margin-inline-start: auto; min-height: 32px; padding: 0 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 0.8rem;
+  cursor: pointer;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --p-ink: #ece7de; --p-paper: #1a1815; --p-card: #22201c;
