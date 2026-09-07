@@ -13,7 +13,7 @@ import {
 } from "@/lib/daigou-data";
 import { parseTaipeiLocalInput } from "@/lib/tw-time";
 import {
-  settleTotals,
+  liveSettlement,
   memberCredit,
   creditToApply,
   isSettlementStatus,
@@ -60,31 +60,19 @@ export async function POST(req: NextRequest) {
     const ledger = await memberLedgerEntries(tenant.slug, s.memberId);
     const available = memberCredit(ledger.map((e) => ({ kind: e.kind as never, amount: e.amount })));
 
-    const before = settleTotals({
-      lines: lines.map((l) => ({
-        unitPrice: l.unitPrice,
-        qty: l.qty,
-        amount: l.amount,
-        gotQty: l.gotQty,
-        status: l.status as LineItemStatus,
-      })),
-      shippingFee: s.shippingFee,
-      adjustAmount: s.adjustAmount,
-    });
-    const applied = creditToApply(available, before.payableAmount);
+    const asLines = lines.map((l) => ({
+      unitPrice: l.unitPrice,
+      qty: l.qty,
+      amount: l.amount,
+      gotQty: l.gotQty,
+      status: l.status as LineItemStatus,
+    }));
 
-    const totals = settleTotals({
-      lines: lines.map((l) => ({
-        unitPrice: l.unitPrice,
-        qty: l.qty,
-        amount: l.amount,
-        gotQty: l.gotQty,
-        status: l.status as LineItemStatus,
-      })),
-      shippingFee: s.shippingFee,
-      adjustAmount: s.adjustAmount,
-      creditApplied: applied,
-    });
+    // 運費依 7-11 交貨便的申報價值級距自動算（依商品淨額，也就是真正裝箱的東西）。
+    // 固定金額的檔期則沿用她填的數字。
+    const before = liveSettlement({ lines: asLines, batch: s.batch });
+    const applied = creditToApply(available, before.payableAmount);
+    const totals = liveSettlement({ lines: asLines, batch: s.batch, creditApplied: applied });
 
     const ok = await freezeSettlement(tenant.slug, id, {
       grossAmount: totals.grossAmount,

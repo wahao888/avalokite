@@ -5,6 +5,7 @@ import { tenantOrigin } from "@/lib/tenants";
 import { twd } from "@/app/sites/amber/_data/cart";
 import {
   settleTotals,
+  settlementTotalsFor,
   SETTLEMENT_STATUS_ZH,
   type LineItemStatus,
   type SettlementStatus,
@@ -113,19 +114,16 @@ export default async function SettlementsPage({
       ) : (
         rows.map((r) => {
           const lines = r.orders.flatMap((o) => o.lines);
-          const totals = settleTotals({
-            lines: lines.map((l) => ({
-              unitPrice: l.unitPrice,
-              qty: l.qty,
-              amount: l.amount,
-              gotQty: l.gotQty,
-              status: l.status as LineItemStatus,
-            })),
-            shippingFee: r.shippingFee,
-            adjustAmount: r.adjustAmount,
-            creditApplied: r.creditApplied,
-            paidAmount: r.paidAmount,
-          });
+          const totals = settlementTotalsFor({
+      ...r,
+      lines: lines.map((l) => ({
+        unitPrice: l.unitPrice,
+        qty: l.qty,
+        amount: l.amount,
+        gotQty: l.gotQty,
+        status: l.status as LineItemStatus,
+      })),
+    });
 
           // 請款文字。金額直接吃 settleTotals 的結果——兩邊各算一次，
           // 某天只改了其中一邊，客人收到的數字就會跟畫面不同。

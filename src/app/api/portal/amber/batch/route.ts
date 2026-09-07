@@ -9,6 +9,7 @@ import {
   purgeBatchFullImages,
 } from "@/lib/daigou-data";
 import { parseTaipeiLocalInput } from "@/lib/tw-time";
+import { isShipPlan } from "@/app/sites/amber/_data/shipping";
 
 // 檔期的建立與維護。
 //
@@ -27,6 +28,12 @@ function slugify(title: string): string {
   const stamp = Date.now().toString(36).slice(-4);
   return ascii ? `${ascii}-${stamp}`.slice(0, 60) : `batch-${stamp}`;
 }
+
+/** 認不得的方案當成「固定金額」——那是最保守的選項，不會意外多收客人錢 */
+const planOf = (v: FormDataEntryValue | null): string => {
+  const s = String(v ?? "");
+  return isShipPlan(s) ? s : "fixed";
+};
 
 const num = (v: FormDataEntryValue | null, fallback = 0): number => {
   const n = Number(String(v ?? "").replace(/[^\d-]/g, ""));
@@ -66,6 +73,7 @@ export async function POST(req: NextRequest) {
       slug: slugify(title),
       defaultDeadlineAt,
       defaultEtaAt,
+      shipPlan: planOf(form.get("shipPlan")),
       shippingFee: num(form.get("shippingFee")),
       freeShippingOver: form.get("freeShippingOver") ? num(form.get("freeShippingOver")) : null,
       note: String(form.get("note") ?? "").trim() || null,
@@ -101,6 +109,7 @@ export async function POST(req: NextRequest) {
 
   if (action === "settings") {
     const ok = await updateBatch(tenant.slug, id, {
+      shipPlan: planOf(form.get("shipPlan")),
       shippingFee: num(form.get("shippingFee")),
       freeShippingOver: form.get("freeShippingOver") ? num(form.get("freeShippingOver")) : null,
       note: String(form.get("note") ?? "").trim() || null,

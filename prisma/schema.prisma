@@ -238,7 +238,14 @@ model DgBatch {
   /// 預計到貨日的預設值，開結單時帶入 DgSettlement.etaAt
   defaultEtaAt      DateTime?
 
-  /// 這一檔的預設運費，開結單時帶入 DgSettlement.shippingFee（之後可個別改）
+  /// 運費方案。standard / economy = 依 7-11 交貨便的申報價值級距自動算，
+  /// fixed（或 null）= 用底下的 shippingFee 固定金額。
+  ///
+  /// 為什麼要自動算：7-11 的運費依申報價值分級（60/70/80/90/100），
+  /// 一件 NT$4,300 的結單運費是 100 不是 60——固定收 60 每單少收 40。
+  /// nullable 是刻意的（SQLite 加可為 null 的欄位是 metadata-only）。
+  shipPlan         String?
+  /// fixed 方案時的運費；自動方案時當作 fallback。
   shippingFee      Int  @default(0)
   freeShippingOver Int?
 

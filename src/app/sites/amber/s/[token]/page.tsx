@@ -7,6 +7,7 @@ import { thumbUrl } from "@/lib/media-url";
 import { twd } from "../../_data/cart";
 import {
   settleTotals,
+  settlementTotalsFor,
   settleLine,
   LINE_STATUS_ZH,
   SETTLEMENT_STATUS_ZH,
@@ -17,6 +18,7 @@ import { maskName, maskPhone, maskAddress, normalizePhone } from "../../_data/me
 import { BANK, LINEPAY, bankReady, linePayReady, SHIP_KIND_ZH, cvsBrandName, TENANT_SLUG } from "../../_data/site";
 import { CopyText } from "../../_components/CopyText";
 import { RemitForm } from "../../_components/RemitForm";
+import { Terms } from "../../_components/Terms";
 
 // 結單頁。客人這一側唯一的出口：他是靠這一頁知道自己要付多少錢的。
 //
@@ -43,19 +45,16 @@ export default async function SettlementPage({
   if (!s) notFound();
 
   const lines = s.orders.flatMap((o) => o.lines);
-  const totals = settleTotals({
-    lines: lines.map((l) => ({
-      unitPrice: l.unitPrice,
-      qty: l.qty,
-      amount: l.amount,
-      gotQty: l.gotQty,
-      status: l.status as LineItemStatus,
-    })),
-    shippingFee: s.shippingFee,
-    adjustAmount: s.adjustAmount,
-    creditApplied: s.creditApplied,
-    paidAmount: s.paidAmount,
-  });
+  const totals = settlementTotalsFor({
+      ...s,
+      lines: lines.map((l) => ({
+        unitPrice: l.unitPrice,
+        qty: l.qty,
+        amount: l.amount,
+        gotQty: l.gotQty,
+        status: l.status as LineItemStatus,
+      })),
+    });
 
   const status = s.status as SettlementStatus;
   const open = status === "open";
@@ -247,6 +246,8 @@ export default async function SettlementPage({
       <p className="am-field__hint" style={{ marginTop: "0.6rem" }}>
         為了保護個資，這一頁只顯示部分收件資料。有誤請直接在 LINE 告訴我們。
       </p>
+
+      <Terms compact />
     </div>
   );
 }

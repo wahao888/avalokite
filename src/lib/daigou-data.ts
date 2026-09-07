@@ -79,6 +79,7 @@ export async function createBatch(
     slug: string;
     defaultDeadlineAt?: Date | null;
     defaultEtaAt?: Date | null;
+    shipPlan?: string | null;
     shippingFee?: number;
     freeShippingOver?: number | null;
     note?: string | null;
@@ -92,6 +93,7 @@ export async function createBatch(
       title: input.title,
       defaultDeadlineAt: input.defaultDeadlineAt ?? null,
       defaultEtaAt: input.defaultEtaAt ?? null,
+      shipPlan: input.shipPlan ?? null,
       shippingFee: input.shippingFee ?? 0,
       freeShippingOver: input.freeShippingOver ?? null,
       note: input.note ?? null,
@@ -106,6 +108,7 @@ export async function updateBatch(
     title?: string;
     defaultDeadlineAt?: Date | null;
     defaultEtaAt?: Date | null;
+    shipPlan?: string | null;
     shippingFee?: number;
     freeShippingOver?: number | null;
     note?: string | null;

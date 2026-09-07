@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getHostTenant, getTenantSession } from "@/lib/tenant-auth";
 import { listBatches, countProducts } from "@/lib/daigou-data";
 import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
+import { SHIP_PLANS, SHIP_PLAN_ZH } from "@/app/sites/amber/_data/shipping";
 import LoginForm from "../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -152,10 +153,26 @@ export default async function AmberHome({
         </div>
 
         <div className="p-dg-field">
-          <label htmlFor="b-ship">運費（元）</label>
-          <input id="b-ship" type="text" inputMode="numeric" name="shippingFee" placeholder="160" />
+          <label htmlFor="b-plan">運費方案</label>
+          <select id="b-plan" name="shipPlan" defaultValue="standard">
+            {SHIP_PLANS.map((k) => (
+              <option key={k} value={k}>
+                {SHIP_PLAN_ZH[k]}
+              </option>
+            ))}
+          </select>
           <p className="p-dg-hint">
-            運費在<strong>結單</strong>層級收，同一位客人這一檔下幾次單都只收一次。
+            7-11 交貨便的運費<strong>依申報價值分級</strong>（每滿 1,000 元跳一級）。
+            選自動的話系統會依實際裝箱金額算，不會發生「一單 4,300 卻只收 60」的少收。
+          </p>
+        </div>
+
+        <div className="p-dg-field">
+          <label htmlFor="b-ship">固定運費（元）</label>
+          <input id="b-ship" type="text" inputMode="numeric" name="shippingFee" placeholder="60" />
+          <p className="p-dg-hint">
+            只有選「固定金額」時才會用到。運費在<strong>結單</strong>層級收，
+            同一位客人這一檔下幾次單都只收一次。
           </p>
         </div>
 

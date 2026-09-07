@@ -300,6 +300,32 @@ a { color: inherit; }
 }
 .am-foot__links { display: flex; gap: 1rem; justify-content: center; }
 
+/* ── 購買規範 ───────────────────────────────────────
+   放在結帳的送出鈕上方。刻意不做成摺疊——摺起來就等於沒看到，
+   而這一段的用途就是「客人下單前看得到」。 */
+.am-terms {
+  margin: 1.5rem 0 1rem; padding: 0.9rem 1rem;
+  border: 1px solid var(--a-line); border-radius: var(--a-radius);
+  background: var(--a-card); font-size: 0.85rem; line-height: 1.7;
+}
+.am-terms__h { margin: 0 0 0.6rem; font-size: 0.95rem; }
+.am-terms__sub { margin: 0.9rem 0 0.3rem; font-size: 0.85rem; color: var(--a-sub); }
+.am-terms__sub--warn { color: var(--a-accent); }
+.am-terms__flow {
+  display: flex; flex-wrap: wrap; gap: 0.3rem 0.2rem;
+  margin: 0; padding: 0; list-style: none; counter-reset: step;
+}
+.am-terms__flow li {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.2rem 0.5rem; border-radius: 999px;
+  background: var(--a-paper); border: 1px solid var(--a-line); font-size: 0.8rem;
+}
+.am-terms__flow li::after { content: "→"; margin-inline-start: 0.2rem; color: var(--a-sub); }
+.am-terms__flow li:last-child::after { content: ""; }
+.am-terms__list { margin: 0; padding-inline-start: 1.1rem; }
+.am-terms__list--warn { color: var(--a-accent); }
+.am-terms__note { margin: 0.6rem 0 0; color: var(--a-sub); }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --a-ink: #f0ebe5;

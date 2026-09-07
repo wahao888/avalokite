@@ -7,6 +7,7 @@ import { CVS_BRANDS, SHIP_KIND_ZH, SITE, type ShipKind } from "../_data/site";
 import { ShareLine, ShareCopy } from "./ShareLine";
 import { rememberMyLink } from "./MyOrdersLink";
 import { keepForMeText } from "@/lib/line-share";
+import { Terms } from "./Terms";
 
 // 結帳。
 //
@@ -395,6 +396,10 @@ export function CheckoutForm() {
         </>
       )}
 
+      {/* ⚠ 規範放在送出鈕**上方**，不是頁尾的連結。
+          客人事後說「我不知道不能退」時，唯一站得住腳的是「你下單前看得到」。 */}
+      <Terms />
+
       {/* 蜜罐。真人看不到，機器人會填。 */}
       <div className="am-hp" aria-hidden>
         <label htmlFor="website">網站</label>
@@ -412,7 +417,7 @@ export function CheckoutForm() {
           disabled={!canSubmit}
           onClick={() => void submit()}
         >
-          {busy ? "送出中…" : "送出訂單"}
+          {busy ? "送出中…" : "同意規範並送出"}
         </button>
       </div>
     </div>

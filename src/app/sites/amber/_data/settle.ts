@@ -18,6 +18,8 @@
 //   = payableAmount 應收
 //   − paidAmount    實收   →  差額為正＝應補，為負＝應退
 
+import { settlementShipping, type ShipPlan, isShipPlan } from "./shipping";
+
 export const LINE_STATUSES = [
   "ordered",
   "bought",
@@ -32,7 +34,9 @@ export const LINE_STATUS_ZH: Record<LineItemStatus, string> = {
   ordered: "待採購",
   bought: "已買到",
   oos: "缺貨",
-  cancelled: "取消", // 客人要求取消
+  // ⚠ 客戶的規範是「下單後恕不接受取消訂單」，所以這不是客人的權利——
+  // 是她自己決定不採購、或破例同意時才用。缺貨走 oos，退款走 refunded。
+  cancelled: "取消",
   refunded: "已退款",
 };
 
@@ -220,4 +224,116 @@ export function paidFromLedger(entries: LedgerEntry[]): number {
     else if (e.kind === "refund") paid -= e.amount;
   }
   return paid;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 結單的即時金額（含自動運費）
+// ═══════════════════════════════════════════════════════════════
+
+export type BatchShipping = {
+  /** null / 認不得 → 當作 fixed，用 shippingFee */
+  shipPlan: string | null;
+  shippingFee: number;
+  freeShippingOver: number | null;
+};
+
+/**
+ * 一張結單「照現在的行狀態」該收多少。
+ *
+ * 運費在這裡才算，因為它依**商品淨額**（缺貨扣掉之後）分級——
+ * 那才是真正裝進箱子的東西。用原始金額算會多收客人錢，
+ * 用固定值則是她自己吸收差額。
+ */
+export function liveSettlement(input: {
+  lines: LineForSettle[];
+  batch: BatchShipping;
+  adjustAmount?: number;
+  creditApplied?: number;
+  paidAmount?: number;
+  /** 她在這張結單上手動改過的運費。給了就以它為準 */
+  shippingOverride?: number | null;
+}): SettleTotals {
+  // 先算一次不含運費的，拿到商品淨額
+  const base = settleTotals({ lines: input.lines });
+  const goodsNet = base.grossAmount - base.deductAmount;
+
+  const plan: ShipPlan = isShipPlan(input.batch.shipPlan) ? input.batch.shipPlan : "fixed";
+  const shippingFee =
+    input.shippingOverride != null
+      ? input.shippingOverride
+      : settlementShipping({
+          plan,
+          goodsNet,
+          fixedFee: input.batch.shippingFee,
+          freeOver: input.batch.freeShippingOver,
+        });
+
+  return settleTotals({
+    lines: input.lines,
+    shippingFee,
+    adjustAmount: input.adjustAmount,
+    creditApplied: input.creditApplied,
+    paidAmount: input.paidAmount,
+  });
+}
+
+/**
+ * 結單凍結之後，因為缺貨而應該退給客人的金額。
+ *
+ * ⚠ 這是「先收款」流程的關鍵。客戶的流程是
+ * 「確認下單 → 匯款 → 採買」——她**先拿到錢，之後才知道缺不缺貨**。
+ * 凍結的金額不會自動變（那是刻意的：客人手上那個數字要對得起來），
+ * 所以差額必須被算出來、明白地擺在她眼前，而不是等她自己想到要退。
+ *
+ * 回傳正數 = 應退給客人；0 = 不用退。
+ */
+export function refundDueAfterFreeze(input: {
+  /** 結單當下凍結、也是通知給客人的應付金額 */
+  frozenPayable: number;
+  /** 依現在的行狀態重算的應付金額 */
+  currentPayable: number;
+}): number {
+  return Math.max(0, input.frozenPayable - input.currentPayable);
+}
+
+/**
+ * 一張結單該顯示的金額。所有頁面都走這一支，才不會有的算含運費、有的不含。
+ *
+ * 未結單（open）→ 依現在的行狀態即時算，運費依商品淨額自動分級。
+ * 已結單 → 用凍結進資料庫的那一份：那是**通知給客人的數字**，
+ *          不能因為之後標了缺貨就自己變小，否則客人手上那張對不起來。
+ *          缺貨造成的差額由 refundDueAfterFreeze 另外算，明白地擺出來。
+ */
+export function settlementTotalsFor(s: {
+  status: string;
+  shippingFee: number;
+  adjustAmount: number;
+  creditApplied: number;
+  paidAmount: number;
+  grossAmount: number;
+  deductAmount: number;
+  payableAmount: number;
+  batch: BatchShipping;
+  lines: LineForSettle[];
+}): SettleTotals {
+  if (!isFrozen(s.status as SettlementStatus)) {
+    return liveSettlement({
+      lines: s.lines,
+      batch: s.batch,
+      adjustAmount: s.adjustAmount,
+      creditApplied: s.creditApplied,
+      paidAmount: s.paidAmount,
+    });
+  }
+  return {
+    grossAmount: s.grossAmount,
+    deductAmount: s.deductAmount,
+    adjustAmount: s.adjustAmount,
+    shippingFee: s.shippingFee,
+    creditApplied: s.creditApplied,
+    payableAmount: s.payableAmount,
+    paidAmount: s.paidAmount,
+    balance: s.payableAmount - s.paidAmount,
+    itemCount: s.lines.reduce((n, l) => n + effectiveQty(l), 0),
+  };
 }

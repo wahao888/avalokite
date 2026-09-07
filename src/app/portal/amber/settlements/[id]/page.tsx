@@ -6,6 +6,8 @@ import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { twd } from "@/app/sites/amber/_data/cart";
 import {
   settleTotals,
+  liveSettlement,
+  refundDueAfterFreeze,
   settleLine,
   memberCredit,
   LINE_STATUSES,
@@ -73,13 +75,29 @@ export default async function SettlementDetail({
         balance: s.payableAmount - s.paidAmount,
         itemCount: 0,
       }
-    : settleTotals({
+    : liveSettlement({
         lines: forSettle,
-        shippingFee: s.shippingFee,
+        batch: s.batch,
         adjustAmount: s.adjustAmount,
         creditApplied: s.creditApplied,
         paidAmount: s.paidAmount,
       });
+
+  // ⚠ 先收款流程的關鍵。客戶的流程是「確認下單 → 匯款 → 採買」——
+  // 她先拿到錢，之後才知道缺不缺貨。凍結的金額刻意不會自動變小
+  // （客人手上那個數字要對得起來），所以差額要被算出來擺在她眼前，
+  // 而不是等她自己想到要退。缺貨一律退款（客戶 2026-09-07 確認）。
+  const refundDue = frozen
+    ? refundDueAfterFreeze({
+        frozenPayable: s.payableAmount,
+        currentPayable: liveSettlement({
+          lines: forSettle,
+          batch: s.batch,
+          adjustAmount: s.adjustAmount,
+          creditApplied: s.creditApplied,
+        }).payableAmount,
+      })
+    : 0;
 
   const ledger = await memberLedgerEntries(tenant.slug, s.memberId);
   const credit = memberCredit(ledger.map((e) => ({ kind: e.kind as never, amount: e.amount })));
@@ -168,6 +186,27 @@ export default async function SettlementDetail({
         {credit > 0 && (
           <p className="p-dg-hint">這位客人另有 {twd(credit)} 的折抵餘額可用於下一檔。</p>
         )}
+        {refundDue > 0 && (
+          <div className="p-error" style={{ marginTop: "0.6rem" }}>
+            <strong>因缺貨應退客人 {twd(refundDue)}</strong>
+            <p style={{ margin: "0.3rem 0 0.5rem", fontSize: "0.85rem" }}>
+              結單時通知客人的金額是 {twd(s.payableAmount)}，但採購後有品項沒買到。
+              退款之後在下面「登錄金額」按「記為退款」，帳才會平。
+            </p>
+            <form method="post" action="/api/portal/amber/settlement">
+              <input type="hidden" name="action" value="ledger" />
+              <input type="hidden" name="id" value={s.id} />
+              <input type="hidden" name="kind" value="refund" />
+              <input type="hidden" name="amount" value={refundDue} />
+              <input type="hidden" name="method" value="transfer" />
+              <input type="hidden" name="note" value="缺貨退款" />
+              <button type="submit" className="p-btn">
+                我已退款 {twd(refundDue)}，記一筆
+              </button>
+            </form>
+          </div>
+        )}
+
         {s.remitLast5 && (
           <p className="p-dg-hint">
             客人回報匯款末五碼 <strong>{s.remitLast5}</strong>

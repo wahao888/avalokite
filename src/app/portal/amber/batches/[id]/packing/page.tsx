@@ -5,6 +5,7 @@ import { twd } from "@/app/sites/amber/_data/cart";
 import {
   settleLine,
   settleTotals,
+  settlementTotalsFor,
   SETTLEMENT_STATUS_ZH,
   type LineItemStatus,
   type SettlementStatus,
@@ -70,19 +71,16 @@ export default async function PackingPage({
             .map((l) => ({ l, st: settleLine({ ...l, status: l.status as LineItemStatus }) }))
             .filter(({ st }) => st.effectiveQty > 0);
 
-          const totals = settleTotals({
-            lines: lines.map((l) => ({
-              unitPrice: l.unitPrice,
-              qty: l.qty,
-              amount: l.amount,
-              gotQty: l.gotQty,
-              status: l.status as LineItemStatus,
-            })),
-            shippingFee: r.shippingFee,
-            adjustAmount: r.adjustAmount,
-            creditApplied: r.creditApplied,
-            paidAmount: r.paidAmount,
-          });
+          const totals = settlementTotalsFor({
+      ...r,
+      lines: lines.map((l) => ({
+        unitPrice: l.unitPrice,
+        qty: l.qty,
+        amount: l.amount,
+        gotQty: l.gotQty,
+        status: l.status as LineItemStatus,
+      })),
+    });
 
           const ship = r.orders.at(-1);
 

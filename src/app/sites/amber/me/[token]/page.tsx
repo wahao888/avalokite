@@ -7,6 +7,7 @@ import { tenantOrigin, getTenant } from "@/lib/tenants";
 import { twd } from "../../_data/cart";
 import {
   settleTotals,
+  settlementTotalsFor,
   memberCredit,
   SETTLEMENT_STATUS_ZH,
   type LineItemStatus,
@@ -89,19 +90,16 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
       ) : (
         settlements.map((s) => {
           const lines = s.orders.flatMap((o) => o.lines);
-          const totals = settleTotals({
-            lines: lines.map((l) => ({
-              unitPrice: l.unitPrice,
-              qty: l.qty,
-              amount: l.amount,
-              gotQty: l.gotQty,
-              status: l.status as LineItemStatus,
-            })),
-            shippingFee: s.shippingFee,
-            adjustAmount: s.adjustAmount,
-            creditApplied: s.creditApplied,
-            paidAmount: s.paidAmount,
-          });
+          const totals = settlementTotalsFor({
+      ...s,
+      lines: lines.map((l) => ({
+        unitPrice: l.unitPrice,
+        qty: l.qty,
+        amount: l.amount,
+        gotQty: l.gotQty,
+        status: l.status as LineItemStatus,
+      })),
+    });
           const open = s.status === "open";
 
           return (
