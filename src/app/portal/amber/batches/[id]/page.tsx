@@ -95,13 +95,29 @@ export default async function BatchPage({
         </div>
       </div>
 
-      {isOpen && (
-        <div className="p-dg-sticky" style={{ position: "static", marginTop: 0 }}>
+      <div className="p-dg-sticky" style={{ position: "static", marginTop: 0, flexWrap: "wrap" }}>
+        {isOpen && (
           <a className="p-btn" href={`/portal/amber/products/new?batch=${encodeURIComponent(batch.id)}`}>
             ＋ 上架商品
           </a>
-        </div>
-      )}
+        )}
+        <a className="p-btn p-btn-ghost" href={`/portal/amber/orders/new?batch=${encodeURIComponent(batch.id)}`}>
+          代客下單
+        </a>
+      </div>
+
+      {/* 收單後的三步：買什麼 → 跟誰收錢 → 怎麼寄 */}
+      <div className="p-dg-sticky" style={{ position: "static", marginTop: "0.5rem", flexWrap: "wrap" }}>
+        <a className="p-btn p-btn-ghost" href={`/portal/amber/batches/${encodeURIComponent(batch.id)}/purchase`}>
+          採購清單
+        </a>
+        <a className="p-btn p-btn-ghost" href={`/portal/amber/settlements?batch=${encodeURIComponent(batch.id)}`}>
+          結單與請款
+        </a>
+        <a className="p-btn p-btn-ghost" href={`/portal/amber/batches/${encodeURIComponent(batch.id)}/packing`}>
+          出貨清單
+        </a>
+      </div>
 
       <h2 className="p-title" style={{ fontSize: "1.1rem", marginTop: "1.8rem" }}>
         商品（{products.length}）

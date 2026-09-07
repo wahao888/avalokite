@@ -937,7 +937,26 @@ describe("通知文字", () => {
       linepay,
     });
     expect(text).not.toMatch(/undefined|null|NaN|\[object/);
-    // 也不該有連續空行（複製貼上到 LINE 會很醜）
+    // 不該有連續兩個以上的空行（貼到 LINE 會很醜）
     expect(text).not.toMatch(/\n\n\n/);
+  });
+
+  it("⚠ 段落之間要有空行——沒有的話貼到 LINE 是一整片牆", () => {
+    // 2026-09-07 實測踩到：nl() 原本用 Boolean(l) 過濾，
+    // 把刻意插入的空字串（段落分隔）也一起吃掉了，
+    // 文字擠成一整片，客人看不出金額在哪一段。
+    const text = settlementRequestText({
+      memberName: "王小明",
+      batchTitle: "9 月韓國連線",
+      totals,
+      items,
+      url: "https://x/s/a",
+      bank,
+      linepay,
+    });
+    expect(text).toMatch(/\n\n/);
+    // 金額區塊要被空行與品項清單隔開
+    const idx = text.indexOf("商品金額");
+    expect(text.slice(0, idx)).toMatch(/\n\n/);
   });
 });

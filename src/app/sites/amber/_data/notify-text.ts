@@ -22,8 +22,15 @@ export type BankInfo = {
 
 export type LinePayInfo = { lineId: string; payLink: string };
 
+/**
+ * 組行。
+ *
+ * ⚠ 只濾掉 null / undefined / false，**空字串要留著**——那是刻意插入的
+ * 段落分隔。用 Boolean(l) 過濾會把它們一起吃掉，文字貼到 LINE 就變成
+ * 一整片沒有斷行的牆，客人根本看不出金額在哪裡。（2026-09-07 實測發現。）
+ */
 const nl = (lines: (string | null | undefined | false)[]): string =>
-  lines.filter((l): l is string => Boolean(l)).join("\n");
+  lines.filter((l): l is string => l !== null && l !== undefined && l !== false).join("\n");
 
 /** 收款資訊區塊。未填時退成「我們會與您聯絡」，不留空欄位 */
 function paymentBlock(bank: BankInfo, linepay: LinePayInfo): string {

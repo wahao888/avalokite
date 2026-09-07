@@ -56,6 +56,15 @@ export default async function AmberHome({
           <p className="p-sub">一檔連線 = 一次出貨。商品掛在檔期底下，並繼承它的收單時間。</p>
         </div>
         <div className="p-actions">
+          <a className="p-btn p-btn-ghost" href="/portal/amber/settlements">
+            結單
+          </a>
+          <a className="p-btn p-btn-ghost" href="/portal/amber/members">
+            客人
+          </a>
+          <a className="p-btn p-btn-ghost" href="/portal/amber/products">
+            所有商品
+          </a>
           <a className="p-btn p-btn-ghost" href="/portal">
             表單管理
           </a>
