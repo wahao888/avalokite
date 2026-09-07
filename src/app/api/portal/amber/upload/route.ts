@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { getTenantSession } from "@/lib/tenant-auth";
 import { sameOrigin } from "@/lib/portal-http";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
-import { createImage, sweepImages } from "@/lib/daigou-data";
+import { createImage, findImageByUploadId, sweepImages } from "@/lib/daigou-data";
 import { storage, storageKey, thumbKey } from "@/lib/storage";
 import {
   TARGET_EDGE,
@@ -73,6 +73,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid productId" }, { status: 400 });
   }
 
+  // ⚠ 冪等要在**做任何工作之前**先查。
+  //
+  // 原本只在 createImage 裡查，結果是：重送時仍然跑了一次 sharp、寫了一份新檔案，
+  // 然後 createImage 回傳既有那一列——磁碟上就永久多出一對孤兒檔。
+  // sweepImages 是走訪資料庫的列，看不到「沒有列的檔案」，所以那些檔案永遠不會被回收。
+  // （2026-09-07 實測發現：重送一次就多 2 個檔。）
+  //
+  // 提前查還順便省掉重試時的 sharp 運算——那在 t3.micro 上不是小事。
+  if (uploadId) {
+    const existing = await findImageByUploadId(tenant.slug, uploadId);
+    if (existing) {
+      return NextResponse.json({
+        id: existing.id,
+        key: existing.key,
+        url: storage.url(existing.key),
+        thumbUrl: storage.url(thumbKey(existing.key)),
+        width: existing.width,
+        height: existing.height,
+      });
+    }
+  }
+
   const input = Buffer.from(await file.arrayBuffer());
 
   // ⚠ 嗅探 magic bytes，不看 Content-Type——那是使用者送來的字串。
@@ -127,8 +149,8 @@ export async function POST(req: NextRequest) {
   await storage.put(key, main, "image/jpeg");
   await storage.put(thumbKey(key), thumb, "image/jpeg");
 
-  // createImage 用 uploadId 做冪等：4G 上「成功但逾時」的重送會拿回既有那一列，
-  // 不會產生兩張一樣的圖。（此時磁碟上會多一份孤兒檔案，由 sweepImages 回收。）
+  // createImage 內部也有一次 uploadId 的冪等檢查，擋的是上面那次提前查之後
+  // 才進來的併發請求（同一支手機重試兩次、兩個請求同時在跑）。
   const row = await createImage(tenant.slug, {
     key,
     width,
@@ -137,6 +159,14 @@ export async function POST(req: NextRequest) {
     uploadId,
     productId,
   });
+
+  // 併發競賽真的發生時，我們剛寫的那對檔案就沒有任何一列指向它——
+  // 而 sweepImages 走訪的是資料庫的列，看不到沒有列的檔案。
+  // 所以在這裡自己收掉，孤兒才不會永久留在磁碟上。
+  if (row.key !== key) {
+    await storage.remove(key).catch(() => {});
+    await storage.remove(thumbKey(key)).catch(() => {});
+  }
 
   // 機會式清掃：不用 cron，改成在她活動的時候順手掃一點——
   // 那正好就是檔案累積的時候，而且自動節流。失敗不影響本次上傳。

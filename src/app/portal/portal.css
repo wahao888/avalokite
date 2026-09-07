@@ -40,6 +40,13 @@ body.portal {
   font-size: 0.85rem; text-decoration: none; cursor: pointer; font-family: inherit;
 }
 .p-btn:hover { opacity: 0.85; }
+/* 停用的按鈕必須看起來就是停用的。上架鈕在名稱／售價還沒填、
+   或照片還在傳的時候是 disabled——沒有這段樣式，她會按下去然後
+   以為系統壞了。 */
+.p-btn:disabled, .p-btn[disabled] {
+  opacity: 0.4; cursor: not-allowed;
+}
+.p-btn:disabled:hover { opacity: 0.4; }
 .p-btn-ghost { background: transparent; color: var(--p-ink); }
 .p-btn-link {
   background: none; border: none; padding: 0; color: var(--p-accent);
@@ -249,6 +256,41 @@ body.portal {
   border: 1px solid var(--p-border); border-radius: 2px;
   background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 0.8rem;
   cursor: pointer;
+}
+
+/* 提示條。用在草稿回復、本次已上架清單、可否下單的狀態。
+   跟 .p-error 同一個形狀但不帶警示色——那些訊息是資訊不是問題。 */
+.p-note {
+  background: var(--p-card); border: 1px solid var(--p-border);
+  padding: 0.6rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;
+  border-radius: 2px;
+}
+.p-note .p-btn-link { margin-inline-start: 0.6rem; }
+
+/* 摺疊區（交叉產生器、更多設定）。90% 的上架路徑不會展開它們，
+   所以收起來的狀態要夠小，不能吃掉置底按鈕的空間。 */
+.p-dg-cross, .p-dg-more { margin-top: 0.5rem; }
+.p-dg-cross > summary, .p-dg-more > summary {
+  cursor: pointer; font-size: 0.82rem; color: var(--p-muted);
+  padding: 0.5rem 0; min-height: 36px;
+}
+.p-dg-crossrow {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0 0.5rem;
+}
+.p-dg-crossrow input {
+  flex: 1; min-width: 0; min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 0.95rem;
+}
+.p-dg-crossrow .p-btn { flex: none; }
+
+/* 商品編輯用的下拉。跟其他輸入框對齊，並保持 44px 的點擊高度 */
+.p-dg-field select {
+  width: 100%; min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 1rem;
 }
 
 @media (prefers-color-scheme: dark) {

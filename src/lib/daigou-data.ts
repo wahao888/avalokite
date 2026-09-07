@@ -372,6 +372,17 @@ export async function recentSpecAxes(tenantId: string, take = 6): Promise<string
  * 記錄一張已寫入儲存的圖片。
  * 用 uploadId 做冪等：4G 上「成功但逾時」的重送不會產生兩張一樣的圖。
  */
+/**
+ * 用冪等鍵查既有的圖片列。
+ *
+ * 上傳端點在**做任何 CPU 與磁碟工作之前**先呼叫這個——重送時直接回傳既有那一列，
+ * 既不重算 sharp 也不寫出一份沒有任何列指向它的孤兒檔案
+ * （sweepImages 走訪的是資料庫的列，看不到沒有列的檔案，所以那種孤兒永遠不會被回收）。
+ */
+export async function findImageByUploadId(tenantId: string, uploadId: string) {
+  return prisma.dgImage.findFirst({ where: { tenantId, uploadId } });
+}
+
 export async function createImage(
   tenantId: string,
   input: {
