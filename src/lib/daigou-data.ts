@@ -221,7 +221,11 @@ export async function getProduct(tenantId: string, id: string) {
 
 export async function getProductBySlug(tenantId: string, slug: string) {
   return prisma.dgProduct.findFirst({
-    where: { tenantId, slug, deletedAt: null },
+    // ⚠ 檔期被移除時，掛在它底下的商品也要一起消失。
+    // 商品自己的 deletedAt 是 null（她刪的是整檔連線，不是逐件商品），
+    // 少了這個條件，那件商品的網址還是打得開、還是買得下去，
+    // 而它所屬的那一趟已經不存在了。
+    where: { tenantId, slug, deletedAt: null, batch: { deletedAt: null } },
     include: {
       batch: true,
       options: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
@@ -791,7 +795,9 @@ export async function loadPricing(tenantId: string, keys: PricingKey[]) {
   if (productIds.length === 0) return [];
 
   const products = await prisma.dgProduct.findMany({
-    where: { tenantId, id: { in: productIds }, deletedAt: null },
+    // 檔期被移除 = 這一趟不存在了。找不到快照的行會被標成 gone，
+    // 也就是購物車裡唯一可以靜默丟棄的那一種（見 _data/cart.ts）。
+    where: { tenantId, id: { in: productIds }, deletedAt: null, batch: { deletedAt: null } },
     include: {
       batch: true,
       options: { where: { deletedAt: null, active: true } },
@@ -889,7 +895,10 @@ export async function createDaigouOrder(tenantId: string, input: CreateOrderInpu
   return prisma.$transaction(async (tx: Tx) => {
     const productIds = [...new Set(input.lines.map((l) => l.productId))];
     const products = await tx.dgProduct.findMany({
-      where: { tenantId, id: { in: productIds }, deletedAt: null },
+      // ⚠ 這裡的條件必須跟 loadPricing 一模一樣，否則會出現
+      // 「購物車算得出價、送出時卻查無此物」——或更糟的反過來：
+      // 購物車擋下來了，下單卻放行，把訂單寫進一檔已經移除的連線。
+      where: { tenantId, id: { in: productIds }, deletedAt: null, batch: { deletedAt: null } },
       include: {
         batch: true,
         options: { where: { deletedAt: null, active: true } },

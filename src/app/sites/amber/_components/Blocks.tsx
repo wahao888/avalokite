@@ -59,6 +59,17 @@ export function TrustChips() {
  * 六個步驟逐字取自客戶提供的出貨說明（site.ts 的 TERMS.flow），
  * 這裡只是替每一步配一個圖示與一句白話。**步驟名稱不要改**——
  * 那是她對客人說過的話。
+ *
+ * 兩種畫法，因為兩個地方要回答的問題不一樣：
+ *
+ *   rail      首頁的「怎麼買」。它是提要不是說明書，所以只給
+ *             圖示＋編號＋步驟名，桌機橫著串成一條線。
+ *             想看細節的人點下面那個連結去 /how。
+ *   timeline  /how 的主體。直向時間軸，每一步帶一句說明。
+ *
+ * ⚠ 兩種都靠一條**連續的線**把六步串起來，不是六張各自獨立的卡片。
+ * 卡片會讀成「六件事」，線才會讀成「一個流程」——而客人真正需要
+ * 理解的是「我付了錢之後，東西還要經過這幾關才會到」。
  */
 const FLOW_ICONS = [IconChat, IconTag, IconCheck, IconBank, IconBag, IconPlane];
 
@@ -71,20 +82,24 @@ const FLOW_NOTES = [
   "商品抵台後檢查，再用 7-11 交貨便寄出，並提供貨態編號。",
 ];
 
-export function FlowSteps({ single = false }: { single?: boolean }) {
+export function FlowSteps({ variant = "timeline" }: { variant?: "rail" | "timeline" }) {
+  const rail = variant === "rail";
+
   return (
-    <ol className={`am-steps${single ? " am-steps--single" : ""}`}>
+    <ol className={`am-flow am-flow--${variant}`}>
       {TERMS.flow.map((label, i) => {
         const Icon = FLOW_ICONS[i] ?? IconSparkle;
         return (
           <li key={label}>
-            <span className="am-steps__i">
+            {/* 連接線畫在 li 上（::before），所以節點與線一定對得齊——
+                用獨立的元素畫線，字級一變就會歪掉 */}
+            <span className="am-flow__node">
               <Icon size={20} stroke={1.7} />
-              <span className="am-steps__n">{i + 1}</span>
+              <span className="am-flow__n">{i + 1}</span>
             </span>
-            <div>
+            <div className="am-flow__body">
               <h3>{label}</h3>
-              <p>{FLOW_NOTES[i]}</p>
+              {!rail && <p>{FLOW_NOTES[i]}</p>}
             </div>
           </li>
         );

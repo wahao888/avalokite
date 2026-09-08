@@ -285,7 +285,7 @@ export default async function Home({
             <h2>怎麼買</h2>
             <p>從你說「我要這個」到收到包裹，一共六步。</p>
           </div>
-          <FlowSteps />
+          <FlowSteps variant="rail" />
           <div className="am-btns" style={{ marginTop: "1.2rem" }}>
             <a className="am-btn am-btn--ghost" href="/how">
               看完整的購買流程與運費說明

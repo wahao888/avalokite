@@ -650,30 +650,87 @@ a { color: inherit; }
 .am-prose strong { color: var(--a-ink); font-weight: 600; }
 .am-prose a { color: var(--a-accent); text-underline-offset: 3px; }
 .am-prose > :first-child { margin-top: 0; }
+/* ⚠ 上面那行把 .am-prose 第一個 h2 的上緣留白吃掉了（那是為了讓
+   內文區塊不要從一個大空隙開始）。但當 .am-prose 是**接在某個區塊後面**
+   時，那個留白正是兩段之間唯一的呼吸——沒有它，流程圖的最後一步
+   會直接黏上下一個標題。 */
+.am-section + .am-prose { margin-top: 3rem; }
 
-/* 流程步驟。編號用手繪圖示，不用 emoji 也不用純數字圓圈 */
-.am-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
-.am-steps li {
-  display: grid; grid-template-columns: 44px 1fr; gap: 0.9rem; align-items: start;
-  padding: 0.9rem 1rem;
-  background: var(--a-card); border: 1px solid var(--a-line);
-  border-radius: var(--a-radius);
-}
-.am-steps__i {
+/* ── 購買流程 ─────────────────────────────────────────
+   ⚠ 六步是**一個流程**，不是六件事。所以它們靠一條連續的線串起來，
+   而不是六張各自獨立的卡片——卡片會讀成清單，線才會讀成順序。
+   這對代購特別重要：客人要理解的是「我付了錢之後，東西還要
+   經過這幾關才會到我手上」。
+
+   線一律畫在 <li> 的 ::before 上，跟節點同一個座標系，
+   所以字級或間距怎麼變都不會歪掉。 */
+.am-flow { list-style: none; margin: 0; padding: 0; }
+
+.am-flow li {
   position: relative;
-  display: grid; place-items: center;
-  width: 44px; height: 44px; border-radius: 12px;
-  background: var(--a-accent-soft); color: var(--a-accent);
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0.9rem;
+  padding-bottom: 1.5rem;
 }
-.am-steps__n {
+.am-flow li:last-child { padding-bottom: 0; }
+
+/* 節點。編號掛在圖示右上角，不佔一個獨立的欄位 */
+.am-flow__node {
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--a-accent-soft); color: var(--a-accent);
+  /* 線是從節點底下穿過去的，這圈底色把線切斷，看起來才像「接在節點上」 */
+  box-shadow: 0 0 0 4px var(--a-paper);
+}
+.am-flow__n {
   position: absolute; inset-block-start: -6px; inset-inline-end: -6px;
   min-width: 20px; height: 20px; padding: 0 5px;
   display: grid; place-items: center; border-radius: 999px;
   background: var(--a-ink); color: var(--a-on-ink);
   font-size: 0.68rem; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-.am-steps h3 { margin: 0 0 0.15rem; font-size: 0.95rem; font-weight: 600; color: var(--a-ink); }
-.am-steps p { margin: 0; font-size: 0.86rem; color: var(--a-sub); line-height: 1.65; }
+
+.am-flow__body { padding-top: 0.15rem; }
+.am-flow h3 { margin: 0 0 0.15rem; font-size: 0.95rem; font-weight: 600; color: var(--a-ink); }
+.am-flow p { margin: 0; font-size: 0.86rem; color: var(--a-sub); line-height: 1.65; }
+
+/* 連接線（直向）。從這一顆節點的下緣拉到下一顆的上緣。
+   用虛線呼應 hero 那條航線——虛線是「還在路上」。 */
+.am-flow li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 44px;
+  inset-block-end: -2px;
+  inset-inline-start: 21px;
+  border-inline-start: 2px dashed var(--a-line-2);
+}
+
+/* rail：首頁的提要版。桌機橫著串，手機沿用上面的直向時間軸 */
+@media (min-width: 900px) {
+  .am-flow--rail { display: flex; align-items: flex-start; }
+  .am-flow--rail li {
+    flex: 1; min-width: 0;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 0.55rem;
+    padding-bottom: 0;
+  }
+  .am-flow--rail .am-flow__body { padding-top: 0; }
+  .am-flow--rail h3 { font-size: 0.9rem; }
+
+  /* 橫向的連接線：從這一顆的右緣拉到下一顆的左緣。
+     用 calc 而不是固定寬度，欄寬變了也還是剛好接上。 */
+  .am-flow--rail li:not(:last-child)::before {
+    inset-block: 21px auto;
+    inset-inline-start: calc(50% + 30px);
+    inset-inline-end: calc(-50% + 30px);
+    border-inline-start: none;
+    border-block-start: 2px dashed var(--a-line-2);
+  }
+}
 
 /* 常見問題。用原生 <details>——不需要一行 JS，而且沒有 JS 也全部讀得到 */
 .am-faq { display: grid; gap: 0.5rem; }
@@ -1017,9 +1074,8 @@ a { color: inherit; }
   .am-pagehead h1 { font-size: 2rem; }
   .am-h1 { font-size: 1.6rem; }
   .am-section { margin-top: 4rem; }
+  .am-section + .am-prose { margin-top: 4rem; }
   .am-prose { font-size: 1rem; }
-  .am-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
-  .am-steps--single { grid-template-columns: minmax(0, 1fr); }
   .am-drawer { width: 440px; }
 
   .am-foot__grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 2.5rem; }

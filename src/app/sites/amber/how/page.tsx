@@ -46,7 +46,7 @@ export default function HowPage() {
         <div className="am-section__head">
           <h2>六個步驟</h2>
         </div>
-        <FlowSteps single />
+        <FlowSteps variant="timeline" />
       </section>
 
       <div className="am-prose">

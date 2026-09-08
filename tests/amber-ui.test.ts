@@ -187,6 +187,35 @@ describe("後台不會替她猜檔期", () => {
   });
 });
 
+describe("檔期被移除後，商品不該還買得到", () => {
+  const data = read(path.join(ROOT, "src/lib/daigou-data.ts"));
+
+  /** 抓出某個 export function 的內容（到下一個 export 為止） */
+  const body = (name: string) => {
+    const i = data.indexOf(`export async function ${name}`);
+    expect(i, `找不到 ${name}`).toBeGreaterThan(-1);
+    const next = data.indexOf("\nexport ", i + 1);
+    return data.slice(i, next === -1 ? undefined : next);
+  };
+
+  // 移除一檔連線時，商品自己的 deletedAt 仍然是 null——她刪的是整趟，
+  // 不是逐件商品。所以每一個對客人開放的讀取都必須自己檢查檔期還在，
+  // 否則商品網址照樣打得開、購物車照樣算得出價、訂單照樣送得出去。
+  it.each(["getProductBySlug", "loadPricing", "createDaigouOrder"])(
+    "%s 會要求檔期未被移除",
+    (fn) => {
+      expect(body(fn)).toContain("batch: { deletedAt: null }");
+    },
+  );
+
+  it("購物車定價與下單的商品條件一致", () => {
+    // 兩邊不一致會出現「購物車算得出價、送出卻查無此物」，
+    // 或更糟的反過來：購物車擋了、下單卻放行。
+    const cond = /where: \{ tenantId, id: \{ in: productIds \}, deletedAt: null, batch: \{ deletedAt: null \} \}/g;
+    expect(data.match(cond)?.length, "loadPricing 與 createDaigouOrder 的條件不一致").toBe(2);
+  });
+});
+
 describe("手機版維持功能優先", () => {
   const css = read(path.join(SITE_DIR, "amber.css"));
 
