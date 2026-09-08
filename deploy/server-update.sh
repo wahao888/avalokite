@@ -45,9 +45,19 @@ sudo chown -R avalo:avalo /var/www/avalo-uploads
 # journal_mode 寫在資料庫檔頭、設一次永久有效，所以這行是冪等的。
 # ⚠ 不能放進 Prisma migration：Prisma 用交易包住 migration，
 #   而 PRAGMA journal_mode=WAL 不能在交易內執行。
-if [ -f "$APP/prisma/prod.db" ]; then
-  sudo -u avalo sqlite3 "$APP/prisma/prod.db" "PRAGMA journal_mode=WAL;" >/dev/null \
-    && echo "  WAL 已啟用" || echo "  （WAL 設定略過：sqlite3 未安裝？）"
+# ⚠ 用 sudo test，不要用 [ -f ]（同下面第 4 步的理由）。
+# $APP 在 /opt/avalo 底下，而那是 750 avalo:avalo——這支腳本以 ubuntu 執行，
+# 連 stat 都做不到，[ -f ] 會**永遠判為不存在**，整個 if 靜靜跳過、
+# 一行訊息都不會印。2026-09-08 上線後查出來：WAL 從來沒有被啟用過，
+# 而它正是「LINE 群組一發商品、幾百人同時湧入」時避免寫入擋住讀取的東西。
+if sudo test -f "$APP/prisma/prod.db"; then
+  mode=$(sudo -u avalo sqlite3 "$APP/prisma/prod.db" "PRAGMA journal_mode=WAL;" 2>/dev/null || echo "")
+  if [ "$mode" = "wal" ]; then
+    echo "  WAL 已啟用"
+  else
+    # 印出實際拿到的值，不要再吞掉失敗——這正是上次沒被發現的原因
+    echo "  ⚠ WAL 設定失敗（journal_mode=${mode:-未知}），請手動確認" >&2
+  fi
 fi
 
 echo "=== 3/5 Prisma（generate 必跑，再 migrate deploy）==="
