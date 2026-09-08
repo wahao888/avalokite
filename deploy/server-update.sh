@@ -21,7 +21,9 @@ sudo -u avalo bash -lc "$APP/deploy/backup-db.sh" || echo "（備份略過：資
 echo "=== 1/5 同步程式碼與建置產物（保留 node_modules/.env/資料庫）==="
 # .next 不再排除：本機已經 build 好一起送上來（見 deploy.sh）。
 # .next/cache 排除，那是 build 快取，不需要也不該覆蓋伺服器上的。
-sudo rsync -a --delete --exclude node_modules --exclude .env --exclude '.next/cache' \
+# ⚠ /node_modules 的開頭斜線不可省（見 deploy.sh 的說明）：沒有它，
+# .next/node_modules 也會被排除，而 sharp 的 turbopack 墊片就放在那裡。
+sudo rsync -a --delete --exclude /node_modules --exclude .env --exclude '.next/cache' \
   --exclude 'prisma/*.db' --exclude 'prisma/*.db-journal' --exclude 'prisma/*.db-wal' \
   --exclude 'prisma/*.db-shm' /tmp/app/ "$APP"/
 sudo chown -R avalo:avalo "$APP"

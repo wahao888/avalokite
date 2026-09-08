@@ -53,8 +53,14 @@ echo "BUILD_ID = $(cat .next/BUILD_ID)"
 
 echo "=== 3/4 上傳（含建置產物，排除 dev 快取）==="
 # .next/dev 是 dev 模式的 turbopack 快取，體積可達數百 MB，絕不能傳
+# ⚠ node_modules 的排除必須加開頭斜線，錨定在傳輸根目錄。
+# 沒有斜線的 rsync 樣式會在**任何深度**命中，於是連 .next/node_modules 一起排除掉——
+# 而那裡放著 turbopack 為 serverExternalPackages（sharp）產生的墊片套件。
+# 少了它，伺服器啟動時會噴
+#   Failed to load external module sharp-<hash>: Cannot find package
+# 而且只有圖片上傳會 500，其他頁面全部正常，非常難聯想。2026-09-08 上線時踩到。
 rsync -az --delete -e "ssh -i $KEY" \
-  --exclude node_modules --exclude .git --exclude .env \
+  --exclude /node_modules --exclude .git --exclude .env \
   --exclude '*.pem' --exclude .claude --exclude 'prisma/*.db*' --exclude suminagashi \
   --exclude '.next/dev' --exclude '.next/cache' \
   ./ "$HOST":/tmp/app/

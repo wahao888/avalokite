@@ -281,6 +281,21 @@ describe("nginx 的上傳相關設定", () => {
     expect(conf).toMatch(/client_max_body_size\s+2m;/);
   });
 
+  it("部署的 rsync 把 node_modules 錨定在根目錄", () => {
+    // ⚠ rsync 沒有開頭斜線的樣式會在**任何深度**命中。
+    // 寫成 --exclude node_modules 會連 .next/node_modules 一起排除，
+    // 而 turbopack 為 serverExternalPackages（sharp）產生的墊片套件就放在那裡。
+    // 後果：伺服器啟動噴 "Failed to load external module sharp-<hash>"，
+    // 但只有圖片上傳會 500，其他頁面全部正常——非常難聯想。2026-09-08 踩到。
+    for (const f of ["deploy/deploy.sh", "deploy/server-update.sh"]) {
+      const src = readFileSync(path.join(ROOT, f), "utf8");
+      expect(src, `${f} 的 node_modules 排除沒有錨定`).toMatch(/--exclude\s+\/node_modules/);
+      expect(src, `${f} 仍有未錨定的 node_modules 排除`).not.toMatch(
+        /--exclude\s+node_modules/,
+      );
+    }
+  });
+
   it("有 /u/ 的 location，且用 ^~ 讓它勝過 regex location", () => {
     expect(conf).toMatch(/location\s+\^~\s+\/u\/\s*\{/);
     expect(conf).toMatch(/alias\s+\/var\/www\/avalo-uploads\/;/);
