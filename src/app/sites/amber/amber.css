@@ -262,6 +262,22 @@ a { color: inherit; }
    一個 400px 高的 hero 會把商品整個推到摺線下面——那是拿轉換換好看。 */
 .am-hero { display: none; }
 
+/* 輪播的單字（hero 小標的 KOREA／JAPAN／EUROPE）。
+   三個字疊在同一個 grid 格子裡：格子寬度是最長的那個字，
+   所以換字時後面的東西不會被推著跑。 */
+.am-rot {
+  display: inline-grid;
+  margin-inline-start: 0.4em;
+  vertical-align: bottom;
+}
+.am-rot > span {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(0.35em);
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.am-rot > span.on { opacity: 1; transform: none; }
+
 /* ── 8. 服務特點 ──────────────────────────────────────── */
 .am-feat {
   display: grid; gap: 0.8rem;
@@ -845,16 +861,88 @@ a { color: inherit; }
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
     gap: 3rem; align-items: center;
   }
+  /* 標語只有五個字，所以可以放到很大——那正是「一句話」該有的份量 */
   .am-hero h1 {
-    margin: 0.6rem 0 0.9rem;
-    font-size: clamp(2rem, 3.1vw, 2.9rem);
-    line-height: 1.22; font-weight: 600; letter-spacing: -0.01em;
+    margin: 0.7rem 0 0.5rem;
+    font-size: clamp(2.6rem, 4.6vw, 4rem);
+    line-height: 1.14; font-weight: 600; letter-spacing: 0.01em;
   }
   .am-hero h1 em { font-style: normal; color: var(--a-accent); }
-  .am-hero__lead { margin: 0 0 1.6rem; font-size: 1.02rem; color: var(--a-ink-2); max-width: 34em; line-height: 1.75; }
+
+  /* 英文副標。日雜的英文是質感，不是資訊——所以它跟中文說同一件事，
+     讀者不必再讀一次也不會漏掉什麼。字距拉開、字重放輕。 */
+  .am-hero__en {
+    margin: 0 0 1.8rem;
+    font-size: 1.05rem; font-weight: 300; letter-spacing: 0.14em;
+    color: var(--a-sub);
+  }
+
   .am-hero__art { width: 100%; height: auto; color: var(--a-ink); }
   .am-hero__art-accent { color: var(--a-accent); }
   .am-hero__art-faint { opacity: 0.4; }
+
+  /* ── 插畫的動態 ────────────────────────────────────
+     全部只跑在桌機（.am-hero 在手機是 display:none，這些規則連解析
+     的機會都沒有），所以無限迴圈的動畫不會在誰的口袋裡耗電。 */
+
+  /* 滑鼠視差。位移由 JS 寫進 --px / --py（-1～1），
+     實際的距離與方向在這裡決定——遠景幾乎不動，近景動得最多。
+     transition 負責平滑，所以 JS 只要每幀丟一個數字就好。 */
+  .am-hero__art { --px: 0; --py: 0; }
+  .am-hero__far,
+  .am-hero__mid,
+  .am-hero__near {
+    transition: transform 420ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  .am-hero__far { transform: translate(calc(var(--px) * 4px), calc(var(--py) * 3px)); }
+  .am-hero__mid { transform: translate(calc(var(--px) * -5px), calc(var(--py) * -4px)); }
+  .am-hero__near { transform: translate(calc(var(--px) * -13px), calc(var(--py) * -9px)); }
+
+  /* 航線的虛線緩慢流動。dasharray 是 2 10（週期 12），
+     位移 -48 剛好是四個週期，所以接得起來、看不出接縫。 */
+  @keyframes am-dash { to { stroke-dashoffset: -48; } }
+  .am-hero__arc { animation: am-dash 3.6s linear infinite; }
+
+  /* 飛機沿著航線飛一趟。offset-path 吃的是同一條路徑字串
+     （HeroArt.tsx 的 FLIGHT_PATH，那裡只有一份定義）。
+
+     ⚠ 包在 @supports 裡：不支援 offset-path 的瀏覽器會把元素留在原點，
+     也就是插畫的左上角，看起來像壞掉。那些瀏覽器維持 HeroArt 裡
+     transform 屬性給的靜態位置（航線終點），只是不會飛。 */
+  @supports (offset-path: path("M0 0")) {
+    .am-hero__plane {
+      transform: none;
+      offset-path: path("M14 128C70 34 264 16 362 68");
+      /* 紙飛機的機頭朝右上約 32 度，補回來才會順著航線的切線指向前方 */
+      offset-rotate: auto 32deg;
+      offset-distance: 100%;
+      animation: am-fly 2.4s cubic-bezier(0.35, 0, 0.2, 1) 0.35s both;
+    }
+    @keyframes am-fly { from { offset-distance: 0%; } }
+  }
+
+  /* 星芒各自錯開相位，才不會像三顆一起呼吸的燈泡 */
+  @keyframes am-twinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.86); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+  .am-hero__spark {
+    /* SVG 的 transform-origin 預設是 viewBox 原點，不加這行會繞著左上角轉 */
+    transform-box: fill-box; transform-origin: center;
+    animation: am-twinkle 3.4s ease-in-out infinite;
+  }
+  .am-hero__spark:nth-of-type(2) { animation-delay: -1.15s; }
+  .am-hero__spark:nth-of-type(3) { animation-delay: -2.3s; }
+
+  /* 價格標。滑鼠移進 hero 時輕輕晃一下，像掛著的吊牌被帶到 */
+  @keyframes am-swing {
+    0% { transform: rotate(0deg); }
+    30% { transform: rotate(-2.4deg); }
+    65% { transform: rotate(1.4deg); }
+    100% { transform: rotate(0deg); }
+  }
+  .am-hero__tag { transform-box: fill-box; transform-origin: 0% 100%; }
+  .am-hero:hover .am-hero__tag { animation: am-swing 1.1s ease-out; }
   .am-hero__meta {
     display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem;
     margin-top: 1.6rem; padding-top: 1.3rem;
@@ -863,6 +951,8 @@ a { color: inherit; }
   }
   .am-hero__meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
   .am-hero__meta .am-i { color: var(--a-accent); }
+  /* 會走的倒數。絕對時間就在它左邊，所以這裡只補「還剩多久」 */
+  .am-hero__meta .am-tag { font-size: 0.72rem; }
 
   /* 進場。只有 hero 有動畫，而且只動一次 */
   .am-hero__text { animation: am-rise 520ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
@@ -950,6 +1040,18 @@ a { color: inherit; }
     scroll-behavior: auto !important;
   }
   .am-card:hover .am-card__img { transform: none; }
+
+  /* ⚠ hero 插畫的動畫要**整個關掉**，不能只靠上面把時間壓到 0.01ms。
+     那個做法會讓動畫瞬間跳到最後一幀，而星芒最後一幀是 opacity .4、
+     scale .86——結果是三顆永久暗掉、縮小的星星。關掉才會停在原本的樣子。 */
+  .am-hero__arc,
+  .am-hero__spark,
+  .am-hero__plane,
+  .am-hero__tag { animation: none !important; }
+  /* 視差在 JS 那邊就會提前 return，這行只是保險 */
+  .am-hero__far,
+  .am-hero__mid,
+  .am-hero__near { transform: none !important; }
 }
 
 /* ── 26. 列印 ─────────────────────────────────────────

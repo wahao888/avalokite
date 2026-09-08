@@ -106,6 +106,33 @@ describe("圖示", () => {
   });
 });
 
+describe("hero 的動態", () => {
+  const css = read(path.join(SITE_DIR, "amber.css"));
+  const art = read(path.join(SITE_DIR, "_components/HeroArt.tsx"));
+
+  it("CSS 的 offset-path 跟 HeroArt 的 FLIGHT_PATH 是同一條線", () => {
+    // 飛機用 CSS 的 offset-path 沿著 SVG 裡那條航線飛。兩邊各存一份字串，
+    // 改了其中一份就會出現「飛機沿著一條看不見的線飛過空白處」——
+    // 而且畫面上不會有任何錯誤，只有看起來怪。
+    const inTsx = art.match(/FLIGHT_PATH = "([^"]+)"/)?.[1];
+    expect(inTsx, "HeroArt.tsx 找不到 FLIGHT_PATH").toBeTruthy();
+    expect(css, "amber.css 的 offset-path 與 FLIGHT_PATH 不一致").toContain(
+      `offset-path: path("${inTsx}")`,
+    );
+  });
+
+  it("offset-path 包在 @supports 裡", () => {
+    // 不支援的瀏覽器會把元素留在原點（插畫左上角），看起來像壞掉。
+    expect(css).toMatch(/@supports \(offset-path:[\s\S]{0,400}\.am-hero__plane/);
+  });
+
+  it("減少動態效果時，插畫的動畫是整個關掉而不是壓成 0.01ms", () => {
+    // 壓成 0.01ms 會讓動畫跳到最後一幀，而星芒的最後一幀是半透明又縮小的。
+    const block = css.match(/@media \(prefers-reduced-motion: reduce\)[\s\S]*$/)?.[0] ?? "";
+    expect(block).toMatch(/\.am-hero__spark[\s\S]{0,120}animation:\s*none/);
+  });
+});
+
 describe("導覽", () => {
   it("頁首的每一頁在檔案系統裡都有對應的 page.tsx", () => {
     // 導覽多一頁但忘了建檔，客人點下去就是 404。

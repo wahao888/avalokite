@@ -4,8 +4,10 @@ import { CATEGORIES } from "./_data/categories";
 import { TENANT_SLUG, SITE } from "./_data/site";
 import { batchTone } from "./_data/batch-tone";
 import { DeadlineBar } from "./_components/DeadlineBar";
+import { Countdown } from "./_components/Countdown";
 import { ProductCard, type CardProduct } from "./_components/ProductCard";
 import { HeroArt } from "./_components/HeroArt";
+import { RotatingWord } from "./_components/RotatingWord";
 import { Features, TrustChips, FlowSteps, HelpCta } from "./_components/Blocks";
 import { AmberMark } from "./_components/Logo";
 import {
@@ -35,6 +37,9 @@ import {
 //   ・每張商品卡標示屬於哪一檔（用該檔的色）
 //   ・購物車依檔期分組、分開結帳（那本來就是兩個包裹、兩筆運費）
 export const dynamic = "force-dynamic";
+
+/** hero 小標輪播的地區。跟 _data/nav.ts 的 FEATURES 描述的市場一致 */
+const SHOPPING_IN = ["KOREA", "JAPAN", "EUROPE"] as const;
 
 export default async function Home({
   searchParams,
@@ -106,18 +111,16 @@ export default async function Home({
           <div className="am-hero__text">
             <p className="am-eyebrow">
               <IconSparkle size={14} stroke={2} />
-              各國連線代購
+              Personal shopping in
+              <RotatingWord words={SHOPPING_IN} />
             </p>
+
+            {/* 一句標語就好。「怎麼算錢、怎麼出貨」那些話在
+                /how 與商品頁講得更清楚，堆在 hero 只會沒有人讀。 */}
             <h1>
-              想要的那一件，
-              <br />
-              到<em>當地門市</em>替你帶回來
+              你挑，<em>我們飛</em>
             </h1>
-            <p className="am-hero__lead">
-              每一檔連線都有明確的收單時間。台幣售價在上架時就已經定案，
-              看到多少就是付多少；同一檔連線下幾次單都會併成一張出貨單，
-              運費只收一次。
-            </p>
+            <p className="am-hero__en">You pick. We fly.</p>
 
             <div className="am-btns">
               <a className="am-btn am-btn--accent" href="#products">
@@ -139,6 +142,12 @@ export default async function Home({
                 <span>
                   <IconClock size={16} stroke={1.8} />
                   最近收單 {formatTaipei(nextDeadline)}
+                  {/* 絕對時間由伺服器渲染（決定性、無 JS 也看得到），
+                      掛載後才在旁邊補上會走的「剩 N 天」 */}
+                  <Countdown
+                    deadlineISO={nextDeadline.toISOString()}
+                    serverNowISO={now.toISOString()}
+                  />
                 </span>
               )}
               <span>
