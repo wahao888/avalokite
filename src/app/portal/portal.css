@@ -360,3 +360,28 @@ body.portal {
   .p-btn { background: var(--p-ink); color: var(--p-paper); }
   .p-error { background: #3a2418; }
 }
+
+/* ── 檔期選擇 ────────────────────────────────────────
+   同時開兩檔以上時，上架與代客下單一律先問「這是哪一趟」。
+   為什麼不給一個預設值：她人站在首爾的店裡、手上抱著東西，
+   按鈕上那行「日本連線」是會被略過的——然後整批商品掛錯檔期，
+   收單時間、到貨日、結單分組、運費全部跟著錯，而且不會報錯。
+   （見 portal/amber/BatchPicker.tsx）
+
+   所以每一檔都是一個 48px 以上的大目標，且**沒有哪一個看起來像預設**。 */
+.p-dg-pickbar { margin-top: 1.2rem; }
+
+.p-dg-pick { display: grid; gap: 0.6rem; }
+/* 後台首頁那排橫的；窄螢幕自動疊回一欄 */
+.p-dg-pick--row { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+.p-dg-pick__item {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  min-height: 56px; padding: 0.8rem 1rem;
+  border: 1px solid var(--p-ink); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink);
+  text-decoration: none;
+}
+.p-dg-pick__item:hover { background: var(--p-paper); }
+.p-dg-pick__title { font-weight: 700; }
+.p-dg-pick__meta { font-size: 0.78rem; color: var(--p-muted); }

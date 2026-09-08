@@ -157,6 +157,36 @@ describe("導覽", () => {
   });
 });
 
+describe("後台不會替她猜檔期", () => {
+  const PORTAL = path.join(ROOT, "src/app/portal/amber");
+
+  it("資料層沒有「回傳單一進行中檔期」的函式", () => {
+    // 曾經有一支 currentBatch()，回 status=open 裡最新開的那一檔。
+    // 它連續害了兩處：前台只列得出一檔，後台則把商品寫進**錯的檔期**。
+    // 問題不在呼叫端，在於這個契約本身就是「從多個裡挑一個，別問是哪個」。
+    const data = read(path.join(ROOT, "src/lib/daigou-data.ts"));
+    expect(data).not.toMatch(/export async function currentBatch/);
+  });
+
+  it("上架與代客下單都會在多檔同開時先問她", () => {
+    // 這兩頁是唯一「猜錯就會把資料寫進錯的檔期」的地方。
+    // 猜錯不會報錯——收單時間、到貨日、結單分組、運費一起錯，
+    // 要到結單那天才看得出來。
+    for (const f of ["products/new/page.tsx", "orders/new/page.tsx"]) {
+      const src = code(path.join(PORTAL, f));
+      expect(src, `${f} 沒有引入 BatchPicker`).toMatch(/BatchPicker/);
+      // 而且必須是「大於一檔才問」，不是無條件問（只開一檔時多一次點擊）
+      expect(src, `${f} 的多檔判斷不見了`).toMatch(/openList\.length > 1/);
+    }
+  });
+
+  it("後台首頁在多檔同開時不會只推一檔", () => {
+    const src = code(path.join(PORTAL, "page.tsx"));
+    expect(src).toMatch(/open\.length === 1/);
+    expect(src).toMatch(/open\.length > 1/);
+  });
+});
+
 describe("手機版維持功能優先", () => {
   const css = read(path.join(SITE_DIR, "amber.css"));
 

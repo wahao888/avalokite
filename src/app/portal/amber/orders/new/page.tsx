@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getHostTenant, getTenantSession } from "@/lib/tenant-auth";
-import { getBatch, currentBatch, listProducts, listMembers } from "@/lib/daigou-data";
+import { getBatch, openBatches, listProducts, listMembers } from "@/lib/daigou-data";
+import { BatchPicker } from "../../BatchPicker";
 import { thumbUrl } from "@/lib/media-url";
 import { twd } from "@/app/sites/amber/_data/cart";
 import LoginForm from "../../../LoginForm";
@@ -35,7 +36,21 @@ export default async function ManualOrderPage({
   const tenant = await getTenantSession();
   if (!tenant) return <LoginForm tenantName={hostTenant.name} error={sp.error} />;
 
-  const batch = sp.batch ? await getBatch(tenant.slug, sp.batch) : await currentBatch(tenant.slug);
+  // 同上：同時開兩檔以上就問她要下到哪一趟，不要替她猜。
+  // 代客下單猜錯的後果跟上架一樣——這位客人的品項會併進錯的那張結單。
+  const openList = sp.batch ? [] : await openBatches(tenant.slug);
+  if (!sp.batch && openList.length > 1) {
+    return (
+      <BatchPicker
+        title="這一筆要下到哪一檔？"
+        hint={`目前有 ${openList.length} 檔連線同時進行。選錯的話這位客人的品項會併進錯的結單。`}
+        batches={openList}
+        basePath="/portal/amber/orders/new"
+      />
+    );
+  }
+
+  const batch = sp.batch ? await getBatch(tenant.slug, sp.batch) : (openList[0] ?? null);
   if (!batch) {
     return (
       <main className="p-wrap">

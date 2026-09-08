@@ -64,20 +64,19 @@ export async function getBatchBySlug(tenantId: string, slug: string) {
   return prisma.dgBatch.findFirst({ where: { tenantId, slug, deletedAt: null } });
 }
 
-/** 目前進行中的檔期。上架頁沒有這個就要先引導她建一檔，而不是給一張會失敗的表單 */
-export async function currentBatch(tenantId: string) {
-  return prisma.dgBatch.findFirst({
-    where: { tenantId, status: "open", deletedAt: null },
-    orderBy: { openAt: "desc" },
-  });
-}
-
 /**
  * 所有進行中的檔期。
  *
- * ⚠ 前台一定要用這一支，不能用 currentBatch。
- * 她可能同時開韓國、日本、歐洲三檔——currentBatch 只回最新的那一檔，
- * 另外兩檔的商品在前台等於沒上架。（2026-09-07 發現的缺口。）
+ * ⚠ 這裡刻意**沒有**「回傳單一一檔」的版本。
+ *
+ * 曾經有過一支 currentBatch()，回 status=open 裡最新開的那一檔。
+ * 它連續害了兩個地方：前台只列得出一檔（另外兩檔的商品等於沒上架），
+ * 後台的上架與代客下單則會把東西寫進**錯的檔期**——收單時間、到貨日、
+ * 結單分組、運費全部跟著錯，而且完全不會報錯。
+ *
+ * 問題不在那兩處的呼叫端，在於這個函式的契約本身就是「從多個裡面
+ * 挑一個給你，別問是哪一個」。所以整支移除：要選哪一檔是呼叫端的決定，
+ * 而在後台那是**使用者**的決定（見 portal/amber/BatchPicker.tsx）。
  */
 export async function openBatches(tenantId: string) {
   return prisma.dgBatch.findMany({

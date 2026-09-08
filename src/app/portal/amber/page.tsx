@@ -76,11 +76,39 @@ export default async function AmberHome({
 
       {sp.error && <div className="p-error">{ERRORS[sp.error] ?? "操作失敗，請再試一次。"}</div>}
 
-      {open.length > 0 && (
+      {/* ⚠ 同時開著兩檔以上時，**不要替她挑一檔**。
+          她人站在首爾的店裡按下上架，而按鈕上寫的是「日本連線」——
+          手上抱著東西的時候那行字是會被略過的，然後整批商品掛錯檔期：
+          錯的收單時間、錯的到貨日、錯的結單分組、錯的運費，
+          而且完全不會報錯，要到結單那天才發現。
+          只開一檔時就不必問了，那是最常見的情況。 */}
+      {open.length === 1 && (
         <div className="p-dg-sticky" style={{ position: "static", marginTop: 0 }}>
           <a className="p-btn" href={`/portal/amber/products/new?batch=${encodeURIComponent(open[0].id)}`}>
             ＋ 上架商品到「{open[0].title}」
           </a>
+        </div>
+      )}
+
+      {open.length > 1 && (
+        <div className="p-dg-pickbar">
+          <p className="p-dg-hint" style={{ margin: "0 0 0.5rem" }}>
+            目前有 {open.length} 檔連線同時進行，上架前先選這一件屬於哪一趟：
+          </p>
+          <div className="p-dg-pick p-dg-pick--row">
+            {open.map((b) => (
+              <a
+                key={b.id}
+                className="p-dg-pick__item"
+                href={`/portal/amber/products/new?batch=${encodeURIComponent(b.id)}`}
+              >
+                <span className="p-dg-pick__title">＋ 上架到「{b.title}」</span>
+                <span className="p-dg-pick__meta">
+                  {b.defaultDeadlineAt ? `收單 ${formatTaipei(b.defaultDeadlineAt)}` : "不設收單"}
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
       )}
 

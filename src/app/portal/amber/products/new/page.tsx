@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getHostTenant, getTenantSession } from "@/lib/tenant-auth";
-import { getBatch, currentBatch, getProduct, recentSpecAxes } from "@/lib/daigou-data";
+import { getBatch, openBatches, getProduct, recentSpecAxes } from "@/lib/daigou-data";
+import { BatchPicker } from "../../BatchPicker";
 import { QuickListForm } from "../../../_components/QuickListForm";
 import LoginForm from "../../../LoginForm";
 
@@ -20,10 +21,22 @@ export default async function NewProductPage({
   const tenant = await getTenantSession();
   if (!tenant) return <LoginForm tenantName={hostTenant.name} error={sp.error} />;
 
-  // 指定了檔期就用它，沒指定就用目前進行中的那一檔。
-  const batch = sp.batch
-    ? await getBatch(tenant.slug, sp.batch)
-    : await currentBatch(tenant.slug);
+  // 指定了檔期就用它。沒指定時只有在「剛好只有一檔進行中」的情況下
+  // 才自動帶入——同時開兩檔以上一律問她（見 BatchPicker 的註解：
+  // 猜錯的成本是整批商品掛錯檔期，而且不會報錯）。
+  const openList = sp.batch ? [] : await openBatches(tenant.slug);
+  if (!sp.batch && openList.length > 1) {
+    return (
+      <BatchPicker
+        title="這一件要上到哪一檔？"
+        hint={`目前有 ${openList.length} 檔連線同時進行。選錯檔期會連收單時間、到貨日與運費一起錯。`}
+        batches={openList}
+        basePath="/portal/amber/products/new"
+      />
+    );
+  }
+
+  const batch = sp.batch ? await getBatch(tenant.slug, sp.batch) : (openList[0] ?? null);
 
   // 沒有進行中的檔期時，直接把她導去建一檔——
   // 而不是給一張 batchId 為空、按下去才失敗的表單。

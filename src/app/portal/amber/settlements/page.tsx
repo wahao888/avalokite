@@ -38,7 +38,10 @@ export default async function SettlementsPage({
   if (!tenant) return <LoginForm tenantName={hostTenant.name} error={sp.error} />;
 
   const batches = await listBatches(tenant.slug);
-  const batchId = sp.batch || batches[0]?.id;
+  // 預設看進行中的那一檔（沒有的話才退回最新一檔）。
+  // 這裡只是列表的濾鏡、下面有檔期選擇器，猜錯不會寫壞任何東西——
+  // 跟上架／代客下單那兩處「猜錯就寫進錯的檔期」是不同性質的。
+  const batchId = sp.batch || batches.find((b) => b.status === "open")?.id || batches[0]?.id;
   if (!batchId) {
     return (
       <main className="p-wrap">
