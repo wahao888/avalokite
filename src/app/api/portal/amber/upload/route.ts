@@ -4,7 +4,12 @@ import sharp from "sharp";
 import { getTenantSession } from "@/lib/tenant-auth";
 import { sameOrigin } from "@/lib/portal-http";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
-import { createImage, findImageByUploadId, sweepImages } from "@/lib/daigou-data";
+import {
+  createImage,
+  findImageByUploadId,
+  sweepBatchFullImages,
+  sweepImages,
+} from "@/lib/daigou-data";
 import { storage, storageKey, thumbKey } from "@/lib/storage";
 import {
   TARGET_EDGE,
@@ -171,6 +176,8 @@ export async function POST(req: NextRequest) {
   // 機會式清掃：不用 cron，改成在她活動的時候順手掃一點——
   // 那正好就是檔案累積的時候，而且自動節流。失敗不影響本次上傳。
   void sweepImages(tenant.slug, 20).catch(() => {});
+  // 順便回收已結束檔期的大圖（一檔約 28MB，不回收的話磁碟只會單向成長）
+  void sweepBatchFullImages(tenant.slug, 20).catch(() => {});
 
   return NextResponse.json({
     id: row.id,

@@ -537,6 +537,75 @@ export async function purgeBatchFullImages(
 }
 
 /** 後台顯示「本檔期照片佔用 X MB」，讓她自己決定要不要提早回收 */
+/**
+ * 機會式的大圖回收：找一檔「關閉滿 30 天、還沒清過」的連線，清掉它的大圖。
+ *
+ * ⚠ 這支是 2026-09-08 補的。在那之前 FULL_PURGE_AFTER_MS 只是一個
+ * 定義了卻沒有人讀的常數，而後台的說明已經寫著「檔期關閉滿 30 天後
+ * 也會自動清一次」——也就是介面對她做了一個程式沒有實現的承諾。
+ * 實際上只有她自己按那顆按鈕才會清，不按就一直長：
+ * 一檔約 28MB，一個月四檔就是 112MB，t3.micro 的磁碟撐不了太久。
+ *
+ * 跟 sweepImages 一樣不用 cron，掛在她會經過的地方（上傳、檔期頁、
+ * 後台首頁）。每次只處理**一檔**、最多 limit 張，所以不會讓某一次
+ * 頁面載入變慢；沒清完的下一次呼叫接著清。
+ *
+ * 已知的取捨（跟 sweepImages 相同）：她如果三個月沒登入後台，
+ * 這裡就不會執行。磁碟用量由 deploy/health-check.sh 監看當作保險。
+ */
+export async function sweepBatchFullImages(tenantId: string, limit = 20): Promise<number> {
+  const cutoff = new Date(Date.now() - FULL_PURGE_AFTER_MS);
+
+  // closedAt 為 null 的檔期不會被選中——那是「還沒真的收過單」，
+  // 寧可不清也不要清掉還在賣的東西。
+  const batch = await prisma.dgBatch.findFirst({
+    where: {
+      tenantId,
+      imagesPurgedAt: null,
+      status: { in: ["closed", "archived"] },
+      closedAt: { lt: cutoff },
+    },
+    orderBy: { closedAt: "asc" },
+    select: { id: true },
+  });
+  if (!batch) return 0;
+
+  const products = await prisma.dgProduct.findMany({
+    where: { tenantId, batchId: batch.id },
+    select: { id: true },
+  });
+  const ids = products.map((p) => p.id);
+
+  const rows = ids.length
+    ? await prisma.dgImage.findMany({
+        where: { tenantId, productId: { in: ids }, fullPurgedAt: null, purgedAt: null },
+        take: limit,
+        select: { id: true, key: true },
+      })
+    : [];
+
+  let purged = 0;
+  for (const row of rows) {
+    // 只刪大圖，縮圖留著——歷史訂單、結單畫面與「再上一件」都靠縮圖
+    await storage.remove(row.key);
+    const r = await prisma.dgImage.updateMany({
+      where: { tenantId, id: row.id },
+      data: { fullPurgedAt: now() },
+    });
+    if (r.count === 1) purged += 1;
+  }
+
+  // 這一輪就把剩下的都清完了才收工；還滿 limit 表示可能還有，
+  // 留著 imagesPurgedAt 為 null 讓下一次呼叫接著處理。
+  if (rows.length < limit) {
+    await prisma.dgBatch.updateMany({
+      where: { tenantId, id: batch.id },
+      data: { imagesPurgedAt: now() },
+    });
+  }
+  return purged;
+}
+
 export async function batchImageBytes(tenantId: string, batchId: string): Promise<number> {
   const products = await prisma.dgProduct.findMany({
     where: { tenantId, batchId },

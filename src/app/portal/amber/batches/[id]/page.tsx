@@ -6,6 +6,7 @@ import {
   countProducts,
   batchImageBytes,
   sweepImages,
+  sweepBatchFullImages,
 } from "@/lib/daigou-data";
 import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { categoryName } from "@/app/sites/amber/_data/categories";
@@ -65,6 +66,7 @@ export default async function BatchPage({
 
   // 機會式清掃：不用 cron，趁她開後台的時候順手回收幾筆過期的圖檔。
   void sweepImages(tenant.slug, 5).catch(() => {});
+  void sweepBatchFullImages(tenant.slug, 10).catch(() => {});
 
   const isOpen = batch.status === "open";
 

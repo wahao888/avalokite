@@ -216,6 +216,41 @@ describe("檔期被移除後，商品不該還買得到", () => {
   });
 });
 
+describe("照片回收", () => {
+  const data = read(path.join(ROOT, "src/lib/daigou-data.ts"));
+
+  it("FULL_PURGE_AFTER_MS 真的有人讀", () => {
+    // 這條測試的由來：後台介面寫著「檔期關閉滿 30 天後也會自動清一次」，
+    // 但那個常數當時只被定義、沒有任何人讀——介面對她做了一個
+    // 程式沒有實現的承諾，而磁碟每一檔長 28MB。
+    const uses = data.match(/FULL_PURGE_AFTER_MS/g) ?? [];
+    expect(uses.length, "定義了卻沒有人使用").toBeGreaterThan(1);
+    expect(data).toMatch(/sweepBatchFullImages/);
+  });
+
+  it("大圖回收掛在她會經過的地方（沒有 cron）", () => {
+    const callers = [
+      "src/app/api/portal/amber/upload/route.ts",
+      "src/app/portal/amber/page.tsx",
+      "src/app/portal/amber/batches/[id]/page.tsx",
+    ];
+    for (const f of callers) {
+      expect(code(path.join(ROOT, f)), `${f} 沒有觸發大圖回收`).toMatch(
+        /sweepBatchFullImages\(/,
+      );
+    }
+  });
+
+  it("只刪大圖，縮圖留著", () => {
+    // 縮圖是歷史訂單、結單畫面與「再上一件」唯一會用到的圖，
+    // 一起刪掉的話半年前的結單畫面會變成一排破圖。
+    const i = data.indexOf("export async function sweepBatchFullImages");
+    const body = data.slice(i, data.indexOf("\nexport ", i + 1));
+    expect(body).toMatch(/storage\.remove\(row\.key\)/);
+    expect(body, "不該連縮圖一起刪").not.toMatch(/thumbKey/);
+  });
+});
+
 describe("手機版維持功能優先", () => {
   const css = read(path.join(SITE_DIR, "amber.css"));
 

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getHostTenant, getTenantSession } from "@/lib/tenant-auth";
-import { listBatches, countProducts } from "@/lib/daigou-data";
+import { listBatches, countProducts, sweepBatchFullImages } from "@/lib/daigou-data";
 import { formatTaipei, toTaipeiLocalInput } from "@/lib/tw-time";
 import { SHIP_PLANS, SHIP_PLAN_ZH } from "@/app/sites/amber/_data/shipping";
 import LoginForm from "../LoginForm";
@@ -35,6 +35,10 @@ export default async function AmberHome({
 
   const tenant = await getTenantSession();
   if (!tenant) return <LoginForm tenantName={hostTenant.name} error={sp.error} />;
+
+  // 機會式回收：清掉關閉滿 30 天的檔期大圖。她每次進後台都會經過這裡，
+  // 而這正好是檔案會累積的時候。不 await——回收失敗不該擋住畫面。
+  void sweepBatchFullImages(tenant.slug, 10).catch(() => {});
 
   const batches = await listBatches(tenant.slug);
   const counts = await Promise.all(
