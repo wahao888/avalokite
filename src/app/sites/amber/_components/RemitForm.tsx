@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconAlert, IconBank, IconCheck } from "./Icons";
 
 // 匯款回報。客人 → Amber 方向唯一的閉環：沒有它，末五碼會散在
 // 幾十則 LINE 訊息裡，她要一則一則對帳。
@@ -36,9 +37,11 @@ export function RemitForm({ token, reported }: { token: string; reported: string
   if (done) {
     return (
       <div className="am-note">
-        ✓ 已收到你的匯款回報{reported ? `（末五碼 ${reported}）` : ""}。
-        <br />
-        我們核帳後會在 LINE 通知你，並安排出貨 🙌
+        <div className="am-note__h">
+          <IconCheck size={16} stroke={2.2} />
+          已收到你的匯款回報{reported ? `（末五碼 ${reported}）` : ""}
+        </div>
+        我們核帳後會在 LINE 通知你，並安排出貨。
       </div>
     );
   }
@@ -61,14 +64,26 @@ export function RemitForm({ token, reported }: { token: string; reported: string
         <input id="r-name" value={name} onChange={(e) => setName(e.target.value)} />
         <p className="am-field__hint">用別人的帳戶匯款時填一下，比較好對。</p>
       </div>
-      {error && <div className="am-err">{error}</div>}
+      {error && (
+        <div className="am-err">
+          <IconAlert size={18} stroke={1.9} />
+          <span>{error}</span>
+        </div>
+      )}
       <button
         type="button"
         className="am-btn am-btn--accent am-btn--full"
         disabled={busy || last5.length !== 5}
         onClick={() => void submit()}
       >
-        {busy ? "送出中…" : "我已匯款"}
+        {busy ? (
+          "送出中…"
+        ) : (
+          <>
+            <IconBank size={17} stroke={1.9} />
+            我已匯款
+          </>
+        )}
       </button>
     </div>
   );

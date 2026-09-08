@@ -12,6 +12,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const origin = tenantOrigin(getTenant(TENANT_SLUG)!);
   return [
     { url: `${origin}/`, changeFrequency: "daily", priority: 1 },
+    // 說明頁相反：它們幾乎不變、內容穩定，而且是搜尋「代購 怎麼買」
+    // 這類問題時真正有用的落點。
+    { url: `${origin}/lineups`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${origin}/how`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${origin}/faq`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${origin}/about`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${origin}/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${origin}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${origin}/order/lookup`, changeFrequency: "monthly", priority: 0.3 },
   ];
 }

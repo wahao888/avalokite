@@ -5,6 +5,7 @@ import { useCart } from "./CartProvider";
 import { LINE_STATUS_ZH, twd, MAX_QTY_PER_LINE, groupByBatch, type PricedLine } from "../_data/cart";
 import { thumbUrl } from "@/lib/media-url";
 import { batchTone } from "../_data/batch-tone";
+import { IconAlert, IconCalendar, IconClose, IconMinus, IconPlus } from "./Icons";
 
 // 購物車抽屜。
 //
@@ -53,7 +54,7 @@ function Line({
           {!blocked && onQty && (
             <div className="am-step">
               <button type="button" aria-label="減少" onClick={() => onQty(line.qty - 1)}>
-                －
+                <IconMinus size={16} stroke={2} />
               </button>
               <span className="am-step__n">{line.qty}</span>
               <button
@@ -62,11 +63,12 @@ function Line({
                 disabled={line.qty >= MAX_QTY_PER_LINE}
                 onClick={() => onQty(line.qty + 1)}
               >
-                ＋
+                <IconPlus size={16} stroke={2} />
               </button>
             </div>
           )}
           <button type="button" className="am-copy" onClick={onRemove}>
+            <IconClose size={14} stroke={2} />
             移除
           </button>
         </div>
@@ -78,7 +80,7 @@ function Line({
 }
 
 export function CartDrawer() {
-  const { open, setOpen, pricing, setQty, remove, count, ready } = useCart();
+  const { open, setOpen, lines, pricing, setQty, remove, count, ready } = useCart();
 
   // 開啟時鎖住底層捲動，並支援 Esc 關閉
   useEffect(() => {
@@ -115,18 +117,26 @@ export function CartDrawer() {
         <div className="am-drawer__head">
           <h2>購物車{ready && count > 0 ? `（${count}）` : ""}</h2>
           <button type="button" className="am-copy" onClick={() => setOpen(false)}>
+            <IconClose size={15} stroke={2} />
             關閉
           </button>
         </div>
 
         <div className="am-drawer__body">
-          {pricing.state === "idle" && <p className="am-empty">購物車是空的。</p>}
-          {pricing.state === "loading" && <p className="am-field__hint">計算中…</p>}
+          {/* ⚠ 空車看 lines，不是 pricing——pricing 一開始一定是 idle（還沒問過價），
+              拿它判斷空車會讓車裡有東西的客人先看到一瞬間的「購物車是空的」。 */}
+          {lines.length === 0 && <p className="am-empty">購物車是空的。</p>}
+          {lines.length > 0 && pricing.state !== "ok" && pricing.state !== "error" && (
+            <p className="am-field__hint">計算中…</p>
+          )}
           {pricing.state === "error" && (
             <div className="am-err">
-              目前無法確認庫存與價格，請檢查網路後重試。
-              <br />
-              為了避免金額不正確，先暫停結帳。
+              <IconAlert size={18} stroke={1.9} />
+              <span>
+                目前無法確認庫存與價格，請檢查網路後重試。
+                <br />
+                為了避免金額不正確，先暫停結帳。
+              </span>
             </div>
           )}
 
@@ -141,6 +151,7 @@ export function CartDrawer() {
                     className="am-cartgroup__head"
                     style={{ color: tone.ink, borderColor: tone.line }}
                   >
+                    <IconCalendar size={14} stroke={2} />
                     {g.batchTitle}
                   </header>
                 )}
@@ -164,7 +175,10 @@ export function CartDrawer() {
 
           {explain.length > 0 && (
             <div className="am-blocked">
-              <strong>以下商品目前無法下單</strong>
+              <div className="am-blocked__h">
+                <IconAlert size={16} stroke={2} />
+                以下商品目前無法下單
+              </div>
               <p style={{ margin: "0.3rem 0 0.5rem" }}>
                 移除後就可以結帳，其餘商品不受影響。
               </p>

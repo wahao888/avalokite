@@ -20,6 +20,15 @@ import { BANK, LINEPAY, bankReady, linePayReady, SHIP_KIND_ZH, cvsBrandName, TEN
 import { CopyText } from "../../_components/CopyText";
 import { RemitForm } from "../../_components/RemitForm";
 import { Terms } from "../../_components/Terms";
+import {
+  IconBank,
+  IconCalendar,
+  IconInfo,
+  IconPin,
+  IconPlane,
+  IconReceipt,
+  IconTruck,
+} from "../../_components/Icons";
 
 // 結單頁。客人這一側唯一的出口：他是靠這一頁知道自己要付多少錢的。
 //
@@ -63,8 +72,14 @@ export default async function SettlementPage({
 
   return (
     <div className="am-wrap">
-      <h1 className="am-h1">{s.batch.title}</h1>
-      <p className="am-sub">{SETTLEMENT_STATUS_ZH[status] ?? status}</p>
+      <header className="am-pagehead">
+        <p className="am-eyebrow">
+          <IconReceipt size={14} stroke={2} />
+          結單明細
+        </p>
+        <h1>{s.batch.title}</h1>
+        <p>{SETTLEMENT_STATUS_ZH[status] ?? status}</p>
+      </header>
 
       <div className="am-code">
         <span className="am-code__label">訂單編號</span>
@@ -74,15 +89,23 @@ export default async function SettlementPage({
 
       {open && (
         <div className="am-note">
-          這一檔還在收單中，下面的金額是<strong>目前的預估</strong>。
-          收單並採購完成後我們會通知你最終金額。
+          <div className="am-note__h">
+            <IconInfo size={16} stroke={1.9} />
+            這一檔還在收單中
+          </div>
+          下面的金額是<strong>目前的預估</strong>。收單並採購完成後我們會通知你最終金額。
         </div>
       )}
 
+      {/* 桌機雙欄：左邊是「買了什麼」，右邊是「要付多少、怎麼付」。
+          手機仍是單欄，順序不變（品項 → 對帳 → 付款 → 出貨）。 */}
+      <div className="am-cols am-cols--flow">
+        <div>
       {/* 品項。逐筆訂單分開列——「9/15 那筆」「9/16 那筆」對客人才有意義 */}
       {s.orders.map((o) => (
         <div key={o.id} style={{ marginBottom: "1rem" }}>
           <p className="am-sub" style={{ margin: "0 0 0.3rem" }}>
+            <IconCalendar size={14} stroke={1.9} />{" "}
             {formatTaipei(o.createdAt, { withTime: false })} 訂單 {o.id}
           </p>
           {o.lines.map((l) => {
@@ -118,6 +141,9 @@ export default async function SettlementPage({
         </div>
       ))}
 
+        </div>
+
+        <aside className="am-cols__side">
       {/* 對帳鏈。原始金額 → 缺貨扣除 → 調整 → 運費 → 折抵 → 應付 → 已收 */}
       <div className="am-sum">
         <div className="am-sum__row">
@@ -172,8 +198,8 @@ export default async function SettlementPage({
       {/* 付款資訊。未填時退成「我們會與你聯絡」，不顯示空欄位 */}
       {!open && totals.balance > 0 && (
         <>
-          <h2 className="am-h1" style={{ fontSize: "1.1rem", marginTop: "1.8rem" }}>
-            付款方式
+          <h2 className="am-h2" style={{ fontSize: "1.05rem", marginTop: "1.5rem" }}>
+            <IconBank size={17} stroke={1.9} /> 付款方式
           </h2>
           {bankReady() ? (
             <div className="am-note">
@@ -195,10 +221,10 @@ export default async function SettlementPage({
             </div>
           ) : null}
           {!bankReady() && !linePayReady() && (
-            <div className="am-note">付款方式我們會另外用 LINE 通知你 🙏</div>
+            <div className="am-note">付款方式我們會另外用 LINE 通知你。</div>
           )}
 
-          <h2 className="am-h1" style={{ fontSize: "1.1rem", marginTop: "1.5rem" }}>
+          <h2 className="am-h2" style={{ fontSize: "1.05rem", marginTop: "1.5rem" }}>
             匯款回報
           </h2>
           <RemitForm token={token} reported={s.remitLast5} />
@@ -206,19 +232,23 @@ export default async function SettlementPage({
       )}
 
       {/* 出貨資訊 */}
-      <h2 className="am-h1" style={{ fontSize: "1.1rem", marginTop: "1.8rem" }}>
-        出貨資訊
+      <h2 className="am-h2" style={{ fontSize: "1.05rem", marginTop: "1.5rem" }}>
+        <IconTruck size={17} stroke={1.9} /> 出貨資訊
       </h2>
       <div className="am-sum">
         {s.etaAt && (
           <div className="am-sum__row">
-            <span>預計到貨</span>
+            <span>
+              <IconPlane size={14} stroke={1.9} /> 預計到貨
+            </span>
             <span>{formatTaipei(s.etaAt, { withTime: false })}</span>
           </div>
         )}
         {s.shipNo && (
           <div className="am-sum__row">
-            <span>貨態編號</span>
+            <span>
+              <IconTruck size={14} stroke={1.9} /> 貨態編號
+            </span>
             <span>{s.shipNo}</span>
           </div>
         )}
@@ -238,7 +268,9 @@ export default async function SettlementPage({
               </span>
             </div>
             <div className="am-sum__row">
-              <span>取貨方式</span>
+              <span>
+                <IconPin size={14} stroke={1.9} /> 取貨方式
+              </span>
               <span>
                 {ship.shipKind === "cvs"
                   ? `${SHIP_KIND_ZH.cvs}｜${cvsBrandName(ship.shipCvsBrand)} ${ship.shipCvsStoreName ?? ""}`
@@ -251,6 +283,8 @@ export default async function SettlementPage({
       <p className="am-field__hint" style={{ marginTop: "0.6rem" }}>
         為了保護個資，這一頁只顯示部分收件資料。有誤請直接在 LINE 告訴我們。
       </p>
+        </aside>
+      </div>
 
       <Terms compact />
     </div>

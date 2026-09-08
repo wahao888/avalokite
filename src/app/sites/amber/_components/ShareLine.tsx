@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconCheck, IconCopy, IconSend } from "./Icons";
 import { lineShareUrl } from "@/lib/line-share";
 
 // 分享到 LINE。
@@ -26,6 +27,7 @@ export function ShareLine({
 }) {
   return (
     <a className={className} href={lineShareUrl(text, url)} target="_blank" rel="noreferrer">
+      <IconSend size={16} stroke={1.9} />
       {label}
     </a>
   );
@@ -72,7 +74,8 @@ export function ShareCopy({
 
   return (
     <button type="button" className={className} onClick={() => void copy()}>
-      {state === "ok" ? "已複製 ✓" : label}
+      {state === "ok" ? <IconCheck size={16} stroke={2.2} /> : <IconCopy size={16} stroke={1.9} />}
+      {state === "ok" ? "已複製" : label}
     </button>
   );
 }

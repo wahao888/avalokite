@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { countdownLabel, isClosingSoon } from "@/lib/daigou-deadline";
+import { IconClock } from "./Icons";
 
 // 倒數計時。
 //
@@ -48,7 +49,13 @@ export function Countdown({
   // 掛載前不佔位也不閃動；外層的絕對時間已經先把資訊給出去了。
   if (label === null) return null;
 
+  // className 傳空字串的呼叫端（檔期橫幅）只要文字，不要晶片外框與圖示
+  if (className !== undefined) return <span className={className}>{label}</span>;
+
   return (
-    <span className={className ?? `am-tag ${soon ? "am-tag--soon" : ""}`}>{label}</span>
+    <span className={`am-tag ${soon ? "am-tag--soon" : ""}`}>
+      <IconClock size={13} stroke={2} />
+      {label}
+    </span>
   );
 }

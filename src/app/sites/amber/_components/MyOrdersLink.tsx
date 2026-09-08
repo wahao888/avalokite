@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconReceipt } from "./Icons";
 
 // 頁首的「我的訂單」。
 //
@@ -37,6 +38,17 @@ export function MyOrdersLink() {
   // 下過單的人 → 直接進自己的頁；沒下過的 → 查訂單。
   // 兩個都放的話標誌變寬之後導覽列會擠到換行，而且對已下單的人來說
   // 「查訂單」是多餘的（她自己的頁面裡就有查詢連結）。
-  if (!path) return <a href="/order/lookup">查訂單</a>;
-  return <a href={path}>我的訂單</a>;
+  if (!path)
+    return (
+      <a href="/order/lookup">
+        <IconReceipt size={18} stroke={1.7} />
+        <span className="am-navtext">查訂單</span>
+      </a>
+    );
+  return (
+    <a href={path}>
+      <IconReceipt size={18} stroke={1.7} />
+      <span className="am-navtext">我的訂單</span>
+    </a>
+  );
 }

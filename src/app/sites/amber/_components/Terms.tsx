@@ -1,4 +1,5 @@
 import { TERMS, SITE } from "../_data/site";
+import { IconAlert, IconChevronRight, IconDoc, IconTruck } from "./Icons";
 
 // 購買規範。
 //
@@ -12,17 +13,32 @@ import { TERMS, SITE } from "../_data/site";
 export function Terms({ compact = false }: { compact?: boolean }) {
   return (
     <section className="am-terms" aria-label="購買規範">
-      <h2 className="am-terms__h">購買流程與規範</h2>
+      <h2 className="am-terms__h">
+        <IconDoc size={18} stroke={1.8} />
+        購買流程與規範
+      </h2>
 
       <ol className="am-terms__flow">
-        {TERMS.flow.map((step) => (
-          <li key={step}>{step}</li>
+        {TERMS.flow.map((step, i) => (
+          <li key={step}>
+            {i > 0 && (
+              <IconChevronRight
+                size={13}
+                stroke={2.2}
+                className="am-i am-terms__arrow"
+              />
+            )}
+            {step}
+          </li>
         ))}
       </ol>
 
       {!compact && (
         <>
-          <h3 className="am-terms__sub">出貨說明</h3>
+          <h3 className="am-terms__sub">
+            <IconTruck size={15} stroke={1.9} />
+            出貨說明
+          </h3>
           <ul className="am-terms__list">
             {TERMS.shipping.map((t) => (
               <li key={t}>{t}</li>
@@ -31,7 +47,10 @@ export function Terms({ compact = false }: { compact?: boolean }) {
         </>
       )}
 
-      <h3 className="am-terms__sub am-terms__sub--warn">下單後恕不接受</h3>
+      <h3 className="am-terms__sub am-terms__sub--warn">
+        <IconAlert size={15} stroke={1.9} />
+        下單後恕不接受
+      </h3>
       <ul className="am-terms__list am-terms__list--warn">
         {TERMS.noRefund.map((t) => (
           <li key={t}>{t}</li>

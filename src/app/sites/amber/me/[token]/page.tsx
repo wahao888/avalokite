@@ -18,6 +18,15 @@ import { TENANT_SLUG } from "../../_data/site";
 import { shortOrderCode } from "@/lib/shop-order-id";
 import { RememberMe } from "../../_components/RememberMe";
 import { ShareCopy } from "../../_components/ShareLine";
+import {
+  IconCalendar,
+  IconChevronRight,
+  IconLock,
+  IconPlane,
+  IconReceipt,
+  IconSparkle,
+  IconTruck,
+} from "../../_components/Icons";
 
 // 「我的訂單」。
 //
@@ -57,15 +66,24 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
       {/* 同一台裝置下次直接從頁首進來，不必再點連結 */}
       <RememberMe path={`/me/${token}`} />
 
-      <h1 className="am-h1">我的訂單</h1>
-      <p className="am-sub">
-        {maskName(member.name)}　{maskPhone(member.phoneDigits)}
-      </p>
+      <header className="am-pagehead">
+        <p className="am-eyebrow">
+          <IconReceipt size={14} stroke={2} />
+          我的訂單
+        </p>
+        <h1>我的訂單</h1>
+        <p>
+          {maskName(member.name)}　{maskPhone(member.phoneDigits)}
+        </p>
+      </header>
 
       {/* 刻意不放「用 LINE 傳給自己」——那要先登入 LINE，多一道很煩。
           複製連結＋截圖才是大家實際會做的事。 */}
       <div className="am-note">
-        <strong>把這個頁面留起來</strong>
+        <div className="am-note__h">
+          <IconLock size={16} stroke={1.9} />
+          把這個頁面留起來
+        </div>
         <p style={{ margin: "0.3rem 0 0.6rem" }}>
           直接<strong>螢幕截圖</strong>，或複製連結傳給自己。
           之後查訂單、看金額、回報匯款都從這裡進去。
@@ -75,12 +93,19 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
 
       {credit > 0 && (
         <div className="am-note">
-          你有 <strong>{twd(credit)}</strong> 的折抵餘額，下一次結單時會自動扣除。
+          <div className="am-note__h">
+            <IconSparkle size={16} stroke={1.9} />
+            折抵餘額 {twd(credit)}
+          </div>
+          下一次結單時會自動扣除。
         </div>
       )}
 
       {settlements.length === 0 ? (
-        <p className="am-empty">目前還沒有訂單。</p>
+        <p className="am-empty">
+          <IconReceipt size={34} stroke={1.3} className="am-i am-empty__i" />
+          目前還沒有訂單。
+        </p>
       ) : (
         settlements.map((s) => {
           const lines = s.orders.flatMap((o) => o.lines);
@@ -100,7 +125,7 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
             <div className="am-sum" key={s.id} style={{ marginBottom: "1rem" }}>
               <div className="am-sum__row">
                 <span>
-                  <strong>{s.batch.title}</strong>
+                  <IconCalendar size={14} stroke={1.9} /> <strong>{s.batch.title}</strong>
                 </span>
                 <span>{SETTLEMENT_STATUS_ZH[s.status as SettlementStatus] ?? s.status}</span>
               </div>
@@ -120,13 +145,17 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
               </div>
               {s.etaAt && (
                 <div className="am-sum__row">
-                  <span>預計到貨</span>
+                  <span>
+                    <IconPlane size={14} stroke={1.9} /> 預計到貨
+                  </span>
                   <span>{formatTaipei(s.etaAt, { withTime: false })}</span>
                 </div>
               )}
               {s.shipNo && (
                 <div className="am-sum__row">
-                  <span>貨態編號</span>
+                  <span>
+                    <IconTruck size={14} stroke={1.9} /> 貨態編號
+                  </span>
                   <span>{s.shipNo}</span>
                 </div>
               )}
@@ -151,6 +180,7 @@ export default async function MePage({ params }: { params: Promise<{ token: stri
                   : totals.balance > 0
                     ? `看明細並回報匯款（還需 ${twd(totals.balance)}）`
                     : "看明細"}
+                <IconChevronRight size={16} stroke={2} />
               </a>
             </div>
           );

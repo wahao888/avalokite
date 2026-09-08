@@ -8,6 +8,14 @@ import { shortOrderCode } from "@/lib/shop-order-id";
 import { ShareCopy } from "./ShareLine";
 import { rememberMyLink } from "./MyOrdersLink";
 import { Terms } from "./Terms";
+import {
+  IconAlert,
+  IconBag,
+  IconCheck,
+  IconChevronRight,
+  IconInfo,
+  IconReceipt,
+} from "./Icons";
 
 // 結帳。
 //
@@ -170,7 +178,12 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
   if (done) {
     return (
       <div>
-        <h1 className="am-h1">訂單成立 🎉</h1>
+        <h1 className="am-h1">
+          <span style={{ color: "var(--a-ok)" }}>
+            <IconCheck size={22} stroke={2.2} />
+          </span>{" "}
+          訂單成立
+        </h1>
         {/* 編號要一眼看得到——多數人會直接截圖。
             顯示後 4 碼就好，查詢時完整或後 4 碼都收。 */}
         <div className="am-code">
@@ -182,7 +195,10 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
           <p style={{ margin: 0 }}>商品小計 {twd(done.itemsTotal)}</p>
         </div>
         <div className="am-note">
-          <strong>接下來會這樣進行</strong>
+          <div className="am-note__h">
+            <IconInfo size={16} stroke={1.9} />
+            接下來會這樣進行
+          </div>
           <ol style={{ margin: "0.4rem 0 0", paddingInlineStart: "1.2rem" }}>
             <li>連線期間你可以繼續加購，訂單會自動併到同一張出貨單</li>
             <li>收單後我們去採購，缺貨的品項會從金額扣掉</li>
@@ -196,7 +212,10 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
             截圖與複製連結才是大家實際會做的事。 */}
         {done.memberPath && (
           <div className="am-note">
-            <strong>把這一頁留起來 👇</strong>
+            <div className="am-note__h">
+              <IconReceipt size={16} stroke={1.9} />
+              把這一頁留起來
+            </div>
             <p style={{ margin: "0.3rem 0 0.6rem" }}>
               直接<strong>螢幕截圖</strong>，或複製下面的連結傳給自己。
               之後查訂單、看金額、回報匯款都從那裡進去。
@@ -216,7 +235,7 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
         </p>
         {groups.length > 0 && (
           <div className="am-note">
-            購物車裡還有其他連線的商品，記得也去結一下 👉{" "}
+            <IconBag size={16} stroke={1.9} /> 購物車裡還有其他連線的商品，記得也去結一下{" "}
             <a href="/cart">看購物車</a>
           </div>
         )}
@@ -239,9 +258,13 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
     return (
       <div>
         <h1 className="am-h1">結帳</h1>
-        <p className="am-empty">購物車是空的。</p>
+        <p className="am-empty">
+          <IconBag size={34} stroke={1.3} className="am-i am-empty__i" />
+          購物車是空的。
+        </p>
         <a className="am-btn am-btn--accent" href="/">
           去逛逛
+          <IconChevronRight size={17} stroke={2} />
         </a>
       </div>
     );
@@ -264,195 +287,220 @@ export function CheckoutForm({ batchId }: { batchId?: string }) {
         </p>
       )}
 
-      {error && <div className="am-err">{error}</div>}
-      {rejected.length > 0 && (
-        <div className="am-err">
-          {rejected.map((r, i) => (
-            <div key={i}>
-              ・{r.name}　{r.reasonZh}
+      {/* 桌機雙欄：左邊填資料、右邊是金額與送出。
+          手機仍是單欄，而且「買了什麼」會排在「填收件資料」前面
+          （靠 .am-cols__first 的 order，見 amber.css 的雙欄骨架）。 */}
+      <div className="am-cols">
+        <div>
+          {error && (
+            <div className="am-err">
+              <IconAlert size={18} stroke={1.9} />
+              <span>{error}</span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {totals && (
-        <div className="am-sum" style={{ marginBottom: "1.2rem" }}>
-          {totals.lines.map((l) => (
-            <div className="am-sum__row" key={`${l.productId}:${l.optionId ?? ""}`}>
-              <span>
-                {l.name}
-                {l.optionLabel ? `（${l.optionLabel}）` : ""} ×{l.qty}
-              </span>
-              <span>{twd(l.amount)}</span>
+          )}
+          {rejected.length > 0 && (
+            <div className="am-err">
+              <IconAlert size={18} stroke={1.9} />
+              <div>
+                {rejected.map((r, i) => (
+                  <div key={i}>
+                    {r.name}　{r.reasonZh}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-          <div className="am-sum__row am-sum__row--total">
-            <span>商品小計</span>
-            <span>{twd(totals.itemsTotal)}</span>
-          </div>
-          <p className="am-field__hint" style={{ marginTop: "0.5rem" }}>
-            運費在結單時計算，同一檔連線下幾次單只收一次。
-          </p>
-        </div>
-      )}
+          )}
 
-      {/* 存過資料就先摺起來——第二次結帳是「確認 → 送出」兩步 */}
-      {!edit ? (
-        <div className="am-note">
-          <div>
-            <strong>{p.name}</strong>　{p.phone}
-          </div>
-          <div className="am-line__spec">
-            {p.shipKind === "cvs"
-              ? `${SHIP_KIND_ZH.cvs}｜${CVS_BRANDS.find((b) => b.key === p.cvsBrand)?.name ?? ""} ${p.cvsStoreName}`
-              : `${SHIP_KIND_ZH.home}｜${p.address}`}
-          </div>
-          <button type="button" className="am-copy" style={{ marginTop: "0.5rem" }} onClick={() => setEdit(true)}>
-            修改資料
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="am-field">
-            <label htmlFor="c-name">姓名</label>
-            <input id="c-name" value={p.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" />
-          </div>
-          <div className="am-field">
-            <label htmlFor="c-phone">手機</label>
-            <input
-              id="c-phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={p.phone}
-              onChange={(e) => set("phone", e.target.value)}
-              placeholder="0912345678"
-            />
-            <p className="am-field__hint">同一支手機的訂單會自動歸到同一位客人，也是之後查訂單用的。</p>
-          </div>
-          <div className="am-field">
-            <label htmlFor="c-line">LINE 名稱或 ID（選填）</label>
-            <input id="c-line" value={p.lineId} onChange={(e) => set("lineId", e.target.value)} />
-            <p className="am-field__hint">方便我們在群組裡找到你。</p>
-          </div>
-          <div className="am-field">
-            <label htmlFor="c-email">Email（選填）</label>
-            <input
-              id="c-email"
-              type="email"
-              autoComplete="email"
-              value={p.email}
-              onChange={(e) => set("email", e.target.value)}
-            />
-          </div>
-
-          <div className="am-field">
-            <label>取貨方式</label>
-            <div className="am-specs">
-              {(["cvs", "home"] as ShipKind[]).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  className="am-spec"
-                  aria-pressed={p.shipKind === k}
-                  onClick={() => set("shipKind", k)}
-                >
-                  {SHIP_KIND_ZH[k]}
-                </button>
-              ))}
+          {/* 存過資料就先摺起來——第二次結帳是「確認 → 送出」兩步 */}
+          {!edit ? (
+            <div className="am-note">
+              <div>
+                <strong>{p.name}</strong>　{p.phone}
+              </div>
+              <div className="am-line__spec">
+                {p.shipKind === "cvs"
+                  ? `${SHIP_KIND_ZH.cvs}｜${CVS_BRANDS.find((b) => b.key === p.cvsBrand)?.name ?? ""} ${p.cvsStoreName}`
+                  : `${SHIP_KIND_ZH.home}｜${p.address}`}
+              </div>
+              <button type="button" className="am-copy" style={{ marginTop: "0.5rem" }} onClick={() => setEdit(true)}>
+                修改資料
+              </button>
             </div>
-          </div>
-
-          {p.shipKind === "cvs" ? (
+          ) : (
             <>
               <div className="am-field">
-                <label>超商</label>
+                <label htmlFor="c-name">姓名</label>
+                <input id="c-name" value={p.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" />
+              </div>
+              <div className="am-field">
+                <label htmlFor="c-phone">手機</label>
+                <input
+                  id="c-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={p.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                  placeholder="0912345678"
+                />
+                <p className="am-field__hint">同一支手機的訂單會自動歸到同一位客人，也是之後查訂單用的。</p>
+              </div>
+              <div className="am-field">
+                <label htmlFor="c-line">LINE 名稱或 ID（選填）</label>
+                <input id="c-line" value={p.lineId} onChange={(e) => set("lineId", e.target.value)} />
+                <p className="am-field__hint">方便我們在群組裡找到你。</p>
+              </div>
+              <div className="am-field">
+                <label htmlFor="c-email">Email（選填）</label>
+                <input
+                  id="c-email"
+                  type="email"
+                  autoComplete="email"
+                  value={p.email}
+                  onChange={(e) => set("email", e.target.value)}
+                />
+              </div>
+
+              <div className="am-field">
+                <label>取貨方式</label>
                 <div className="am-specs">
-                  {CVS_BRANDS.map((b) => (
+                  {(["cvs", "home"] as ShipKind[]).map((k) => (
                     <button
-                      key={b.key}
+                      key={k}
                       type="button"
                       className="am-spec"
-                      aria-pressed={p.cvsBrand === b.key}
-                      onClick={() => set("cvsBrand", b.key)}
+                      aria-pressed={p.shipKind === k}
+                      onClick={() => set("shipKind", k)}
                     >
-                      {b.name}
+                      {SHIP_KIND_ZH[k]}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {p.shipKind === "cvs" ? (
+                <>
+                  <div className="am-field">
+                    <label>超商</label>
+                    <div className="am-specs">
+                      {CVS_BRANDS.map((b) => (
+                        <button
+                          key={b.key}
+                          type="button"
+                          className="am-spec"
+                          aria-pressed={p.cvsBrand === b.key}
+                          onClick={() => set("cvsBrand", b.key)}
+                        >
+                          {b.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="am-field">
+                    <label htmlFor="c-store">門市名稱</label>
+                    <input
+                      id="c-store"
+                      value={p.cvsStoreName}
+                      onChange={(e) => set("cvsStoreName", e.target.value)}
+                      placeholder="例：民生門市"
+                    />
+                  </div>
+                  <div className="am-field">
+                    <label htmlFor="c-storeid">店號（選填）</label>
+                    <input
+                      id="c-storeid"
+                      inputMode="numeric"
+                      value={p.cvsStoreId}
+                      onChange={(e) => set("cvsStoreId", e.target.value)}
+                    />
+                    <p className="am-field__hint">填了比較不會寄錯門市。</p>
+                  </div>
+                </>
+              ) : (
+                <div className="am-field">
+                  <label htmlFor="c-addr">收件地址</label>
+                  <input
+                    id="c-addr"
+                    autoComplete="street-address"
+                    value={p.address}
+                    onChange={(e) => set("address", e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="am-field">
-                <label htmlFor="c-store">門市名稱</label>
-                <input
-                  id="c-store"
-                  value={p.cvsStoreName}
-                  onChange={(e) => set("cvsStoreName", e.target.value)}
-                  placeholder="例：民生門市"
-                />
+                <label htmlFor="c-recv">收件人（跟訂購人不同才要填）</label>
+                <input id="c-recv" value={p.recipient} onChange={(e) => set("recipient", e.target.value)} />
               </div>
               <div className="am-field">
-                <label htmlFor="c-storeid">店號（選填）</label>
+                <label htmlFor="c-recvphone">收件人手機（同上）</label>
                 <input
-                  id="c-storeid"
-                  inputMode="numeric"
-                  value={p.cvsStoreId}
-                  onChange={(e) => set("cvsStoreId", e.target.value)}
+                  id="c-recvphone"
+                  type="tel"
+                  inputMode="tel"
+                  value={p.recipientPhone}
+                  onChange={(e) => set("recipientPhone", e.target.value)}
                 />
-                <p className="am-field__hint">填了比較不會寄錯門市。</p>
               </div>
             </>
-          ) : (
-            <div className="am-field">
-              <label htmlFor="c-addr">收件地址</label>
-              <input
-                id="c-addr"
-                autoComplete="street-address"
-                value={p.address}
-                onChange={(e) => set("address", e.target.value)}
-              />
+          )}
+
+          {/* ⚠ 規範放在送出鈕**上方**，不是頁尾的連結。
+              客人事後說「我不知道不能退」時，唯一站得住腳的是「你下單前看得到」。 */}
+          <Terms />
+
+          {/* 蜜罐。真人看不到，機器人會填。 */}
+          <div className="am-hp" aria-hidden>
+            <label htmlFor="website">網站</label>
+            <input id="website" name="website" tabIndex={-1} autoComplete="off" />
+          </div>
+
+        </div>
+
+        <aside className="am-cols__side">
+          {totals && (
+            <div className="am-sum am-cols__first" style={{ marginBottom: "1.2rem" }}>
+              {totals.lines.map((l) => (
+                <div className="am-sum__row" key={`${l.productId}:${l.optionId ?? ""}`}>
+                  <span>
+                    {l.name}
+                    {l.optionLabel ? `（${l.optionLabel}）` : ""} ×{l.qty}
+                  </span>
+                  <span>{twd(l.amount)}</span>
+                </div>
+              ))}
+              <div className="am-sum__row am-sum__row--total">
+                <span>商品小計</span>
+                <span>{twd(totals.itemsTotal)}</span>
+              </div>
+              <p className="am-field__hint" style={{ marginTop: "0.5rem" }}>
+                運費在結單時計算，同一檔連線下幾次單只收一次。
+              </p>
             </div>
           )}
 
-          <div className="am-field">
-            <label htmlFor="c-recv">收件人（跟訂購人不同才要填）</label>
-            <input id="c-recv" value={p.recipient} onChange={(e) => set("recipient", e.target.value)} />
+          <div className="am-buybar">
+            <div className="am-buybar__sum">
+              商品小計
+              <b>{totals ? twd(totals.itemsTotal) : "—"}</b>
+            </div>
+            <button
+              type="button"
+              className="am-btn am-btn--accent"
+              disabled={!canSubmit}
+              onClick={() => void submit()}
+            >
+              {busy ? (
+                "送出中…"
+              ) : (
+                <>
+                  <IconCheck size={17} stroke={2.2} />
+                  同意規範並送出
+                </>
+              )}
+            </button>
           </div>
-          <div className="am-field">
-            <label htmlFor="c-recvphone">收件人手機（同上）</label>
-            <input
-              id="c-recvphone"
-              type="tel"
-              inputMode="tel"
-              value={p.recipientPhone}
-              onChange={(e) => set("recipientPhone", e.target.value)}
-            />
-          </div>
-        </>
-      )}
-
-      {/* ⚠ 規範放在送出鈕**上方**，不是頁尾的連結。
-          客人事後說「我不知道不能退」時，唯一站得住腳的是「你下單前看得到」。 */}
-      <Terms />
-
-      {/* 蜜罐。真人看不到，機器人會填。 */}
-      <div className="am-hp" aria-hidden>
-        <label htmlFor="website">網站</label>
-        <input id="website" name="website" tabIndex={-1} autoComplete="off" />
-      </div>
-
-      <div className="am-buybar">
-        <div className="am-buybar__sum">
-          商品小計
-          <b>{totals ? twd(totals.itemsTotal) : "—"}</b>
-        </div>
-        <button
-          type="button"
-          className="am-btn am-btn--accent"
-          disabled={!canSubmit}
-          onClick={() => void submit()}
-        >
-          {busy ? "送出中…" : "同意規範並送出"}
-        </button>
+        </aside>
       </div>
     </div>
   );

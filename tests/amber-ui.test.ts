@@ -1,0 +1,148 @@
+import { describe, it, expect } from "vitest";
+import { readdirSync, readFileSync, statSync } from "fs";
+import path from "path";
+
+import { FEATURES, TRUST_CHIPS, SITE_NAV, FOOT_HELP, FOOT_SHOP } from "@/app/sites/amber/_data/nav";
+
+// 代購站前台的結構性測試。
+//
+// 這裡守的是**設計決策**，不是商業邏輯（那些在 amber-shop.test.ts）。
+// 每一條都對應一個「改壞了不會有人立刻發現」的性質：
+// 主題預設值被 media query 悄悄改掉、圖示名稱打錯後無聲退成星芒、
+// 導覽多了一頁但頁尾沒跟上。全部只掃原始碼，成本接近零。
+
+const ROOT = path.resolve(__dirname, "..");
+const SITE_DIR = path.join(ROOT, "src/app/sites/amber");
+
+const read = (p: string) => readFileSync(p, "utf8");
+
+/** 去掉註解再掃：說明文字本身不該觸發告警 */
+const code = (p: string) =>
+  read(p)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+function walk(dir: string): string[] {
+  let out: string[] = [];
+  for (const e of readdirSync(dir)) {
+    const p = path.join(dir, e);
+    if (statSync(p).isDirectory()) out = out.concat(walk(p));
+    else if (/\.tsx?$/.test(p)) out.push(p);
+  }
+  return out;
+}
+
+describe("深淺色：預設是淺色", () => {
+  const css = read(path.join(SITE_DIR, "amber.css"));
+
+  it("樣式表裡沒有 prefers-color-scheme", () => {
+    // 客戶要求「預設淺色，可以切換」。只要有一條 prefers-color-scheme，
+    // 系統設深色的人就會拿到深色——那就不是「預設淺色」了。
+    expect(css).not.toMatch(/prefers-color-scheme/);
+  });
+
+  it("基準 :root 帶著淺色的紙張色，深色只在 [data-theme=\"dark\"] 底下", () => {
+    expect(css).toMatch(/:root\s*\{[\s\S]*?--a-paper:\s*#faf9f6/);
+    expect(css).toMatch(/:root\[data-theme="dark"\]\s*\{/);
+  });
+
+  it("開機腳本只認得 \"dark\"，其餘一律落到淺色", () => {
+    const toggle = read(path.join(SITE_DIR, "_components/ThemeToggle.tsx"));
+    // 寫成 t==="dark"?"dark":"light" 才有這個性質。
+    // 反過來寫（t==="light"?"light":"dark"）就會變成預設深色。
+    expect(toggle).toMatch(/t\s*===\s*"dark"\s*\?\s*"dark"\s*:\s*"light"/);
+    // catch 裡也要退回淺色，不能什麼都不做
+    expect(toggle).toMatch(/catch[\s\S]{0,80}dataset\.theme\s*=\s*"light"/);
+  });
+
+  it("layout 對 <html> 標了 suppressHydrationWarning", () => {
+    // 開機腳本在 React 之前就改了 <html> 的屬性，伺服器不可能知道
+    // 這台裝置存了什麼偏好。少了這個標記，每一頁都會噴 hydration 警告。
+    const layout = code(path.join(SITE_DIR, "layout.tsx"));
+    expect(layout).toMatch(/<html[^>]*suppressHydrationWarning/);
+  });
+});
+
+describe("圖示", () => {
+  const icons = read(path.join(SITE_DIR, "_components/Icons.tsx"));
+
+  /** Icons.tsx 的 BY_NAME 對照表裡列了哪些 key */
+  const registered = (() => {
+    const block = icons.match(/const BY_NAME[\s\S]*?\n\};/)?.[0] ?? "";
+    return new Set([...block.matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]));
+  })();
+
+  it("BY_NAME 有被解析到（防止正則寫錯導致測試空跑）", () => {
+    expect(registered.size).toBeGreaterThanOrEqual(15);
+  });
+
+  it("_data/nav.ts 用到的每個圖示名稱都註冊過", () => {
+    // NamedIcon 找不到名稱時會無聲退成星芒——四張服務特點卡
+    // 會變成四顆一模一樣的星星，而且不會有任何錯誤。
+    const used = [...FEATURES.map((f) => f.icon), ...TRUST_CHIPS.map((c) => c.icon)];
+    const missing = used.filter((n) => !registered.has(n));
+    expect(missing, "這些名稱在 Icons.tsx 的 BY_NAME 裡找不到").toEqual([]);
+  });
+
+  it("每個分類都有自己的圖示", () => {
+    const block = icons.match(/const CATEGORY_ICONS[\s\S]*?\n\};/)?.[0] ?? "";
+    for (const key of ["women", "men", "shoes", "accessory", "beauty", "food", "instock"]) {
+      expect(block, `分類 ${key} 沒有配圖示`).toContain(`${key}:`);
+    }
+  });
+
+  it("前台看得到的地方沒有 emoji", () => {
+    // 客戶要求用圖示不要用 emoji：emoji 在每個系統長得都不一樣、
+    // 大小顏色不受控，而且一律是彩色的，深色模式下會蓋過價格與倒數。
+    //
+    // _data/notify-text.ts 例外——那些字串是 Amber 複製去貼在 LINE 的
+    // **訊息內容**，不是網站介面，LINE 訊息裡有 emoji 是自然的。
+    const emoji = /[\u{1F300}-\u{1FAFF}\u{2705}\u{2713}\u{2714}\u{2716}\u{274C}\u{2B50}]/u;
+    const offenders = walk(SITE_DIR)
+      .filter((f) => !f.endsWith("_data/notify-text.ts"))
+      .filter((f) => emoji.test(code(f)))
+      .map((f) => path.relative(ROOT, f));
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("導覽", () => {
+  it("頁首的每一頁在檔案系統裡都有對應的 page.tsx", () => {
+    // 導覽多一頁但忘了建檔，客人點下去就是 404。
+    for (const l of SITE_NAV) {
+      const p = path.join(SITE_DIR, l.href.replace(/^\//, ""), "page.tsx");
+      expect(() => statSync(p), `${l.href} 沒有對應的頁面`).not.toThrow();
+    }
+  });
+
+  it("頁尾的說明頁也都存在", () => {
+    for (const l of [...FOOT_HELP, ...FOOT_SHOP]) {
+      if (l.href === "/") continue;
+      const p = path.join(SITE_DIR, l.href.replace(/^\//, ""), "page.tsx");
+      expect(() => statSync(p), `${l.href} 沒有對應的頁面`).not.toThrow();
+    }
+  });
+
+  it("規範與隱私權在頁尾找得到（它們不該只出現在結帳流程裡）", () => {
+    const hrefs = FOOT_HELP.map((l) => l.href);
+    expect(hrefs).toContain("/terms");
+    expect(hrefs).toContain("/privacy");
+  });
+});
+
+describe("手機版維持功能優先", () => {
+  const css = read(path.join(SITE_DIR, "amber.css"));
+
+  it("hero 在手機上是 display:none，桌機才打開", () => {
+    // 客人是從 LINE 群組點連結進來看商品的。
+    // 一個 400px 高的 hero 會把商品整個推到摺線下面。
+    expect(css).toMatch(/\.am-hero\s*\{\s*display:\s*none;/);
+    expect(css).toMatch(/@media \(min-width: 900px\)[\s\S]*\.am-hero\s*\{\s*\n?\s*display:\s*block/);
+  });
+
+  it("雙欄骨架在手機上是 display:contents", () => {
+    // .am-buybar 的 position:sticky 需要父層夠高才黏得住；
+    // 包在一個高度只有它自己的 <aside> 裡，手機版的結帳鈕會沉到頁尾。
+    expect(css).toMatch(/\.am-cols__side\s*\{\s*display:\s*contents;\s*\}/);
+  });
+});

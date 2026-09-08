@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCart } from "./CartProvider";
 import { twd, MAX_QTY_PER_LINE } from "../_data/cart";
+import { IconBag, IconCheck, IconMinus, IconPlus } from "./Icons";
 
 export type OptionView = {
   id: string;
@@ -101,7 +102,7 @@ export function AddToCart({
             disabled={qty <= 1}
             onClick={() => setQty((n) => Math.max(1, n - 1))}
           >
-            －
+            <IconMinus size={17} stroke={2} />
           </button>
           <span className="am-step__n">{qty}</span>
           <button
@@ -110,7 +111,7 @@ export function AddToCart({
             disabled={qty >= max}
             onClick={() => setQty((n) => Math.min(max, n + 1))}
           >
-            ＋
+            <IconPlus size={17} stroke={2} />
           </button>
         </div>
         {showStock && stock !== null && (
@@ -129,15 +130,23 @@ export function AddToCart({
           disabled={disabled}
           onClick={onAdd}
         >
-          {!canOrder
-            ? closedLabel
-            : soldOut
-              ? "已售完"
-              : needsChoice
-                ? `請選擇${axis ?? "規格"}`
-                : added
-                  ? "已加入 ✓"
-                  : "加入購物車"}
+          {!canOrder ? (
+            closedLabel
+          ) : soldOut ? (
+            "已售完"
+          ) : needsChoice ? (
+            `請選擇${axis ?? "規格"}`
+          ) : added ? (
+            <>
+              <IconCheck size={17} stroke={2.2} />
+              已加入
+            </>
+          ) : (
+            <>
+              <IconBag size={17} stroke={1.9} />
+              加入購物車
+            </>
+          )}
         </button>
       </div>
 

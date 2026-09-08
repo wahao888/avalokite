@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "./CartProvider";
+import { IconCheck, IconPlus } from "./Icons";
 
 // 列表頁的「＋1」。
 //
@@ -23,7 +24,17 @@ export function QuickAdd({ productId }: { productId: string }) {
         setTimeout(() => setHit(false), 1200);
       }}
     >
-      {hit ? "已加入 ✓" : "＋1"}
+      {hit ? (
+        <>
+          <IconCheck size={15} stroke={2.2} />
+          已加入
+        </>
+      ) : (
+        <>
+          <IconPlus size={15} stroke={2.2} />
+          加入
+        </>
+      )}
     </button>
   );
 }

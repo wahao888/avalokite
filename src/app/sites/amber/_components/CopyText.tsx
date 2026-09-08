@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconCheck, IconCopy } from "./Icons";
 
 // 一鍵複製（匯款帳號用）。
 //
@@ -36,7 +37,8 @@ export function CopyText({ value, label }: { value: string; label?: string }) {
 
   return (
     <button type="button" className="am-copy" onClick={() => void copy()}>
-      {state === "ok" ? "已複製 ✓" : (label ?? "複製")}
+      {state === "ok" ? <IconCheck size={15} stroke={2.2} /> : <IconCopy size={15} stroke={1.9} />}
+      {state === "ok" ? "已複製" : (label ?? "複製")}
     </button>
   );
 }

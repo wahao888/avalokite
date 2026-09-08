@@ -1,28 +1,83 @@
-/* 代購連線站。
-   設計目標只有兩個：在 LINE 內建瀏覽器上「立刻」看得到商品，
-   以及連線期間能一直加購物車而不被打斷。
-   沒有 web font、沒有動畫庫、沒有任何會擋住首次繪製的東西。 */
+/* AmberPick 代購連線站。
+   ─────────────────────────────────────────────────────────
+   兩種螢幕，兩種任務，同一套語彙：
 
+   手機  客人從 LINE 群組點連結進來，目的很明確——看這一檔有什麼、加購物車。
+         所以手機版維持功能優先：不放 hero、不放插畫，商品在第一屏。
+   桌機  多的是橫向空間與滑鼠。這裡才做得起 hero、雙欄商品頁、
+         側邊固定的金額欄——那些在 375px 上只會把「買」推到摺線下面。
+
+   沒有 CSS 框架、沒有動畫庫。唯一的外部資源是 Outfit 的 latin 子集（約 20KB）。 */
+
+/* ── 1. 色彩符記 ───────────────────────────────────────
+   基準值就是淺色。「預設淺色」不是靠 media query 猜的，
+   是這一層直接寫死——沒有 JS、沒有偏好、系統設成深色，通通都是淺色。
+   要深色的人按頁首那顆鈕，選擇會被記住（見 ThemeToggle.tsx）。 */
 :root {
+  color-scheme: light;
+
   /* 日雜清爽：暖白底、柔黑字、髮絲級的線。
      對比刻意不拉到最滿——純黑配純白是海報的做法，不是雜誌的。 */
   --a-ink: #2b2925;
-  --a-sub: #8c867d;
+  --a-ink-2: #5d574e;
+  --a-sub: #877f74;
   --a-paper: #faf9f6;
   --a-card: #ffffff;
-  --a-line: #e9e5de;
+  --a-tint: #f4f1eb;
+  --a-line: #e6e1d9;
+  --a-line-2: #d3ccc0;
 
   /* 琥珀。價格、快截止、主要動作。
      壓到 #9c6c33 是為了對比度——淺一階（#a8763a）配白底只有約 4.2:1，
      而價格是加粗的內文尺寸，那個數字在 AA 標準的邊緣。 */
   --a-accent: #9c6c33;
+  --a-accent-2: #7f5626;
   --a-accent-soft: #f6efe4;
-  --a-ok: #5f7a5c;
+  --a-ok: #55704f;
+  --a-ok-soft: #edf1ea;
+
+  /* ⚠ 「放在有色底上的字」一律走符記，不要在深色區塊裡回頭覆寫按鈕顏色。
+     2026-09-07 的教訓：深色區塊裡的 .am-btn 排在 .am-btn--ghost 後面、
+     權重相同，ghost 就拿到了近黑的字——在深色底上等於隱形。
+     顏色由符記決定，那個 bug 在結構上就發生不了。 */
+  --a-on-ink: #faf9f6;
+  --a-on-accent: #ffffff;
 
   --a-radius: 12px;
+  --a-r-sm: 8px;
+  --a-r-lg: 20px;
+  --a-shadow-sm: 0 1px 2px rgba(43, 41, 37, 0.05);
   --a-shadow: 0 1px 2px rgba(43, 41, 37, 0.04), 0 8px 24px rgba(43, 41, 37, 0.05);
+  --a-shadow-lg: 0 2px 4px rgba(43, 41, 37, 0.05), 0 18px 40px rgba(43, 41, 37, 0.09);
+
+  --a-max: 1180px;
+  --a-nav-h: 60px;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* 深色也要暖。冷灰會讓商品照的膚色與布料看起來髒 */
+  --a-ink: #efebe3;
+  --a-ink-2: #c4bcae;
+  --a-sub: #9e968a;
+  --a-paper: #17150f;
+  --a-card: #201d18;
+  --a-tint: #1d1a15;
+  --a-line: #322d25;
+  --a-line-2: #443d33;
+  --a-accent: #d9a15c;
+  --a-accent-2: #e8b979;
+  --a-accent-soft: #2a2118;
+  --a-ok: #8fae8b;
+  --a-ok-soft: #1e241d;
+  --a-on-ink: #17150f;
+  --a-on-accent: #17150f;
+  --a-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --a-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --a-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ── 2. 基礎 ──────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
 body.am {
@@ -44,52 +99,117 @@ body.am {
 img { max-width: 100%; }
 a { color: inherit; }
 
-/* ── 頁首 ───────────────────────────────────────────── */
+/* 錨點捲動不要被固定頁首吃掉 */
+:target { scroll-margin-top: calc(var(--a-nav-h) + 1rem); }
+
+/* 鍵盤操作看得到焦點。滑鼠點擊不出現外框（:focus-visible 的用途） */
+:where(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--a-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── 3. 小工具 ────────────────────────────────────────── */
+
+/* 只給螢幕閱讀器的文字。用 clip 而不是 display:none——後者不會被讀出來 */
+.am-sr {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* 只在其中一種螢幕出現的區塊。
+   用途很窄：同一件事在手機上要用一排晶片講完、在桌機上值得四張卡，
+   兩種寫法都留著比硬擠出一個「兩邊都堪用」的版本好。 */
+.am-mobile-only { display: block; }
+.am-desktop-only { display: none; }
+
+/* 圖示。基線對齊靠 vertical-align，跟文字混排才不會浮起來 */
+.am-i { flex: none; vertical-align: -0.18em; }
+
+/* 只有圖示的按鈕。48px 是拇指的最小可靠命中範圍 */
+.am-iconbtn {
+  display: inline-grid; place-items: center;
+  width: 40px; height: 40px; padding: 0;
+  border: 1px solid var(--a-line); border-radius: 999px;
+  background: var(--a-card); color: var(--a-ink);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .am-iconbtn:hover { border-color: var(--a-line-2); color: var(--a-accent); }
+}
+
+/* 深淺切換：兩顆圖示都在 DOM 裡，由目前的主題決定顯示哪一顆。
+   這樣伺服器與客戶端的 HTML 完全一致，不會有 hydration mismatch，
+   也不必等 useEffect 才知道現在是什麼模式（那會先閃一下錯的圖示）。 */
+.am-theme__light { display: none; }
+:root[data-theme="dark"] .am-theme__dark { display: none; }
+:root[data-theme="dark"] .am-theme__light { display: inline-grid; place-items: center; }
+
+/* ── 4. 頁首 ──────────────────────────────────────────── */
 .am-nav {
   position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem;
-  padding: 0.7rem 1rem;
-  background: color-mix(in srgb, var(--a-paper) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--a-paper) 88%, transparent);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--a-line);
 }
-.am-nav__brand {
-  font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em;
-  text-decoration: none;
+.am-nav__inner {
+  max-width: var(--a-max); margin: 0 auto;
+  min-height: var(--a-nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding: 0.55rem 1rem;
 }
-.am-nav__links { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; }
-.am-nav__links a { text-decoration: none; color: var(--a-sub); white-space: nowrap; }
-/* 標誌變寬之後，375px 下三個項目會擠到換行。訂單那一格永遠只有一個連結
-   （有下過單就是「我的訂單」，否則是「查訂單」），這樣就穩定放得下。 */
-/* 品牌名是 AmberPick，「Pick」不能砍——導覽列的擁擠已經靠
-   「訂單入口只留一個」解決了，這裡只需要再收一點間距。 */
+/* 站台導覽（連線總覽／購買流程／常見問題）。
+   手機版藏起來——那些是「先了解再買」的頁面，而從 LINE 點進來的人
+   是來買的。它們在頁尾找得到，不佔第一屏。 */
+.am-nav__site { display: none; }
+.am-nav__links { display: flex; align-items: center; gap: 0.55rem; font-size: 0.85rem; }
+.am-nav__links > a {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  text-decoration: none; color: var(--a-ink-2); white-space: nowrap;
+  padding: 0.35rem 0.1rem;
+}
+@media (hover: hover) { .am-nav__links > a:hover { color: var(--a-accent); } }
+
 @media (max-width: 380px) {
-  .am-nav__links { gap: 0.6rem; font-size: 0.8rem; }
-  .am-logo__text b, .am-logo__text i { font-size: 0.95rem; }
+  .am-nav__inner { gap: 0.5rem; padding-inline: 0.75rem; }
+  .am-nav__links { gap: 0.35rem; font-size: 0.8rem; }
+  .am-iconbtn { width: 36px; height: 36px; }
+
+  /* 這個寬度下「我的訂單」四個字讓標誌沒地方站，只留圖示。
+     購物車的字保留——那是這個站最重要的動作，而且它旁邊還有數字，
+     少了「購物車」三個字那個數字就沒有主詞。
+
+     ⚠ 用視覺隱藏而不是 display:none。後者會把文字一起從無障礙樹上拿掉，
+     這個連結就變成一個沒有名字的圖示按鈕，螢幕閱讀器只會唸出「連結」。 */
+  .am-nav__links > a .am-navtext {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
 }
 
 /* 購物車鈕。連線期間她的客人會一直加，所以數字要明顯 */
 .am-cartbtn {
   position: relative;
   display: inline-flex; align-items: center; gap: 0.35rem;
-  min-height: 40px; padding: 0.3rem 0.7rem;
+  min-height: 40px; padding: 0.3rem 0.75rem;
   border: 1px solid var(--a-line); border-radius: 999px;
   background: var(--a-card); color: var(--a-ink);
   font: inherit; font-size: 0.85rem; cursor: pointer;
 }
+@media (hover: hover) { .am-cartbtn:hover { border-color: var(--a-line-2); } }
 .am-cartbtn__n {
   min-width: 20px; height: 20px; padding: 0 5px;
   display: inline-grid; place-items: center;
-  border-radius: 999px; background: var(--a-accent); color: #fff;
+  border-radius: 999px; background: var(--a-accent); color: var(--a-on-accent);
   font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-/* 加入購物車時輕輕跳一下。唯一的動畫，因為它是唯一需要回饋的動作。 */
+/* 加入購物車時輕輕跳一下。整站最重要的一個回饋 */
 @keyframes am-bump { 50% { transform: scale(1.25); } }
 .am-cartbtn__n.bump { animation: am-bump 260ms ease-out; }
-@media (prefers-reduced-motion: reduce) { .am-cartbtn__n.bump { animation: none; } }
 
-/* ── 標誌 ───────────────────────────────────────────── */
+/* ── 5. 標誌 ──────────────────────────────────────────── */
 .am-logo {
   display: inline-flex; align-items: center; gap: 0.45rem;
   text-decoration: none; color: var(--a-ink);
@@ -102,46 +222,120 @@ a { color: inherit; }
   letter-spacing: 0.06em; color: var(--a-sub);
 }
 
-/* ── 版面 ───────────────────────────────────────────── */
-.am-wrap { max-width: 960px; margin: 0 auto; padding: 1.2rem 1rem 5rem; }
-.am-h1 { font-size: 1.3rem; font-weight: 600; margin: 0.8rem 0 0.3rem; letter-spacing: 0.02em; }
+/* ── 6. 版面 ──────────────────────────────────────────── */
+.am-wrap { max-width: var(--a-max); margin: 0 auto; padding: 1.2rem 1rem 5rem; }
+/* 文字型頁面（規範、隱私、常見問題）。一行 45～75 字才讀得下去 */
+.am-wrap--narrow { max-width: 760px; }
+
+.am-h1 { font-size: 1.35rem; font-weight: 600; margin: 0.8rem 0 0.3rem; letter-spacing: 0.01em; line-height: 1.35; }
+.am-h2 { font-size: 1.15rem; font-weight: 600; margin: 2.2rem 0 0.6rem; letter-spacing: 0.01em; }
 .am-sub { margin: 0 0 1rem; color: var(--a-sub); font-size: 0.9rem; }
 .am-empty {
   padding: 3rem 1rem; text-align: center; color: var(--a-sub);
   border: 1px dashed var(--a-line); border-radius: var(--a-radius);
 }
+.am-empty__i { display: block; margin: 0 auto 0.6rem; color: var(--a-line-2); }
 
-/* ── 檔期橫幅：收單時間要「明顯顯示在上方」（客戶需求第 7 項）── */
+/* 頁面標頭：小標＋大標＋副說明。內容頁共用 */
+.am-pagehead { padding: 1.2rem 0 0.5rem; }
+.am-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--a-accent);
+  margin: 0 0 0.5rem;
+}
+.am-pagehead h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 0.5rem; line-height: 1.3; }
+.am-pagehead p { margin: 0; color: var(--a-sub); max-width: 46em; }
+
+/* 區塊分隔。整站的節奏靠留白，不靠框線 */
+.am-section { margin-top: 3rem; }
+.am-section__head { margin-bottom: 1.1rem; }
+.am-section__head h2 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem; }
+.am-section__head p { margin: 0; color: var(--a-sub); font-size: 0.9rem; }
+
+/* 通欄的淺色帶。桌機用來把首頁切成幾段，不要一路白到底 */
+.am-band { background: var(--a-tint); border-block: 1px solid var(--a-line); }
+.am-band__inner { max-width: var(--a-max); margin: 0 auto; padding: 2.5rem 1rem; }
+
+/* ── 7. Hero ──────────────────────────────────────────
+   ⚠ 桌機才出現。手機版首頁的任務是「立刻看到這一檔有什麼」，
+   一個 400px 高的 hero 會把商品整個推到摺線下面——那是拿轉換換好看。 */
+.am-hero { display: none; }
+
+/* ── 8. 服務特點 ──────────────────────────────────────── */
+.am-feat {
+  display: grid; gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.am-feat__i {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; margin-bottom: 0.6rem;
+  border-radius: 12px;
+  background: var(--a-accent-soft); color: var(--a-accent);
+}
+.am-feat__c {
+  padding: 1.1rem 1.1rem 1.2rem;
+  background: var(--a-card); border: 1px solid var(--a-line);
+  border-radius: var(--a-radius);
+}
+.am-feat__c h3 { margin: 0 0 0.25rem; font-size: 0.98rem; font-weight: 600; }
+.am-feat__c p { margin: 0; font-size: 0.86rem; color: var(--a-sub); line-height: 1.65; }
+
+/* 手機版的信任列：橫向捲動的小晶片，放在商品格**下面**。
+   放上面會佔掉第一屏，放下面則是「看完商品，順便知道這家是怎麼做事的」。 */
+.am-trust {
+  display: flex; gap: 0.4rem; overflow-x: auto;
+  padding: 0.2rem 0 0.4rem; scrollbar-width: none;
+}
+.am-trust::-webkit-scrollbar { display: none; }
+.am-trust li {
+  flex: none; display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.35rem 0.75rem; border-radius: 999px;
+  border: 1px solid var(--a-line); background: var(--a-card);
+  font-size: 0.8rem; color: var(--a-ink-2); white-space: nowrap;
+}
+.am-trust li .am-i { color: var(--a-accent); }
+
+/* ── 9. 檔期橫幅：收單時間要「明顯顯示在上方」（客戶需求第 7 項）── */
 .am-banner {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.7rem;
   padding: 0.8rem 1rem; margin-bottom: 1rem;
   background: var(--a-accent-soft);
   border: 1px solid color-mix(in srgb, var(--a-accent) 25%, transparent);
   border-radius: var(--a-radius);
 }
-.am-banner__title { font-weight: 800; }
-.am-banner__time { font-weight: 700; color: var(--a-accent); font-variant-numeric: tabular-nums; }
-.am-banner__left { margin-inline-start: auto; font-size: 0.85rem; color: var(--a-accent); font-weight: 700; }
-.am-banner--closed { background: #f3f1ee; border-color: var(--a-line); }
+.am-banner__i { color: var(--am-tone, var(--a-accent)); }
+.am-banner__title { font-weight: 700; }
+.am-banner__time { font-weight: 600; color: var(--am-tone, var(--a-accent)); font-variant-numeric: tabular-nums; }
+.am-banner__left { margin-inline-start: auto; font-size: 0.85rem; color: var(--am-tone, var(--a-accent)); font-weight: 700; }
+.am-banner--closed { background: var(--a-tint); border-color: var(--a-line); }
 .am-banner--closed .am-banner__time,
+.am-banner--closed .am-banner__i,
 .am-banner--closed .am-banner__left { color: var(--a-sub); }
 
-/* ── 分類列 ─────────────────────────────────────────── */
+/* ── 10. 晶片列（檔期／分類）─────────────────────────── */
 .am-cats {
   display: flex; gap: 0.45rem; overflow-x: auto;
   padding: 0 0 0.9rem; scrollbar-width: none;
 }
 .am-cats::-webkit-scrollbar { display: none; }
 .am-cats a {
-  flex: none; padding: 0.4rem 0.85rem; min-height: 36px;
-  display: inline-flex; align-items: center;
+  flex: none; padding: 0.4rem 0.85rem; min-height: 38px;
+  display: inline-flex; align-items: center; gap: 0.35rem;
   border: 1px solid var(--a-line); border-radius: 999px;
   background: var(--a-card); font-size: 0.85rem; text-decoration: none;
-  white-space: nowrap;
+  white-space: nowrap; color: var(--a-ink-2);
+  transition: border-color 140ms ease, color 140ms ease;
 }
-.am-cats a.on { background: var(--a-ink); border-color: var(--a-ink); color: var(--a-paper); }
+.am-cats a .am-i { color: var(--a-sub); }
+@media (hover: hover) {
+  .am-cats a:hover { border-color: var(--a-line-2); color: var(--a-ink); }
+  .am-cats a:hover .am-i { color: var(--a-accent); }
+}
+.am-cats a.on { background: var(--a-ink); border-color: var(--a-ink); color: var(--a-on-ink); }
+.am-cats a.on .am-i { color: inherit; }
 
-/* ── 商品格 ─────────────────────────────────────────── */
+/* ── 11. 商品格 ───────────────────────────────────────── */
 .am-grid {
   display: grid; gap: 0.9rem;
   grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
@@ -151,18 +345,27 @@ a { color: inherit; }
   background: var(--a-card); border: 1px solid var(--a-line);
   border-radius: var(--a-radius); overflow: hidden;
   /* 極淡的陰影。日雜的卡片是靠留白與髮絲線分開的，不是靠厚重的框 */
-  box-shadow: var(--a-shadow);
+  box-shadow: var(--a-shadow-sm);
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 .am-card__link { text-decoration: none; display: block; }
+.am-card__media { position: relative; overflow: hidden; background: var(--a-tint); }
 .am-card__img {
   /* height:auto 不可省。<img> 上有 width/height 屬性（那是為了避免版位跳動），
      而那個 height 屬性會蓋過 aspect-ratio——少了這一行，直式商品照會被
      拉成 163×400 的長條。2026-09-07 量出來的。 */
   aspect-ratio: 1; width: 100%; height: auto; object-fit: cover; display: block;
-  background: #f1ece6;
+  background: var(--a-tint);
+  transition: transform 400ms cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 .am-card__img--none {
-  display: grid; place-items: center; color: var(--a-sub); font-size: 0.8rem;
+  display: grid; place-items: center; align-content: center; gap: 0.3rem;
+  color: var(--a-line-2); font-size: 0.78rem;
+}
+@media (hover: hover) {
+  .am-card:hover { box-shadow: var(--a-shadow); border-color: var(--a-line-2); }
+  /* 圖片放大而不是整張卡放大：卡片位移會讓整格商品跟著抖 */
+  .am-card:hover .am-card__img { transform: scale(1.045); }
 }
 .am-card__body { padding: 0.7rem 0.8rem 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
 .am-card__name {
@@ -172,68 +375,126 @@ a { color: inherit; }
 .am-card__price { font-weight: 600; font-size: 1.02rem; color: var(--a-accent); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
 .am-card__foot { margin-top: auto; padding-top: 0.35rem; }
 
+/* 圖片上的角標（檔期色）。放在圖上而不是文字區，因為多檔同開時
+   客人是在掃圖片，不是在讀文字 */
+.am-card__batch {
+  position: absolute; inset-block-start: 0.5rem; inset-inline-start: 0.5rem;
+  padding: 0.16rem 0.5rem; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em;
+  backdrop-filter: blur(4px);
+}
+
 /* 倒數標籤。快截止的用主色，其餘用灰——全部標紅就等於沒有標。 */
 .am-tag {
-  display: inline-block; padding: 0.15rem 0.5rem;
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 999px; font-size: 0.72rem; font-weight: 700;
-  background: #f3f1ee; color: var(--a-sub);
+  background: var(--a-tint); color: var(--a-sub);
 }
 .am-tag--soon { background: var(--a-accent-soft); color: var(--a-accent); }
-.am-tag--closed { background: #efedea; color: #9a938c; }
-.am-tag--pre { background: #eef2ee; color: var(--a-ok); }
+.am-tag--closed { background: var(--a-tint); color: var(--a-sub); }
+.am-tag--pre { background: var(--a-ok-soft); color: var(--a-ok); }
 
-/* ── 按鈕 ───────────────────────────────────────────── */
+/* ── 12. 按鈕 ─────────────────────────────────────────── */
 .am-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   min-height: 44px; padding: 0.55rem 1rem;
   border: 1px solid var(--a-ink); border-radius: var(--a-radius);
-  background: var(--a-ink); color: var(--a-paper);
-  font: inherit; font-size: 0.95rem; font-weight: 700;
+  background: var(--a-ink); color: var(--a-on-ink);
+  font: inherit; font-size: 0.95rem; font-weight: 600;
   text-decoration: none; cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 90ms ease;
 }
-.am-btn--accent { background: var(--a-accent); border-color: var(--a-accent); color: #fff; }
-.am-btn--ghost { background: transparent; color: var(--a-ink); border-color: var(--a-line); }
+.am-btn--accent { background: var(--a-accent); border-color: var(--a-accent); color: var(--a-on-accent); }
+.am-btn--ghost { background: transparent; color: var(--a-ink); border-color: var(--a-line-2); }
 .am-btn--sm { min-height: 36px; padding: 0.3rem 0.7rem; font-size: 0.82rem; }
 .am-btn--full { width: 100%; }
-.am-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* ⚠ 停用狀態不要用 opacity 壓暗。
+   這顆按鈕停用時的文字是「請選擇顏色」「請先移除無法下單的商品」——
+   **它自己就是那句指示**，壓到 40% 等於把畫面上最需要被讀到的一句話
+   變成最看不清楚的一句。改成轉灰：一樣清楚地表達「現在按不下去」，
+   但字仍然讀得到。 */
+.am-btn:disabled,
+.am-btn[aria-disabled="true"] {
+  background: var(--a-tint);
+  border-color: var(--a-line);
+  color: var(--a-sub);
+  cursor: not-allowed;
+}
+@media (hover: hover) {
+  .am-btn:not(:disabled):not([aria-disabled="true"]):hover { background: var(--a-ink-2); border-color: var(--a-ink-2); }
+  .am-btn--accent:not(:disabled):hover { background: var(--a-accent-2); border-color: var(--a-accent-2); }
+  .am-btn--ghost:not(:disabled):not([aria-disabled="true"]):hover {
+    background: var(--a-tint); color: var(--a-ink); border-color: var(--a-line-2);
+  }
+}
+.am-btn:not(:disabled):active { transform: translateY(1px); }
 
-/* ── 數量加減 ───────────────────────────────────────── */
+.am-btns { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+/* ── 13. 數量加減 ─────────────────────────────────────── */
 .am-step { display: inline-flex; align-items: center; border: 1px solid var(--a-line); border-radius: var(--a-radius); overflow: hidden; }
+/* ⚠ .am-field 是 flex-column，它的小孩預設會被拉滿整欄寬。
+   inline-flex 擋不住 stretch——那會讓「－ 1 ＋」旁邊拖著一大片空白外框。 */
+.am-field > .am-step { align-self: flex-start; }
 .am-step button {
   width: 44px; height: 44px; border: none; background: var(--a-card);
-  color: var(--a-ink); font: inherit; font-size: 1.2rem; cursor: pointer;
+  color: var(--a-ink); cursor: pointer;
+  display: grid; place-items: center;
 }
 .am-step button:disabled { opacity: 0.35; cursor: not-allowed; }
+@media (hover: hover) { .am-step button:not(:disabled):hover { background: var(--a-tint); } }
 .am-step__n {
   min-width: 48px; text-align: center; font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 規格晶片 ───────────────────────────────────────── */
+/* ── 14. 規格晶片 ─────────────────────────────────────── */
 .am-specs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .am-spec {
   min-height: 40px; padding: 0.35rem 0.8rem;
-  border: 1px solid var(--a-line); border-radius: 999px;
+  border: 1px solid var(--a-line-2); border-radius: 999px;
   background: var(--a-card); color: var(--a-ink);
   font: inherit; font-size: 0.88rem; cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
 }
-.am-spec[aria-pressed="true"] { border-color: var(--a-ink); background: var(--a-ink); color: var(--a-paper); }
+@media (hover: hover) { .am-spec:not(:disabled):hover { border-color: var(--a-ink); } }
+.am-spec[aria-pressed="true"] { border-color: var(--a-ink); background: var(--a-ink); color: var(--a-on-ink); }
 .am-spec:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
 
-/* ── 商品頁 ─────────────────────────────────────────── */
-.am-gallery { display: flex; gap: 0.5rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-.am-gallery::-webkit-scrollbar { display: none; }
-.am-gallery img {
-  /* 同上：商品頁的圖帶著資料庫存的實際寬高，height:auto 才輪得到 aspect-ratio */
-  flex: none; width: 100%; max-width: 420px; aspect-ratio: 1; height: auto;
-  object-fit: cover; scroll-snap-align: center;
-  border-radius: var(--a-radius); background: #f1ece6;
+/* ── 15. 商品頁 ───────────────────────────────────────── */
+.am-gal { display: flex; flex-direction: column; gap: 0.5rem; }
+.am-gal__track {
+  display: flex; gap: 0.5rem; overflow-x: auto;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  border-radius: var(--a-radius);
 }
-.am-price { font-size: 1.5rem; font-weight: 800; color: var(--a-accent); font-variant-numeric: tabular-nums; }
-.am-desc { white-space: pre-wrap; color: var(--a-sub); font-size: 0.92rem; }
+.am-gal__track::-webkit-scrollbar { display: none; }
+.am-gal__slide {
+  /* 同商品卡：圖上帶著資料庫存的實際寬高，height:auto 才輪得到 aspect-ratio */
+  flex: none; width: 100%; aspect-ratio: 1; height: auto;
+  object-fit: cover; scroll-snap-align: center;
+  border-radius: var(--a-radius); background: var(--a-tint);
+}
+.am-gal__thumbs { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+.am-gal__thumb {
+  width: 60px; height: 60px; padding: 0; flex: none;
+  border: 1px solid var(--a-line); border-radius: var(--a-r-sm);
+  background: var(--a-tint); overflow: hidden; cursor: pointer;
+  opacity: 0.55; transition: opacity 140ms ease, border-color 140ms ease;
+}
+.am-gal__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.am-gal__thumb[aria-current="true"] { opacity: 1; border-color: var(--a-ink); }
+@media (hover: hover) { .am-gal__thumb:hover { opacity: 1; } }
 
-/* 商品頁底部的固定購買列。lemai 也是這個形狀，因為它是對的：
-   規格與數量選完之後，主要動作不該需要再捲一次。 */
+.am-price { font-size: 1.6rem; font-weight: 700; color: var(--a-accent); font-variant-numeric: tabular-nums; margin: 0.2rem 0 0.6rem; }
+.am-desc { white-space: pre-wrap; color: var(--a-ink-2); font-size: 0.92rem; }
+
+/* 商品頁的中繼資料列（分類・可預購・檔期） */
+.am-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; color: var(--a-sub); font-size: 0.85rem; margin: 0 0 0.6rem; }
+.am-meta span { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+/* 商品頁底部的固定購買列。規格與數量選完之後，主要動作不該需要再捲一次。 */
 .am-buybar {
   position: sticky; bottom: 0; z-index: 15;
   display: flex; align-items: center; gap: 0.7rem;
@@ -246,132 +507,251 @@ a { color: inherit; }
 .am-buybar__sum b { display: block; font-size: 1.1rem; color: var(--a-accent); font-variant-numeric: tabular-nums; }
 .am-buybar .am-btn { flex: 1; }
 
-/* ── 購物車抽屜 ─────────────────────────────────────── */
+/* ── 16. 購物車抽屜 ───────────────────────────────────── */
 .am-drawer__scrim {
   position: fixed; inset: 0; z-index: 40;
-  background: rgba(28, 25, 23, 0.4);
+  background: rgba(28, 25, 23, 0.42);
   border: none; padding: 0; cursor: pointer;
+  animation: am-fade 160ms ease-out;
 }
+@keyframes am-fade { from { opacity: 0; } }
 .am-drawer {
   position: fixed; z-index: 41; inset-block: 0; inset-inline-end: 0;
   width: min(420px, 100%);
   display: flex; flex-direction: column;
   background: var(--a-paper);
   border-inline-start: 1px solid var(--a-line);
+  box-shadow: var(--a-shadow-lg);
+  animation: am-slide 200ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
+@keyframes am-slide { from { transform: translateX(100%); } }
 .am-drawer__head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.9rem 1rem; border-bottom: 1px solid var(--a-line);
+  padding: 0.85rem 1rem; border-bottom: 1px solid var(--a-line);
 }
 .am-drawer__head h2 { margin: 0; font-size: 1rem; }
 .am-drawer__body { flex: 1; overflow-y: auto; padding: 0.8rem 1rem; }
 .am-drawer__foot { padding: 0.8rem 1rem; border-top: 1px solid var(--a-line); }
 
 .am-line { display: flex; gap: 0.7rem; padding: 0.7rem 0; border-bottom: 1px solid var(--a-line); }
-.am-line img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; flex: none; background: #f1ece6; }
+.am-line img { width: 60px; height: 60px; object-fit: cover; border-radius: var(--a-r-sm); flex: none; background: var(--a-tint); }
 .am-line__main { flex: 1; min-width: 0; }
 .am-line__name { font-size: 0.9rem; font-weight: 600; }
 .am-line__spec { font-size: 0.78rem; color: var(--a-sub); }
 .am-line__amt { font-weight: 700; font-variant-numeric: tabular-nums; }
-.am-line--blocked { opacity: 0.6; }
+.am-line--blocked { opacity: 0.65; }
 .am-line--blocked .am-line__name { text-decoration: line-through; }
+.am-line__row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.35rem; }
 
 /* 被擋下的行（已截止／庫存不足）刻意留在畫面上。
    她放進購物車時是開放的，默默移除等於在她不知情下改掉即將付的金額。 */
 .am-blocked {
-  margin-top: 1rem; padding: 0.7rem 0.8rem;
+  margin-top: 1rem; padding: 0.7rem 0.85rem;
   background: var(--a-accent-soft);
   border: 1px solid color-mix(in srgb, var(--a-accent) 25%, transparent);
   border-radius: var(--a-radius); font-size: 0.85rem;
 }
+.am-blocked__h { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--a-accent); }
 
 .am-total { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.7rem; }
 .am-total b { font-size: 1.2rem; color: var(--a-accent); font-variant-numeric: tabular-nums; }
 
-/* ── 表單 ───────────────────────────────────────────── */
+/* ── 雙欄的骨架 ───────────────────────────────────────
+   桌機是「清單 ＋ 側邊固定的金額欄」，手機是單欄。
+
+   ⚠ 手機上 .am-cols__side 必須是 display:contents，不能只是「沒有 grid」。
+   .am-buybar 靠 position:sticky; bottom:0 黏在視窗底部，而 sticky 是
+   相對**父層的盒子**移動的——包在一個高度只有它自己的 <aside> 裡，
+   它就沒有可以移動的範圍，等於變回靜態元素，手機版的結帳鈕會沉到頁尾。
+   display:contents 讓 <aside> 在手機上不產生盒子，它的小孩直接成為
+   .am-cols 這個 flex 容器的項目，sticky 的父層因此變成夠高的 .am-cols。
+
+   用 flex 而不是純 block，是為了下面那一行 order —— 結帳頁在手機上
+   「買了什麼」要排在「填收件資料」前面，桌機則是右欄。 */
+.am-cols { display: flex; flex-direction: column; }
+.am-cols__side { display: contents; }
+.am-cols__first { order: -1; }
+
+/* ── 17. 表單 ─────────────────────────────────────────── */
 .am-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
-.am-field > label { font-size: 0.82rem; font-weight: 700; color: var(--a-sub); }
+.am-field > label { font-size: 0.82rem; font-weight: 700; color: var(--a-ink-2); }
 .am-field input, .am-field textarea, .am-field select {
   width: 100%; min-height: 46px; padding: 0.6rem 0.75rem;
-  border: 1px solid var(--a-line); border-radius: var(--a-radius);
+  border: 1px solid var(--a-line-2); border-radius: var(--a-radius);
   background: var(--a-card); color: var(--a-ink);
   font: inherit; font-size: 1rem;
+  transition: border-color 140ms ease;
 }
+.am-field input:focus, .am-field textarea:focus { border-color: var(--a-accent); }
 .am-field textarea { min-height: 90px; resize: vertical; }
 .am-field__hint { font-size: 0.78rem; color: var(--a-sub); margin: 0; }
 .am-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 .am-note {
-  padding: 0.7rem 0.85rem; border-radius: var(--a-radius);
+  padding: 0.75rem 0.9rem; border-radius: var(--a-radius);
   background: var(--a-card); border: 1px solid var(--a-line);
   font-size: 0.88rem; margin-bottom: 1rem;
 }
+.am-note__h { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+.am-note__h .am-i { color: var(--a-accent); }
 .am-err {
-  padding: 0.7rem 0.85rem; border-radius: var(--a-radius);
+  display: flex; gap: 0.5rem; align-items: flex-start;
+  padding: 0.75rem 0.9rem; border-radius: var(--a-radius);
   background: var(--a-accent-soft);
   border: 1px solid color-mix(in srgb, var(--a-accent) 30%, transparent);
   color: var(--a-accent); font-size: 0.88rem; margin-bottom: 1rem;
 }
+.am-err .am-i { margin-top: 0.15rem; }
 
-/* ── 對帳表（結單頁與訂單頁共用）───────────────────── */
-.am-sum { border: 1px solid var(--a-line); border-radius: var(--a-radius); background: var(--a-card); padding: 0.8rem 0.9rem; }
+/* ── 18. 對帳表（結單頁與訂單頁共用）─────────────────── */
+.am-sum { border: 1px solid var(--a-line); border-radius: var(--a-radius); background: var(--a-card); padding: 0.85rem 0.95rem; }
 .am-sum__row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.25rem 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-.am-sum__row--total { border-top: 1px solid var(--a-line); margin-top: 0.4rem; padding-top: 0.6rem; font-weight: 800; font-size: 1.05rem; }
+.am-sum__row--total { border-top: 1px solid var(--a-line); margin-top: 0.4rem; padding-top: 0.6rem; font-weight: 700; font-size: 1.05rem; }
 .am-sum__row--total span:last-child { color: var(--a-accent); }
 .am-sum__row--minus span:last-child { color: var(--a-ok); }
 
 .am-copy {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  min-height: 36px; padding: 0.25rem 0.6rem;
-  border: 1px solid var(--a-line); border-radius: 8px;
-  background: var(--a-card); font: inherit; font-size: 0.82rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  min-height: 36px; padding: 0.25rem 0.65rem;
+  border: 1px solid var(--a-line-2); border-radius: var(--a-r-sm);
+  background: var(--a-card); color: var(--a-ink);
+  font: inherit; font-size: 0.82rem; cursor: pointer;
 }
+@media (hover: hover) { .am-copy:hover { background: var(--a-tint); } }
 
-.am-foot {
-  border-top: 1px solid var(--a-line); padding: 1.5rem 1rem 2.5rem;
-  text-align: center; color: var(--a-sub); font-size: 0.82rem;
+/* ── 19. 內容頁 ───────────────────────────────────────── */
+.am-prose { font-size: 0.95rem; line-height: 1.85; color: var(--a-ink-2); }
+.am-prose h2 {
+  font-size: 1.12rem; font-weight: 600; color: var(--a-ink);
+  margin: 2.2rem 0 0.5rem; letter-spacing: 0.01em;
+  display: flex; align-items: center; gap: 0.45rem;
 }
-.am-foot__links { display: flex; gap: 1rem; justify-content: center; }
+.am-prose h2 .am-i { color: var(--a-accent); }
+.am-prose h3 { font-size: 0.98rem; font-weight: 600; color: var(--a-ink); margin: 1.4rem 0 0.35rem; }
+.am-prose p { margin: 0 0 0.8rem; }
+.am-prose ul, .am-prose ol { margin: 0 0 1rem; padding-inline-start: 1.3rem; }
+.am-prose li { margin-bottom: 0.35rem; }
+.am-prose strong { color: var(--a-ink); font-weight: 600; }
+.am-prose a { color: var(--a-accent); text-underline-offset: 3px; }
+.am-prose > :first-child { margin-top: 0; }
 
-/* ── 購買規範 ───────────────────────────────────────
+/* 流程步驟。編號用手繪圖示，不用 emoji 也不用純數字圓圈 */
+.am-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.am-steps li {
+  display: grid; grid-template-columns: 44px 1fr; gap: 0.9rem; align-items: start;
+  padding: 0.9rem 1rem;
+  background: var(--a-card); border: 1px solid var(--a-line);
+  border-radius: var(--a-radius);
+}
+.am-steps__i {
+  position: relative;
+  display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--a-accent-soft); color: var(--a-accent);
+}
+.am-steps__n {
+  position: absolute; inset-block-start: -6px; inset-inline-end: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--a-ink); color: var(--a-on-ink);
+  font-size: 0.68rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.am-steps h3 { margin: 0 0 0.15rem; font-size: 0.95rem; font-weight: 600; color: var(--a-ink); }
+.am-steps p { margin: 0; font-size: 0.86rem; color: var(--a-sub); line-height: 1.65; }
+
+/* 常見問題。用原生 <details>——不需要一行 JS，而且沒有 JS 也全部讀得到 */
+.am-faq { display: grid; gap: 0.5rem; }
+.am-faq details {
+  background: var(--a-card); border: 1px solid var(--a-line);
+  border-radius: var(--a-radius); overflow: hidden;
+}
+.am-faq summary {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.9rem 1rem; cursor: pointer;
+  font-weight: 600; font-size: 0.94rem;
+  list-style: none;
+}
+.am-faq summary::-webkit-details-marker { display: none; }
+.am-faq summary .am-faq__x { margin-inline-start: auto; color: var(--a-sub); transition: transform 180ms ease; }
+.am-faq details[open] summary .am-faq__x { transform: rotate(180deg); }
+.am-faq summary .am-faq__q { color: var(--a-accent); }
+@media (hover: hover) { .am-faq summary:hover { background: var(--a-tint); } }
+.am-faq__a { padding: 0 1rem 1rem; font-size: 0.9rem; color: var(--a-ink-2); line-height: 1.8; }
+.am-faq__a p { margin: 0 0 0.6rem; }
+.am-faq__a > :last-child { margin-bottom: 0; }
+.am-faq__a ul { margin: 0 0 0.6rem; padding-inline-start: 1.2rem; }
+
+/* 表格。窄螢幕自己橫捲，不要把整頁撐爆 */
+.am-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.am-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 380px; }
+.am-table th, .am-table td { padding: 0.6rem 0.8rem; text-align: start; border-bottom: 1px solid var(--a-line); }
+.am-table th { font-weight: 600; color: var(--a-sub); font-size: 0.8rem; letter-spacing: 0.03em; }
+.am-table td { font-variant-numeric: tabular-nums; }
+.am-table tbody tr:last-child td { border-bottom: none; }
+
+/* 重點提示框 */
+.am-callout {
+  display: flex; gap: 0.7rem; align-items: flex-start;
+  padding: 0.9rem 1rem; margin: 1.2rem 0;
+  border: 1px solid color-mix(in srgb, var(--a-accent) 25%, transparent);
+  background: var(--a-accent-soft); border-radius: var(--a-radius);
+  font-size: 0.88rem; line-height: 1.75;
+}
+.am-callout .am-i { color: var(--a-accent); margin-top: 0.15rem; }
+.am-callout p { margin: 0; }
+.am-callout strong { color: var(--a-accent); }
+
+/* 頁尾的求助卡：每個內容頁最後都導向 LINE，因為那才是她實際的客服管道 */
+.am-cta {
+  margin-top: 2.5rem; padding: 1.4rem 1.2rem; text-align: center;
+  background: var(--a-card); border: 1px solid var(--a-line);
+  border-radius: var(--a-r-lg);
+}
+.am-cta h2 { margin: 0.5rem 0 0.3rem; font-size: 1.05rem; font-weight: 600; }
+.am-cta p { margin: 0 0 1rem; color: var(--a-sub); font-size: 0.88rem; }
+.am-cta .am-btns { justify-content: center; }
+.am-cta__i { color: var(--a-accent); }
+
+/* ── 20. 購買規範 ─────────────────────────────────────
    放在結帳的送出鈕上方。刻意不做成摺疊——摺起來就等於沒看到，
    而這一段的用途就是「客人下單前看得到」。 */
 .am-terms {
-  margin: 1.5rem 0 1rem; padding: 0.9rem 1rem;
+  margin: 1.5rem 0 1rem; padding: 0.95rem 1.05rem;
   border: 1px solid var(--a-line); border-radius: var(--a-radius);
-  background: var(--a-card); font-size: 0.85rem; line-height: 1.7;
+  background: var(--a-card); font-size: 0.85rem; line-height: 1.75;
 }
-.am-terms__h { margin: 0 0 0.6rem; font-size: 0.95rem; }
-.am-terms__sub { margin: 0.9rem 0 0.3rem; font-size: 0.85rem; color: var(--a-sub); }
+.am-terms__h { margin: 0 0 0.7rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; }
+.am-terms__h .am-i { color: var(--a-accent); }
+.am-terms__sub { margin: 1rem 0 0.35rem; font-size: 0.85rem; color: var(--a-sub); display: flex; align-items: center; gap: 0.35rem; }
 .am-terms__sub--warn { color: var(--a-accent); }
 .am-terms__flow {
-  display: flex; flex-wrap: wrap; gap: 0.3rem 0.2rem;
-  margin: 0; padding: 0; list-style: none; counter-reset: step;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem;
+  margin: 0; padding: 0; list-style: none;
 }
 .am-terms__flow li {
   display: inline-flex; align-items: center; gap: 0.3rem;
-  padding: 0.2rem 0.5rem; border-radius: 999px;
-  background: var(--a-paper); border: 1px solid var(--a-line); font-size: 0.8rem;
+  padding: 0.25rem 0.6rem; border-radius: 999px;
+  background: var(--a-tint); border: 1px solid var(--a-line); font-size: 0.8rem;
 }
-.am-terms__flow li::after { content: "→"; margin-inline-start: 0.2rem; color: var(--a-sub); }
-.am-terms__flow li:last-child::after { content: ""; }
-.am-terms__list { margin: 0; padding-inline-start: 1.1rem; }
+.am-terms__flow li .am-i { color: var(--a-accent); }
+.am-terms__flow .am-terms__arrow { color: var(--a-line-2); flex: none; }
+.am-terms__list { margin: 0; padding-inline-start: 1.15rem; }
 .am-terms__list--warn { color: var(--a-accent); }
-.am-terms__note { margin: 0.6rem 0 0; color: var(--a-sub); }
+.am-terms__note { margin: 0.7rem 0 0; color: var(--a-sub); }
 
-/* ── 訂單編號 ───────────────────────────────────────
+/* ── 21. 訂單編號 ─────────────────────────────────────
    客人多半是直接截圖，所以編號要一眼看得到、字要夠大。
    顯示的是後 4 碼——完整編號的前半段是店家對帳用的日期，
    客人要打的時候 13 個字太長。完整編號小字附在旁邊給對帳用。 */
 .am-code {
   display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
-  padding: 0.5rem 0.7rem; margin: 0.5rem 0;
-  background: var(--a-paper); border: 1px solid var(--a-line);
+  padding: 0.6rem 0.8rem; margin: 0.5rem 0;
+  background: var(--a-tint); border: 1px solid var(--a-line);
   border-radius: var(--a-radius);
 }
 .am-code__label { font-size: 0.78rem; color: var(--a-sub); }
 .am-code__value {
-  font-size: 1.5rem; font-weight: 800; letter-spacing: 0.12em;
+  font-size: 1.5rem; font-weight: 700; letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
 }
 .am-code__full {
@@ -379,49 +759,203 @@ a { color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 多檔連線 ───────────────────────────────────────
+/* ── 22. 多檔連線 ─────────────────────────────────────
    她可能同時開韓國／日本／歐洲。每一檔有自己的識別色（見 _data/batch-tone.ts），
    購物車也依檔期分組——那是三個包裹、三筆運費、三張結單。 */
-.am-batch { margin-bottom: 2rem; }
+.am-batch { margin-bottom: 2.4rem; }
 .am-batch:last-child { margin-bottom: 0; }
-
-.am-card__batch {
-  align-self: flex-start;
-  padding: 0.1rem 0.45rem; border-radius: 999px;
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em;
-}
 
 .am-cartgroup { margin-bottom: 1.2rem; }
 .am-cartgroup__head {
-  font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em;
   padding-bottom: 0.35rem; margin-bottom: 0.2rem;
   border-bottom: 1px solid currentColor;
 }
 
-/* 檔期橫幅在有 tone 的時候，倒數與時間跟著那一檔的色 */
-.am-banner[style*="--am-tone"] .am-banner__time,
-.am-banner[style*="--am-tone"] .am-banner__left { color: var(--am-tone); }
+/* ── 23. 頁尾 ─────────────────────────────────────────── */
+.am-foot {
+  border-top: 1px solid var(--a-line);
+  background: var(--a-tint);
+  padding: 2rem 1rem 2.5rem;
+  color: var(--a-sub); font-size: 0.84rem;
+}
+.am-foot__inner { max-width: var(--a-max); margin: 0 auto; }
+.am-foot__grid { display: grid; gap: 1.6rem; }
+.am-foot__brand p { margin: 0.5rem 0 0; max-width: 30em; line-height: 1.7; }
+.am-foot h3 {
+  margin: 0 0 0.6rem; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--a-ink-2);
+}
+.am-foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.am-foot a { text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; }
+@media (hover: hover) { .am-foot a:hover { color: var(--a-accent); } }
+.am-foot__bar {
+  margin-top: 1.8rem; padding-top: 1.1rem; border-top: 1px solid var(--a-line);
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: space-between;
+  font-size: 0.78rem;
+}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* 深色也要暖。冷灰會讓商品照的膚色與布料看起來髒 */
-    --a-ink: #efebe3;
-    --a-sub: #9e968a;
-    --a-paper: #17150f;
-    --a-card: #201d18;
-    --a-line: #302b24;
-    --a-accent: #d9a15c;
-    --a-accent-soft: #2a2118;
-    --a-ok: #8fae8b;
+/* ── 24. 桌機 ─────────────────────────────────────────
+   從這裡開始才是「電腦螢幕的版面」。上面全部是手機版，
+   桌機只做加法：更多欄、更大的留白、hero、側邊固定的金額欄。 */
+@media (min-width: 900px) {
+  .am-mobile-only { display: none; }
+  .am-desktop-only { display: block; }
+
+  .am-wrap { padding: 1.6rem 2rem 6rem; }
+  .am-nav__inner { padding-inline: 2rem; }
+  .am-band__inner { padding-inline: 2rem; }
+  .am-foot { padding-inline: 2rem; }
+
+  /* 站台導覽在桌機才出現 */
+  .am-nav__site {
+    display: flex; align-items: center; gap: 1.4rem;
+    margin-inline-start: 2rem; margin-inline-end: auto;
+    font-size: 0.88rem;
   }
-  .am-cats a.on { color: #17150f; }
-  .am-btn { color: #17150f; }
-  .am-btn--accent { color: #17150f; }
-  /* ⚠ 這一行不可省。上面的 .am-btn 與 .am-btn--ghost 同權重，
-     但它排在後面 → ghost 會拿到近黑的字，在深色底上等於隱形。
-     2026-09-07 從截圖裡發現：「選規格」與「複製連結」都看不見。 */
-  .am-btn--ghost { color: var(--a-ink); }
-  .am-card__img, .am-line img, .am-gallery img { background: #272219; }
-  .am-tag { background: #272219; }
-  .am-tag--closed { background: #221e18; color: #6f665d; }
+  .am-nav__site a {
+    text-decoration: none; color: var(--a-ink-2);
+    padding: 0.3rem 0; position: relative;
+  }
+  /* 底線從中間長出來。唯一的滑鼠彩蛋，克制到不會有人覺得吵 */
+  .am-nav__site a::after {
+    content: ""; position: absolute; inset-inline: 0; bottom: 0;
+    height: 1px; background: var(--a-accent);
+    transform: scaleX(0); transition: transform 200ms ease;
+  }
+  .am-nav__site a:hover { color: var(--a-ink); }
+  .am-nav__site a:hover::after { transform: scaleX(1); }
+  .am-nav__site a[aria-current="page"] { color: var(--a-ink); }
+  .am-nav__site a[aria-current="page"]::after { transform: scaleX(1); }
+
+  .am-nav__links { gap: 0.75rem; }
+
+  /* ── Hero ── */
+  .am-hero {
+    display: block;
+    border-bottom: 1px solid var(--a-line);
+    background:
+      radial-gradient(90rem 40rem at 82% -20%, var(--a-accent-soft), transparent 60%),
+      var(--a-paper);
+  }
+  .am-hero__inner {
+    max-width: var(--a-max); margin: 0 auto;
+    padding: 3.5rem 2rem 3rem;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+    gap: 3rem; align-items: center;
+  }
+  .am-hero h1 {
+    margin: 0.6rem 0 0.9rem;
+    font-size: clamp(2rem, 3.1vw, 2.9rem);
+    line-height: 1.22; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .am-hero h1 em { font-style: normal; color: var(--a-accent); }
+  .am-hero__lead { margin: 0 0 1.6rem; font-size: 1.02rem; color: var(--a-ink-2); max-width: 34em; line-height: 1.75; }
+  .am-hero__art { width: 100%; height: auto; color: var(--a-ink); }
+  .am-hero__art-accent { color: var(--a-accent); }
+  .am-hero__art-faint { opacity: 0.4; }
+  .am-hero__meta {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem;
+    margin-top: 1.6rem; padding-top: 1.3rem;
+    border-top: 1px solid var(--a-line);
+    font-size: 0.86rem; color: var(--a-sub);
+  }
+  .am-hero__meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .am-hero__meta .am-i { color: var(--a-accent); }
+
+  /* 進場。只有 hero 有動畫，而且只動一次 */
+  .am-hero__text { animation: am-rise 520ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+  .am-hero__art { animation: am-rise 520ms 90ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+  @keyframes am-rise { from { opacity: 0; transform: translateY(14px); } }
+
+  /* ── 更大的商品格 ── */
+  .am-grid { gap: 1.4rem; grid-template-columns: repeat(auto-fill, minmax(226px, 1fr)); }
+  .am-card__name { font-size: 0.92rem; }
+  .am-card__body { padding: 0.85rem 0.95rem 1rem; }
+
+  /* ── 商品頁雙欄 ── */
+  .am-pdp {
+    display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+    gap: 3rem; align-items: start;
+  }
+  /* 圖跟著捲。右欄比左欄長的時候，客人還看得到自己在買什麼 */
+  .am-pdp__media { position: sticky; top: calc(var(--a-nav-h) + 1.2rem); }
+  .am-pdp__buy { min-width: 0; }
+  .am-gal__slide { max-height: 560px; }
+  /* 桌機沒有滑動手勢，縮圖就是唯一的換圖方式，所以放大一點 */
+  .am-gal__thumb { width: 72px; height: 72px; }
+  .am-price { font-size: 1.85rem; }
+
+  /* 桌機的購買列不必固定在視窗底部——它本來就在第一屏看得到 */
+  .am-pdp .am-buybar {
+    position: static; margin: 1.4rem 0 0; padding: 1rem 0 0;
+    background: none; backdrop-filter: none;
+  }
+
+  /* ── 購物車／結帳雙欄 ── */
+  .am-cols {
+    display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 2.5rem; align-items: start;
+  }
+  /* 桌機回到 DOM 順序：左欄是表單，右欄整個是金額，不需要換位置 */
+  .am-cols__first { order: 0; }
+  /* display 要明寫回來——基準值是 contents（見上面雙欄骨架那一段），
+     而 display:contents 的元素不會產生盒子，position:sticky 也就無從作用 */
+  .am-cols__side { display: block; position: sticky; top: calc(var(--a-nav-h) + 1.2rem); }
+  /* ⚠ 側欄比視窗高的時候不能用 sticky——它會在頂端卡住，
+     底部就永遠捲不到了。結單頁的側欄有對帳、付款方式、匯款回報、
+     出貨資訊四段，一定會超過一屏，所以那一頁用這個修飾字關掉 sticky。 */
+  .am-cols--flow .am-cols__side { position: static; }
+  /* 側欄裡的金額區塊變成一張卡，不再是黏在視窗底部的橫條 */
+  .am-cols__side .am-buybar {
+    position: static; flex-direction: column; align-items: stretch; gap: 0.8rem;
+    margin: 0; padding: 1.1rem;
+    background: var(--a-card); backdrop-filter: none;
+    border: 1px solid var(--a-line); border-radius: var(--a-radius);
+    box-shadow: var(--a-shadow-sm);
+  }
+  .am-cols__side .am-buybar__sum { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.9rem; }
+  .am-cols__side .am-buybar__sum b { font-size: 1.3rem; }
+  /* 結帳頁的側欄是「明細卡 ＋ 送出卡」上下疊著，兩張都印一次「商品小計」
+     就變成同一個數字連講兩遍。手機上兩者中間隔著整份收件表單，
+     那時候重覆一次是必要的，所以這條只在桌機成立。 */
+  .am-cols__side .am-sum + .am-buybar .am-buybar__sum { display: none; }
+
+  /* ── 其他 ── */
+  .am-pagehead { padding: 2rem 0 1rem; }
+  .am-pagehead h1 { font-size: 2rem; }
+  .am-h1 { font-size: 1.6rem; }
+  .am-section { margin-top: 4rem; }
+  .am-prose { font-size: 1rem; }
+  .am-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+  .am-steps--single { grid-template-columns: minmax(0, 1fr); }
+  .am-drawer { width: 440px; }
+
+  .am-foot__grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 2.5rem; }
+}
+
+@media (min-width: 1180px) {
+  .am-grid { grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
+}
+
+/* ── 25. 動態偏好 ─────────────────────────────────────
+   系統設了「減少動態效果」就全部關掉。這不是加分項——
+   前庭功能障礙的人看到位移動畫是會不舒服的。 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .am-card:hover .am-card__img { transform: none; }
+}
+
+/* ── 26. 列印 ─────────────────────────────────────────
+   客人會把結單頁印出來或存 PDF 對帳。把導覽、購物車、按鈕拿掉。 */
+@media print {
+  .am-nav, .am-foot, .am-buybar, .am-drawer, .am-drawer__scrim, .am-cta { display: none !important; }
+  body.am { background: #fff; color: #000; }
+  .am-wrap { padding: 0; max-width: none; }
 }

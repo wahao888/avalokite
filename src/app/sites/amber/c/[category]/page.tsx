@@ -1,87 +1,25 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
 
-import { currentBatch, listProducts } from "@/lib/daigou-data";
-import { CATEGORIES, getCategory } from "../../_data/categories";
-import { TENANT_SLUG } from "../../_data/site";
-import { DeadlineBar } from "../../_components/DeadlineBar";
-import { ProductCard, type CardProduct } from "../../_components/ProductCard";
+import { getCategory } from "../../_data/categories";
 
-export const dynamic = "force-dynamic";
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ category: string }>;
-}): Promise<Metadata> {
-  const { category } = await params;
-  const c = getCategory(category);
-  return { title: c ? c.name : "分類" };
-}
-
+// 分類頁。
+//
+// 現在只是一條轉址：分類篩選已經整合進首頁的 ?c= 參數，
+// 而首頁才是唯一懂**多檔同開**的地方（列出所有進行中的檔期、
+// 每張卡標檔期色、購物車分組結帳）。
+//
+// 為什麼不留一份自己的列表：這一頁原本用 currentBatch()，那支只回
+// 最新的那一檔——韓國與日本同時開的時候，這裡會少掉一整檔的商品。
+// 那個 bug 首頁已經修過一次（2026-09-07）。留兩份列表就是留兩份
+// 要同步的邏輯，而漏掉的那一份不會有人發現，直到客人問「我的東西呢」。
+//
+// 舊連結（LINE 群組裡貼過的）還是活的，所以用轉址而不是直接刪掉。
 export default async function CategoryPage({
   params,
 }: {
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  const cat = getCategory(category);
-  if (!cat) notFound();
-
-  const now = new Date();
-  const batch = await currentBatch(TENANT_SLUG);
-  if (!batch) notFound();
-
-  const products = await listProducts(TENANT_SLUG, {
-    batchId: batch.id,
-    categoryKey: cat.key,
-    status: "live",
-    take: 200,
-  });
-
-  const cards: CardProduct[] = products.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    price: p.price,
-    status: p.status,
-    deadlineAt: p.deadlineAt,
-    preorder: p.preorder,
-    options: p.options.map((o) => ({ price: o.price })),
-    images: p.images.map((i) => ({ key: i.key })),
-    batch: { defaultDeadlineAt: batch.defaultDeadlineAt, status: batch.status },
-  }));
-
-  return (
-    <div className="am-wrap">
-      <DeadlineBar
-        title={batch.title}
-        deadline={batch.defaultDeadlineAt}
-        now={now}
-        closed={batch.status !== "open"}
-        closedLabel="本檔已收單"
-      />
-
-      <nav className="am-cats" aria-label="商品分類">
-        <a href="/">全部</a>
-        {CATEGORIES.map((c) => (
-          <a key={c.key} href={`/c/${c.key}`} className={c.key === cat.key ? "on" : ""}>
-            {c.name}
-          </a>
-        ))}
-      </nav>
-
-      <h1 className="am-h1">{cat.name}</h1>
-
-      {cards.length === 0 ? (
-        <p className="am-empty">這一檔的「{cat.name}」還沒有商品。</p>
-      ) : (
-        <div className="am-grid">
-          {cards.map((p) => (
-            <ProductCard key={p.id} p={p} now={now} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  if (!getCategory(category)) notFound();
+  redirect(`/?c=${encodeURIComponent(category)}`);
 }

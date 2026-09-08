@@ -1,5 +1,6 @@
 import { formatTaipei } from "@/lib/tw-time";
 import { Countdown } from "./Countdown";
+import { IconClock, IconCheck } from "./Icons";
 import type { Tone } from "../_data/batch-tone";
 
 // 檔期橫幅。客戶需求第 7 項：「商品頁上方希望直接明顯顯示 收單時間：2026/09/20 23:00」。
@@ -32,6 +33,9 @@ export function DeadlineBar({
 
   return (
     <div className={`am-banner${closed ? " am-banner--closed" : ""}`} style={style}>
+      <span className="am-banner__i">
+        {closed ? <IconCheck size={18} stroke={1.8} /> : <IconClock size={18} stroke={1.8} />}
+      </span>
       <span className="am-banner__title">{title}</span>
       {deadline ? (
         <span className="am-banner__time">
