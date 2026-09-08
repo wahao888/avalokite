@@ -7,6 +7,7 @@ import { twd } from "@/app/sites/amber/_data/cart";
 import { orderState, effectiveDeadline } from "@/lib/daigou-deadline";
 import { mediaUrl, thumbUrl } from "@/lib/media-url";
 import LoginForm from "../../../LoginForm";
+import { AddPhotos } from "../../../_components/AddPhotos";
 
 export const dynamic = "force-dynamic";
 
@@ -87,8 +88,12 @@ export default async function ProductPage({
               : "已下架，前台看不到"}
       </div>
 
+      <h2 className="p-title" style={{ fontSize: "1rem", marginTop: "1.4rem" }}>
+        照片
+      </h2>
+
       {p.images.length > 0 && (
-        <div className="p-dg-photogrid" style={{ marginTop: "1rem" }}>
+        <div className="p-dg-photogrid" style={{ marginTop: "0.6rem" }}>
           {p.images.map((img) => (
             <div key={img.id} className="p-dg-photo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -114,6 +119,9 @@ export default async function ProductPage({
           ))}
         </div>
       )}
+
+      {/* 上架之後也要補得了照片——她常常是回台灣才拍得到像樣的圖 */}
+      <AddPhotos productId={p.id} existing={p.images.length} />
 
       <form method="post" action="/api/portal/amber/product/edit" className="p-board-form">
         <input type="hidden" name="id" value={p.id} />

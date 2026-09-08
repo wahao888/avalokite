@@ -434,6 +434,46 @@ export async function createImage(
   });
 }
 
+/**
+ * 把已上傳的照片接到一件**既有**商品上。
+ *
+ * 為什麼需要這支：createProduct 一開始就能帶 imageIds，但上架之後就沒有
+ * 任何加照片的路徑了——她回頭補一張正面照，只能把整件商品刪掉重上。
+ * 而代購最常見的情況正是「先用店裡隨手拍的上架，回台灣再補正式照」。
+ *
+ * ⚠ where 帶 `productId: null`：只認領「還沒接上任何商品」的圖。
+ * 少了這個條件，傳一個別件商品的 imageId 進來就能把它的照片搬走。
+ * 租戶範圍另外由 tenantId 保證。
+ */
+export async function attachImages(
+  tenantId: string,
+  productId: string,
+  imageIds: string[],
+): Promise<number> {
+  if (imageIds.length === 0) return 0;
+
+  const product = await prisma.dgProduct.findFirst({
+    where: { tenantId, id: productId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!product) return 0;
+
+  // 接在現有照片後面，不要跟既有的 sortOrder 撞號（撞了排序就不穩定）
+  const existing = await prisma.dgImage.count({
+    where: { tenantId, productId, deletedAt: null },
+  });
+
+  let attached = 0;
+  for (const [i, imageId] of imageIds.entries()) {
+    const r = await prisma.dgImage.updateMany({
+      where: { tenantId, id: imageId, productId: null },
+      data: { productId, sortOrder: existing + i },
+    });
+    attached += r.count;
+  }
+  return attached;
+}
+
 export async function archiveImage(tenantId: string, id: string): Promise<boolean> {
   const r = await prisma.dgImage.updateMany({
     where: { tenantId, id, deletedAt: null },

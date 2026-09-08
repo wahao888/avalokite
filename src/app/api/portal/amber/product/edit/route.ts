@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getTenantSession } from "@/lib/tenant-auth";
 import { absoluteUrl, sameOrigin } from "@/lib/portal-http";
-import { updateProduct, archiveProduct, archiveImage } from "@/lib/daigou-data";
+import {
+  updateProduct,
+  archiveProduct,
+  archiveImage,
+  attachImages,
+} from "@/lib/daigou-data";
 import { parseTaipeiLocalInput } from "@/lib/tw-time";
 import { isCategoryKey } from "@/app/sites/amber/_data/categories";
 
@@ -45,6 +50,19 @@ export async function POST(req: NextRequest) {
     // 正是「再上一件」的來源。她單手操作誤觸刪除也救得回來。
     const ok = await archiveProduct(tenant.slug, id);
     return ok ? back("/portal/amber") : back(target, "notfound");
+  }
+
+  if (action === "add-images") {
+    // 照片已經由 /api/portal/amber/upload 傳好了（前端壓縮 → 伺服器重編碼），
+    // 這裡收到的只是那些圖的 id，把它們接到這件商品上。
+    const ids = String(form.get("imageIds") ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+    if (ids.length === 0) return back(target, "bad");
+    await attachImages(tenant.slug, id, ids);
+    return back(target);
   }
 
   if (action === "remove-image") {
