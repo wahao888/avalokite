@@ -32,9 +32,11 @@ sudo -u avalo bash -lc "cd $APP && npm install"
 # 上傳目錄與 SQLite 的 WAL。兩者都是冪等的，每次部署跑一次最省事。
 #
 # 上傳目錄：在 repo 樹之外，所以上面那個 rsync --delete 碰不到它；
+# 也在 /opt/avalo 之外——那個目錄是 750 avalo:avalo，nginx（www-data）
+# 穿不進去，圖片會全部回 403（見 setup-ec2.sh 的說明）。
 # 這裡只是確保新機器或還沒跑過 setup-ec2.sh 的環境也有這個目錄。
-sudo mkdir -p /opt/avalo/uploads
-sudo chown -R avalo:avalo /opt/avalo/uploads
+sudo mkdir -p /var/www/avalo-uploads
+sudo chown -R avalo:avalo /var/www/avalo-uploads
 
 # WAL：連線尖峰時（LINE 群組一發商品，幾百人同一分鐘衝進來）
 # 預設的 journal 模式會讓一筆寫入擋住所有讀取，客人看到的是頁面卡住。

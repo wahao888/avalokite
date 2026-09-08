@@ -133,7 +133,7 @@ describe("上傳目錄不可落在 repo 樹內", () => {
       // deploy 的 rsync --delete 會清掉 repo 樹底下的執行期檔案，
       // 上傳目錄落在裡面等於每次部署都刪光客戶的商品照片。
       expect(root.startsWith(repo + path.sep)).toBe(false);
-      expect(root).toBe("/opt/avalo/uploads");
+      expect(root).toBe("/var/www/avalo-uploads");
     } finally {
       if (prev !== undefined) process.env.UPLOAD_DIR = prev;
     }

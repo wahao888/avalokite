@@ -56,7 +56,7 @@ SUSPENDED_TENANTS=""                            # 欠費暫停中的客戶站 sl
 
 # ── 代購站（amber）專用 ──
 MEMBER_SESSION_SECRET="<openssl rand -hex 32>"  # 會員 session 的 HMAC 金鑰
-UPLOAD_DIR="/opt/avalo/uploads"                 # 商品照存放處，必須在 repo 樹之外
+UPLOAD_DIR="/var/www/avalo-uploads"                 # 商品照存放處，必須在 repo 樹之外
 NEXT_PUBLIC_MEDIA_BASE="/u"                     # 對外圖片網址前綴，由 nginx 直送
 LINE_CHANNEL_ID=""                              # 留空 = 前台不顯示 LINE 登入
 LINE_CHANNEL_SECRET=""
@@ -83,7 +83,7 @@ Login Channel 與未來的 Messaging API Channel 也要在同一個 Provider 底
 
 ### 使用者上傳的檔案（代購站的商品照）
 
-存在 **`/opt/avalo/uploads`，刻意在 repo 樹之外**。
+存在 **`/var/www/avalo-uploads`，刻意在 repo 樹之外**。
 
 理由是部署流程：`deploy.sh` 與 `server-update.sh` 都用 `rsync --delete`，
 **任何寫進 repo 樹的執行期檔案都會在下一次部署時被刪光**。2026-07-30 就是這樣把
@@ -100,7 +100,7 @@ nginx 以 `location ^~ /u/` 直接送這個目錄，**完全不經過 Node**—�
 （有測試守住這個值。）
 
 **⚠ 尚未納入備份。** `backup-db.sh` 只備 SQLite。EBS 掛掉的話商品照片全沒。
-上線前要決定：把 `/opt/avalo/uploads` 的 `aws s3 sync` 加進那支腳本
+上線前要決定：把 `/var/www/avalo-uploads` 的 `aws s3 sync` 加進那支腳本
 （它已經是 S3-aware，由 `BACKUP_S3_BUCKET` 控制），或明確接受這個風險。
 折衷做法是**只備縮圖**——全站縮圖總量小到可以每日全量上傳，而歷史結單畫面
 只用得到縮圖。

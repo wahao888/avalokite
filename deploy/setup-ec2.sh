@@ -62,13 +62,21 @@ id -u $APP_USER &>/dev/null || useradd -r -m -d $APP_DIR -s /usr/sbin/nologin $A
 mkdir -p $APP_DIR
 chown -R $APP_USER:$APP_USER $APP_DIR
 
-# 客戶上傳的商品照。刻意在 repo 樹之外（$APP_DIR/app 底下會被部署的
-# rsync --delete 清掉——2026-07-30 就是這樣刪掉過一次 prod.db，
-# 而商品照片沒有 .db 那種每日備份，掉了就沒了）。
-# nginx 以 location ^~ /u/ 直接送這個目錄的檔案，不經過 Node。
-mkdir -p $APP_DIR/uploads
-chown -R $APP_USER:$APP_USER $APP_DIR/uploads
-chmod 755 $APP_DIR/uploads
+# 客戶上傳的商品照。放在 /var/www 而**不是** $APP_DIR 底下，有兩個理由：
+#
+#   ① 不能在 repo 樹裡：$APP_DIR/app 會被部署的 rsync --delete 清掉——
+#      2026-07-30 就是這樣刪掉過一次 prod.db，而商品照沒有 .db 那種
+#      每日備份，掉了就沒了。
+#   ② 也不能只是「$APP_DIR 底下、app 外面」：$APP_DIR 是 750 avalo:avalo，
+#      而 nginx 跑在 www-data，穿不進去——每一張商品照都會回 403。
+#      要讓 nginx 進得來就得對 $APP_DIR 開 o+x，但那底下還有 backups/
+#      （755，裡面是資料庫備份）與 app/prisma/prod.db（644），
+#      等於為了送圖片把整個正式資料庫攤開給本機上的任何人。
+#      公開的靜態檔案就該住在公開的地方。（2026-09-08 上線前發現。）
+UPLOAD_DIR=/var/www/avalo-uploads
+mkdir -p $UPLOAD_DIR
+chown -R $APP_USER:$APP_USER $UPLOAD_DIR
+chmod 755 $UPLOAD_DIR
 
 # systemd 服務
 cat > /etc/systemd/system/avalo.service <<EOF
@@ -90,10 +98,10 @@ RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=full
 PrivateTmp=true
-# ProtectSystem=full 之下 /opt 仍可寫，所以上傳目錄本來就沒問題；
-# 明寫出來是為了「哪天有人把它調成 strict」時不會靜默壞掉——
-# 那會變成圖片上傳全部失敗，而且錯誤訊息只是一個 EACCES。
-ReadWritePaths=$APP_DIR/uploads
+# ⚠ ProtectSystem=full 會把 /usr /boot /etc 設為唯讀，/var 仍可寫，
+# 所以上傳目錄本來就沒問題；明寫出來是為了「哪天有人把它調成 strict」
+# 時不會靜默壞掉——那會變成圖片上傳全部失敗，而錯誤訊息只是一個 EACCES。
+ReadWritePaths=/var/www/avalo-uploads
 
 [Install]
 WantedBy=multi-user.target

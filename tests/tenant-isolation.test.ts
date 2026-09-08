@@ -228,12 +228,12 @@ describe("上傳檔案不可落在 repo 樹內", () => {
    *
    * 同時這條也讓「換 S3 只要改一個檔」變成被檢查的性質，而不是願望。
    */
-  it("/opt/avalo/uploads 只出現在 local-disk.ts 與 deploy/ 底下", () => {
+  it("/var/www/avalo-uploads 只出現在 local-disk.ts 與 deploy/ 底下", () => {
     const allowed = ["src/lib/storage/local-disk.ts"];
     // 用去註解的版本掃：規則講的是「程式碼不得寫死這個路徑」，
     // 而說明這條規則的註解本身一定會提到它（storage/types.ts 就是）。
     const offenders = walk(path.join(ROOT, "src"))
-      .filter((f) => code(f).includes("/opt/avalo/uploads"))
+      .filter((f) => code(f).includes("/var/www/avalo-uploads"))
       .map(rel)
       .filter((f) => !allowed.includes(f));
     expect(offenders, "上傳路徑只能住在儲存實作裡").toEqual([]);
@@ -283,7 +283,12 @@ describe("nginx 的上傳相關設定", () => {
 
   it("有 /u/ 的 location，且用 ^~ 讓它勝過 regex location", () => {
     expect(conf).toMatch(/location\s+\^~\s+\/u\/\s*\{/);
-    expect(conf).toMatch(/alias\s+\/opt\/avalo\/uploads\/;/);
+    expect(conf).toMatch(/alias\s+\/var\/www\/avalo-uploads\/;/);
+    // ⚠ 上傳目錄不能放回 /opt/avalo 底下。那個目錄是 750 avalo:avalo，
+    // nginx 跑在 www-data 穿不進去，商品照會全部回 403；而要讓它進得來
+    // 就得對 /opt/avalo 開 o+x，那底下有 backups/（資料庫備份）與
+    // prod.db（644），等於為了送圖片把正式資料庫攤開。2026-09-08 上線前發現。
+    expect(conf, "上傳目錄不可放在 /opt/avalo 底下").not.toMatch(/alias\s+\/opt\/avalo/);
   });
 
   it("/u/ 自己補回安全標頭（本層一有 add_header 就不繼承上層）", () => {

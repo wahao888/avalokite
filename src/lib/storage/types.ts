@@ -2,7 +2,7 @@
 //
 // 抽這一層的唯一目的：第一期存本機磁碟，之後搬 S3 時只換一個實作檔。
 // tests/tenant-isolation.test.ts 有一條規則守住這件事——
-// 「/opt/avalo/uploads 只能出現在 local-disk.ts 與 deploy/ 底下」，
+// 「/var/www/avalo-uploads 只能出現在 local-disk.ts 與 deploy/ 底下」，
 // 讓「只改一個檔」變成被檢查的性質，而不是願望。
 
 export interface Storage {

@@ -1,6 +1,6 @@
 // 本機磁碟的儲存實作。
 //
-// ⚠ 這是整個 repo 裡唯一知道 /opt/avalo/uploads 這個路徑的檔案。
+// ⚠ 這是整個 repo 裡唯一知道 /var/www/avalo-uploads 這個路徑的檔案。
 // 有一條結構性測試守住這件事——搬 S3 時只要新增 s3.ts 並改 index.ts 的選擇邏輯。
 //
 // ⚠⚠ 上傳目錄**必須在 repo 樹之外**。
@@ -19,7 +19,7 @@ import type { Storage } from "./types";
 import { isValidKey } from "./keys";
 import { mediaUrl } from "../media-url";
 
-const DEFAULT_ROOT = "/opt/avalo/uploads";
+const DEFAULT_ROOT = "/var/www/avalo-uploads";
 
 
 export const uploadRoot = (): string =>
