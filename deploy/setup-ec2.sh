@@ -62,6 +62,14 @@ id -u $APP_USER &>/dev/null || useradd -r -m -d $APP_DIR -s /usr/sbin/nologin $A
 mkdir -p $APP_DIR
 chown -R $APP_USER:$APP_USER $APP_DIR
 
+# 客戶上傳的商品照。刻意在 repo 樹之外（$APP_DIR/app 底下會被部署的
+# rsync --delete 清掉——2026-07-30 就是這樣刪掉過一次 prod.db，
+# 而商品照片沒有 .db 那種每日備份，掉了就沒了）。
+# nginx 以 location ^~ /u/ 直接送這個目錄的檔案，不經過 Node。
+mkdir -p $APP_DIR/uploads
+chown -R $APP_USER:$APP_USER $APP_DIR/uploads
+chmod 755 $APP_DIR/uploads
+
 # systemd 服務
 cat > /etc/systemd/system/avalo.service <<EOF
 [Unit]
@@ -82,6 +90,10 @@ RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=full
 PrivateTmp=true
+# ProtectSystem=full 之下 /opt 仍可寫，所以上傳目錄本來就沒問題；
+# 明寫出來是為了「哪天有人把它調成 strict」時不會靜默壞掉——
+# 那會變成圖片上傳全部失敗，而且錯誤訊息只是一個 EACCES。
+ReadWritePaths=$APP_DIR/uploads
 
 [Install]
 WantedBy=multi-user.target

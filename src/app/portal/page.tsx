@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getHostTenant, getTenantSession } from "@/lib/tenant-auth";
 import { countInquiries, listInquiries, PAGE_SIZE } from "@/lib/tenant-data";
 import LoginForm from "./LoginForm";
@@ -25,6 +25,11 @@ export default async function PortalPage({
 
   const tenant = await getTenantSession();
   if (!tenant) return <LoginForm tenantName={hostTenant.name} error={sp.error} />;
+
+  // 代購站沒有詢問表單，這一頁對她永遠是空的。
+  // 登入後的預設導向也是 /portal，所以直接把她帶到真正在用的後台，
+  // 而不是先看到一個空列表再自己找路。
+  if (tenant.daigou) redirect("/portal/amber");
 
   const onlyUnhandled = sp.filter === "open";
   const page = Math.max(1, Number(sp.page) || 1);

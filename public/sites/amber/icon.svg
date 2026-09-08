@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- AmberPick。菱形寶石＋被挑中的那一個點。
+       favicon 尺寸小，線加粗到 2.2（站上的元件用 1.6），
+       否則 16px 下那圈會細到看不見。 -->
+  <rect width="24" height="24" rx="5" fill="#faf9f6"/>
+  <g transform="rotate(45 12 12)">
+    <rect x="5.6" y="5.6" width="12.8" height="12.8" rx="3"
+          fill="none" stroke="#a8763a" stroke-width="2.2"/>
+  </g>
+  <circle cx="12" cy="12" r="2.8" fill="#a8763a"/>
+</svg>

@@ -3,8 +3,22 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// 代購站（amber）的 Host。頁面一律不可被邊緣快取。
+//
+// 下面 headers() 那條通用規則送的是 s-maxage=300 + stale-while-revalidate=86400，
+// 而標頭比對看到的是**改寫前**的路徑（/p/xxx），沒辦法用 source 區分租戶。
+// 現在沒有 CDN 所以無害；一旦掛上 CDN，一個已經截止的商品頁最久可以繼續顯示
+// 「立即購買」24 小時——那是真的會收到不該收的單的金錢 bug。
+// 結單頁 /s/<token> 更嚴重：那是逐客人的金額與收件資料，絕不能進共用快取。
+const AMBER_HOST = "amber\\.(avalokite\\.xyz|localhost(:\\d+)?)";
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // sharp 帶原生二進位檔（libvips），不能被打包器處理。
+  // 代購站的圖片上傳端點用它重新編碼——那一步同時是安全控制：
+  // polyglot 檔案活不過重新編碼，而且 sharp 預設會剝掉 EXIF
+  // （iPhone 照片帶著韓國那家店與客戶住家的 GPS 座標）。
+  serverExternalPackages: ["sharp"],
   async redirects() {
     // 文山木材行原掛在 avalokite.xyz/wenshan（子目錄），已改為 wenshan.avalokite.xyz。
     // 子目錄會讓客戶內容累積到主域，既稀釋 Avalo 自己的主題，也落入 Google 的
@@ -33,12 +47,21 @@ const nextConfig: NextConfig = {
         // /admin 與 /portal（登入後的後台資料，維持 Next 自己給的 no-store——
         // 邊緣快取會把 A 租戶的表單清單發給 B）、以及帶副檔名的靜態檔。
         source: "/((?!api/|_next/|.*\\.)(?!(?:zh-TW|en)/admin)(?!admin)(?!portal).*)",
+        // 代購站排除在外，改用下面那條 no-store（理由見 AMBER_HOST 的註解）。
+        // 用 missing 而非把租戶寫進 source：source 比對的是改寫前的路徑，
+        // 那裡看不出這個請求屬於哪一個租戶。
+        missing: [{ type: "host", value: AMBER_HOST }],
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
           },
         ],
+      },
+      {
+        source: "/(.*)",
+        has: [{ type: "host", value: AMBER_HOST }],
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
     ];
   },

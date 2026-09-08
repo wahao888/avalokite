@@ -29,6 +29,23 @@ sudo chown -R avalo:avalo "$APP"
 echo "=== 2/5 安裝相依 ==="
 sudo -u avalo bash -lc "cd $APP && npm install"
 
+# 上傳目錄與 SQLite 的 WAL。兩者都是冪等的，每次部署跑一次最省事。
+#
+# 上傳目錄：在 repo 樹之外，所以上面那個 rsync --delete 碰不到它；
+# 這裡只是確保新機器或還沒跑過 setup-ec2.sh 的環境也有這個目錄。
+sudo mkdir -p /opt/avalo/uploads
+sudo chown -R avalo:avalo /opt/avalo/uploads
+
+# WAL：連線尖峰時（LINE 群組一發商品，幾百人同一分鐘衝進來）
+# 預設的 journal 模式會讓一筆寫入擋住所有讀取，客人看到的是頁面卡住。
+# journal_mode 寫在資料庫檔頭、設一次永久有效，所以這行是冪等的。
+# ⚠ 不能放進 Prisma migration：Prisma 用交易包住 migration，
+#   而 PRAGMA journal_mode=WAL 不能在交易內執行。
+if [ -f "$APP/prisma/prod.db" ]; then
+  sudo -u avalo sqlite3 "$APP/prisma/prod.db" "PRAGMA journal_mode=WAL;" >/dev/null \
+    && echo "  WAL 已啟用" || echo "  （WAL 設定略過：sqlite3 未安裝？）"
+fi
+
 echo "=== 3/5 Prisma（generate 必跑，再 migrate deploy）==="
 sudo -u avalo bash -lc "cd $APP && npx prisma generate"
 sudo -u avalo bash -lc "cd $APP && npx prisma migrate deploy"

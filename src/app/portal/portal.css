@@ -40,6 +40,13 @@ body.portal {
   font-size: 0.85rem; text-decoration: none; cursor: pointer; font-family: inherit;
 }
 .p-btn:hover { opacity: 0.85; }
+/* 停用的按鈕必須看起來就是停用的。上架鈕在名稱／售價還沒填、
+   或照片還在傳的時候是 disabled——沒有這段樣式，她會按下去然後
+   以為系統壞了。 */
+.p-btn:disabled, .p-btn[disabled] {
+  opacity: 0.4; cursor: not-allowed;
+}
+.p-btn:disabled:hover { opacity: 0.4; }
 .p-btn-ghost { background: transparent; color: var(--p-ink); }
 .p-btn-link {
   background: none; border: none; padding: 0; color: var(--p-accent);
@@ -132,6 +139,219 @@ body.portal {
   border: 1px solid var(--p-border);
 }
 
+/* ── 代購站的上架流程（僅 daigou 租戶）──────────────────
+   行動優先，而且是真的行動優先：使用者站在韓國的店裡、單手、4G。
+   點擊目標一律 ≥ 44px（Apple HIG 的下限），主要動作固定在畫面底部
+   讓拇指構得到，欄位順序照「照片先、其餘跟著打字並行」排。 */
+
+.p-dg-photos { margin: 0.4rem 0 0.2rem; }
+
+.p-dg-photogrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.5rem;
+}
+
+.p-dg-photo {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--p-border);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--p-card);
+}
+
+.p-dg-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 還沒傳完的照片壓暗，一眼看得出哪幾張還在路上 */
+.p-dg-photo--pending img,
+.p-dg-photo--working img { opacity: 0.45; }
+.p-dg-photo--error { border-color: var(--p-warn); }
+.p-dg-photo--error img { opacity: 0.35; }
+
+.p-dg-photo__badge {
+  position: absolute; inset-inline: 0; bottom: 0;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.68rem; text-align: center;
+  background: rgba(0, 0, 0, 0.55); color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.p-dg-photo__actions {
+  position: absolute; top: 0.25rem; right: 0.25rem;
+  display: flex; gap: 0.25rem;
+}
+.p-dg-photo__actions button {
+  min-width: 28px; min-height: 28px;
+  border: none; border-radius: 2px;
+  background: rgba(0, 0, 0, 0.6); color: #fff;
+  font: inherit; font-size: 0.72rem; line-height: 1;
+  cursor: pointer;
+}
+
+.p-dg-photo--add {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  align-items: center; justify-content: center;
+  border-style: dashed; cursor: pointer;
+  color: var(--p-muted); font: inherit; font-size: 0.78rem;
+}
+.p-dg-photo--add span[aria-hidden] { font-size: 1.6rem; line-height: 1; }
+.p-dg-photo--add:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.p-dg-hint { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--p-muted); }
+.p-dg-error { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--p-warn); }
+
+/* 規格與分類的晶片列。橫向捲動而不是換行——換行會把送出鈕推到螢幕外 */
+.p-dg-chips {
+  display: flex; gap: 0.4rem; overflow-x: auto;
+  padding: 0.15rem 0 0.4rem; margin: 0;
+  scrollbar-width: none;
+}
+.p-dg-chips::-webkit-scrollbar { display: none; }
+.p-dg-chip {
+  flex: none; min-height: 36px;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--p-border); border-radius: 999px;
+  background: var(--p-card); color: var(--p-ink);
+  font: inherit; font-size: 0.85rem; white-space: nowrap; cursor: pointer;
+}
+.p-dg-chip[aria-pressed="true"] {
+  background: var(--p-accent); border-color: var(--p-accent); color: var(--p-paper);
+}
+
+/* 置底動作列。她抱著八件商品，主要按鈕必須永遠在拇指下面 */
+.p-dg-sticky {
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 1.2rem -1rem 0; padding: 0.7rem 1rem;
+  background: var(--p-paper);
+  border-top: 1px solid var(--p-border);
+  display: flex; gap: 0.6rem;
+}
+.p-dg-sticky .p-btn { flex: 1; min-height: 48px; font-size: 1rem; }
+
+/* 上架表單的欄位。inputMode=numeric 的價格欄不要用 type=number——
+   iOS 會給帶小數點的鍵盤，而且 spinner 會劫持捲動。 */
+.p-dg-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.9rem; }
+.p-dg-field > label { font-size: 0.8rem; font-weight: 700; color: var(--p-muted); }
+.p-dg-field input[type="text"],
+.p-dg-field input[type="datetime-local"],
+.p-dg-field textarea {
+  width: 100%; min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink);
+  font: inherit; font-size: 1rem;
+}
+
+/* 截止時間平常是一個唯讀晶片（「跟檔期一樣：9/20 23:00」），
+   常見情況下她一次都不用碰它。需求 6 與 7 在每件商品上的成本因此是零。 */
+.p-dg-inherit {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.7rem; min-height: 44px;
+  border: 1px dashed var(--p-border); border-radius: 2px;
+  font-size: 0.9rem; color: var(--p-muted);
+}
+.p-dg-inherit button {
+  margin-inline-start: auto; min-height: 32px; padding: 0 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* 提示條。用在草稿回復、本次已上架清單、可否下單的狀態。
+   跟 .p-error 同一個形狀但不帶警示色——那些訊息是資訊不是問題。 */
+.p-note {
+  background: var(--p-card); border: 1px solid var(--p-border);
+  padding: 0.6rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem;
+  border-radius: 2px;
+}
+.p-note .p-btn-link { margin-inline-start: 0.6rem; }
+
+/* 摺疊區（交叉產生器、更多設定）。90% 的上架路徑不會展開它們，
+   所以收起來的狀態要夠小，不能吃掉置底按鈕的空間。 */
+.p-dg-cross, .p-dg-more { margin-top: 0.5rem; }
+.p-dg-cross > summary, .p-dg-more > summary {
+  cursor: pointer; font-size: 0.82rem; color: var(--p-muted);
+  padding: 0.5rem 0; min-height: 36px;
+}
+.p-dg-crossrow {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0 0.5rem;
+}
+.p-dg-crossrow input {
+  flex: 1; min-width: 0; min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 0.95rem;
+}
+.p-dg-crossrow .p-btn { flex: none; }
+
+/* 商品編輯用的下拉。跟其他輸入框對齊，並保持 44px 的點擊高度 */
+.p-dg-field select {
+  width: 100%; min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink); font: inherit; font-size: 1rem;
+}
+
+/* ── 採購清單 ───────────────────────────────────────
+   她拿著手機站在店裡，一根拇指由上往下掃。每一列就是一個「要買什麼、
+   買到幾件」的決定，所以輸入框要大、要好按，其餘資訊往後退。 */
+.p-dg-purchase {
+  border: 1px solid var(--p-border); background: var(--p-card);
+  border-radius: 2px; padding: 0.7rem 0.8rem; margin-bottom: 0.6rem;
+}
+.p-dg-purchase__head { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.p-dg-purchase__head img { border-radius: 2px; object-fit: cover; flex: none; }
+.p-dg-purchase__name { flex: 1; min-width: 120px; line-height: 1.4; }
+.p-dg-purchase__name div { font-size: 0.82rem; color: var(--p-muted); }
+.p-dg-purchase__need { font-size: 0.78rem; color: var(--p-muted); text-align: center; }
+.p-dg-purchase__need b { display: block; font-size: 1.2rem; color: var(--p-ink); }
+.p-dg-purchase__got { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--p-muted); }
+.p-dg-purchase__got input {
+  width: 72px; min-height: 48px; text-align: center;
+  font: inherit; font-size: 1.1rem; font-weight: 700;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-paper); color: var(--p-ink);
+}
+
+/* ── 結單列表 ───────────────────────────────────────── */
+.p-dg-settle {
+  border: 1px solid var(--p-border); background: var(--p-card);
+  border-radius: 2px; padding: 0.7rem 0.8rem; margin-bottom: 0.6rem;
+}
+.p-dg-settle__head { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.p-dg-settle__head > div:first-child { flex: 1; min-width: 140px; }
+.p-dg-settle__amt { text-align: end; }
+.p-dg-settle__amt b { font-size: 1.15rem; }
+
+/* ── 對帳面板 ───────────────────────────────────────── */
+.p-dg-recon {
+  border: 1px solid var(--p-border); background: var(--p-card);
+  border-radius: 2px; padding: 0.8rem 0.9rem; margin-top: 1rem;
+}
+.p-dg-recon__row {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 0.25rem 0; font-size: 0.9rem; font-variant-numeric: tabular-nums;
+}
+.p-dg-recon__row--total {
+  border-top: 1px solid var(--p-border); margin-top: 0.35rem;
+  padding-top: 0.5rem; font-weight: 800; font-size: 1.02rem;
+}
+
+/* ── 逐行狀態 ───────────────────────────────────────── */
+.p-dg-line {
+  display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-start;
+  border-bottom: 1px solid var(--p-border); padding: 0.6rem 0;
+}
+.p-dg-line__main { flex: 1; min-width: 160px; line-height: 1.45; }
+.p-dg-line__acts { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+.p-dg-line__acts input {
+  min-height: 36px; padding: 0.3rem 0.5rem;
+  border: 1px solid var(--p-border); border-radius: 2px;
+  background: var(--p-paper); color: var(--p-ink); font: inherit; font-size: 0.85rem;
+}
+.p-dg-line__acts .p-btn { min-height: 36px; padding: 0.25rem 0.6rem; font-size: 0.8rem; }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --p-ink: #ece7de; --p-paper: #1a1815; --p-card: #22201c;
@@ -140,3 +360,28 @@ body.portal {
   .p-btn { background: var(--p-ink); color: var(--p-paper); }
   .p-error { background: #3a2418; }
 }
+
+/* ── 檔期選擇 ────────────────────────────────────────
+   同時開兩檔以上時，上架與代客下單一律先問「這是哪一趟」。
+   為什麼不給一個預設值：她人站在首爾的店裡、手上抱著東西，
+   按鈕上那行「日本連線」是會被略過的——然後整批商品掛錯檔期，
+   收單時間、到貨日、結單分組、運費全部跟著錯，而且不會報錯。
+   （見 portal/amber/BatchPicker.tsx）
+
+   所以每一檔都是一個 48px 以上的大目標，且**沒有哪一個看起來像預設**。 */
+.p-dg-pickbar { margin-top: 1.2rem; }
+
+.p-dg-pick { display: grid; gap: 0.6rem; }
+/* 後台首頁那排橫的；窄螢幕自動疊回一欄 */
+.p-dg-pick--row { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+.p-dg-pick__item {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  min-height: 56px; padding: 0.8rem 1rem;
+  border: 1px solid var(--p-ink); border-radius: 2px;
+  background: var(--p-card); color: var(--p-ink);
+  text-decoration: none;
+}
+.p-dg-pick__item:hover { background: var(--p-paper); }
+.p-dg-pick__title { font-weight: 700; }
+.p-dg-pick__meta { font-size: 0.78rem; color: var(--p-muted); }
