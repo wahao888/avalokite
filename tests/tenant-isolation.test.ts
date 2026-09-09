@@ -281,6 +281,30 @@ describe("nginx 的上傳相關設定", () => {
     expect(conf).toMatch(/client_max_body_size\s+2m;/);
   });
 
+  it("備份腳本自己從 .env 讀 BACKUP_S3_BUCKET", () => {
+    // ⚠ 這兩支都是 cron 跑的，而 cron **不會載入 .env**。
+    // 只看 ${BACKUP_S3_BUCKET:-} 的話，在 .env 設好了也永遠不會生效，
+    // 而 log 會一直印「local only」——看起來像值沒設對，實際是根本沒讀到。
+    // 靜靜跳過的備份比沒有備份更危險，因為它看起來像有。
+    for (const f of ["deploy/backup-db.sh", "deploy/backup-uploads.sh"]) {
+      const src = readFileSync(path.join(ROOT, f), "utf8");
+      expect(src, `${f} 沒有從 .env 讀 bucket`).toMatch(
+        /sed -n 's\/\^BACKUP_S3_BUCKET=\/\/p'/,
+      );
+    }
+  });
+
+  it("照片備份不得使用 --delete", () => {
+    // 兩個理由：
+    // ① sweepBatchFullImages 會在檔期結束 30 天後清掉本機大圖（只留縮圖）。
+    //    加了 --delete，S3 上的大圖會跟著消失——但那正是最值得留的。
+    // ② --delete 是備份最經典的自傷：來源目錄哪天掛載失敗或被清空，
+    //    一次同步就把遠端副本一起抹掉。備份只該累加。
+    const src = readFileSync(path.join(ROOT, "deploy/backup-uploads.sh"), "utf8");
+    const code = src.replace(/^\s*#.*$/gm, ""); // 註解裡提到 --delete 是說明，不算
+    expect(code, "備份同步不可以帶 --delete").not.toMatch(/--delete/);
+  });
+
   it("部署的 rsync 把 node_modules 錨定在根目錄", () => {
     // ⚠ rsync 沒有開頭斜線的樣式會在**任何深度**命中。
     // 寫成 --exclude node_modules 會連 .next/node_modules 一起排除，

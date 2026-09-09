@@ -99,11 +99,13 @@ nginx 以 `location ^~ /u/` 直接送這個目錄，**完全不經過 Node**—�
 約 300KB，而且**一次只傳一張**；真的傳不動一定是前端壓縮壞了，不是這個數字太小。
 （有測試守住這個值。）
 
-**⚠ 尚未納入備份。** `backup-db.sh` 只備 SQLite。EBS 掛掉的話商品照片全沒。
-上線前要決定：把 `/var/www/avalo-uploads` 的 `aws s3 sync` 加進那支腳本
-（它已經是 S3-aware，由 `BACKUP_S3_BUCKET` 控制），或明確接受這個風險。
-折衷做法是**只備縮圖**——全站縮圖總量小到可以每日全量上傳，而歷史結單畫面
-只用得到縮圖。
+**備份**由 [backup-uploads.sh](backup-uploads.sh) 每日同步到 S3（見第 5 節）。
+`backup-db.sh` 只管 SQLite，照片是獨立一支——兩者失敗互不影響，log 也分得開。
+
+⚠ 那支**刻意不加 `--delete`**：`sweepBatchFullImages` 會在檔期結束 30 天後
+清掉本機大圖（只留縮圖），加了 `--delete` 遠端的大圖會跟著消失；而且來源目錄
+哪天掛載失敗或被清空，一次同步就會把遠端副本一起抹掉。備份只該累加。
+成本可以忽略：一檔約 28MB，一年不到 1.5GB。
 
 容量參考：一檔連線約 20 件 × 5 張 ≈ 28MB，其中九成是大圖。
 檔期關閉滿 30 天後會自動只清大圖、保留縮圖（約 3MB／檔），回收九成空間。
@@ -332,17 +334,103 @@ sudo systemctl restart avalo
    另建議測一筆維護訂閱授權，確認 `/api/ecpay/period-return` 有收到每期通知。
 6. 停止某客戶訂閱扣款：綠界後台 → 信用卡收單 → 定期定額查詢 → 以 admin 後台顯示的授權單號（gwsr）終止授權。
 
-## 5. 備份（每日 SQLite → S3）
+## 5. 備份（每日 SQLite ＋ 商品照片 → S3）
+
+備份分兩支，各自獨立跑、各自記 log：
+
+| 腳本 | 備什麼 | 保留 |
+|---|---|---|
+| [backup-db.sh](backup-db.sh) | SQLite 一致性快照（`.backup`，WAL 下安全） | 本機 30 份、S3 30 份 |
+| [backup-uploads.sh](backup-uploads.sh) | `/var/www/avalo-uploads` 的商品照片 | S3 只累加、不刪 |
+
+**為什麼照片一定要備**：EBS 掉了，照片就真的沒了——那些商品早就採買、寄給客人，
+不可能重拍。資料庫會留著一堆指向不存在檔案的 `DgImage` 列，前台變成一整片破圖。
+
+### 5.1 AWS 這一側（需要有 AWS 主控台權限的人做一次）
+
+**不要用 access key**，掛 IAM Role 到執行個體——機器上就不會有任何長期憑證。
 
 ```bash
-sudo apt-get install -y awscli
-sudo -u avalo crontab -e
-# 加入（換成你的桶名）：
-# BACKUP_S3_BUCKET=your-backup-bucket
-# 15 3 * * * /opt/avalo/app/deploy/backup-db.sh >> /opt/avalo/backup.log 2>&1
+# 1) 建桶（首爾，與 EC2 同區域；桶名要全球唯一）
+aws s3api create-bucket --bucket avalo-backup-XXXX --region ap-northeast-2 \
+  --create-bucket-configuration LocationConstraint=ap-northeast-2
+
+# 2) 擋掉所有公開存取（備份裡有全部客人的個資）
+aws s3api put-public-access-block --bucket avalo-backup-XXXX \
+  --public-access-block-configuration \
+  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+
+# 3) 開版本控制（誤刪／被加密勒索時還救得回來）
+aws s3api put-bucket-versioning --bucket avalo-backup-XXXX \
+  --versioning-configuration Status=Enabled
 ```
 
-還原：`aws s3 cp s3://bucket/avalo-db/<檔> . && gunzip … && mv 到 prisma/prod.db && systemctl restart avalo`
+IAM 政策（**只給這個桶**，不要用 AmazonS3FullAccess）：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Effect": "Allow", "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::avalo-backup-XXXX" },
+    { "Effect": "Allow", "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::avalo-backup-XXXX/*" }
+  ]
+}
+```
+
+把它做成 Role（信任 `ec2.amazonaws.com`）後掛到執行個體：
+
+```bash
+aws ec2 associate-iam-instance-profile \
+  --instance-id i-080aea2eb044b3149 \
+  --iam-instance-profile Name=avalo-backup-profile
+```
+
+### 5.2 伺服器這一側
+
+```bash
+# aws cli v2（⚠ 不要用 snap 版：snap 拒絕在 HOME 不在 /home 底下時執行，
+# 而 avalo 的家目錄是 /opt/avalo，cron 會直接失敗）
+cd /var/tmp && curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip -q awscliv2.zip && sudo ./aws/install && rm -rf /var/tmp/aws /var/tmp/awscliv2.zip
+
+# 桶名寫進 .env（⚠ 不是寫進 crontab——兩支腳本都會自己讀 .env）
+echo 'BACKUP_S3_BUCKET="avalo-backup-XXXX"' | sudo tee -a /opt/avalo/app/.env
+
+# 照片備份的排程（資料庫那條已經在了）
+sudo -u avalo crontab -e
+# 25 3 * * * /opt/avalo/app/deploy/backup-uploads.sh >> /opt/avalo/backup.log 2>&1
+```
+
+驗證：
+
+```bash
+sudo -u avalo bash -lc '/opt/avalo/app/deploy/backup-db.sh'
+sudo -u avalo bash -lc '/opt/avalo/app/deploy/backup-uploads.sh'
+tail -4 /opt/avalo/backup.log   # 要看到 "local + s3" 與 "uploads backup ok"
+```
+
+### 5.3 還原
+
+```bash
+# 資料庫
+aws s3 cp s3://avalo-backup-XXXX/avalo-db/<檔名>.db.gz /var/tmp/
+gunzip -c /var/tmp/<檔名>.db.gz > /var/tmp/restore.db
+sqlite3 /var/tmp/restore.db "pragma integrity_check;"      # 必須是 ok
+sudo systemctl stop avalo
+sudo -u avalo cp /var/tmp/restore.db /opt/avalo/app/prisma/prod.db
+sudo -u avalo sqlite3 /opt/avalo/app/prisma/prod.db "PRAGMA journal_mode=WAL;"
+sudo systemctl start avalo
+
+# 照片
+sudo aws s3 sync s3://avalo-backup-XXXX/uploads/ /var/www/avalo-uploads/
+sudo chown -R avalo:avalo /var/www/avalo-uploads
+```
+
+⚠ **還原演練要真的做過一次**。沒有驗證過的備份不算備份——
+第一次跑完 5.2 之後，照著 5.3 把資料庫還原到 `/var/tmp/restore.db` 檢查
+`integrity_check` 與筆數，確認真的救得回來再收工。
 
 ## 6. 日常維運
 
@@ -412,6 +500,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 |---|---|
 | `15 3 * * *` `/opt/avalo/run-care-cron.sh` | 打兩支 cron：`/api/cron/care-links` 追回「已上線但維護未授權」的訂單（最多 2 封信），`/api/cron/dunning` 跑欠費催收階梯。log 在 `/opt/avalo/cron-care.log` |
 | `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
+| `25 3 * * *` [backup-uploads.sh](backup-uploads.sh) | 商品照片同步到 S3（只累加，不刪） |
 
 `run-care-cron.sh` 刻意住在 repo 外（`/opt/avalo/`），內容是從 `.env` 讀 `CRON_SECRET`
 再 curl 本機端點——秘密只存在 `.env` 一處，不會跟著 rsync 進 repo。兩支 cron 共用這個腳本：
