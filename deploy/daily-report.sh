@@ -153,6 +153,32 @@ collect() {
     emit backup "$(basename "$backup")"
     emit backup_age_h "$(( ($(date +%s) - $(stat -c %Y "$backup")) / 3600 ))"
   fi
+
+  # ⚠ 上面那兩行只看得到**本機**備份。離線備份（S3）要是哪天靜靜停掉——
+  # IAM Role 被拿掉、桶被改名、政策被收緊——本機備份照跑、報表照樣一片綠，
+  # 而真正防得了 EBS 全掉的那一份已經沒有了。所以這裡直接去問 S3。
+  #
+  # 只讀不寫：抓最新一個物件的日期算出「幾小時前」。
+  # 超過 48 小時就代表至少漏了一天，該進信裡讓人看到。
+  BUCKET=$(sed -n 's/^BACKUP_S3_BUCKET=//p' "$APP/.env" 2>/dev/null | tr -d '"'"'" | head -1)
+  AWSBIN=""
+  for p in /usr/local/bin/aws /snap/bin/aws /usr/bin/aws; do
+    [ -x "$p" ] && AWSBIN="$p" && break
+  done
+  if [ -n "$BUCKET" ] && [ -n "$AWSBIN" ]; then
+    for kind in avalo-db uploads; do
+      last=$("$AWSBIN" s3 ls "s3://$BUCKET/$kind/" --recursive 2>/dev/null \
+        | sort | tail -1 | awk '{print $1" "$2}')
+      if [ -n "$last" ]; then
+        age=$(( ($(date +%s) - $(date -d "$last" +%s 2>/dev/null || echo 0)) / 3600 ))
+        emit "s3_${kind//-/_}_age_h" "$age"
+      else
+        emit "s3_${kind//-/_}_age_h" "MISSING"
+      fi
+    done
+  else
+    emit s3_backup "OFF"
+  fi
 }
 
 # 先落地再送：render 掛掉時還能把原始數據寄出來，

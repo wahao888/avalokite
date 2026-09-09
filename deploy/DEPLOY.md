@@ -352,16 +352,16 @@ sudo systemctl restart avalo
 
 ```bash
 # 1) 建桶（首爾，與 EC2 同區域；桶名要全球唯一）
-aws s3api create-bucket --bucket avalo-backup-XXXX --region ap-northeast-2 \
+aws s3api create-bucket --bucket avalo-backup-amberpick --region ap-northeast-2 \
   --create-bucket-configuration LocationConstraint=ap-northeast-2
 
 # 2) 擋掉所有公開存取（備份裡有全部客人的個資）
-aws s3api put-public-access-block --bucket avalo-backup-XXXX \
+aws s3api put-public-access-block --bucket avalo-backup-amberpick \
   --public-access-block-configuration \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 
 # 3) 開版本控制（誤刪／被加密勒索時還救得回來）
-aws s3api put-bucket-versioning --bucket avalo-backup-XXXX \
+aws s3api put-bucket-versioning --bucket avalo-backup-amberpick \
   --versioning-configuration Status=Enabled
 ```
 
@@ -372,9 +372,9 @@ IAM 政策（**只給這個桶**，不要用 AmazonS3FullAccess）：
   "Version": "2012-10-17",
   "Statement": [
     { "Effect": "Allow", "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::avalo-backup-XXXX" },
+      "Resource": "arn:aws:s3:::avalo-backup-amberpick" },
     { "Effect": "Allow", "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::avalo-backup-XXXX/*" }
+      "Resource": "arn:aws:s3:::avalo-backup-amberpick/*" }
   ]
 }
 ```
@@ -396,7 +396,7 @@ cd /var/tmp && curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zi
 unzip -q awscliv2.zip && sudo ./aws/install && rm -rf /var/tmp/aws /var/tmp/awscliv2.zip
 
 # 桶名寫進 .env（⚠ 不是寫進 crontab——兩支腳本都會自己讀 .env）
-echo 'BACKUP_S3_BUCKET="avalo-backup-XXXX"' | sudo tee -a /opt/avalo/app/.env
+echo 'BACKUP_S3_BUCKET="avalo-backup-amberpick"' | sudo tee -a /opt/avalo/app/.env
 
 # 照片備份的排程（資料庫那條已經在了）
 sudo -u avalo crontab -e
@@ -415,7 +415,7 @@ tail -4 /opt/avalo/backup.log   # 要看到 "local + s3" 與 "uploads backup ok"
 
 ```bash
 # 資料庫
-aws s3 cp s3://avalo-backup-XXXX/avalo-db/<檔名>.db.gz /var/tmp/
+aws s3 cp s3://avalo-backup-amberpick/avalo-db/<檔名>.db.gz /var/tmp/
 gunzip -c /var/tmp/<檔名>.db.gz > /var/tmp/restore.db
 sqlite3 /var/tmp/restore.db "pragma integrity_check;"      # 必須是 ok
 sudo systemctl stop avalo
@@ -424,13 +424,26 @@ sudo -u avalo sqlite3 /opt/avalo/app/prisma/prod.db "PRAGMA journal_mode=WAL;"
 sudo systemctl start avalo
 
 # 照片
-sudo aws s3 sync s3://avalo-backup-XXXX/uploads/ /var/www/avalo-uploads/
+sudo aws s3 sync s3://avalo-backup-amberpick/uploads/ /var/www/avalo-uploads/
 sudo chown -R avalo:avalo /var/www/avalo-uploads
 ```
 
-⚠ **還原演練要真的做過一次**。沒有驗證過的備份不算備份——
-第一次跑完 5.2 之後，照著 5.3 把資料庫還原到 `/var/tmp/restore.db` 檢查
-`integrity_check` 與筆數，確認真的救得回來再收工。
+### 5.4 現況
+
+已於 **2026-09-09** 完成設定並**實際做過還原演練**：
+
+| 檢查 | 結果 |
+|---|---|
+| IAM Role | `avalo-backup-role`（掛在 `i-080aea2eb044b3149`，機器上沒有任何長期憑證） |
+| 權限範圍 | 只有 `avalo-backup-amberpick` 這一個桶；讀其他桶會被拒 |
+| 資料庫還原 | 從 S3 取回 → `integrity_check = ok`，筆數與正式庫一致 |
+| 照片還原 | 36 個檔案全數取回，**逐檔 md5 與正式站完全相同** |
+| 排程驗證 | 兩支腳本都在 **cron 的最小環境**（`PATH=/usr/bin:/bin`、非登入 shell）下跑過 |
+
+⚠ **以後改動備份相關的東西，要重跑一次 5.3 的演練。**
+沒有驗證過的備份不算備份，而它失效的時候不會有任何徵兆。
+每日報表現在會帶 `s3_avalo_db_age_h` 與 `s3_uploads_age_h`——
+數字爬過 48 就代表離線備份至少漏了一天。
 
 ## 6. 日常維運
 
