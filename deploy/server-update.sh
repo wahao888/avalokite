@@ -15,6 +15,17 @@ set -euo pipefail
 
 APP=/opt/avalo/app
 
+# ⚠ 下面第 3 步會**停掉服務**才跑 migrate。set -e 之下，停掉之後到重啟之前
+# 任何一步失敗都會讓站台留在關閉狀態——四個客戶站一起掛掉，而且沒人會知道。
+# 這個 trap 保證不論怎麼中止，服務一定會被拉回來。
+restore_service() {
+  if ! systemctl is-active --quiet avalo; then
+    echo "  ⚠ 部署中止，把服務拉回來（可能是舊版本，請檢查）" >&2
+    sudo systemctl start avalo || true
+  fi
+}
+trap restore_service EXIT
+
 echo "=== 0/5 部署前先備份資料庫 ==="
 sudo -u avalo bash -lc "$APP/deploy/backup-db.sh" || echo "（備份略過：資料庫尚未存在）"
 
@@ -61,7 +72,19 @@ if sudo test -f "$APP/prisma/prod.db"; then
 fi
 
 echo "=== 3/5 Prisma（generate 必跑，再 migrate deploy）==="
+# generate 只讀 schema 檔、不碰資料庫，放在停機之前跑可以縮短中斷時間
 sudo -u avalo bash -lc "cd $APP && npx prisma generate"
+
+# ⚠ migrate deploy 一定要在服務停止的狀態下跑。
+# 2026-09-09 啟用 WAL 之後的第一次部署就踩到：schema engine 需要排他鎖
+# 才能初始化 _prisma_migrations，而跑著的 Next.js 握著連線池 →
+# "SQLite database error: database is locked"，整個部署中止。
+# 那個中止很難察覺：站台還活著（舊程序還在跑），但程式碼已經同步過去、
+# 沒有重啟——磁碟上是新版、記憶體裡是舊版。
+#
+# 順帶好處：不會再出現「舊程式碼配上新 schema」的時間窗。
+# 代價是多幾秒中斷，換的是部署的確定性，划算。
+sudo systemctl stop avalo
 sudo -u avalo bash -lc "cd $APP && npx prisma migrate deploy"
 
 echo "=== 4/5 建置產物 ==="

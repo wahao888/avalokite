@@ -281,6 +281,20 @@ describe("nginx 的上傳相關設定", () => {
     expect(conf).toMatch(/client_max_body_size\s+2m;/);
   });
 
+  it("migrate deploy 前會先停掉服務，且失敗時會把服務拉回來", () => {
+    const src = readFileSync(path.join(ROOT, "deploy/server-update.sh"), "utf8");
+    // 註解裡也提到這兩個指令（檔頭的「部署雷」清單），先剝掉才不會比錯位置
+    const code = src.replace(/^\s*#.*$/gm, "");
+    const stop = code.indexOf("systemctl stop avalo");
+    const migrate = code.indexOf("prisma migrate deploy");
+    // WAL 之下，跑著的 Next.js 握著連線池會讓 schema engine 拿不到排他鎖，
+    // migrate 直接 "database is locked"，部署中止在「磁碟新版、記憶體舊版」。
+    expect(stop, "找不到停服務的步驟").toBeGreaterThan(-1);
+    expect(stop, "停服務必須排在 migrate deploy 之前").toBeLessThan(migrate);
+    // 停掉之後任何失敗都會讓四個客戶站一起掛著，所以一定要有 trap 兜底
+    expect(src, "缺少把服務拉回來的 trap").toMatch(/trap\s+restore_service\s+EXIT/);
+  });
+
   it("備份腳本自己從 .env 讀 BACKUP_S3_BUCKET", () => {
     // ⚠ 這兩支都是 cron 跑的，而 cron **不會載入 .env**。
     // 只看 ${BACKUP_S3_BUCKET:-} 的話，在 .env 設好了也永遠不會生效，
