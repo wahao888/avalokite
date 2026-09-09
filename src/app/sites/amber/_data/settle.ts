@@ -18,7 +18,7 @@
 //   = payableAmount 應收
 //   − paidAmount    實收   →  差額為正＝應補，為負＝應退
 
-import { settlementShipping, type ShipPlan, isShipPlan } from "./shipping";
+import { settlementShipping } from "./shipping";
 
 export const LINE_STATUSES = [
   "ordered",
@@ -231,18 +231,17 @@ export function paidFromLedger(entries: LedgerEntry[]): number {
 // ═══════════════════════════════════════════════════════════════
 
 export type BatchShipping = {
-  /** null / 認不得 → 當作 fixed，用 shippingFee */
-  shipPlan: string | null;
+  /** 這一檔覆寫的運費（0 = 用預設表）。整批都是重物時才設 */
   shippingFee: number;
+  /** 這一檔覆寫的免運門檻（null = 用預設表） */
   freeShippingOver: number | null;
 };
 
 /**
  * 一張結單「照現在的行狀態」該收多少。
  *
- * 運費在這裡才算，因為它依**商品淨額**（缺貨扣掉之後）分級——
- * 那才是真正裝進箱子的東西。用原始金額算會多收客人錢，
- * 用固定值則是她自己吸收差額。
+ * 運費在這裡才算，因為免運門檻看的是**商品淨額**（缺貨扣掉之後）——
+ * 那才是真正裝進箱子的東西。用原始金額判斷會白送一趟運費。
  */
 export function liveSettlement(input: {
   lines: LineForSettle[];
@@ -252,20 +251,25 @@ export function liveSettlement(input: {
   paidAmount?: number;
   /** 她在這張結單上手動改過的運費。給了就以它為準 */
   shippingOverride?: number | null;
+  /**
+   * 取貨方式。運費與免運門檻都看它：超商 $60／滿 3,500 免運，
+   * 宅配 $120／滿 5,000 免運。
+   * ⚠ 來自訂單快照（DgOrder.shipKind），不是檔期的屬性。
+   */
+  shipKind?: string | null;
 }): SettleTotals {
   // 先算一次不含運費的，拿到商品淨額
   const base = settleTotals({ lines: input.lines });
   const goodsNet = base.grossAmount - base.deductAmount;
 
-  const plan: ShipPlan = isShipPlan(input.batch.shipPlan) ? input.batch.shipPlan : "fixed";
   const shippingFee =
     input.shippingOverride != null
       ? input.shippingOverride
       : settlementShipping({
-          plan,
+          shipKind: input.shipKind,
           goodsNet,
-          fixedFee: input.batch.shippingFee,
-          freeOver: input.batch.freeShippingOver,
+          batchFee: input.batch.shippingFee,
+          batchFreeOver: input.batch.freeShippingOver,
         });
 
   return settleTotals({
@@ -299,11 +303,21 @@ export function refundDueAfterFreeze(input: {
 /**
  * 一張結單該顯示的金額。所有頁面都走這一支，才不會有的算含運費、有的不含。
  *
- * 未結單（open）→ 依現在的行狀態即時算，運費依商品淨額自動分級。
+ * 未結單（open）→ 依現在的行狀態即時算，運費依取貨方式與商品淨額自動判斷。
  * 已結單 → 用凍結進資料庫的那一份：那是**通知給客人的數字**，
  *          不能因為之後標了缺貨就自己變小，否則客人手上那張對不起來。
  *          缺貨造成的差額由 refundDueAfterFreeze 另外算，明白地擺出來。
  */
+/**
+ * 這張結單的取貨方式：以**最後一筆訂單**為準（客人可能中途改過）。
+ *
+ * ⚠ 這個規則必須跟 /s 頁顯示收件資料的規則一致（那裡也是 orders.at(-1)）——
+ * 畫面上寫「7-11 取貨」卻按宅配收 $120，是客人一定會抓到的錯。
+ */
+export const settlementShipKind = (
+  orders: { shipKind: string }[],
+): string | null => orders.at(-1)?.shipKind ?? null;
+
 export function settlementTotalsFor(s: {
   status: string;
   shippingFee: number;
@@ -315,11 +329,14 @@ export function settlementTotalsFor(s: {
   payableAmount: number;
   batch: BatchShipping;
   lines: LineForSettle[];
+  /** 取貨方式（來自訂單快照）。決定運費與免運門檻 */
+  shipKind?: string | null;
 }): SettleTotals {
   if (!isFrozen(s.status as SettlementStatus)) {
     return liveSettlement({
       lines: s.lines,
       batch: s.batch,
+      shipKind: s.shipKind,
       adjustAmount: s.adjustAmount,
       creditApplied: s.creditApplied,
       paidAmount: s.paidAmount,

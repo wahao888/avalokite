@@ -9,6 +9,7 @@ import { twd } from "../../_data/cart";
 import {
   settleTotals,
   settlementTotalsFor,
+  settlementShipKind,
   settleLine,
   LINE_STATUS_ZH,
   SETTLEMENT_STATUS_ZH,
@@ -57,6 +58,7 @@ export default async function SettlementPage({
   const lines = s.orders.flatMap((o) => o.lines);
   const totals = settlementTotalsFor({
       ...s,
+      shipKind: settlementShipKind(s.orders),
       lines: lines.map((l) => ({
         unitPrice: l.unitPrice,
         qty: l.qty,

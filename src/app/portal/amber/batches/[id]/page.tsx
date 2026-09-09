@@ -15,7 +15,6 @@ import { thumbUrl } from "@/lib/media-url";
 import { ShareBatch } from "../../../_components/ShareBatch";
 import { batchOpenText, deadlineReminderText } from "@/app/sites/amber/_data/notify-text";
 import { tenantOrigin } from "@/lib/tenants";
-import { SHIP_PLANS, SHIP_PLAN_ZH, cvsShippingFee, isShipPlan } from "@/app/sites/amber/_data/shipping";
 import LoginForm from "../../../LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -229,40 +228,22 @@ export default async function BatchPage({
         <input type="hidden" name="action" value="settings" />
         <input type="hidden" name="id" value={batch.id} />
         <div className="p-dg-field">
-          <label htmlFor="s-plan">運費方案</label>
-          <select id="s-plan" name="shipPlan" defaultValue={batch.shipPlan ?? "fixed"}>
-            {SHIP_PLANS.map((k) => (
-              <option key={k} value={k}>
-                {SHIP_PLAN_ZH[k]}
-              </option>
-            ))}
-          </select>
-          {isShipPlan(batch.shipPlan) && batch.shipPlan !== "fixed" && (
-            <p className="p-dg-hint">
-              目前級距：
-              {[1000, 2000, 3000, 4000, 5000]
-                .map((v) => `${v / 1000}千以內 ${cvsShippingFee(batch.shipPlan as never, v)}`)
-                .join("／")}
-              。依<strong>實際裝箱金額</strong>（缺貨扣掉之後）計算。
-            </p>
-          )}
-        </div>
-
-        <div className="p-dg-field">
-          <label htmlFor="s-ship">固定運費（元）</label>
+          <label htmlFor="s-ship">這一檔的運費（元，0 = 用預設）</label>
           <input
             id="s-ship"
             type="text"
             inputMode="numeric"
             name="shippingFee"
-            defaultValue={batch.shippingFee}
+            defaultValue={batch.shippingFee || ""}
           />
           <p className="p-dg-hint">
-            只有「固定金額」方案會用到。同一位客人這一檔下幾次單，運費都只收一次。
+            預設就是她的公告費率：<strong>超商 $60（滿 3,500 免運）、宅配 $120（滿 5,000 免運）</strong>，
+            系統依客人選的取貨方式自動套用。下面兩欄留空就好——
+            只有整批是重物（例如鑄鐵鍋）需要另外收費時才填。
           </p>
         </div>
         <div className="p-dg-field">
-          <label htmlFor="s-free">滿額免運（元）</label>
+          <label htmlFor="s-free">這一檔的免運門檻（元，留空 = 用預設）</label>
           <input
             id="s-free"
             type="text"

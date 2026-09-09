@@ -59,11 +59,9 @@ import { CATEGORIES, isCategoryKey, categoryName } from "@/app/sites/amber/_data
 import { lineShareUrl, keepForMeText, LINE_TEXT_MAX } from "@/lib/line-share";
 import { shortOrderCode, orderCodeInput, makeOrderId } from "@/lib/shop-order-id";
 import {
-  cvsShippingFee,
+  SHIPPING,
   settlementShipping,
-  shippingTier,
-  isExtrapolatedTier,
-  isShipPlan,
+  amountToFreeShipping,
 } from "@/app/sites/amber/_data/shipping";
 import {
   settlementRequestText,
@@ -1034,54 +1032,61 @@ describe("LINE 分享連結", () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// 7-11 交貨便運費
+// 運費
 //
-// 這一組守的是「她會不會少收運費」。7-11 依申報價值分級，
-// 固定收 60 的話，一單 4,300 就少收 40——那是她自己吸收。
+// 客戶 2026-09-09 公告的實際費率：
+//     超商（7-11／全家）$60，滿 3,500 免運
+//     宅配              $120，滿 5,000 免運
+//
+// ⚠ 這一組守的是「客人看到的數字」與「系統收的數字」一致。
+// 之前系統照 7-11 公開費率分級算（60–100），但她對外收的是固定價——
+// 一單 4,300 會被多收 40，那是客人一定會抓到的錯。
 // ────────────────────────────────────────────────────────────
-describe("交貨便運費級距", () => {
-  it("一般交貨便：每滿 1,000 元跳一級，60 起 +10", () => {
-    expect(cvsShippingFee("standard", 1)).toBe(60);
-    expect(cvsShippingFee("standard", 1000)).toBe(60);
-    expect(cvsShippingFee("standard", 1001)).toBe(70);
-    expect(cvsShippingFee("standard", 2000)).toBe(70);
-    expect(cvsShippingFee("standard", 2001)).toBe(80);
-    expect(cvsShippingFee("standard", 3500)).toBe(90);
-    expect(cvsShippingFee("standard", 5000)).toBe(100);
+describe("運費費率", () => {
+  it("超商 60、宅配 120", () => {
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 500 })).toBe(60);
+    expect(settlementShipping({ shipKind: "home", goodsNet: 500 })).toBe(120);
   });
 
-  it("經濟交貨便：同級距，55 起", () => {
-    expect(cvsShippingFee("economy", 800)).toBe(55);
-    expect(cvsShippingFee("economy", 4300)).toBe(95);
+  it("免運門檻依取貨方式不同", () => {
+    // 超商 3,500
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 3499 })).toBe(60);
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 3500 })).toBe(0);
+    // 宅配 5,000——同樣是 3,500 的訂單，宅配還是要收
+    expect(settlementShipping({ shipKind: "home", goodsNet: 3500 })).toBe(120);
+    expect(settlementShipping({ shipKind: "home", goodsNet: 5000 })).toBe(0);
   });
 
-  it("級距邊界：正好 1,000 還在第一級，1,001 才跳", () => {
-    expect(shippingTier(1000)).toBe(1);
-    expect(shippingTier(1001)).toBe(2);
+  it("認不得的取貨方式當超商——猜錯寧可少收，不要多收客人錢", () => {
+    expect(settlementShipping({ shipKind: null, goodsNet: 500 })).toBe(60);
+    expect(settlementShipping({ shipKind: "typo", goodsNet: 500 })).toBe(60);
   });
 
-  it("0 元與負數當第一級，不會算出負運費或 NaN", () => {
-    expect(cvsShippingFee("standard", 0)).toBe(60);
-    expect(cvsShippingFee("standard", -100)).toBe(60);
-    expect(cvsShippingFee("standard", NaN)).toBe(60);
+  it("⚠ 全部缺貨就沒有包裹，運費是 0", () => {
+    // 少了這一行，一位所有商品都沒買到的客人還是會被收運費——
+    // 而她已經先付過款，那筆錢就是實實在在多收的。
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 0 })).toBe(0);
+    expect(settlementShipping({ shipKind: "home", goodsNet: -50 })).toBe(0);
   });
 
-  it("超過公開費率表（5,000）會標記出來，讓她自己確認", () => {
-    expect(isExtrapolatedTier(5000)).toBe(false);
-    expect(isExtrapolatedTier(5001)).toBe(true);
-    // 往上推的規律不變，寧可算高一點——少收才是她自己吸收
-    expect(cvsShippingFee("standard", 6000)).toBe(110);
+  it("檔期可以覆寫運費與門檻（整批重物時用）", () => {
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 500, batchFee: 200 })).toBe(200);
+    // 覆寫門檻之後，預設的 3,500 不再適用
+    expect(
+      settlementShipping({ shipKind: "cvs", goodsNet: 3500, batchFreeOver: 8000 }),
+    ).toBe(60);
   });
 
-  it("固定金額方案回傳她填的數字", () => {
-    expect(cvsShippingFee("fixed", 4300, 80)).toBe(80);
-    expect(cvsShippingFee("fixed", 4300)).toBe(0);
+  it("費率表就是客戶公告的數字", () => {
+    // 這條是刻意的重複：費率改動必須是有意識的行為，不能順手改掉
+    expect(SHIPPING.cvs).toEqual({ fee: 60, freeOver: 3500 });
+    expect(SHIPPING.home).toEqual({ fee: 120, freeOver: 5000 });
   });
 
-  it("方案守衛", () => {
-    expect(isShipPlan("standard")).toBe(true);
-    expect(isShipPlan("nope")).toBe(false);
-    expect(isShipPlan(null)).toBe(false);
+  it("amountToFreeShipping 算得出「再買多少免運」", () => {
+    expect(amountToFreeShipping({ shipKind: "cvs", goodsNet: 3000 })).toBe(500);
+    expect(amountToFreeShipping({ shipKind: "cvs", goodsNet: 3500 })).toBe(0);
+    expect(amountToFreeShipping({ shipKind: "home", goodsNet: 3000 })).toBe(2000);
   });
 });
 
@@ -1089,25 +1094,39 @@ describe("結單運費", () => {
   it("⚠ 滿額免運看的是商品淨額，不是原始金額", () => {
     // REKAT 的免運門檻踩過同一個坑：用原始金額判斷會白送一趟運費。
     // 訂 2,500 但缺貨剩 1,800，門檻 2,000 → 這時候該收運費。
-    expect(settlementShipping({ plan: "standard", goodsNet: 1800, freeOver: 2000 })).toBe(70);
-    expect(settlementShipping({ plan: "standard", goodsNet: 2000, freeOver: 2000 })).toBe(0);
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 1800, batchFreeOver: 2000 })).toBe(60);
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 2000, batchFreeOver: 2000 })).toBe(0);
   });
 
-  it("沒有設免運門檻就一律算運費", () => {
-    // 9,999 落在第 10 級：60 + 9×10 = 150（我第一次寫成 160，被這條抓到）
-    expect(settlementShipping({ plan: "standard", goodsNet: 9999, freeOver: null })).toBe(150);
+  it("門檻留空就用預設表，不是「沒有門檻」", () => {
+    // batchFreeOver 為 null = 沿用該取貨方式的預設門檻，不是不免運
+    expect(settlementShipping({ shipKind: "cvs", goodsNet: 9999, batchFreeOver: null })).toBe(0);
+    expect(settlementShipping({ shipKind: "home", goodsNet: 9999, batchFreeOver: null })).toBe(0);
   });
 
-  it("運費依商品淨額分級——缺貨之後箱子變輕，運費也該降", () => {
+  it("⚠ 免運看的是缺貨扣掉之後的淨額——箱子變輕就不該再免運", () => {
+    // 訂 3,600（超商本來免運），但缺了一件剩 3,000 → 掉到門檻以下，運費照收
     const full = liveSettlement({
-      lines: [{ unitPrice: 2200, qty: 1, amount: 2200, gotQty: null, status: "ordered" }],
-      batch: { shipPlan: "standard", shippingFee: 0, freeShippingOver: null },
+      lines: [{ unitPrice: 3600, qty: 1, amount: 3600, gotQty: null, status: "ordered" }],
+      batch: { shippingFee: 0, freeShippingOver: null },
+      shipKind: "cvs",
     });
-    expect(full.shippingFee).toBe(80); // 2,200 → 第 3 級
+    expect(full.shippingFee).toBe(0);
+
+    const partial = liveSettlement({
+      lines: [
+        { unitPrice: 3000, qty: 1, amount: 3000, gotQty: null, status: "ordered" },
+        { unitPrice: 600, qty: 1, amount: 600, gotQty: 0, status: "oos" },
+      ],
+      batch: { shippingFee: 0, freeShippingOver: null },
+      shipKind: "cvs",
+    });
+    expect(partial.shippingFee).toBe(60);
 
     const shorted = liveSettlement({
       lines: [{ unitPrice: 2200, qty: 1, amount: 2200, gotQty: 0, status: "oos" }],
-      batch: { shipPlan: "standard", shippingFee: 0, freeShippingOver: null },
+      batch: { shippingFee: 0, freeShippingOver: null },
+      shipKind: "cvs",
     });
     // ⚠ 全部缺貨 = 沒有包裹要寄 = 運費 0。
     // 少了這條，客人所有商品都沒買到卻還是被收 60 元運費，
@@ -1115,18 +1134,19 @@ describe("結單運費", () => {
     expect(shorted.shippingFee).toBe(0);
   });
 
-  it("固定金額方案不受金額影響", () => {
+  it("檔期覆寫的運費會蓋過預設表", () => {
     const t = liveSettlement({
-      lines: [{ unitPrice: 4300, qty: 1, amount: 4300, gotQty: null, status: "ordered" }],
-      batch: { shipPlan: "fixed", shippingFee: 65, freeShippingOver: null },
+      lines: [{ unitPrice: 1000, qty: 1, amount: 1000, gotQty: null, status: "ordered" }],
+      batch: { shippingFee: 200, freeShippingOver: null },
+      shipKind: "cvs",
     });
-    expect(t.shippingFee).toBe(65);
+    expect(t.shippingFee).toBe(200);
   });
 
   it("她手動改過的運費最優先", () => {
     const t = liveSettlement({
       lines: [{ unitPrice: 4300, qty: 1, amount: 4300, gotQty: null, status: "ordered" }],
-      batch: { shipPlan: "standard", shippingFee: 0, freeShippingOver: null },
+      batch: { shippingFee: 0, freeShippingOver: null },
       shippingOverride: 0,
     });
     expect(t.shippingFee).toBe(0);
@@ -1140,33 +1160,35 @@ describe("結單後的缺貨退款", () => {
   const batch = { shipPlan: "standard", shippingFee: 0, freeShippingOver: null };
 
   it("客戶的流程是「匯款 → 採買」，所以缺貨一定發生在收完錢之後", () => {
-    // 結單時：兩件都還沒採購，預估 2 × 1,200 = 2,400 + 運費 80
+    // 結單時：兩件都還沒採購，預估 2 × 1,200 = 2,400 + 超商運費 60
     const atFreeze = liveSettlement({
       lines: [
         { unitPrice: 1200, qty: 1, amount: 1200, gotQty: null, status: "ordered" },
         { unitPrice: 1200, qty: 1, amount: 1200, gotQty: null, status: "ordered" },
       ],
       batch,
+      shipKind: "cvs",
     });
-    expect(atFreeze.payableAmount).toBe(2480);
+    expect(atFreeze.payableAmount).toBe(2460);
 
-    // 採購後：一件缺貨。淨額剩 1,200 → 運費也降到 70
+    // 採購後：一件缺貨。運費不變（還是要寄一個包裹），只有商品金額少了
     const afterBuying = liveSettlement({
       lines: [
         { unitPrice: 1200, qty: 1, amount: 1200, gotQty: null, status: "bought" },
         { unitPrice: 1200, qty: 1, amount: 1200, gotQty: 0, status: "oos" },
       ],
       batch,
+      shipKind: "cvs",
     });
-    expect(afterBuying.payableAmount).toBe(1270);
+    expect(afterBuying.payableAmount).toBe(1260);
 
-    // 應退 = 已通知的金額 − 現在該收的
+    // 應退 = 已通知的金額 − 現在該收的 = 缺掉的那 1,200
     expect(
       refundDueAfterFreeze({
         frozenPayable: atFreeze.payableAmount,
         currentPayable: afterBuying.payableAmount,
       }),
-    ).toBe(1210);
+    ).toBe(1200);
   });
 
   it("⚠ 整張單都缺貨時要連運費一起退——那個包裹根本不存在", () => {

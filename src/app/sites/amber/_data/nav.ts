@@ -55,7 +55,7 @@ export const FEATURES = [
   {
     icon: "box",
     title: "合併結單，運費收一次",
-    body: "同一檔連線內下幾次單都會併成一張出貨單，運費只算一次。",
+    body: "同一檔連線內下幾次單都會併成一張出貨單，運費只算一次；超商滿 3,500、宅配滿 5,000 免運。",
   },
 ] as const;
 
@@ -64,5 +64,5 @@ export const TRUST_CHIPS = [
   { icon: "globe", label: "各國正品代購" },
   { icon: "tag", label: "售價已含代購費" },
   { icon: "box", label: "合併結單運費一次" },
-  { icon: "store", label: "7-11 交貨便" },
+  { icon: "store", label: "超商 / 宅配" },
 ] as const;

@@ -127,7 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
             <span>
               <IconStore size={15} stroke={1.9} />
-              7-11 交貨便
+              超商・宅配
             </span>
           </p>
 

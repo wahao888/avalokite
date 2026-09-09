@@ -14,6 +14,7 @@ import {
 import { parseTaipeiLocalInput } from "@/lib/tw-time";
 import {
   liveSettlement,
+  settlementShipKind,
   memberCredit,
   creditToApply,
   isSettlementStatus,
@@ -68,11 +69,18 @@ export async function POST(req: NextRequest) {
       status: l.status as LineItemStatus,
     }));
 
-    // 運費依 7-11 交貨便的申報價值級距自動算（依商品淨額，也就是真正裝箱的東西）。
-    // 固定金額的檔期則沿用她填的數字。
-    const before = liveSettlement({ lines: asLines, batch: s.batch });
+    // 運費依**客人選的取貨方式**算：超商 $60（滿 3,500 免運）、
+    // 宅配 $120（滿 5,000 免運）。門檻看的是商品淨額，也就是真正裝箱的東西——
+    // 用原始金額判斷免運會白送一趟運費。
+    const shipKind = settlementShipKind(s.orders);
+    const before = liveSettlement({ lines: asLines, batch: s.batch, shipKind });
     const applied = creditToApply(available, before.payableAmount);
-    const totals = liveSettlement({ lines: asLines, batch: s.batch, creditApplied: applied });
+    const totals = liveSettlement({
+      lines: asLines,
+      batch: s.batch,
+      shipKind,
+      creditApplied: applied,
+    });
 
     const ok = await freezeSettlement(tenant.slug, id, {
       grossAmount: totals.grossAmount,

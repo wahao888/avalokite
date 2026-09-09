@@ -8,6 +8,7 @@ import { lookupForCustomer } from "@/lib/daigou-data";
 import { normalizePhone } from "@/app/sites/amber/_data/member";
 import {
   settlementTotalsFor,
+  settlementShipKind,
   LINE_STATUS_ZH,
   type LineItemStatus,
 } from "@/app/sites/amber/_data/settle";
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
     const lines = s.orders.flatMap((o) => o.lines);
     const totals = settlementTotalsFor({
       ...s,
+      shipKind: settlementShipKind(s.orders),
       lines: lines.map((l) => ({
         unitPrice: l.unitPrice,
         qty: l.qty,

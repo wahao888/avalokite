@@ -7,6 +7,7 @@ import { twd } from "@/app/sites/amber/_data/cart";
 import {
   settleTotals,
   liveSettlement,
+  settlementShipKind,
   refundDueAfterFreeze,
   settleLine,
   memberCredit,
@@ -78,6 +79,7 @@ export default async function SettlementDetail({
     : liveSettlement({
         lines: forSettle,
         batch: s.batch,
+        shipKind: settlementShipKind(s.orders),
         adjustAmount: s.adjustAmount,
         creditApplied: s.creditApplied,
         paidAmount: s.paidAmount,
@@ -93,6 +95,7 @@ export default async function SettlementDetail({
         currentPayable: liveSettlement({
           lines: forSettle,
           batch: s.batch,
+          shipKind: settlementShipKind(s.orders),
           adjustAmount: s.adjustAmount,
           creditApplied: s.creditApplied,
         }).payableAmount,

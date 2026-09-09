@@ -152,7 +152,7 @@ export default async function Home({
               )}
               <span>
                 <IconStore size={16} stroke={1.8} />
-                7-11 交貨便寄送
+                超商 60・宅配 120
               </span>
             </div>
           </div>

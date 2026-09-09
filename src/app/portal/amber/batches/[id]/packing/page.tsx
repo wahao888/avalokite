@@ -6,6 +6,7 @@ import {
   settleLine,
   settleTotals,
   settlementTotalsFor,
+  settlementShipKind,
   SETTLEMENT_STATUS_ZH,
   type LineItemStatus,
   type SettlementStatus,
@@ -73,6 +74,7 @@ export default async function PackingPage({
 
           const totals = settlementTotalsFor({
       ...r,
+      shipKind: settlementShipKind(r.orders),
       lines: lines.map((l) => ({
         unitPrice: l.unitPrice,
         qty: l.qty,

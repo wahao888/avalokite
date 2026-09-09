@@ -82,26 +82,28 @@ export default function HowPage() {
           運費
         </h2>
         <p>
-          寄送方式是 <strong>7-ELEVEN 交貨便</strong>（{SHIP_KIND_ZH.cvs}）。
-          運費依包裹的申報金額分級，每滿 1,000 元跳一級：
+          運費依你選的取貨方式計算，<strong>一律先付款</strong>：
         </p>
         <div className="am-tablewrap">
           <table className="am-table">
             <thead>
               <tr>
-                <th>包裹金額</th>
+                <th>取貨方式</th>
                 <th>運費</th>
+                <th>免運門檻</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>1 – 1,000 元</td><td>60 元</td></tr>
-              <tr><td>1,001 – 2,000 元</td><td>70 元</td></tr>
-              <tr><td>2,001 – 3,000 元</td><td>80 元</td></tr>
-              <tr><td>3,001 – 4,000 元</td><td>90 元</td></tr>
-              <tr><td>4,001 – 5,000 元</td><td>100 元</td></tr>
+              <tr><td>7-ELEVEN 取貨</td><td>60 元</td><td>滿 3,500 元免運</td></tr>
+              <tr><td>全家取貨</td><td>60 元</td><td>滿 3,500 元免運</td></tr>
+              <tr><td>宅配到府</td><td>120 元</td><td>滿 5,000 元免運</td></tr>
             </tbody>
           </table>
         </div>
+        <p>
+          免運門檻看的是<strong>實際出貨的商品金額</strong>——
+          如果有品項缺貨被扣掉、金額掉到門檻以下，運費就會照收。
+        </p>
         <div className="am-callout">
           <IconInfo size={19} stroke={1.8} />
           <p>
