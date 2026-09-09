@@ -6,7 +6,6 @@ import { FREE_SHIPPING_OVER, twd, WHOLE_BEAN_ONLY } from "../_data/shop";
 import { RK } from "../_data/site";
 import { useCart } from "./CartProvider";
 import BeanArt from "./BeanArt";
-import BundleRows, { BundleHint } from "./BundleRows";
 
 /** 購物車完整頁。抽屜適合「順手看一眼」，這頁適合「認真整理一下再結帳」。 */
 export default function CartPage() {
@@ -50,7 +49,6 @@ export default function CartPage() {
                   NO.{String(bean.no).padStart(2, "0")}・{twd(l.unitPrice)} / 半磅 227g
                 </div>
 
-                {bean.bundle && <BundleHint line={l} bean={bean} />}
 
                 <div className="rk-line__ctl">
                   <div className="rk-qty">
@@ -94,12 +92,7 @@ export default function CartPage() {
 
         <div className="rk-sum">
           <div>
-            <span>品項定價（{totals.count} 包）</span>
-            <b>{twd(totals.listTotal)}</b>
-          </div>
-          <BundleRows bundles={totals.bundles} />
-          <div>
-            <span>小計</span>
+            <span>品項小計（{totals.count} 包）</span>
             <b>{twd(totals.subtotal)}</b>
           </div>
           <div>

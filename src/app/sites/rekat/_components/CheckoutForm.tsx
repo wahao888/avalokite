@@ -16,7 +16,6 @@ import { RK, SITE } from "../_data/site";
 import CopyField from "./CopyField";
 import LineButton from "./LineButton";
 import { useCart } from "./CartProvider";
-import BundleRows from "./BundleRows";
 
 type Done = { id: string; total: number; payment: PaymentKey };
 
@@ -298,12 +297,7 @@ export default function CheckoutForm() {
 
         <div className="rk-sum" style={{ marginTop: 16 }}>
           <div>
-            <span>品項定價</span>
-            <b>{twd(totals.listTotal)}</b>
-          </div>
-          <BundleRows bundles={totals.bundles} />
-          <div>
-            <span>小計</span>
+            <span>品項小計</span>
             <b>{twd(totals.subtotal)}</b>
           </div>
           <div>

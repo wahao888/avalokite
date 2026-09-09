@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getBean } from "../_data/beans";
-import { twd } from "../_data/shop";
 import { useCart } from "./CartProvider";
 
 /**
@@ -36,11 +35,6 @@ export default function CardAddButton({ slug, soldOut = false }: { slug: string;
 
   return (
     <div className="rk-cardbuy">
-      {bean.bundle && (
-        <span className="rk-cardbuy__promo">
-          {bean.bundle.label} {twd(bean.bundle.price)}
-        </span>
-      )}
       <button
         type="button"
         className={`rk-btn rk-btn--sm ${hit ? "rk-btn--accent" : "rk-btn--solid"}`}

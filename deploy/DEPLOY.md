@@ -180,7 +180,9 @@ REKAT ROASTERY 首次部署的額外步驟（只做一次）：
 3. certbot `--expand`（domains.txt 已加 `rekat.avalokite.xyz`）。
 4. **上線前務必先跟客戶核對匯款銀行帳號**（`src/app/sites/rekat/_data/shop.ts` 的 `BANK`）。
    留空時前台會退成「我們會與您聯絡提供帳號」，不會顯示假帳號，但客人也就無法自助付款。
-   運費（160／滿 2000 免運／貨到付款免手續費）與地址已於 2026-09-02 客戶確認。
+   運費（100／滿 2000 免運／貨到付款免手續費）與地址已客戶確認。
+   註：紙本豆單有「三包」整組優惠價，但**線上商店刻意不提供任何折扣**
+   （客戶 2026-09-09 指示），所以 `priceCart()` 沒有折抵邏輯，這不是漏掉。
 5. 內容定稿、店家確認可對外後，再把 `tenants.ts` 的 `indexable` 與
    `_data/site.ts` 的 `INDEXABLE` 一起改 `true`。
 
@@ -190,7 +192,7 @@ REKAT ROASTERY 首次部署的額外步驟（只做一次）：
 | --- | --- | --- | --- |
 | 某支售完／補貨／暫時下架 | 店家自己 | `/portal/beans` 選狀態按儲存 | 立即 |
 | 官網公告一句話 | 店家自己 | 同上，表單最下方 | 立即 |
-| 換整份豆單（新品項、改價、改優惠） | Avalo | 改 `_data/beans.ts`＋`site.ts` 的 `listVersion`＋`tests/rekat-shop.test.ts` 的 `SHEET` 對照表，部署 | 部署後 |
+| 換整份豆單（新品項、改價） | Avalo | 改 `_data/beans.ts`＋`site.ts` 的 `listVersion`＋`tests/rekat-shop.test.ts` 的 `SHEET` 對照表，部署 | 部署後 |
 
 為什麼售價不開放後台改：`priceCart()` 是前後台共用的**同步**純函式，客人的瀏覽器要能
 自己算出跟伺服器一樣的金額，這才讓「前端偽造價格無效」在結構上成立。把售價搬進資料庫

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { listBeans, priceRange, PROCESS, UNIT_LABEL, type ProcessKey } from "../_data/beans";
 import type { FamilyKey } from "../_data/flavor-wheel";
 import { FAMILY } from "../_data/flavor-wheel";
-import { BUNDLE_NOTE, LIST_NOTE, SITE } from "../_data/site";
+import { LIST_NOTE, SITE } from "../_data/site";
 import { twd } from "../_data/shop";
 import { getStock, stockProps, visibleBeans } from "../_data/stock";
 import BeanBrowser from "../_components/BeanBrowser";
@@ -67,8 +67,6 @@ export default async function BeansPage({
       />
 
       <p className="rk-caveat" style={{ marginTop: 34, marginBottom: 20 }}>
-        {BUNDLE_NOTE}
-        <br />
         {LIST_NOTE}　單位：{UNIT_LABEL}。
       </p>
     </div>

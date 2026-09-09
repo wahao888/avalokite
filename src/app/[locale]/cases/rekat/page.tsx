@@ -40,7 +40,7 @@ const C = {
       steps: [
         { t: "用風味輪找方向", d: "點內圈的九大家族，展開第二層描述詞，再直接跳到「本期有幾支這個調性」" },
         { t: "在單品頁確認", d: "批次卡式的規格表、風味輪廓圖、烘焙度刻度與該支的沖煮參數，一頁看完" },
-        { t: "加入購物車結帳", d: "半磅裝、三包優惠自動套用，匯款或貨到付款，出貨前可線上回報末五碼" },
+        { t: "加入購物車結帳", d: "半磅裝原豆，匯款或貨到付款，轉帳後可線上回報帳號末五碼供核帳" },
       ],
     },
     arch: {
@@ -63,7 +63,7 @@ const C = {
         { t: "研磨粗細對照", d: "「中細研磨，砂糖顆粒大小」對沒磨過豆子的人沒有畫面。改成五塊同面積、同密度、只有顆粒大小在變的取樣圖，差距用眼睛就量得出來。" },
         { t: "手繪的咖啡帶地圖", d: "視野裁在西經 162° 到東經 115°，剛好裝下從夏威夷可娜到蘇門答臘林東的九個產地。不嵌第三方地圖，避免在頁面上戳出一塊別人的視覺。" },
         { t: "金額只有一個真實來源", d: "計價是前後台共用的同一支純函式，購物車只存品項與數量、不存價格。前端送來的任何金額欄位一律忽略，伺服器重算——「改 devtools 拿便宜」在結構上不成立。" },
-        { t: "三包優惠看得懂", d: "每一行維持「數量 × 單價」的直接乘法，優惠另外列一條減項，客人拿網頁對紙本豆單每一格都對得起來。免運門檻也是看折抵後的金額。" },
+        { t: "售完的豆子擋在伺服器", d: "店家標為售完之後，前台不只是把按鈕變灰——後端收單時會再擋一次並回報是哪一支。客人的購物車可能是幾天前加的，那時候還有貨。" },
         { t: "資料誠實性有測試在守", d: "豆單的品名與售價逐列釘在測試裡，改錯會在 CI 紅起來；產區背景標明是公開資料整理、非批次卡；風味輪廓圖明講不是杯測分數。" },
       ],
     },
@@ -103,7 +103,7 @@ const C = {
       steps: [
         { t: "Find a direction", d: "Click a family on the flavour wheel, open the second ring, jump straight to the coffees in that register" },
         { t: "Confirm on the product page", d: "A batch-card spec table, a flavour profile chart, a roast scale and brewing parameters — all on one screen" },
-        { t: "Add to cart and check out", d: "Half-pound bags, three-bag pricing applied automatically, transfer or cash on delivery" },
+        { t: "Add to cart and check out", d: "Half-pound bags of whole beans, bank transfer or cash on delivery, with a form to report the transfer afterwards" },
       ],
     },
     arch: {
@@ -126,7 +126,7 @@ const C = {
         { t: "Grind size you can measure by eye", d: "\"Medium-fine, like table sugar\" means nothing if you've never ground coffee. Five swatches, same area, same density, only particle size changes." },
         { t: "A hand-drawn coffee belt", d: "Cropped to 162°W–115°E, which is exactly what it takes to hold all nine origins from Kona to Lintong. No third-party map embed punching someone else's visual language into the page." },
         { t: "One source of truth for money", d: "Pricing is a single pure function shared by browser and server; the cart stores items and quantities, never prices. Any amount sent from the client is ignored and recomputed — tampering in devtools is structurally impossible." },
-        { t: "Legible bundle discounts", d: "Every line stays a plain quantity × price multiplication, with the discount as its own deduction — so the screen reconciles against the printed price list cell by cell." },
+        { t: "Sold-out enforced server-side", d: "When the shop marks a coffee sold out, the front end doesn't just grey out a button — the order endpoint rejects it too, naming the item. A customer's cart may have been filled days ago, when it was still in stock." },
         { t: "Honesty enforced by tests", d: "Names and prices are pinned row by row in the test suite; origin background is labelled as public research rather than batch data; the flavour chart states plainly that it isn't a cupping score." },
       ],
     },

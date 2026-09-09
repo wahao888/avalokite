@@ -32,7 +32,7 @@ const mono = DM_Mono({
 const ORIGIN = tenantOrigin(getTenant("rekat")!);
 
 const DESCRIPTION =
-  "REKAT ROASTERY 日卡地自然農莊，台東鹿野的自家烘焙咖啡。烘豆師王龍三十年資歷，以淺焙為主，選用夏威夷可娜、巴拿馬藝伎、牙買加藍山、蘇門答臘曼特寧等高階生豆。線上訂購半磅裝原豆，三包另有優惠。";
+  "REKAT ROASTERY 日卡地自然農莊，台東鹿野的自家烘焙咖啡。烘豆師王龍三十年資歷，以淺焙為主，選用夏威夷可娜、巴拿馬藝伎、牙買加藍山、蘇門答臘曼特寧等高階生豆。線上訂購半磅裝原豆，全台宅配。";
 
 export const metadata: Metadata = {
   metadataBase: new URL(ORIGIN),

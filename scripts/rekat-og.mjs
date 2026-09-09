@@ -57,7 +57,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" v
 
   <rect x="150" y="512" width="126" height="42" rx="21" fill="${INK}"/>
   <text x="170" y="540" font-family="Helvetica, Arial, sans-serif" font-size="17" fill="${PAPER}" letter-spacing="2">BEANS</text>
-  <text x="300" y="540" font-family="'PingFang TC', Helvetica, Arial, sans-serif" font-size="21" fill="${MUTE}" letter-spacing="1">可娜・藝伎・藍山・曼特寧　半磅原豆　三包優惠</text>
+  <text x="300" y="540" font-family="'PingFang TC', Helvetica, Arial, sans-serif" font-size="21" fill="${MUTE}" letter-spacing="1">可娜・藝伎・藍山・曼特寧　半磅原豆　全台宅配</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(OUT);

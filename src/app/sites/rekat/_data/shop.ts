@@ -5,7 +5,7 @@
 // 計價全部是純函式，src/app/api/rekat/order 與 tests/rekat-shop.test.ts 共用同一份，
 // 前台顯示的金額與後端寫入資料庫的金額因此不可能算出不同答案。
 
-import { getBean, type Bean } from "./beans";
+import { getBean } from "./beans";
 
 // ── 出貨規格 ──────────────────────────────────────────────────
 // 本店只出原豆，不提供代磨（客戶確認）。所以購物車的一行就是「一支豆子」，
@@ -42,8 +42,8 @@ export const isPayment = (v: unknown): v is PaymentKey => v === "transfer" || v 
 export const needsPaymentReport = (p: PaymentKey): boolean => p !== "cod";
 
 // ── 運費 ──────────────────────────────────────────────────────
-// 客戶確認（2026-09-02）：運費 160，滿 2000 免運，貨到付款不另收手續費。
-export const SHIPPING_FEE = 160;
+// 客戶確認（2026-09-09）：運費 100，滿 2000 免運，貨到付款不另收手續費。
+export const SHIPPING_FEE = 100;
 export const FREE_SHIPPING_OVER = 2000;
 
 /**
@@ -74,58 +74,22 @@ export type PricedLine = {
   name: string;
   unitPrice: number;
   qty: number;
-  /** qty × unitPrice。三包優惠不在這裡扣，見 Totals.bundles */
+  /** qty × unitPrice */
   amount: number;
-  /** 這一行還差幾包才湊滿下一組優惠。0 = 沒優惠或剛好湊滿 */
-  toNextBundle: number;
-};
-
-/** 湊成一組三包優惠的紀錄。前台把它列成獨立的折抵列。 */
-export type BundleSaving = {
-  slug: string;
-  name: string;
-  /** 豆單原文的「三包」或「特三包」 */
-  label: string;
-  /** 幾包一組 */
-  per: number;
-  /** 湊成了幾組 */
-  sets: number;
-  unitPrice: number;
-  bundlePrice: number;
-  /** 這幾組總共折抵多少（正數） */
-  saved: number;
 };
 
 export type Totals = {
   lines: PricedLine[];
-  bundles: BundleSaving[];
-  /** 未折扣前的定價總額 */
-  listTotal: number;
-  /** 三包優惠折抵合計（正數） */
-  discount: number;
+  /** 品項小計。線上不做任何折扣，所以它就等於各行 amount 的總和 */
   subtotal: number;
   shippingFee: number;
   total: number;
-  /** 總支數 */
+  /** 總包數 */
   count: number;
 };
 
 export const MAX_QTY_PER_LINE = 20;
 export const MAX_LINES = 20;
-
-/**
- * 三包優惠。
- *
- * **折抵獨立成一列，不改行金額**。每一行仍然是「數量 × 單價」的直接乘法，
- * 折抵另外列一條「三包4800 ×1　−NT$1,200」。這樣客人拿網頁跟紙本豆單對，
- * 每個數字都對得起來；把優惠攤回各行單價反而會出現對不上的小數。
- *
- * 湊不滿一組的餘數以原價計，例如 7 包＝2 組優惠價 ＋ 1 包原價。
- */
-export function bundleSetsFor(bean: Bean, qty: number): number {
-  if (!bean.bundle || bean.bundle.qty <= 0) return 0;
-  return Math.floor(qty / bean.bundle.qty);
-}
 
 /** 一支豆子一行，重複出現就合併數量。 */
 export function normalizeCart(lines: CartLine[]): CartLine[] {
@@ -153,61 +117,27 @@ export function normalizeCart(lines: CartLine[]): CartLine[] {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function priceCart(rawLines: CartLine[], payment: PaymentKey): Totals {
   const lines: PricedLine[] = [];
-  const bundles: BundleSaving[] = [];
-  let listTotal = 0;
-  let discount = 0;
+  let subtotal = 0;
   let count = 0;
 
   for (const l of normalizeCart(rawLines)) {
     const bean = getBean(l.slug);
     if (!bean) continue;
     const amount = l.qty * bean.price;
-    listTotal += amount;
+    subtotal += amount;
     count += l.qty;
-
-    const sets = bundleSetsFor(bean, l.qty);
     lines.push({
       slug: bean.slug,
       name: bean.nameZh,
       unitPrice: bean.price,
       qty: l.qty,
       amount,
-      toNextBundle: bean.bundle ? (bean.bundle.qty - (l.qty % bean.bundle.qty)) % bean.bundle.qty : 0,
     });
-
-    if (bean.bundle && sets > 0) {
-      const saved = sets * (bean.bundle.qty * bean.price - bean.bundle.price);
-      if (saved > 0) {
-        discount += saved;
-        bundles.push({
-          slug: bean.slug,
-          name: bean.nameZh,
-          label: bean.bundle.label,
-          per: bean.bundle.qty,
-          sets,
-          unitPrice: bean.price,
-          bundlePrice: bean.bundle.price,
-          saved,
-        });
-      }
-    }
   }
-  // 折抵多的排前面，讓客人一眼看到最有感的那一條
-  bundles.sort((a, b) => b.saved - a.saved);
 
-  const subtotal = listTotal - discount;
   const shippingFee = subtotal === 0 || subtotal >= FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE;
 
-  return {
-    lines,
-    bundles,
-    listTotal,
-    discount,
-    subtotal,
-    shippingFee,
-    total: subtotal + shippingFee,
-    count,
-  };
+  return { lines, subtotal, shippingFee, total: subtotal + shippingFee, count };
 }
 
 export const twd = (n: number) => `NT$${n.toLocaleString("en-US")}`;

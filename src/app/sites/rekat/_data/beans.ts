@@ -2,7 +2,7 @@
 //
 // ┌─ 這份資料的可信度分級（改動前務必先讀）──────────────────────────┐
 // │ ① exact：直接抄自客戶提供的豆單——編號、品名、處理方式、烘焙度、    │
-// │    風味描述、半磅售價、三包優惠價。這幾欄不得自行「潤飾」。         │
+// │    風味描述、半磅售價。這幾欄不得自行「潤飾」。                     │
 // │ ② context：產區背景（國家、產區、品種、莊園沿革）為公開資料整理，   │
 // │    屬於「這個產區是什麼」而非「這一批的批次卡」。前台會標示來源。   │
 // │ ③ derived：風味輪家族、風味輪廓分數、插畫母題，是由 ① 的風味描述    │
@@ -14,6 +14,11 @@
 //
 // 目前依據：2026 九月豆單（見 _data/site.ts 的 SITE.listVersion）。
 // 換豆單時：改這個檔的 BEANS、site.ts 的 listVersion，兩處一起。
+//
+// ⚠️ 紙本豆單的「備註」欄有「三包 4800」「特三包 2700」這類整組優惠價，
+//    但**線上商店刻意不提供任何折扣**（客戶 2026-09-09 指示：網路上不要特價）。
+//    所以這裡沒有 bundle 欄位，priceCart 也沒有任何折抵邏輯——
+//    這不是漏掉，是決定。要恢復的話 git log 找得到當初的實作。
 //
 // 新增一支豆子 = 在 BEANS 陣列加一筆。插畫由 <BeanArt> 依 motif / family
 // 自動生成，不必畫圖；風味雷達由 profile 自動繪製。
@@ -125,22 +130,6 @@ export const PROFILE_LABEL: Record<keyof Profile, string> = {
 
 export type CountryCode = "US" | "PA" | "JM" | "ET" | "KE" | "CO" | "GT" | "ID" | "PE";
 
-/**
- * 三包優惠。豆單「備註」欄那一格。
- *
- * 為什麼存「整組價」而不是折扣率或折抵金額：豆單上寫的是「三包4800」，
- * 老闆與客人核對的也是這個數字。存成 0.8 折之類的東西，四捨五入之後
- * 就會跟紙本對不起來——而對得起帳是這一欄唯一的職責。
- */
-export type Bundle = {
-  /** 幾包一組。目前豆單全部是 3 */
-  qty: number;
-  /** 整組的價格（新台幣） */
-  price: number;
-  /** 豆單原文的標籤：「三包」或「特三包」 */
-  label: string;
-};
-
 export type Bean = {
   /** 豆單上的編號，保留下來讓客戶對單方便 */
   no: number;
@@ -161,8 +150,6 @@ export type Bean = {
   notes: string[];
   /** 半磅（227g）售價，新台幣 */
   price: number;
-  /** 豆單「備註」欄的三包優惠。沒有就是沒有 */
-  bundle?: Bundle;
   /** 品名裡標了「空運」的批次 */
   airFreight?: boolean;
   /** 主要風味家族，第一個為主調（決定卡片配色） */
@@ -176,8 +163,6 @@ export type Bean = {
   /** 產區背景（公開資料整理，非批次卡）。前台會標示資料性質 */
   context?: string;
 };
-
-const B = (price: number, label: string): Bundle => ({ qty: 3, price, label });
 
 const BEANS: Bean[] = [
   {
@@ -218,7 +203,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["檸檬卡士達", "佛手柑", "藍莓與水蜜桃"],
     price: 2000,
-    bundle: B(4800, "三包"),
     airFreight: true,
     families: ["fruity", "sweet", "floral"],
     motif: "bergamot",
@@ -245,7 +229,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["核果", "杏仁", "巧克力", "奶油", "花香"],
     price: 1700,
-    bundle: B(4500, "三包"),
     airFreight: true,
     families: ["nutty-cocoa", "sweet", "floral"],
     motif: "nut",
@@ -272,7 +255,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["蘭姆酒", "佛手柑", "葡萄乾"],
     price: 1200,
-    bundle: B(2700, "特三包"),
     families: ["sour-fermented", "fruity", "sweet"],
     motif: "rum",
     profile: { acidity: 4, sweetness: 5, body: 4, aroma: 5, aftertaste: 5, clean: 3 },
@@ -297,7 +279,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["堅果", "檸檬", "茉莉花", "紅茶"],
     price: 700,
-    bundle: B(1500, "特三包"),
     families: ["floral", "nutty-cocoa", "fruity"],
     motif: "tea",
     profile: { acidity: 4, sweetness: 4, body: 4, aroma: 5, aftertaste: 4, clean: 4 },
@@ -321,7 +302,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["櫻桃", "藍莓", "黑巧克力", "堅果"],
     price: 1200,
-    bundle: B(3000, "三包"),
     families: ["fruity", "nutty-cocoa"],
     motif: "berry",
     profile: { acidity: 4, sweetness: 5, body: 4, aroma: 4, aftertaste: 4, clean: 4 },
@@ -345,7 +325,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["梅酒", "黑糖", "蜂蜜", "桃子", "花香"],
     price: 1600,
-    bundle: B(4200, "三包"),
     families: ["sweet", "fruity", "floral"],
     motif: "plum",
     profile: { acidity: 4, sweetness: 5, body: 4, aroma: 5, aftertaste: 5, clean: 4 },
@@ -370,7 +349,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["野薑花", "柑橘", "伯爵茶", "水蜜桃"],
     price: 1200,
-    bundle: B(2700, "特三包"),
     families: ["floral", "fruity"],
     motif: "lily",
     profile: { acidity: 4, sweetness: 4, body: 4, aroma: 5, aftertaste: 4, clean: 4 },
@@ -418,7 +396,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["野薑花", "檸檬", "蘋果", "百香果"],
     price: 600,
-    bundle: B(1500, "三包"),
     families: ["floral", "fruity"],
     motif: "jasmine",
     profile: { acidity: 5, sweetness: 4, body: 3, aroma: 5, aftertaste: 4, clean: 5 },
@@ -490,7 +467,6 @@ const BEANS: Bean[] = [
     roast: "light",
     notes: ["熱帶水果", "百香果", "鳳梨"],
     price: 600,
-    bundle: B(1500, "三包"),
     families: ["fruity", "sour-fermented"],
     motif: "tropical",
     profile: { acidity: 5, sweetness: 5, body: 3, aroma: 5, aftertaste: 4, clean: 4 },
@@ -569,13 +545,6 @@ export const getBean = (slug: string): Bean | undefined =>
 /** 依價格由高到低的前 n 支——首頁「本季重點」用 */
 export const topBeans = (n: number): Bean[] =>
   [...BEANS].sort((a, b) => b.price - a.price).slice(0, n);
-
-/** 有三包優惠的豆子，依折抵金額由多到少 */
-export const bundledBeans = (): Bean[] =>
-  BEANS.filter((b) => b.bundle).sort(
-    (a, b) =>
-      b.price * b.bundle!.qty - b.bundle!.price - (a.price * a.bundle!.qty - a.bundle!.price),
-  );
 
 /** 該豆子的主色（取主風味家族的色票） */
 export const beanColor = (b: Bean): string => FAMILY[b.families[0]!].color;

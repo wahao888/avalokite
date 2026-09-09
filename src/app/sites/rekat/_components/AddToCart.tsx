@@ -10,12 +10,6 @@ export default function AddToCart({ bean }: { bean: Bean }) {
   const { add } = useCart();
   const [qty, setQty] = useState(1);
 
-  // 三包優惠：把「現在這個數量會不會湊成組、還差幾包」直接算給客人看
-  const bundle = bean.bundle;
-  const sets = bundle ? Math.floor(qty / bundle.qty) : 0;
-  const toNext = bundle ? (bundle.qty - (qty % bundle.qty)) % bundle.qty : 0;
-  const savePerSet = bundle ? bean.price * bundle.qty - bundle.price : 0;
-
   return (
     <div className="rk-buy">
       <div className="rk-field">
@@ -31,15 +25,6 @@ export default function AddToCart({ bean }: { bean: Bean }) {
         </div>
       </div>
 
-      {bundle && (
-        <p className="rk-buy__note" style={{ color: "var(--rk-ember)" }}>
-          {sets > 0
-            ? `${bundle.label}已套用：${sets} 組 × ${twd(bundle.price)}，省 ${twd(sets * savePerSet)}${
-                toNext > 0 ? `。再加 ${toNext} 包可再湊一組。` : "。"
-              }`
-            : `${bundle.label} ${twd(bundle.price)}：再加 ${toNext} 包即可套用，省 ${twd(savePerSet)}。`}
-        </p>
-      )}
 
       <div className="rk-buy__row" style={{ marginTop: 20 }}>
         <div className="rk-price">

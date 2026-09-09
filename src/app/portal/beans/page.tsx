@@ -107,10 +107,7 @@ export default async function BeansStockPage({
                     <td>
                       NO.{String(b.no).padStart(2, "0")}　{b.nameZh}
                       <br />
-                      <small>
-                        {b.country}
-                        {b.bundle ? `・${b.bundle.label} ${twd(b.bundle.price)}` : ""}
-                      </small>
+                      <small>{b.country}</small>
                     </td>
                     <td className="p-nowrap">{twd(b.price)}</td>
                     <td className="p-nowrap">

@@ -775,20 +775,6 @@
 }
 .rk-card__foot { position: relative; z-index: 2; }
 
-/* 促銷角標 */
-.rk-card__promo {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 2;
-  font-family: var(--rk-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  padding: 5px 10px;
-  background: var(--rk-ember);
-}
-.rk .rk-card__promo { color: var(--rk-paper-2); }
-
 /* ───────────────────────────────────────────────────────────────
    篩選列
    ─────────────────────────────────────────────────────────────── */
@@ -1825,19 +1811,6 @@
   gap: 7px;
 }
 
-/* 三包優惠標籤就放在按鈕正上方——放在卡片角落的話，
-   人看到「想買」與看到「買三包比較划算」是兩個分開的時刻，湊不起來。 */
-.rk-cardbuy__promo {
-  font-family: var(--rk-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  color: var(--rk-ember);
-  border: 1px solid color-mix(in srgb, var(--rk-ember) 38%, transparent);
-  background: color-mix(in srgb, var(--rk-ember) 7%, transparent);
-  border-radius: 999px;
-  padding: 2px 9px;
-  white-space: nowrap;
-}
 
 .rk-cardbuy .rk-btn { white-space: nowrap; }
 

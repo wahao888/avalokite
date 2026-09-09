@@ -157,13 +157,9 @@ model ShopOrder {
   // JSON: [{ slug, name, unitPrice, qty, amount }]
   // amount = qty × unitPrice，不含優惠。本店只出原豆，沒有研磨度這個欄位。
   items String
-  // JSON: [{ slug, name, label, per, sets, unitPrice, bundlePrice, saved }]
-  // 三包優惠的折抵明細。分開存而不攤回 items 的理由：老闆對帳時要看得出
-  // 「品項小計」與「實收」中間那一段差額是怎麼來的，攤進單價就查不回去了。
-  bundles String @default("[]")
 
   payment     String // transfer 匯款 | cod 貨到付款
-  subtotal    Int // 品項小計（已扣掉三包優惠）
+  subtotal    Int // 品項小計。線上不做折扣，所以它就等於各品項 amount 的總和
   shippingFee Int
   total       Int
 

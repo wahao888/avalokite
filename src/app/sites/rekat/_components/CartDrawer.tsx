@@ -7,7 +7,6 @@ import { FREE_SHIPPING_OVER, twd, type PricedLine } from "../_data/shop";
 import { RK } from "../_data/site";
 import { useCart } from "./CartProvider";
 import BeanArt from "./BeanArt";
-import BundleRows, { BundleHint } from "./BundleRows";
 
 /* 側滑購物車。
  * 刻意不做「加入購物車後跳轉到購物車頁」——咖啡豆常常一次買兩三支，
@@ -29,7 +28,6 @@ function Line({ line }: { line: PricedLine }) {
           {bean.nameZh}
         </Link>
         <div className="rk-line__meta">{twd(line.unitPrice)} / 半磅 227g</div>
-        {bean.bundle && <BundleHint line={line} bean={bean} />}
         <div className="rk-line__ctl">
           <div className="rk-qty">
             <button type="button" aria-label="減少一包" onClick={() => setQty(line.slug, line.qty - 1)}>
@@ -112,12 +110,7 @@ export default function CartDrawer() {
           <footer className="rk-drawer__foot">
             <div className="rk-sum">
               <div>
-                <span>品項定價</span>
-                <b>{twd(totals.listTotal)}</b>
-              </div>
-              <BundleRows bundles={totals.bundles} />
-              <div>
-                <span>小計</span>
+                <span>小計（{totals.count} 包）</span>
                 <b>{twd(totals.subtotal)}</b>
               </div>
               <div>

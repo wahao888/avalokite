@@ -121,7 +121,6 @@ export async function POST(req: NextRequest) {
       amount: l.amount,
     })),
   );
-  const bundlesJson = JSON.stringify(totals.bundles);
 
   // 先落庫再寄信：SMTP 掛掉時客戶後台仍看得到訂單，不會漏單。
   const order = await prisma.shopOrder.create({
@@ -134,7 +133,6 @@ export async function POST(req: NextRequest) {
       address: d.address,
       note: d.note || null,
       items: itemsJson,
-      bundles: bundlesJson,
       payment: d.payment,
       subtotal: totals.subtotal,
       shippingFee: totals.shippingFee,
@@ -144,13 +142,6 @@ export async function POST(req: NextRequest) {
 
   const lineText = totals.lines
     .map((l) => `・${l.name} × ${l.qty} 包　${twd(l.amount)}`)
-    .join("\n");
-
-  const bundleText = totals.bundles
-    .map(
-      (b) =>
-        `・${b.name}　${b.label}${b.bundlePrice} × ${b.sets} 組　−${twd(b.saved)}`,
-    )
     .join("\n");
 
   const notified = await notifyTenant(TENANT, {
@@ -163,12 +154,7 @@ export async function POST(req: NextRequest) {
       "【品項】",
       lineText,
       "",
-      totals.bundles.length > 0 ? "【三包優惠】" : null,
-      totals.bundles.length > 0 ? bundleText : null,
-      totals.bundles.length > 0 ? "" : null,
-      `品項定價合計：${twd(totals.listTotal)}`,
-      totals.discount > 0 ? `優惠折抵：−${twd(totals.discount)}` : null,
-      `小計：${twd(totals.subtotal)}`,
+      `品項小計：${twd(totals.subtotal)}`,
       `運費：${totals.shippingFee === 0 ? "免運" : twd(totals.shippingFee)}`,
       `合計：${twd(totals.total)}`,
       "",

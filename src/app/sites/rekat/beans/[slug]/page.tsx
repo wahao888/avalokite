@@ -158,11 +158,6 @@ export default async function BeanDetail({ params }: { params: Promise<{ slug: s
                   {FAMILY[f].zh}
                 </span>
               ))}
-              {bean.bundle && (
-                <span className="rk-tag rk-tag--ember">
-                  {bean.bundle.label} {twd(bean.bundle.price)}
-                </span>
-              )}
               {bean.airFreight && <span className="rk-tag">空運批次</span>}
             </div>
 
@@ -202,18 +197,6 @@ export default async function BeanDetail({ params }: { params: Promise<{ slug: s
                 <dt>規格</dt>
                 <dd>{UNIT_LABEL}</dd>
               </div>
-              {bean.bundle && (
-                <div>
-                  <dt>{bean.bundle.label}</dt>
-                  <dd>
-                    {twd(bean.bundle.price)}
-                    <small>
-                      　{bean.bundle.qty} 包一組，原價 {twd(bean.price * bean.bundle.qty)}，
-                      省 {twd(bean.price * bean.bundle.qty - bean.bundle.price)}
-                    </small>
-                  </dd>
-                </div>
-              )}
             </dl>
 
             {soldOut ? (

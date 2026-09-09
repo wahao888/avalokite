@@ -74,10 +74,8 @@ export default function BeanBrowser({
   const [proc, setProc] = useState<ProcessKey[]>(initialProcess ? [initialProcess] : []);
   const [ctry, setCtry] = useState<string[]>(initialCountry ? [initialCountry] : []);
   const [price, setPrice] = useState<Price>("all");
-  const [onlyBundle, setOnlyBundle] = useState(false);
   const [sort, setSort] = useState<Sort>("no");
 
-  const bundleCount = useMemo(() => all.filter((b) => b.bundle).length, [all]);
 
   const shown = useMemo(() => {
     const p = PRICE_OPTS.find((o) => o.key === price)!;
@@ -86,23 +84,20 @@ export default function BeanBrowser({
         (fam.length === 0 || b.families.some((f) => fam.includes(f))) &&
         (proc.length === 0 || proc.includes(b.process)) &&
         (ctry.length === 0 || ctry.includes(b.countryCode)) &&
-        (!onlyBundle || Boolean(b.bundle)) &&
         p.test(b),
     );
     if (sort === "asc") out.sort((a, b) => a.price - b.price);
     else if (sort === "desc") out.sort((a, b) => b.price - a.price);
     return out;
-  }, [all, fam, proc, ctry, price, onlyBundle, sort]);
+  }, [all, fam, proc, ctry, price, sort]);
 
-  const dirty =
-    fam.length > 0 || proc.length > 0 || ctry.length > 0 || price !== "all" || onlyBundle;
+  const dirty = fam.length > 0 || proc.length > 0 || ctry.length > 0 || price !== "all";
 
   const reset = () => {
     setFam([]);
     setProc([]);
     setCtry([]);
     setPrice("all");
-    setOnlyBundle(false);
   };
 
   return (
@@ -159,21 +154,6 @@ export default function BeanBrowser({
                 <em>{c.count}</em>
               </button>
             ))}
-          </div>
-        </div>
-
-        <div className="rk-filterrow">
-          <span className="rk-eyebrow">優惠</span>
-          <div className="rk-chips">
-            <button
-              type="button"
-              className="rk-chip"
-              aria-pressed={onlyBundle}
-              onClick={() => setOnlyBundle((v) => !v)}
-            >
-              只看三包優惠
-              <em>{bundleCount}</em>
-            </button>
           </div>
         </div>
 

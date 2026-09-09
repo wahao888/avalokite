@@ -26,9 +26,7 @@ const NEEDS_REPORT = (p: string) => p === "transfer";
 
 type Item = { name?: string; qty?: number; unitPrice?: number; amount?: number };
 
-type BundleRow = { name?: string; label?: string; sets?: number; bundlePrice?: number; saved?: number };
-
-/** items / bundles 是下單當下寫死的 JSON 快照，不回頭讀豆單——豆單改價後舊訂單仍對得起帳。 */
+/** items 是下單當下寫死的 JSON 快照，不回頭讀豆單——豆單改價後舊訂單仍對得起帳。 */
 function parseJson<T>(json: string): T[] {
   try {
     const v: unknown = JSON.parse(json);
@@ -63,7 +61,6 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   if (!o) notFound();
 
   const items = parseJson<Item>(o.items);
-  const bundles = parseJson<BundleRow>(o.bundles);
   const status = isShopStatus(o.status) ? o.status : "pending";
 
   return (
@@ -140,22 +137,6 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           </tbody>
         </table>
       </div>
-
-      {bundles.length > 0 && (
-        <div className="p-msg">
-          <b>三包優惠</b>
-          <br />
-          {bundles.map((b, i) => (
-            <span key={i}>
-              {b.name}　{b.label}
-              {typeof b.bundlePrice === "number" ? ` ${twd(b.bundlePrice)}` : ""}
-              {b.sets && b.sets > 1 ? ` × ${b.sets} 組` : ""}
-              　折抵 −{typeof b.saved === "number" ? twd(b.saved) : "—"}
-              <br />
-            </span>
-          ))}
-        </div>
-      )}
 
       <div className="p-detail">
         <dl style={{ margin: 0 }}>

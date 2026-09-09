@@ -2,7 +2,7 @@ import Link from "next/link";
 import { listBeans, usedCountries, usedFamilies, usedProcesses, priceRange, type ProcessKey } from "./_data/beans";
 import type { FamilyKey } from "./_data/flavor-wheel";
 import { twd } from "./_data/shop";
-import { BUNDLE_NOTE, LIST_NOTE, RK, SITE } from "./_data/site";
+import { LIST_NOTE, RK, SITE } from "./_data/site";
 import BeanCard from "./_components/BeanCard";
 import FlavorWheel from "./_components/FlavorWheel";
 import OriginMap from "./_components/OriginMap";
@@ -43,7 +43,6 @@ export const dynamic = "force-dynamic";
 export default async function RekatHome() {
   const stock = await getStock();
   const beans = visibleBeans(stock);
-  const bundled = beans.filter((b) => b.bundle).length;
   const [lo, hi] = priceRange();
   const countries = usedCountries();
 
@@ -128,7 +127,7 @@ export default async function RekatHome() {
             </h2>
             <p className="rk-lede" style={{ marginTop: 14 }}>
               從 {twd(lo)} 到 {twd(hi)}，{processes.length} 種處理法、{countries.length} 個產地。
-              全部單一產區、下單後才烘，半磅裝原豆出貨。其中 {bundled} 支有三包優惠。
+              全部單一產區、下單後才烘，半磅裝原豆出貨。
             </p>
           </Reveal>
         </div>
@@ -263,7 +262,7 @@ export default async function RekatHome() {
               訂單確認後才烘焙
             </h2>
             <p className="rk-lede" style={{ marginTop: 14, marginInline: "auto" }}>
-              全品項半磅裝、一律出原豆，不代客研磨。本期 {bundled} 支有三包優惠。
+              全品項半磅裝、一律出原豆，不代客研磨。
               付款方式為銀行匯款 / ATM 轉帳與貨到付款，約 2–3 個工作天出貨。
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 28 }}>
@@ -276,8 +275,6 @@ export default async function RekatHome() {
               </a>
             </div>
             <p className="rk-caveat" style={{ marginTop: 30, textAlign: "left" }}>
-              {BUNDLE_NOTE}
-              <br />
               {LIST_NOTE}
             </p>
           </Reveal>
