@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
-import { careRequired, fmt, getProduct, withTax } from "@/lib/products";
+import { careRequired, fmt, getProduct, withTax, promoPlanForSkus } from "@/lib/products";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
 
@@ -21,6 +21,7 @@ export default function CheckoutPage() {
   // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
   // 含建置的訂單有 12 個月最短承諾期，這件事必須在按下付款前就講明白
   const hasBuild = careRequired(cart.items.map((i) => i.sku));
+  const promo = promoPlanForSkus(cart.items.map((i) => i.sku));
   const empty = cart.ready && cart.items.length === 0;
   useEffect(() => {
     if (empty && !submitting) router.replace("/cart");
@@ -151,22 +152,22 @@ export default function CheckoutPage() {
           })}
           {cart.oneTimeSubtotal > 0 && (
             <div className="cart-summary-row total">
-              <span>{t("payOnetime")}</span>
+              <span>{t(promo ? "payDeposit" : "payOnetime")}</span>
               <span className="amount">NT${fmt(withTax(cart.oneTimeSubtotal))}</span>
             </div>
           )}
           {cart.monthlySubtotal > 0 && (
             <>
               <div className="cart-summary-row">
-                <span>{cart.oneTimeSubtotal > 0 ? t("payMonthly") : t("payMonthlyNow")}</span>
+                <span>{hasBuild ? t("payMonthly") : t("payMonthlyNow")}</span>
                 <span>NT${fmt(withTax(cart.monthlySubtotal))}{locale === "en" ? "/mo" : "/月"}</span>
               </div>
               <div className="cart-monthly-note">
-                {cart.oneTimeSubtotal > 0 ? t("payMonthlyStart") : t("payMonthlyNowNote")}
+                {hasBuild ? t(promo ? "payPromoMonthlyStart" : "payMonthlyStart") : t("payMonthlyNowNote")}
               </div>
             </>
           )}
-          <div className="cart-monthly-note">✦ {cart.oneTimeSubtotal > 0 ? t("payHint") : t("payHintCareOnly")}</div>
+          <div className="cart-monthly-note">✦ {hasBuild ? t("payHintBuild") : cart.oneTimeSubtotal > 0 ? t("payHint") : t("payHintCareOnly")}</div>
         </aside>
       </div>
     </main>

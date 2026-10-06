@@ -62,4 +62,8 @@ COUNT=$(find "$SRC" -type f | wc -l)
 REMOTE=$("$AWS" s3 ls "s3://$BUCKET/uploads/" --recursive --summarize 2>/dev/null \
   | sed -n 's/^ *Total Objects: *//p' | head -1)
 
+# Record a successful sync independently of object modification dates.
+# Unchanged photos retain their old LastModified even when daily sync succeeds.
+printf '%s\n' "$(date -u +%FT%TZ)" | "$AWS" s3 cp - "s3://$BUCKET/backup-status/uploads-success.txt" --only-show-errors
+
 echo "[$(date)] uploads backup ok: 本機 $COUNT 個檔案 → s3://$BUCKET/uploads/（遠端 ${REMOTE:-?} 個）"

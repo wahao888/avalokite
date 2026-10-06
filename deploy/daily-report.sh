@@ -166,7 +166,7 @@ collect() {
     [ -x "$p" ] && AWSBIN="$p" && break
   done
   if [ -n "$BUCKET" ] && [ -n "$AWSBIN" ]; then
-    for kind in avalo-db uploads; do
+    for kind in avalo-db; do
       last=$("$AWSBIN" s3 ls "s3://$BUCKET/$kind/" --recursive 2>/dev/null \
         | sort | tail -1 | awk '{print $1" "$2}')
       if [ -n "$last" ]; then
@@ -176,6 +176,13 @@ collect() {
         emit "s3_${kind//-/_}_age_h" "MISSING"
       fi
     done
+    last=$("$AWSBIN" s3 cp "s3://$BUCKET/backup-status/uploads-success.txt" - 2>/dev/null || true)
+    stamp=$(date -d "$last" +%s 2>/dev/null || true)
+    if [ -n "$last" ] && [ -n "$stamp" ]; then
+      emit s3_uploads_age_h "$(( ($(date +%s) - stamp) / 3600 ))"
+    else
+      emit s3_uploads_age_h "MISSING"
+    fi
   else
     emit s3_backup "OFF"
   fi

@@ -80,7 +80,7 @@ if (s.svc !== "active") flag(2, `網站服務不是 active（${s.svc || "讀取�
 if (n(s.leak) > 0)
   flag(2, `${fmt(s.leak)} 次掃描探測被送進網站程式`, "攔截樣式有缺口，把下面列的路徑補進 deploy/nginx-scan-block.conf");
 if (n(s.probe_redirect) > 0)
-  flag(1, `${fmt(s.probe_redirect)} 次探測只拿到 301 導轉`, "有 server 區塊少了 include avalo-scan-block.conf（:80 導轉站台最常漏）；沒被送進程式，但 fail2ban 抓不到這種紀錄");
+  flag(1, `${fmt(s.probe_redirect)} 次探測只拿到 301 導轉`, "檢查 :80 的 scan-block include，以及 Certbot 的 server 層 if/return 是否搶先導轉；沒被送進程式，但 fail2ban 抓不到這種紀錄");
 if (n(s.authok) > 0) flag(1, `後台成功登入 ${fmt(s.authok)} 次`, "如果不是你本人登入的，立刻換掉 ADMIN_PASSWORD");
 if (n(s.authfail) >= 10) flag(1, `後台登入失敗 ${fmt(s.authfail)} 次`, "有人在猜密碼，確認 avalo-auth jail 有在封鎖");
 if (n(s.s5xx) >= 50) flag(2, `${fmt(s.s5xx)} 次 5xx（網站自己出錯）`, "這是程式錯誤不是攻擊，看 journalctl -u avalo");
@@ -94,6 +94,15 @@ if (!s.backup) flag(2, "找不到任何資料庫備份", "檢查 backup-db.sh �
 else if (n(s.backup_age_h) > 48) flag(2, `最近備份是 ${s.backup_age_h} 小時前`, "備份排程掛了，資料庫沒有退路");
 else if (n(s.backup_age_h) > 30) flag(1, `最近備份是 ${s.backup_age_h} 小時前`, "比預期的 24 小時久，確認 cron");
 if (s.db_inquiry === "ERR") flag(1, "讀不到資料庫筆數", "sqlite3 讀 prod.db 失敗，確認檔案權限");
+
+// Verify off-host backup success; photo object ages do not measure sync freshness.
+if (s.s3_backup === "OFF") flag(1, "離線備份未啟用或 AWS 工具不可用", "確認 BACKUP_S3_BUCKET、AWS CLI 與 IAM Role");
+else for (const [key, label] of [["s3_avalo_db_age_h", "資料庫"], ["s3_uploads_age_h", "商品照片"]]) {
+  const value = s[key];
+  if (value == null || value === "MISSING" || !/^\d+$/.test(value))
+    flag(2, `${label}離線備份狀態無法確認`, "檢查備份排程、S3 權限與 backup.log");
+  else if (n(value) > 48) flag(2, `${label}離線備份已 ${value} 小時未成功`, "檢查備份排程與 backup.log，成功備份後才會解除");
+}
 
 // 「必做」排在「留意」前面：這份清單是給人照著做的，不是流水帳
 findings.sort((a, b) => b.level - a.level);

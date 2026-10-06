@@ -44,11 +44,16 @@ export default function Nav() {
         <button
           className="nav-burger"
           aria-label="Menu"
+          aria-expanded={open}
+          aria-controls="main-nav-links"
           onClick={() => setOpen((v) => !v)}
         >
           MENU
         </button>
-        <ul className={`nav-links${open ? " open" : ""}`}>
+        <ul id="main-nav-links" className={`nav-links${open ? " open" : ""}`}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest("a")) setOpen(false);
+          }}>
           <li><Link href={anchor("services")}>{t("services")}</Link></li>
           <li><Link href={anchor("pricing")}>{t("pricing")}</Link></li>
           <li><Link href={anchor("cases")}>{t("cases")}</Link></li>
