@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   PROMO_WINDOW,
+  isExpired,
   remainingFrom,
   seatsLeft,
   type Remaining,
@@ -18,9 +19,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export default function PromoUrgency() {
   const t = useTranslations("promo");
   const [left, setLeft] = useState<Remaining | null>(null);
+  const [ended, setEnded] = useState(false);
 
   useEffect(() => {
-    const tick = () => setLeft(remainingFrom());
+    const tick = () => {
+      setLeft(remainingFrom());
+      setEnded(isExpired());
+    };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -58,16 +63,20 @@ export default function PromoUrgency() {
       </div>
 
       <div className="promo-countdown">
-        <div className="promo-urgency-label">{t("countdownLabel")}</div>
-        <div className="promo-clock" aria-live="off">
-          {cells.map(([value, unit], i) => (
-            <div className="promo-clock-cell" key={unit}>
-              <b>{value}</b>
-              <span>{unit}</span>
-              {i < cells.length - 1 && <i className="promo-clock-sep" aria-hidden="true" />}
-            </div>
-          ))}
-        </div>
+        {!ended && <div className="promo-urgency-label">{t("countdownLabel")}</div>}
+        {ended ? (
+          <p className="promo-ended">{t("ended")}</p>
+        ) : (
+          <div className="promo-clock" aria-live="off">
+            {cells.map(([value, unit], i) => (
+              <div className="promo-clock-cell" key={unit}>
+                <b>{value}</b>
+                <span>{unit}</span>
+                {i < cells.length - 1 && <i className="promo-clock-sep" aria-hidden="true" />}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

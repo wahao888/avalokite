@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { compactClock, remainingFrom, seatsLeft, type Remaining } from "@/lib/promo-window";
+import {
+  compactClock,
+  isExpired,
+  remainingFrom,
+  seatsLeft,
+  type Remaining,
+} from "@/lib/promo-window";
 import { PROMO_PLANS } from "@/lib/products";
 
 /**
@@ -13,15 +19,21 @@ import { PROMO_PLANS } from "@/lib/products";
 export default function PromoBar() {
   const t = useTranslations("promo");
   const [left, setLeft] = useState<Remaining | null>(null);
+  // 過期判斷跟倒數一樣只在瀏覽器算，伺服器算會被靜態產出凍住、也會跟使用者時鐘對不上
+  const [ended, setEnded] = useState(false);
 
   useEffect(() => {
-    const tick = () => setLeft(remainingFrom());
+    const tick = () => {
+      setLeft(remainingFrom());
+      setEnded(isExpired());
+    };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  if (PROMO_PLANS.length === 0) return null;
+  // 檔期一過就不再宣傳：留著過期的倒數比沒有倒數更傷信任
+  if (PROMO_PLANS.length === 0 || ended) return null;
 
   return (
     <Link className="promo-bar" href={{ pathname: "/", hash: "promo" }}>

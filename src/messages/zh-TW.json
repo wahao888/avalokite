@@ -521,6 +521,7 @@
     "seatsLabel": "本檔名額",
     "seatsLeft": "僅剩 {n} 席",
     "countdownLabel": "優惠倒數",
+    "ended": "本檔已結束，目前恢復標準定價",
     "cd": {
       "d": "天",
       "h": "時",

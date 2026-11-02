@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>零元啟動 宣傳短片</title>
+<meta name="description" content="Avalo 零元啟動限時檔期的 9:16 宣傳短影音，可直接播放錄製。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Noto+Serif+TC:wght@300;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F0EBE3; --cream:#E4DCCF; --wood:#A98467; --walnut:#7A5C44;
+  --sage:#8A9A7B; --moss:#5F7155; --moss-deep:#3F4D39; --ink:#2F2B26;
+  --muted:#8C8478; --border:#D6CDBD;
+  --display:"Fraunces","Noto Serif TC",serif;
+  --serif:"Noto Serif TC",serif;
+  --mono:"DM Mono","Courier New",monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#14120F;font-family:var(--serif);overflow:hidden;color:var(--ink)}
+
+/* ── 舞台：固定 1080×1920，再等比縮到視窗 ── */
+#stage{
+  position:absolute;left:50%;top:50%;width:1080px;height:1920px;
+  transform-origin:center center;overflow:hidden;background:var(--ink);
+  box-shadow:0 40px 120px rgba(0,0,0,.6);
+}
+.scene{position:absolute;inset:0;opacity:0;padding:110px 86px 300px;display:flex;flex-direction:column}
+.scene[data-bg="ink"]{background:var(--ink);color:var(--paper)}
+.scene[data-bg="paper"]{background:var(--paper);color:var(--ink)}
+.scene[data-bg="moss"]{background:var(--moss-deep);color:#F4F1EA}
+/* 社群平台底部介面會蓋掉約 300px，關鍵字句一律留在安全區內 */
+.scene.tall{padding-top:64px}
+
+/* 紙紋與暗角，避免大色塊太平 */
+.scene::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 15%,transparent 40%,rgba(0,0,0,.22) 100%);
+}
+
+.label{font-family:var(--mono);font-size:26px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--sage);display:flex;align-items:center;gap:20px}
+.label::before{content:'';width:54px;height:1px;background:var(--sage)}
+.big{font-family:var(--display);font-weight:600;font-size:104px;line-height:1.12;letter-spacing:.01em}
+.big em{font-style:normal;color:var(--wood)}
+.mid{font-family:var(--display);font-weight:600;font-size:74px;line-height:1.2}
+.body{font-size:38px;line-height:1.7;font-weight:300;color:var(--muted)}
+.scene[data-bg="ink"] .body,.scene[data-bg="moss"] .body{color:#C9C1B2}
+.spacer{flex:1}
+
+/* ── 通用動畫（時長固定，延遲由 JS 寫成絕對時間） ── */
+.a-up,.a-in,.a-pop,.a-blur,.a-wipe,.a-bar,.a-strike>i,.a-check{animation-fill-mode:both;animation-timing-function:cubic-bezier(.16,.84,.3,1)}
+.a-up{animation-name:up;animation-duration:.85s}
+.a-in{animation-name:fin;animation-duration:.7s;animation-timing-function:linear}
+.a-pop{animation-name:pop;animation-duration:.8s;animation-timing-function:cubic-bezier(.2,1.5,.4,1)}
+.a-blur{animation-name:blin;animation-duration:.9s}
+.a-wipe{animation-name:wipe;animation-duration:.8s}
+.a-bar{animation-name:bar;animation-duration:1.1s}
+.a-strike{position:relative;display:inline-block}
+.a-strike>i{position:absolute;left:-.06em;right:-.06em;top:52%;height:5px;background:currentColor;
+  transform-origin:left center;animation-name:strike;animation-duration:.5s;opacity:.85}
+.a-check{animation-name:pop;animation-duration:.5s;animation-timing-function:cubic-bezier(.2,1.6,.4,1)}
+@keyframes up{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:none}}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.62)}to{opacity:1;transform:none}}
+@keyframes blin{from{opacity:0;filter:blur(16px);transform:scale(1.04)}to{opacity:1;filter:none;transform:none}}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 -2% 0 0)}}
+@keyframes bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes strike{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,30px) scale(1.15)}100%{transform:translate(0,0) scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── 1 ── 鉤子：那句客戶真的問過的話 ── */
+.chat{margin-top:110px;display:flex;flex-direction:column;gap:38px}
+.bub{max-width:760px;padding:40px 48px;border-radius:38px;font-size:46px;line-height:1.5;font-weight:300}
+.bub.them{background:var(--cream);color:var(--ink);border-bottom-left-radius:8px}
+.bub.me{align-self:flex-end;border:2px solid rgba(240,235,227,.3);border-bottom-right-radius:8px;
+  color:rgba(240,235,227,.55);min-width:300px}
+.caret{display:inline-block;width:4px;height:44px;background:var(--sage);vertical-align:-8px;
+  animation:caret 1s steps(1,end) infinite}
+
+/* ── 2 ── 痛點三連 ── */
+.pains{margin-top:60px;display:flex;flex-direction:column;gap:56px}
+.pain{font-family:var(--display);font-weight:500;font-size:62px;line-height:1.3;color:#E7E1D6}
+
+/* ── 3 ── 手機裡的 Hero Banner ── */
+.phone{width:548px;height:1020px;margin:0 auto;border-radius:62px;border:12px solid #1D1A16;
+  background:var(--paper);position:relative;overflow:hidden;box-shadow:0 50px 90px rgba(47,43,38,.33)}
+.ph-notch{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:150px;height:30px;
+  background:#1D1A16;border-radius:20px;z-index:5}
+.ink{position:absolute;border-radius:50%;filter:blur(44px);opacity:.5}
+.ink.a{width:420px;height:420px;background:var(--sage);top:150px;left:-120px;animation:drift 9s ease-in-out infinite}
+.ink.b{width:360px;height:360px;background:var(--wood);top:420px;right:-130px;animation:drift 11s ease-in-out infinite reverse}
+.ph-rings{position:absolute;right:-110px;top:300px;opacity:.35;animation:spin 60s linear infinite}
+.ph-in{position:absolute;inset:0;padding:92px 44px 36px;display:flex;flex-direction:column}
+.ph-label{font-family:var(--mono);font-size:17px;letter-spacing:.26em;color:var(--moss)}
+.ph-title{font-family:var(--display);font-weight:600;font-size:62px;line-height:1.1;margin-top:26px;color:var(--ink)}
+.ph-title span{display:block;color:var(--wood)}
+.ph-desc{font-size:19px;line-height:1.75;color:var(--muted);margin-top:24px;font-weight:300}
+.ph-btn{margin-top:34px;align-self:flex-start;background:var(--moss);color:#fff;font-family:var(--mono);
+  font-size:18px;letter-spacing:.14em;padding:18px 36px}
+.ph-stats{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ph-stat{border:1px solid var(--border);background:rgba(255,255,255,.42);padding:18px 20px}
+.ph-stat b{font-family:var(--display);font-size:38px;font-weight:600;color:var(--moss)}
+.ph-stat b i{font-style:normal;font-size:20px;color:var(--wood)}
+.ph-stat span{display:block;font-family:var(--mono);font-size:14px;letter-spacing:.1em;color:var(--muted);margin-top:4px}
+
+/* ── 4 ── 功能卡 ── */
+.cards{margin-top:60px;display:flex;flex-direction:column;gap:26px}
+.card{display:flex;gap:34px;align-items:flex-start;background:#fff;border:1px solid var(--border);
+  padding:40px 44px;box-shadow:0 10px 30px rgba(47,43,38,.05)}
+.card b{font-family:var(--mono);font-size:30px;color:var(--moss);padding-top:6px;min-width:56px}
+.card h3{font-family:var(--display);font-weight:600;font-size:52px;line-height:1.25;color:var(--ink)}
+.card p{font-size:31px;line-height:1.6;color:var(--muted);font-weight:300;margin-top:10px}
+
+/* ── 5 ── 價格落差 ── */
+.price-old{font-family:var(--display);font-size:92px;font-weight:500;color:rgba(240,235,227,.42)}
+.price-new{font-family:var(--display);font-weight:700;font-size:300px;line-height:.9;color:var(--paper);letter-spacing:-.02em}
+.price-new sup{font-size:84px;vertical-align:super;color:var(--wood);font-weight:600;letter-spacing:0}
+.rule{height:1px;background:rgba(240,235,227,.22);margin:68px 0;transform-origin:left center}
+.monthly{display:flex;align-items:baseline;gap:24px}
+.monthly b{font-family:var(--display);font-weight:600;font-size:132px;color:var(--sage)}
+.monthly span{font-family:var(--mono);font-size:40px;letter-spacing:.1em;color:#C9C1B2}
+
+/* ── 6 ── 月費拆解 ── */
+.rows{margin-top:54px}
+.row{display:flex;align-items:center;gap:28px;padding:28px 0;border-bottom:1px solid var(--border)}
+.row .tick{width:46px;height:46px;border-radius:50%;background:var(--moss);color:#fff;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:26px}
+.row p{flex:1;font-size:38px;color:var(--ink-soft,#3A352E);font-weight:300}
+.row b{font-family:var(--mono);font-size:34px;color:var(--muted)}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin-top:40px}
+.total span{font-family:var(--mono);font-size:34px;letter-spacing:.14em;color:var(--moss)}
+.total b{font-family:var(--display);font-weight:700;font-size:96px;color:var(--ink)}
+
+/* ── 7 ── 名額稀缺 ── */
+.seats{display:flex;gap:22px;margin-top:70px}
+.seat{flex:1;aspect-ratio:1/1.25;border:2px solid rgba(240,235,227,.3);display:flex;
+  align-items:center;justify-content:center;font-family:var(--mono);font-size:44px;color:var(--paper);position:relative}
+.seat.taken{border-color:transparent;background:rgba(240,235,227,.08);color:rgba(240,235,227,.3)}
+.seat.taken::after{content:'';position:absolute;left:18%;right:18%;height:3px;background:rgba(240,235,227,.35);
+  transform:rotate(-24deg)}
+.seat.open{border-color:var(--sage);color:var(--sage);box-shadow:0 0 0 0 rgba(138,154,123,.5)}
+.left-now{font-family:var(--display);font-weight:700;font-size:150px;color:var(--sage);line-height:1}
+.deadline{display:inline-flex;align-items:baseline;gap:18px;border:2px solid var(--wood);padding:26px 42px;margin-top:10px}
+.deadline b{font-family:var(--display);font-weight:700;font-size:86px;color:var(--wood)}
+.deadline span{font-family:var(--mono);font-size:32px;letter-spacing:.16em;color:#C9C1B2}
+
+/* ── 8 ── 收尾 CTA ── */
+.end{align-items:center;justify-content:center;text-align:center}
+.end .url{font-family:var(--display);font-weight:700;font-size:118px;letter-spacing:-.01em;color:#fff;margin-top:34px}
+.end .cta{margin-top:54px;background:var(--paper);color:var(--moss-deep);font-family:var(--mono);
+  font-size:38px;letter-spacing:.14em;padding:30px 60px}
+.end .foot{margin-top:60px;font-family:var(--mono);font-size:26px;letter-spacing:.1em;color:rgba(244,241,234,.6)}
+
+/* ── 控制列（錄影時自動隱藏） ── */
+#ui{position:fixed;left:0;right:0;bottom:0;padding:14px 18px;display:flex;gap:10px;align-items:center;
+  background:rgba(20,18,15,.88);backdrop-filter:blur(8px);font-family:var(--mono);font-size:12px;color:#C9C1B2;z-index:50}
+#ui button{font-family:var(--mono);font-size:12px;padding:8px 14px;border:1px solid #4a443c;background:#241f1a;
+  color:#E7E1D6;cursor:pointer}
+#ui button:hover{background:#332c25}
+#track{flex:1;height:6px;background:#332c25;cursor:pointer;position:relative}
+#fill{position:absolute;inset:0;right:auto;width:0;background:var(--sage)}
+body.record #ui{display:none}
+body.record{background:#000}
+body.record #stage{box-shadow:none}
+@media (prefers-reduced-motion:reduce){.ink,.ph-rings,.caret{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- 1 ── 鉤子 -->
+  <section class="scene" data-bg="ink" data-start="0" data-dur="2.6">
+    <div class="chat">
+      <div class="bub them a-pop" data-at=".15">「你們公司有網站嗎？」</div>
+      <div class="bub me a-in" data-at=".85"><span class="caret"></span></div>
+    </div>
+    <div class="spacer"></div>
+    <h1 class="big a-up" data-at="1.25">這 3 秒的沉默，<br><em>客戶就走了。</em></h1>
+  </section>
+
+  <!-- 2 ── 痛點 -->
+  <section class="scene" data-bg="ink" data-start="2.6" data-dur="4.2">
+    <div class="label a-in" data-at=".1">沒有官網的代價</div>
+    <div class="pains">
+      <div class="pain a-wipe" data-at=".3"><span class="a-strike">名片發出去，沒人記得你<i class="" data-at=".9"></i></span></div>
+      <div class="pain a-wipe" data-at="1.2"><span class="a-strike">報價傳 LINE，像在路邊攤<i data-at="1.8"></i></span></div>
+      <div class="pain a-wipe" data-at="2.1"><span class="a-strike">Google 搜你的名字，是空的<i data-at="2.7"></i></span></div>
+    </div>
+    <div class="spacer"></div>
+    <p class="body a-in" data-at="3.1">客戶不是不想買，是找不到理由相信你。</p>
+  </section>
+
+  <!-- 3 ── Hero Banner -->
+  <section class="scene tall" data-bg="paper" data-start="6.8" data-dur="5.8">
+    <h2 class="mid a-up" data-at=".2">3 秒決定<br>他要不要<em>聽你說完</em>。</h2>
+    <p class="body a-in" data-at=".7" style="margin-top:22px">會動、有質感的 Hero Banner —— 打開的第一眼就是專業。</p>
+    <div class="spacer" style="max-height:40px"></div>
+    <div class="phone a-blur" data-at=".9">
+      <div class="ph-notch"></div>
+      <div class="ink a"></div><div class="ink b"></div>
+      <svg class="ph-rings" width="360" height="360" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(32,33)">
+        <circle r="26" fill="none" stroke="#A98467" stroke-width=".6" stroke-linecap="round" stroke-dasharray="100 16 36 12" transform="rotate(-30)"/>
+        <circle r="20" fill="none" stroke="#8A9A7B" stroke-width=".6" stroke-linecap="round" stroke-dasharray="52 12 46 18" transform="rotate(40)"/>
+        <circle r="14" fill="none" stroke="#A98467" stroke-width=".6" stroke-linecap="round" stroke-dasharray="56 10 16 7" transform="rotate(160)"/>
+      </g></svg>
+      <div class="ph-in">
+        <div class="ph-label a-in" data-at="1.5">工程・設計・自動化</div>
+        <div class="ph-title a-up" data-at="1.7">把你的生意<span>交給會跑的系統</span></div>
+        <div class="ph-desc a-in" data-at="2.2">品牌官網、可收錢的電商、企業 AI 自動化 —— 設計、開發、部署、維運一站式交付。</div>
+        <div class="ph-btn a-pop" data-at="2.5">看透明定價 →</div>
+        <div class="ph-stats">
+          <div class="ph-stat a-up" data-at="2.9"><b>100<i>%</i></b><span>價格公開透明</span></div>
+          <div class="ph-stat a-up" data-at="3.05"><b>1<i>-2</i></b><span>月內完成交付</span></div>
+          <div class="ph-stat a-up" data-at="3.2"><b>24<i>hr</i></b><span>專人必回覆</span></div>
+          <div class="ph-stat a-up" data-at="3.35"><b>365<i>天</i></b><span>全年維運監控</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ── 它怎麼幫你帶客 -->
+  <section class="scene" data-bg="paper" data-start="12.6" data-dur="6.4">
+    <div class="label a-in" data-at=".1">不只是好看</div>
+    <h2 class="mid a-up" data-at=".25">是讓他願意<br><em>留下聯絡方式</em>。</h2>
+    <div class="cards">
+      <div class="card a-up" data-at=".8"><b>01</b><div><h3>Google 搜得到你</h3><p>客戶查你的名字與公司，第一頁出現的是你的官網，不是別人。</p></div></div>
+      <div class="card a-up" data-at="1.5"><b>02</b><div><h3>詢問自動進後台</h3><p>表單送出即通知，每一筆名單都留底，不會再漏接客戶。</p></div></div>
+      <div class="card a-up" data-at="2.2"><b>03</b><div><h3>手機上一樣完美</h3><p>八成的人用手機看你——版面、載入、按鈕都為手機調過。</p></div></div>
+      <div class="card a-up" data-at="2.9"><b>04</b><div><h3>作品與案例牆</h3><p>把成交過的案子排成一面牆，讓實績替你開口議價。</p></div></div>
+    </div>
+  </section>
+
+  <!-- 5 ── 價格落差 -->
+  <section class="scene" data-bg="ink" data-start="19" data-dur="5.2">
+    <div class="label a-in" data-at=".1">本檔限時</div>
+    <div class="spacer"></div>
+    <p class="body a-in" data-at=".3" style="font-size:40px">形象官網建置費</p>
+    <div class="price-old a-in" data-at=".55" style="margin-top:14px"><span class="a-strike">NT$39,000<i data-at="1.05"></i></span></div>
+    <div class="price-new a-pop" data-at="1.5" style="margin-top:18px"><sup>NT$</sup>0</div>
+    <div class="rule a-bar" data-at="2.2"></div>
+    <p class="body a-in" data-at="2.5" style="font-size:40px">月費全包</p>
+    <div class="monthly"><b class="a-up" data-at="2.7">NT$2,000</b><span class="a-in" data-at="3.1">／月</span></div>
+    <div class="spacer"></div>
+    <p class="body a-in" data-at="3.6">主機、備份、監控、表單後台、每月改稿 —— 一個數字全包。</p>
+  </section>
+
+  <!-- 6 ── 解除風險 -->
+  <section class="scene" data-bg="paper" data-start="24.2" data-dur="5.2">
+    <h2 class="mid a-up" data-at=".15">網站上線、你點頭，<br><em>月費才開始跑。</em></h2>
+    <div class="rows">
+      <div class="row"><span class="tick a-check" data-at=".9">✓</span><p class="a-in" data-at=".9">主機與網域代管</p><b class="a-in" data-at=".9">500</b></div>
+      <div class="row"><span class="tick a-check" data-at="1.15">✓</span><p class="a-in" data-at="1.15">每日備份與上線監控</p><b class="a-in" data-at="1.15">300</b></div>
+      <div class="row"><span class="tick a-check" data-at="1.4">✓</span><p class="a-in" data-at="1.4">詢問表單與名單後台</p><b class="a-in" data-at="1.4">400</b></div>
+      <div class="row"><span class="tick a-check" data-at="1.65">✓</span><p class="a-in" data-at="1.65">每月 1 小時內容改稿</p><b class="a-in" data-at="1.65">800</b></div>
+      <div class="row"><span class="tick a-check" data-at="1.9">✓</span><p class="a-in" data-at="1.9">安全性更新與修補</p><b class="a-in" data-at="1.9">300</b></div>
+    </div>
+    <div class="total"><span class="a-in" data-at="2.4">每月合計</span><b class="a-pop" data-at="2.45">NT$2,000</b></div>
+    <div class="spacer"></div>
+    <p class="body a-in" data-at="3.1">下單只付 NT$2,000 席次保留金，全額折抵首期月費；未能如期交付，全額退還。</p>
+  </section>
+
+  <!-- 7 ── 名額與截止 -->
+  <section class="scene" data-bg="ink" data-start="29.4" data-dur="5.2">
+    <div class="label a-in" data-at=".1">零元啟動・限時開放</div>
+    <h2 class="mid a-up" data-at=".25">本檔只開 <em id="seatTotalTxt">5</em> 席。</h2>
+    <div class="seats" id="seats"></div>
+    <div class="spacer"></div>
+    <p class="body a-in" data-at="2.6" style="font-size:40px">目前僅剩</p>
+    <div style="display:flex;align-items:baseline;gap:22px">
+      <span class="left-now a-pop" data-at="2.75" id="leftNum">3</span>
+      <span class="body a-in" data-at="3" style="font-size:52px">席</span>
+    </div>
+    <div class="deadline a-up" data-at="3.4"><b id="deadlineTxt">11 / 30</b><span>截止</span></div>
+    <p class="body a-in" data-at="3.9" style="margin-top:28px">額滿或檔期結束，恢復標準定價 NT$39,000。</p>
+  </section>
+
+  <!-- 8 ── CTA -->
+  <section class="scene end" data-bg="moss" data-start="34.6" data-dur="4">
+    <svg class="a-pop" data-at=".1" width="180" height="180" viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(32,33)">
+      <circle r="26" fill="none" stroke="#F0EBE3" stroke-width=".8" stroke-linecap="round" stroke-dasharray="100 16 36 12" transform="rotate(-30)" opacity=".8"/>
+      <circle r="20" fill="none" stroke="#C7D3BA" stroke-width=".8" stroke-linecap="round" stroke-dasharray="52 12 46 18" transform="rotate(40)" opacity=".75"/>
+      <circle r="14" fill="none" stroke="#E4DCCF" stroke-width=".8" stroke-linecap="round" stroke-dasharray="56 10 16 7" transform="rotate(160)" opacity=".7"/>
+    </g></svg>
+    <div class="label a-in" data-at=".45" style="margin-top:46px;color:#C7D3BA">AVALO 阿瓦羅</div>
+    <div class="url a-up" data-at=".7">avalokite.xyz</div>
+    <div class="cta a-pop" data-at="1.2">現在就鎖定名額 →</div>
+    <div class="foot a-in" data-at="1.7">建置費 0 元・月費 NT$2,000・上線才開始計費</div>
+  </section>
+
+</div>
+
+<div id="ui">
+  <button id="replay">↻ 重播</button>
+  <button id="rec">● 錄影模式</button>
+  <div id="track"><div id="fill"></div></div>
+  <span id="clock">0.0 / 38.6s</span>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────
+   檔期參數：名額與截止日改這裡就好
+   ────────────────────────────────────────────── */
+const CONFIG = {
+  seatsTotal: 5,      // 本檔總席次
+  seatsTaken: 2,      // 已認購（會在畫面上被劃掉）
+  deadline: "11 / 30" // 截止日文字
+};
+
+const stage = document.getElementById("stage");
+const scenes = [...document.querySelectorAll(".scene")];
+const TOTAL = Math.max(...scenes.map(s => +s.dataset.start + +s.dataset.dur));
+
+/* 名額區塊依 CONFIG 生成 */
+(function buildSeats(){
+  const left = Math.max(0, CONFIG.seatsTotal - CONFIG.seatsTaken);
+  document.getElementById("seatTotalTxt").textContent = CONFIG.seatsTotal;
+  document.getElementById("leftNum").textContent = left;
+  document.getElementById("deadlineTxt").textContent = CONFIG.deadline;
+  const wrap = document.getElementById("seats");
+  for (let i = 0; i < CONFIG.seatsTotal; i++){
+    const el = document.createElement("div");
+    const taken = i < CONFIG.seatsTaken;
+    el.className = "seat " + (taken ? "taken" : "open") + " a-pop";
+    el.dataset.at = (0.7 + i * 0.28).toFixed(2);
+    el.textContent = taken ? "已滿" : (i + 1);
+    wrap.appendChild(el);
+  }
+})();
+
+/* 把每個元素的 data-at（相對於所屬幕）換算成絕對時間的 animation-delay */
+scenes.forEach(sc => {
+  const t0 = +sc.dataset.start;
+  sc.querySelectorAll("[data-at]").forEach(el => {
+    el.style.animationDelay = (t0 + +el.dataset.at) + "s";
+  });
+});
+
+/* 幕本身的淡入淡出：時長各幕不同，用 Web Animations API 比較乾淨 */
+const sceneAnims = scenes.map((sc, i) => {
+  const dur = +sc.dataset.dur, t0 = +sc.dataset.start;
+  const fin = Math.min(0.42 / dur, 0.3), fout = Math.min(0.34 / dur, 0.25);
+  sc.style.zIndex = i + 1;
+  return sc.animate(
+    [{opacity:0, offset:0},{opacity:1, offset:fin},{opacity:1, offset:1-fout},{opacity:0, offset:1}],
+    {duration: dur*1000, delay: t0*1000, fill:"both", easing:"linear"}
+  );
+});
+
+const all = () => document.getAnimations();
+function seek(t){ all().forEach(a => { try { a.currentTime = t*1000; } catch(e){} }); }
+function play(){ all().forEach(a => a.play()); }
+function pause(){ all().forEach(a => a.pause()); }
+
+/* 視窗等比縮放 */
+function fit(){
+  const s = Math.min(innerWidth / 1080, (innerHeight - (document.body.classList.contains("record") ? 0 : 52)) / 1920);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener("resize", fit); fit();
+
+/* 控制列 */
+const fill = document.getElementById("fill"), clock = document.getElementById("clock");
+document.getElementById("replay").onclick = () => { seek(0); play(); };
+document.getElementById("rec").onclick = () => {
+  document.body.classList.toggle("record"); fit(); seek(0); play();
+};
+document.getElementById("track").onclick = e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  seek(((e.clientX - r.left) / r.width) * TOTAL);
+};
+addEventListener("keydown", e => {
+  if (e.key === "r" || e.key === "R") document.getElementById("rec").click();
+  // 錄影模式下控制列是藏起來的，Enter 就是重播鍵
+  if (e.key === "Enter") { seek(0); play(); }
+  if (e.key === " ") { e.preventDefault(); sceneAnims[0].playState === "running" ? pause() : play(); }
+});
+
+/* 網址加 ?rec=1 直接進錄影模式 */
+if (new URLSearchParams(location.search).get("rec") === "1") document.body.classList.add("record");
+
+/* 進度條 */
+(function tick(){
+  const t = (sceneAnims[0].currentTime || 0) / 1000;
+  fill.style.width = Math.min(100, (t / TOTAL) * 100) + "%";
+  clock.textContent = t.toFixed(1) + " / " + TOTAL.toFixed(1) + "s";
+  requestAnimationFrame(tick);
+})();
+
+/* 字體沒載好就開播會跳版，等 fonts.ready 再從 0 開始 */
+pause();
+(document.fonts ? document.fonts.ready : Promise.resolve())
+  .then(() => new Promise(r => setTimeout(r, 250)))
+  .then(() => { seek(0); play(); });
+</script>
+</body>
+</html>

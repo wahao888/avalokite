@@ -521,6 +521,7 @@
     "seatsLabel": "Seats in this run",
     "seatsLeft": "only {n} left",
     "countdownLabel": "Offer ends in",
+    "ended": "This run has closed — standard pricing applies",
     "cd": {
       "d": "days",
       "h": "hrs",
