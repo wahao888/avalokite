@@ -8,6 +8,7 @@ import { CartProvider } from "@/lib/cart";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ScrollFx from "@/components/ScrollFx";
+import ChatWidget from "@/components/ChatWidget";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -69,6 +70,7 @@ export default async function LocaleLayout({
             {children}
             <Footer />
             <ScrollFx />
+            <ChatWidget />
           </CartProvider>
         </NextIntlClientProvider>
       </body>

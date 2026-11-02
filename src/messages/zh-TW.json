@@ -580,5 +580,17 @@
     "errEcpay": "終止授權時綠界回報失敗，請直接來信 service@avalokite.xyz，我們會人工處理。",
     "errGeneric": "操作失敗，請重試或來信 service@avalokite.xyz。",
     "help": "有任何問題請來信 service@avalokite.xyz，我們會在一個工作天內回覆。"
+  },
+  "chat": {
+    "launcher": "線上客服",
+    "title": "線上客服",
+    "subtitle": "AI 即時回覆・24 小時",
+    "greeting": "您好，這裡是 Avalo 線上客服。方案價格、交期、規格都可以直接問；需要專人處理時我們會請同事接手。",
+    "placeholder": "輸入訊息…",
+    "send": "送出",
+    "close": "關閉",
+    "thinking": "輸入中",
+    "error": "連線出了點狀況，請再試一次，或來信 service@avalokite.xyz。",
+    "disclaimer": "由 AI 回覆，報價以官網方案頁為準"
   }
 }

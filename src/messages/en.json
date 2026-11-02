@@ -580,5 +580,17 @@
     "errEcpay": "ECPay reported a failure while cancelling. Please email service@avalokite.xyz and we will handle it manually.",
     "errGeneric": "Something went wrong. Please retry or email service@avalokite.xyz.",
     "help": "Questions? Email service@avalokite.xyz and we will reply within one business day."
+  },
+  "chat": {
+    "launcher": "Live support",
+    "title": "Live support",
+    "subtitle": "AI replies, around the clock",
+    "greeting": "Hi, this is Avalo support. Ask about pricing, timelines or specs — we'll bring in a colleague whenever a human is needed.",
+    "placeholder": "Type a message…",
+    "send": "Send",
+    "close": "Close",
+    "thinking": "Typing",
+    "error": "Something went wrong. Please try again, or email service@avalokite.xyz.",
+    "disclaimer": "Answered by AI; the pricing page is authoritative"
   }
 }
