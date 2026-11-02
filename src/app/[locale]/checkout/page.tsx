@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
   const [stale, setStale] = useState(false); // 條款已改版，需重新確認
+  const [promoClosed, setPromoClosed] = useState(false); // 促銷檔期已額滿或結束
 
   // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
   // 含建置的訂單有 12 個月最短承諾期，這件事必須在按下付款前就講明白
@@ -32,6 +33,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError(false);
     setStale(false);
+    setPromoClosed(false);
     setSubmitting(true);
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
     try {
@@ -43,6 +45,12 @@ export default function CheckoutPage() {
       // 條款在結帳途中改版 → 不默默用新版成立契約，請客戶重新確認
       if (res.status === 409) {
         setStale(true);
+        setSubmitting(false);
+        return;
+      }
+      // 最後一席在結帳途中被買走，或檔期剛好到期 → 講清楚為什麼送不出去
+      if (res.status === 410) {
+        setPromoClosed(true);
         setSubmitting(false);
         return;
       }
@@ -71,6 +79,14 @@ export default function CheckoutPage() {
               <a href="/legal/terms" target="_blank" style={{ textDecoration: "underline" }}>
                 {tl("terms")}
               </a>
+            </div>
+          )}
+          {promoClosed && (
+            <div className="form-feedback err">
+              {t("promoClosed")}{" "}
+              <Link href="/cart" style={{ textDecoration: "underline" }}>
+                {t("backToCart")}
+              </Link>
             </div>
           )}
 

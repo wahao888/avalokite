@@ -32,6 +32,8 @@ export default function PromoUrgency() {
   }, []);
 
   const { seatsTaken, seatsTotal } = PROMO_WINDOW;
+  const soldOut = seatsLeft() === 0;
+  const closed = soldOut || ended;
   const pct = Math.min(100, Math.round((seatsTaken / seatsTotal) * 100));
 
   const cells: Array<[string, string]> = [
@@ -48,7 +50,10 @@ export default function PromoUrgency() {
         <div className="promo-seats-count">
           <b>{seatsTaken}</b>
           <span className="promo-seats-of"> / {seatsTotal}</span>
-          <span className="promo-seats-left">{t("seatsLeft", { n: seatsLeft() })}</span>
+          {/* 額滿時下方已經寫明，這裡再掛一個「僅剩 0 席」只是贅字 */}
+          {!soldOut && (
+            <span className="promo-seats-left">{t("seatsLeft", { n: seatsLeft() })}</span>
+          )}
         </div>
         <div
           className="promo-seats-bar"
@@ -63,9 +68,9 @@ export default function PromoUrgency() {
       </div>
 
       <div className="promo-countdown">
-        {!ended && <div className="promo-urgency-label">{t("countdownLabel")}</div>}
-        {ended ? (
-          <p className="promo-ended">{t("ended")}</p>
+        {!closed && <div className="promo-urgency-label">{t("countdownLabel")}</div>}
+        {closed ? (
+          <p className="promo-ended">{soldOut ? t("soldOut") : t("ended")}</p>
         ) : (
           <div className="promo-clock" aria-live="off">
             {cells.map(([value, unit], i) => (

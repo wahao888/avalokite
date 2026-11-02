@@ -32,8 +32,8 @@ export default function PromoBar() {
     return () => clearInterval(id);
   }, []);
 
-  // 檔期一過就不再宣傳：留著過期的倒數比沒有倒數更傷信任
-  if (PROMO_PLANS.length === 0 || ended) return null;
+  // 檔期一過或名額售罄就不再宣傳：留著過期的倒數、或喊「僅剩 0 席」比沒有倒數更傷信任
+  if (PROMO_PLANS.length === 0 || seatsLeft() === 0 || ended) return null;
 
   return (
     <Link className="promo-bar" href={{ pathname: "/", hash: "promo" }}>

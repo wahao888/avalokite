@@ -15,7 +15,7 @@ export const PROMO_WINDOW = {
   /** 本檔開放席次 */
   seatsTotal: 5,
   /** 已認購席次（顯示用；小於等於 seatsTotal） */
-  seatsTaken: 2,
+  seatsTaken: 3,
   /** 檔期截止時間；null 表示開放式檔期，改用下面的滾動週期 */
   endsAt: Date.UTC(2026, 10, 30, 16, 0, 0) as number | null, // UTC+8 的 2026-12-01 00:00（11/30 結束）
   /** 滾動模式的倒數起算點（UTC+8 的 2026-09-01 00:00） */
@@ -46,6 +46,16 @@ export function currentDeadline(now: number = Date.now()): number {
 /** 固定檔期是否已經結束。開放式檔期永遠回 false。 */
 export function isExpired(now: number = Date.now()): boolean {
   return PROMO_WINDOW.endsAt !== null && now >= PROMO_WINDOW.endsAt;
+}
+
+/**
+ * 本檔是否還收得了單：沒過期、而且還有席次。
+ *
+ * 前端拿它來停用按鈕，/api/checkout 拿它做最後一道攔截——前端擋掉的東西
+ * 用 curl 一樣送得進來，席次限制沒有伺服器端這一關就只是裝飾。
+ */
+export function promoOpen(now: number = Date.now()): boolean {
+  return !isExpired(now) && seatsLeft() > 0;
 }
 
 export interface Remaining {

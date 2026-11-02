@@ -439,6 +439,8 @@
     "commitNotice": "and I understand that the care plan on this order has a minimum term (see Terms, section 3).",
     "agreementRecord": "When you place the order we record the terms version you accepted ({version}), the time and your IP address as evidence of the contract. Later revisions do not affect this order.",
     "termsChanged": "Our terms were just updated. Please review them again before placing the order.",
+    "promoClosed": "This run is fully booked or has closed, so it can no longer be ordered at the promotional price. Remove the promo plan from your cart, or contact us about standard pricing.",
+    "backToCart": "Back to cart",
     "payPromoMonthlyStart": "Care starts after launch and acceptance. Today’s seat deposit is credited in full toward the first period. No care fees are charged during production; follow the later authorization notice.",
     "payDeposit": "Seat deposit (paid today, incl. tax)",
     "payHintBuild": "Today you pay only the one-time amount above through ECPay. We notify you separately about care authorization after launch and acceptance."
@@ -522,6 +524,9 @@
     "seatsLeft": "only {n} left",
     "countdownLabel": "Offer ends in",
     "ended": "This run has closed — standard pricing applies",
+    "soldOut": "This run is fully booked — standard pricing applies",
+    "soldOutCta": "Fully booked",
+    "endedCta": "Run closed",
     "cd": {
       "d": "days",
       "h": "hrs",

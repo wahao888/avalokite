@@ -811,6 +811,11 @@ button { font-family: inherit; }
 .promo-clock-sep::before { content: ":"; }
 
 /* 固定檔期結束後取代倒數的說明，見 promo-window.ts 的 isExpired */
+.promo-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .promo-ended {
   font-family: var(--font-mono);
   font-size: 0.8rem;

@@ -12,6 +12,7 @@ import {
   promoPlanForSkus,
   withTax,
 } from "@/lib/products";
+import { promoOpen } from "@/lib/promo-window";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { LEGAL_VERSION } from "@/lib/legal-content";
@@ -103,6 +104,12 @@ export async function POST(req: NextRequest) {
   // 促銷維護單獨結帳＝用促銷價買到沒有綁約的維護，擋掉（見 promoCareNeedsBuild）
   if (promoCareNeedsBuild(skus)) {
     return NextResponse.json({ error: "promo care requires the promo build" }, { status: 400 });
+  }
+  // 檔期額滿或結束後就不能再用促銷價下單。購物車已把按鈕停用，這裡是伺服器端
+  // 那一道——前端擋掉的東西用 curl 照樣送得進來。
+  // 用 410 而不是 409：409 已經被「條款改版請重新確認」佔走了，共用會讓結帳頁顯示錯的訊息。
+  if (skus.some((s) => getProduct(s)?.group === "promo") && !promoOpen()) {
+    return NextResponse.json({ error: "promo window closed" }, { status: 410 });
   }
   // 有建置＝先付一次性款項，網站上線驗收後才寄維護授權連結；
   // 無建置＝單購維護（既有網站），服務當下就在提供，結帳當下即授權。

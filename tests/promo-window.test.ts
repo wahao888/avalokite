@@ -3,6 +3,7 @@ import {
   PROMO_WINDOW,
   currentDeadline,
   isExpired,
+  promoOpen,
   remainingFrom,
   rollingDeadline,
   seatsLeft,
@@ -118,5 +119,36 @@ describe("名額設定", () => {
 
   it("週期至少一小時（避免倒數快到看不出來）", () => {
     expect(PROMO_WINDOW.cycleHours).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("是否還收得了單（promoOpen）", () => {
+  const { endsAt } = PROMO_WINDOW;
+
+  it("名額與時間都還在，就開著", () => {
+    if (endsAt === null || seatsLeft() === 0) return;
+    expect(promoOpen(endsAt - HOUR)).toBe(true);
+  });
+
+  it("過了截止時間就關閉，即使還有席次", () => {
+    if (endsAt === null) return;
+    expect(promoOpen(endsAt)).toBe(false);
+    expect(promoOpen(endsAt + 30 * 24 * HOUR)).toBe(false);
+  });
+
+  it("席次歸零就關閉，即使時間還沒到", () => {
+    const taken = PROMO_WINDOW.seatsTaken;
+    // 這一條是席次限制的核心，必須能在「只剩時間、沒剩名額」時擋下來
+    (PROMO_WINDOW as { seatsTaken: number }).seatsTaken = PROMO_WINDOW.seatsTotal;
+    try {
+      expect(seatsLeft()).toBe(0);
+      expect(promoOpen(endsAt === null ? Date.now() : endsAt - HOUR)).toBe(false);
+    } finally {
+      (PROMO_WINDOW as { seatsTaken: number }).seatsTaken = taken;
+    }
+  });
+
+  it("目前的設定是開著的（改壞參數會在這裡被抓到）", () => {
+    expect(promoOpen(Date.now())).toBe(true);
   });
 });

@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
+import { isExpired, seatsLeft } from "@/lib/promo-window";
 import PromoUrgency from "@/components/sections/PromoUrgency";
 import {
   fmt,
@@ -25,6 +27,18 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
   const chosen =
     plan.skus.every((s) => has(s)) &&
     others.every((s) => plan.skus.includes(s) || !has(s));
+
+  // 席次是設定值，伺服器與瀏覽器算出來一樣，可以直接參與首次繪製；
+  // 過期與否取決於當下時間，只能在瀏覽器算（否則靜態產出會把判斷凍住）。
+  const soldOut = seatsLeft() === 0;
+  const [expired, setExpired] = useState(false);
+  useEffect(() => {
+    const tick = () => setExpired(isExpired());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  const closed = soldOut || expired;
 
   const choose = () => {
     // cart 的 add 用函式式更新，連續呼叫可安全累加
@@ -101,7 +115,11 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
           <b>NT${fmt(promoPlanTotal(plan))}</b>
         </div>
 
-        {chosen ? (
+        {closed ? (
+          <button className="btn-ghost promo-cta" disabled>
+            {soldOut ? t("soldOutCta") : t("endedCta")}
+          </button>
+        ) : chosen ? (
           <button className="btn-ghost promo-cta" onClick={() => router.push("/cart")}>
             {t("inCart")}
           </button>
