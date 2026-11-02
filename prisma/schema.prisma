@@ -688,10 +688,16 @@ model ChatConversation {
   externalId  String // LINE userId，或網站訪客的匿名 cookie id
   displayName String?
 
-  /// 已判定需要專人接手。轉過一次就不再重複寄通知，否則客人每問一句就一封信。
+  /// 已判定需要專人接手。
   handoff       Boolean   @default(false)
   handoffAt     DateTime?
   handoffReason String?
+
+  /// AI 閉嘴到這個時間為止（只對 LINE 有意義：那裡才有真人聊天介面）。
+  /// 轉人之後若 AI 還在自動回每一句，等於和你在同一個對話框裡搶話，
+  /// 而你打字比它慢，客人會看到你們兩個各說各的。
+  /// 用時間自動解除而不是永久靜音：客人過幾天來問別的事，不該沒人理。
+  mutedUntil DateTime?
 
   lastAt    DateTime @default(now())
   createdAt DateTime @default(now())

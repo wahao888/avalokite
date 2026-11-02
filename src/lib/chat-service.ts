@@ -41,6 +41,17 @@ const PRICE_IN = Number(process.env.AI_PRICE_IN || 0.1);
 const PRICE_CACHED = Number(process.env.AI_PRICE_CACHED || 0.01);
 const PRICE_OUT = Number(process.env.AI_PRICE_OUT || 0.5);
 
+/**
+ * 轉人之後 AI 閉嘴幾小時。
+ *
+ * 只對 LINE 生效——那裡你能在 LINE Official Account Manager 的聊天分頁親自回，
+ * AI 繼續自動回每一句就是跟你在同一個對話框裡搶話。官網的聊天視窗沒有真人
+ * 介面，靜音只會變成沒人理。
+ *
+ * 用時間自動解除而不是永久靜音：客人過幾天來問別的事，不該還是沒人回。
+ */
+const MUTE_HOURS = Number(process.env.AI_MUTE_HOURS || 12);
+
 /** 單則訊息的字數上限。LINE 一則可以送到 5000 字，全塞進去就是五千字的輸入成本。 */
 const MAX_CHARS = 1000;
 
@@ -116,7 +127,8 @@ async function overBudget(): Promise<boolean> {
   return false;
 }
 
-export async function handleMessage(msg: IncomingMessage): Promise<string> {
+/** 回 null 代表「這則不要回覆」——真人已接手，AI 安靜聽著就好。 */
+export async function handleMessage(msg: IncomingMessage): Promise<string | null> {
   // 先截斷再做任何事：下面每一步（存檔、帶進歷史、送進模型）都會被長度放大
   const text = msg.text.slice(0, MAX_CHARS);
   msg = { ...msg, text };
@@ -133,6 +145,23 @@ export async function handleMessage(msg: IncomingMessage): Promise<string> {
     // 顯示名稱可能第一次沒拿到，之後補上；拿不到就別用 null 蓋掉已有的值。
     update: msg.displayName ? { displayName: msg.displayName } : {},
   });
+
+  // 真人接手期間不呼叫模型，但訊息照存、通知照寄——客人說的每一句你都要看得到
+  const muted =
+    msg.channel === "line" && !!convo.mutedUntil && convo.mutedUntil > new Date();
+  if (muted) {
+    await prisma.$transaction([
+      prisma.chatMessage.create({
+        data: { conversationId: convo.id, role: "user", content: text },
+      }),
+      prisma.chatConversation.update({
+        where: { id: convo.id },
+        data: { lastAt: new Date() },
+      }),
+    ]);
+    await notifyIfNeeded(convo, msg, null, []);
+    return null;
+  }
 
   const recent = await prisma.chatMessage.findMany({
     where: { conversationId: convo.id },
@@ -195,16 +224,31 @@ export const looksLikeContact = (text: string): boolean => CONTACT_RE.test(text)
 async function notifyIfNeeded(
   convo: { id: number; handoff: boolean; displayName: string | null },
   msg: IncomingMessage,
-  result: { reply: string; needsHuman: boolean; handoffReason: string },
+  result: { reply: string; needsHuman: boolean; handoffReason: string } | null,
   history: AgentTurn[],
 ): Promise<void> {
-  const firstTime = result.needsHuman && !convo.handoff;
+  const firstTime = !!result?.needsHuman && !convo.handoff;
   if (!firstTime && !convo.handoff) return;
+
+  // LINE 從下一則起靜音；官網不靜音（那裡沒有真人介面，靜了就沒人理）
+  const muteUntil =
+    msg.channel === "line" ? new Date(Date.now() + MUTE_HOURS * 3_600_000) : null;
 
   if (firstTime) {
     await prisma.chatConversation.update({
       where: { id: convo.id },
-      data: { handoff: true, handoffAt: new Date(), handoffReason: result.handoffReason },
+      data: {
+        handoff: true,
+        handoffAt: new Date(),
+        handoffReason: result?.handoffReason ?? "真人接手",
+        mutedUntil: muteUntil,
+      },
+    });
+  } else if (muteUntil) {
+    // 客人持續在講，就把靜音往後延：你還在處理，AI 不該中途插話
+    await prisma.chatConversation.update({
+      where: { id: convo.id },
+      data: { mutedUntil: muteUntil },
     });
   }
 
@@ -213,6 +257,11 @@ async function notifyIfNeeded(
   const subject = firstTime
     ? `[Avalo] AI 客服請求轉接 — ${who}（${msg.channel}）`
     : `[Avalo] 客人補充訊息${hasContact ? "（含聯絡方式）" : ""} — ${who}（${msg.channel}）`;
+
+  const muteNote = muteUntil
+    ? `AI 已在此對話靜音至 ${muteUntil.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}，` +
+      "這段期間客人的訊息只會寄信給你，LINE 上不會自動回覆——請直接在 LINE 官方帳號的聊天分頁接手。"
+    : "";
 
   // 附上前文：只有最後一句的通知信看不出客人要什麼，等於還是要自己去後台翻
   const recent = [...history.slice(-6), { role: "user" as const, content: msg.text }]
@@ -224,11 +273,12 @@ async function notifyIfNeeded(
     [
       `來源：${msg.channel}`,
       `對象：${who}`,
-      firstTime ? `原因：${result.handoffReason || "未說明"}` : "狀態：已轉接，這是客人後續補充",
+      firstTime ? `原因：${result?.handoffReason || "未說明"}` : "狀態：已轉接，這是客人後續補充",
+      ...(muteNote ? ["", muteNote] : []),
       "",
       "─── 對話 ───",
       recent,
-      `客服：${result.reply}`,
+      ...(result ? [`客服：${result.reply}`] : ["（AI 靜音中，未回覆）"]),
       "",
       `對話 ID：${convo.id}`,
     ].join("\n"),

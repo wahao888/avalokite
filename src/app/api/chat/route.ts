@@ -48,13 +48,14 @@ export async function POST(req: NextRequest) {
   const existing = req.cookies.get(VISITOR_COOKIE)?.value;
   const visitorId = existing ?? crypto.randomUUID();
 
+  // 官網不靜音（那裡沒有真人介面），所以這裡實際上永遠拿得到字串
   const reply = await handleMessage({
     channel: "web",
     externalId: visitorId,
     text: parsed.data.message,
   });
 
-  const res = NextResponse.json({ reply });
+  const res = NextResponse.json({ reply: reply ?? "" });
   if (!existing) {
     res.cookies.set(VISITOR_COOKIE, visitorId, {
       httpOnly: true,

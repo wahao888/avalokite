@@ -57,7 +57,8 @@ async function processEvent(event: LineEvent) {
       displayName,
       text,
     });
-    await replyText(event.replyToken, reply);
+    // null = 真人已接手，AI 這輪不說話。reply token 就讓它過期，不送任何訊息。
+    if (reply) await replyText(event.replyToken, reply);
   } catch (err) {
     // 背景工作沒有人接 promise，不自己 catch 就會變成 unhandled rejection。
     console.error("[line/webhook] 處理事件失敗", err);
