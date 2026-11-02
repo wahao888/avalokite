@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 
 import { verifyLineSignature } from "@/lib/line";
 import { buildKnowledge } from "@/lib/ai-knowledge";
+import { looksLikeContact } from "@/lib/chat-service";
 import { PRODUCTS, fmt, withTax } from "@/lib/products";
 import { COMPANY } from "@/lib/site";
 
@@ -93,5 +94,35 @@ describe("知識庫", () => {
   it("禁止自行加總，並指向購物車試算", () => {
     expect(kb).toContain("不要自己做加總、乘法或年度試算");
     expect(kb).toContain("加入購物車");
+  });
+});
+
+describe("轉人通知：聯絡方式偵測", () => {
+  /**
+   * 這個旗標只影響通知信的主旨，但那正是 Barry 決定「要不要現在放下手邊事情」
+   * 的依據，所以寧可嚴一點也不要把金額誤判成電話。
+   */
+  it.each([
+    "0961187792",
+    "0961-187-792",
+    "0961 187 792",
+    "我的電話 02-27001234",
+    "02 2700 1234",
+    "寄到 barry@example.com 謝謝",
+    "王庭號 0961187792",
+  ])("認得出聯絡方式：%s", (text) => {
+    expect(looksLikeContact(text)).toBe(true);
+  });
+
+  it.each([
+    "AI 智能客服多少錢？",
+    "建置費 NT$89,000，含稅 NT$93,450",
+    "統編 60543664",
+    "第一年共 NT$160,880",
+    "我想問 2026 年底前能不能做完",
+    "上線日排 2026-11-02 可以嗎",
+    "叫真人來",
+  ])("不把數字誤判成聯絡方式：%s", (text) => {
+    expect(looksLikeContact(text)).toBe(false);
   });
 });
