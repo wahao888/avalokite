@@ -64,8 +64,9 @@ LINE_CHANNEL_SECRET=""
 # ── AI 智能客服（LINE 官方帳號 ＋ 官網聊天）──
 LINE_OA_CHANNEL_SECRET=""                       # 官方帳號 Messaging API，與上面那組不同 channel
 LINE_OA_CHANNEL_ACCESS_TOKEN=""
-ANTHROPIC_API_KEY=""
-AI_MODEL=""                                     # 留空 = claude-haiku-5-5
+OPENAI_API_KEY=""
+AI_MODEL=""                                     # 留空 = gpt-6-luna（最便宜的一級）
+AI_REASONING_EFFORT=""                          # 留空 = none（關閉推理）
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
@@ -79,7 +80,7 @@ AI_MODEL=""                                     # 留空 = claude-haiku-5-5
 客戶端元件、也要組圖片網址；伺服器端的 storage 模組會拉進 `fs`，
 進不了瀏覽器的 bundle。搬 S3／CloudFront 時把這個值指向 CDN 網域即可。
 
-**AI 客服的三個變數留空時，客服整組停用** —— webhook 一律回 401（LINE 後台會顯示
+**AI 客服的 LINE 與 OpenAI 金鑰留空時，客服整組停用** —— webhook 一律回 401（LINE 後台會顯示
 驗證失敗，這是預期的），官網聊天則回固定的「請留下聯絡方式」。所以沒金鑰也不會擋上線。
 
 ⚠ `LINE_OA_CHANNEL_SECRET` 與上面 LINE 登入的 `LINE_CHANNEL_SECRET` **是兩支不同的
