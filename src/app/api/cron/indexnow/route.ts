@@ -7,10 +7,12 @@ import { routing } from "@/i18n/routing";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  // 一律驗 secret。這裡原本還有一條「沒有 x-forwarded-for 就當成本機」的放行，
+  // 但 Next 自己會補上那個標頭，條件永遠不成立——看起來有兩條路，實際只有一條。
+  // 本機要打就用 deploy/run-cron.sh，它會從 .env 把秘密帶上。
   const secret = process.env.CRON_SECRET;
   const provided = req.headers.get("x-cron-secret") ?? "";
-  const isLocal = req.headers.get("x-forwarded-for") == null && clientIsLoopback(req);
-  if (secret && provided !== secret && !isLocal) {
+  if (!secret || provided !== secret) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -28,9 +30,4 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify(payload),
   });
   return NextResponse.json({ ok: res.ok, status: res.status, urls: payload.urlList.length });
-}
-
-function clientIsLoopback(req: NextRequest) {
-  const ip = req.headers.get("x-real-ip") || "";
-  return ip === "127.0.0.1" || ip === "::1" || ip === "";
 }

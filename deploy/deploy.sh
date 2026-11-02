@@ -74,7 +74,11 @@ for p in / /en /pricing /services /faq /guides /tools/geo /about /contact /llms.
 done
 
 echo "=== IndexNow ==="
-# 本機打 3000，不經 nginx；沒有 x-forwarded-for 時端點允許 loopback。
-ssh -i "$KEY" "$HOST" 'curl -sS -X POST --max-time 30 http://127.0.0.1:3000/api/cron/indexnow || true'
-echo
+# 走 run-cron.sh：它從伺服器 .env 讀 CRON_SECRET 再打本機 3000。
+# 原本是直接 curl、靠端點的「沒有 x-forwarded-for 就當成 loopback」放行，
+# 但 Next 自己會補上 x-forwarded-for，那條判斷永遠不成立——
+# 2026-11-02 第一次部署時就吃到 {"error":"unauthorized"}，而且 curl 失敗被 || true 吞掉，
+# 部署照樣顯示成功。秘密本來就在伺服器上，直接帶就好，不要猜來源。
+ssh -i "$KEY" "$HOST" 'sudo -u avalo /opt/avalo/app/deploy/run-cron.sh indexnow' || \
+  echo "  ⚠ IndexNow 沒打成功，確認伺服器 .env 的 CRON_SECRET"
 echo "✓ 部署完成"
