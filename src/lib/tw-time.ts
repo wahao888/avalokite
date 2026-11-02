@@ -95,3 +95,29 @@ export function taipeiDateKey(d: Date = new Date()): string {
   const p = instantToTaipeiParts(d);
   return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
 }
+
+/** 台北的那一天從哪個瞬間開始。用於「今天用了幾則」這種以當地日界線切的統計。 */
+export function taipeiDayStart(d: Date = new Date()): Date {
+  const p = instantToTaipeiParts(d);
+  return taipeiWallClockToInstant({ ...p, hour: 0, minute: 0 });
+}
+
+/**
+ * 台北的某個月從哪個瞬間開始。monthsAgo = 0 是本月、1 是上個月。
+ *
+ * 跨年要往回退：月份減到 0 以下時自己處理，不要丟 month = -1 給 Date.UTC
+ * 期待它幫忙捲——它會捲，但捲出來的是哪一年要再算一次，不如寫清楚。
+ */
+export function taipeiMonthStart(monthsAgo = 0, now: Date = new Date()): Date {
+  const p = instantToTaipeiParts(now);
+  const zeroBased = p.month - 1 - monthsAgo;
+  const year = p.year + Math.floor(zeroBased / 12);
+  const month = ((zeroBased % 12) + 12) % 12 + 1;
+  return taipeiWallClockToInstant({ year, month, day: 1, hour: 0, minute: 0 });
+}
+
+/** 台北的年月（YYYY-MM）。報表分組與標題用。 */
+export function taipeiMonthKey(d: Date = new Date()): string {
+  const p = instantToTaipeiParts(d);
+  return `${p.year}-${pad(p.month)}`;
+}

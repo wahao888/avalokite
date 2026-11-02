@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
 import { answer, HISTORY_TURNS, type AgentTurn } from "@/lib/ai-agent";
+import { estimateCostUsd } from "@/lib/chat-pricing";
+import { taipeiDateKey, taipeiDayStart, taipeiMonthStart } from "@/lib/tw-time";
 
 export type ChatChannel = "line" | "web";
 
@@ -22,7 +24,7 @@ export interface IncomingMessage {
  * 這道是最後一關：超過就停止呼叫模型，當天後續一律回「請留聯絡方式」。
  * 寧可漏接幾個真客人，也不要隔天看到五位數的帳單。
  */
-const DAILY_CAP = Number(process.env.AI_DAILY_CAP || 500);
+export const DAILY_CAP = Number(process.env.AI_DAILY_CAP || 500);
 
 /**
  * 每月花費上限（美元）。這是真正對得上「我不想付超過多少錢」的那道閘。
@@ -31,15 +33,7 @@ const DAILY_CAP = Number(process.env.AI_DAILY_CAP || 500);
  * 單價換模型就會變，用則數估錢永遠估不準。所以兩道並存：則數擋突發，
  * 金額擋累積。
  */
-const MONTHLY_BUDGET = Number(process.env.AI_MONTHLY_BUDGET_USD || 10);
-
-/**
- * 每百萬 token 的單價（美元），預設是 gpt-6-luna 的牌價。
- * 換模型時要一起改，否則這道閘會用錯的單價估錢——估低了就擋不住。
- */
-const PRICE_IN = Number(process.env.AI_PRICE_IN || 0.1);
-const PRICE_CACHED = Number(process.env.AI_PRICE_CACHED || 0.01);
-const PRICE_OUT = Number(process.env.AI_PRICE_OUT || 0.5);
+export const MONTHLY_BUDGET = Number(process.env.AI_MONTHLY_BUDGET_USD || 10);
 
 /**
  * 轉人之後 AI 閉嘴幾小時。
@@ -50,7 +44,7 @@ const PRICE_OUT = Number(process.env.AI_PRICE_OUT || 0.5);
  *
  * 用時間自動解除而不是永久靜音：客人過幾天來問別的事，不該還是沒人回。
  */
-const MUTE_HOURS = Number(process.env.AI_MUTE_HOURS || 12);
+export const MUTE_HOURS = Number(process.env.AI_MUTE_HOURS || 12);
 
 /** 單則訊息的字數上限。LINE 一則可以送到 5000 字，全塞進去就是五千字的輸入成本。 */
 const MAX_CHARS = 1000;
@@ -62,29 +56,21 @@ const CAPPED_REPLY =
 /** 上一次寄出超額警示的日期，避免同一天狂寄。重啟歸零，可接受。 */
 let capAlertedOn = "";
 
-const todayInTaipei = () =>
-  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
-
-const startOfTodayTaipei = () => new Date(`${todayInTaipei()}T00:00:00+08:00`);
-const startOfMonthTaipei = () =>
-  new Date(`${todayInTaipei().slice(0, 7)}-01T00:00:00+08:00`);
-
-/** 以實際記錄的 token 數換算當月花費。cacheRead 是 input 的子集，要先扣掉。 */
+/** 以實際記錄的 token 數換算當月花費（台北時間的月界線）。 */
 export async function monthlySpendUsd(): Promise<number> {
   const agg = await prisma.chatMessage.aggregate({
-    where: { role: "assistant", createdAt: { gte: startOfMonthTaipei() } },
+    where: { role: "assistant", createdAt: { gte: taipeiMonthStart() } },
     _sum: { inputTokens: true, outputTokens: true, cacheReadTokens: true },
   });
-  const input = agg._sum.inputTokens ?? 0;
-  const output = agg._sum.outputTokens ?? 0;
-  const cached = Math.min(agg._sum.cacheReadTokens ?? 0, input);
-  return (
-    ((input - cached) * PRICE_IN + cached * PRICE_CACHED + output * PRICE_OUT) / 1_000_000
-  );
+  return estimateCostUsd({
+    input: agg._sum.inputTokens ?? 0,
+    output: agg._sum.outputTokens ?? 0,
+    cacheRead: agg._sum.cacheReadTokens ?? 0,
+  });
 }
 
 async function alertOnce(subject: string, lines: string[]): Promise<void> {
-  const today = todayInTaipei();
+  const today = taipeiDateKey();
   if (capAlertedOn === today) return;
   capAlertedOn = today;
   await notifyOwner(subject, lines.join("\n"));
@@ -108,7 +94,7 @@ async function overBudget(): Promise<boolean> {
   }
 
   const used = await prisma.chatMessage.count({
-    where: { role: "assistant", createdAt: { gte: startOfTodayTaipei() } },
+    where: { role: "assistant", createdAt: { gte: taipeiDayStart() } },
   });
   if (used >= DAILY_CAP) {
     await alertOnce(

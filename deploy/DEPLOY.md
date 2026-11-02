@@ -73,9 +73,19 @@ AI_PRICE_IN=""                                  # 留空 = 0.10（每百萬 toke
 AI_PRICE_CACHED=""                              # 留空 = 0.01
 AI_PRICE_OUT=""                                 # 留空 = 0.50
 AI_MUTE_HOURS=""                                # 留空 = 12，轉人後 AI 在該 LINE 對話閉嘴幾小時
+AI_USD_TWD=""                                   # 留空 = 32，後台報表的美元→台幣概估匯率
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
+
+**AI 客服後台**在 `/admin` → 右上角「AI 客服」（待處理的轉接筆數會直接標在入口上）。
+那裡看得到每一通對話的逐字稿、每月用量與估算費用，以及兩顆按鈕：
+
+- **標記已處理，AI 接回**：清掉待處理、解除靜音。清掉之後客人再說話不會再寄信給你；
+  真的又需要人時 AI 會重新判定，那時你會再收到第一封。
+- **我自己接**：AI 沒判定要轉人、但你想親自回的時候用。按下去該 LINE 對話的 AI 會閉嘴
+  `AI_MUTE_HOURS` 小時，客人的訊息照樣存檔並寄信給你。官網對話不提供這顆——
+  那裡沒有真人介面，靜音等於沒人理。
 
 **`MEMBER_SESSION_SECRET` 必須與 `PORTAL_SESSION_SECRET`／`ADMIN_SESSION_SECRET` 不同。**
 三套身分刻意用三把金鑰：一個外洩的會員 token 不該有機會換成後台身分。
