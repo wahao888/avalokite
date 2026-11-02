@@ -221,7 +221,7 @@ model BeanStock {
 
 /// 連線檔期。商品掛在檔期底下並繼承它的預設收單時間。
 model DgBatch {
-  id       String @id // AB260920-K7QX（lib/shop-order-id.ts）
+  id       String  @id // AB260920-K7QX（lib/shop-order-id.ts）
   tenantId String
   slug     String // 網址用：korea-0920
   title    String // 「9 月韓國連線」
@@ -237,7 +237,7 @@ model DgBatch {
   /// 這一檔的識別色（見 _data/batch-tone.ts）。null = 由 id 自動推導，
   /// 所以她開檔期時可以完全不用管顏色，但想指定時也指定得了。
   /// nullable → metadata-only ALTER。
-  tone             String?
+  tone String?
 
   /// 運費方案。standard / economy = 依 7-11 交貨便的申報價值級距自動算，
   /// fixed（或 null）= 用底下的 shippingFee 固定金額。
@@ -247,7 +247,7 @@ model DgBatch {
   /// nullable 是刻意的（SQLite 加可為 null 的欄位是 metadata-only）。
   shipPlan         String?
   /// fixed 方案時的運費；自動方案時當作 fallback。
-  shippingFee      Int  @default(0)
+  shippingFee      Int     @default(0)
   freeShippingOver Int?
 
   status   String    @default("open") // draft 草稿 | open 進行中 | closed 已收單 | archived 封存
@@ -676,4 +676,46 @@ model DgLedger {
 
   @@index([tenantId, settlementId])
   @@index([tenantId, memberId, at])
+}
+
+/// AI 客服的一段對話。LINE 與網站共用這兩張表，channel 區分來源。
+///
+/// 一個 LINE 使用者永遠只有一段對話（靠 channel + externalId 唯一），
+/// 不切 session：客人隔三天再問一句，脈絡還在才像客服而不是重新認識。
+model ChatConversation {
+  id          Int     @id @default(autoincrement())
+  channel     String // line | web
+  externalId  String // LINE userId，或網站訪客的匿名 cookie id
+  displayName String?
+
+  /// 已判定需要專人接手。轉過一次就不再重複寄通知，否則客人每問一句就一封信。
+  handoff       Boolean   @default(false)
+  handoffAt     DateTime?
+  handoffReason String?
+
+  lastAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  messages ChatMessage[]
+
+  @@unique([channel, externalId])
+  @@index([lastAt])
+}
+
+/// 單則訊息。token 數記在 assistant 這一側，供每月用量報表統計。
+model ChatMessage {
+  id             Int              @id @default(autoincrement())
+  conversationId Int
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    String // user | assistant
+  content String
+
+  inputTokens     Int @default(0)
+  outputTokens    Int @default(0)
+  cacheReadTokens Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
 }

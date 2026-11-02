@@ -11,7 +11,7 @@ import { COMPANY, SITE } from "./site";
  * 條款版本。客戶同意的版本會寫進訂單，日後爭議時據此還原當時的條款全文。
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
-export const LEGAL_VERSION = "2026-09-03";
+export const LEGAL_VERSION = "2026-11-02";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -315,6 +315,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           body: [
             "您下單或填寫諮詢表單時，本站蒐集：姓名、Email、電話／LINE ID、公司名稱、統一編號（選填）、訂單與付款狀態紀錄。",
             "為留存契約成立之證據，本站另記錄您同意條款時的時間、來源 IP 位址與同意之條款版本。",
+            "您使用線上客服時另蒐集對話相關資料，詳見第三條。",
           ],
         },
         {
@@ -324,19 +325,27 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           ],
         },
         {
-          h: "三、金流資訊",
+          h: "三、線上客服與 AI 對話紀錄",
+          body: [
+            `您透過本公司 LINE 官方帳號（${SITE.lineId}）或官網線上客服與我們對話時，本站蒐集：LINE 使用者識別碼、您在 LINE 設定的顯示名稱、對話內容與對話時間。官網客服則以一組存於 Cookie 的匿名識別碼串接同一位訪客的對話，該識別碼本身不含個人資料。`,
+            "為生成回覆，對話內容會傳送至本公司委任之 AI 服務供應商處理。該供應商僅得依本公司指示處理，不得將您的對話內容用於訓練其模型。請勿在對話中提供信用卡號、身分證字號或任何密碼——客服不會、也不需要向您索取這些資訊。",
+            "對話紀錄用於回覆詢問、轉接真人客服與服務品質檢討，自最後一次對話起保存 2 年後刪除；您亦得隨時來信要求提前刪除。",
+          ],
+        },
+        {
+          h: "四、金流資訊",
           body: [
             "信用卡號等支付資訊由綠界科技 ECPay 於其安全頁面處理，本站不經手、不儲存任何卡號資料。",
           ],
         },
         {
-          h: "四、Cookie 與分析",
+          h: "五、Cookie 與分析",
           body: [
             "本站使用必要之 Cookie 維持購物車與登入狀態，並可能使用 Google Analytics 進行匿名流量分析。",
           ],
         },
         {
-          h: "五、保存與您的權利",
+          h: "六、保存與您的權利",
           body: [
             `交易紀錄（含同意紀錄）依稅法與舉證需要保存至少 5 年。您得隨時來信 ${SITE.email} 行使查詢、更正、刪除（法令要求保存者除外）之權利。`,
           ],
@@ -351,6 +360,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           body: [
             "When you order or submit an inquiry, we collect: name, email, phone/LINE ID, company name, tax ID (optional), and order/payment records.",
             "To evidence the formation of the contract, we also record the time you accepted the Terms, your source IP address, and the version accepted.",
+            "Using our live support collects additional data; see Section 3.",
           ],
         },
         {
@@ -360,19 +370,27 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           ],
         },
         {
-          h: "3. Payment Data",
+          h: "3. Live Support & AI Chat Records",
+          body: [
+            `When you message us on our LINE Official Account (${SITE.lineId}) or through the chat on this site, we collect your LINE user ID, your LINE display name, the content of the conversation, and its timestamps. Web chat instead uses an anonymous identifier stored in a cookie to link one visitor's messages; that identifier contains no personal data.`,
+            "To generate replies, conversation content is sent to our contracted AI service provider for processing. The provider may act only on our instructions and may not use your conversations to train its models. Please do not send card numbers, national ID numbers, or passwords in chat — our support will never ask for them.",
+            "Chat records are used to answer your questions, hand off to a human agent, and review service quality. They are deleted two years after the last message; you may also request earlier deletion at any time.",
+          ],
+        },
+        {
+          h: "4. Payment Data",
           body: [
             "Card details are processed entirely on ECPay's secure pages. This site never handles or stores card numbers.",
           ],
         },
         {
-          h: "4. Cookies & Analytics",
+          h: "5. Cookies & Analytics",
           body: [
             "We use essential cookies for the cart and admin sessions, and may use Google Analytics for anonymized traffic analysis.",
           ],
         },
         {
-          h: "5. Retention & Your Rights",
+          h: "6. Retention & Your Rights",
           body: [
             `Transaction records, including consent records, are retained for at least 5 years for tax and evidentiary purposes. Contact ${SITE.email} anytime to access, correct, or delete your data (except records we must legally retain).`,
           ],

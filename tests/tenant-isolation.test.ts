@@ -44,6 +44,8 @@ const DATA_LAYERS = ["src/lib/tenant-data.ts", "src/lib/daigou-data.ts"];
  * 這條規則擋的是「有人偷偷新增第三個資料層」——那個檔不在 DATA_LAYERS 裡，
  * 上面那些規則就掃不到它，等於整套租戶範圍的保證被繞過去了。
  * ecpay-process 與 subscription 是 Avalo 自己的金流與訂閱，本來就不分租戶。
+ * chat-service 同理：AI 客服回答的是 Avalo 自己的方案與價格，
+ * 對話只屬於 Avalo，沒有客戶站的資料流進來。
  */
 const LIB_PRISMA_ALLOWED = [
   "src/lib/prisma.ts",
@@ -51,6 +53,7 @@ const LIB_PRISMA_ALLOWED = [
   "src/lib/daigou-data.ts",
   "src/lib/ecpay-process.ts",
   "src/lib/subscription.ts",
+  "src/lib/chat-service.ts",
 ];
 
 describe("portal 只能透過資料層存取資料", () => {

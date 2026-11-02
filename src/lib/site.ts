@@ -5,7 +5,9 @@ export const SITE = {
   // 所以這個地址的信會直接進 service@chaingull.com 的同一個信箱。
   // 別名網域只會複製「現有帳號的名稱」，所以能用的是 service@ 而不是 hello@。
   email: "service@avalokite.xyz",
-  lineId: "@avalo", // TODO: 換成正式 LINE 官方帳號 ID
+  // 官方帳號的系統配發 ID（Channel ID 2012330435）。買了專屬 ID 之後改這裡一行即可，
+  // 條款、頁尾與客服頁都是從這個常數取值。
+  lineId: "@958nplck",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 };
 

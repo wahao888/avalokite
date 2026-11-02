@@ -60,6 +60,12 @@ UPLOAD_DIR="/var/www/avalo-uploads"                 # 商品照存放處，必�
 NEXT_PUBLIC_MEDIA_BASE="/u"                     # 對外圖片網址前綴，由 nginx 直送
 LINE_CHANNEL_ID=""                              # 留空 = 前台不顯示 LINE 登入
 LINE_CHANNEL_SECRET=""
+
+# ── AI 智能客服（LINE 官方帳號 ＋ 官網聊天）──
+LINE_OA_CHANNEL_SECRET=""                       # 官方帳號 Messaging API，與上面那組不同 channel
+LINE_OA_CHANNEL_ACCESS_TOKEN=""
+ANTHROPIC_API_KEY=""
+AI_MODEL=""                                     # 留空 = claude-haiku-5-5
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
@@ -72,6 +78,19 @@ LINE_CHANNEL_SECRET=""
 它必須是 `NEXT_PUBLIC_` 而不是普通環境變數，因為購物車抽屜與購物車頁是
 客戶端元件、也要組圖片網址；伺服器端的 storage 模組會拉進 `fs`，
 進不了瀏覽器的 bundle。搬 S3／CloudFront 時把這個值指向 CDN 網域即可。
+
+**AI 客服的三個變數留空時，客服整組停用** —— webhook 一律回 401（LINE 後台會顯示
+驗證失敗，這是預期的），官網聊天則回固定的「請留下聯絡方式」。所以沒金鑰也不會擋上線。
+
+⚠ `LINE_OA_CHANNEL_SECRET` 與上面 LINE 登入的 `LINE_CHANNEL_SECRET` **是兩支不同的
+channel**（一支 Messaging API、一支 LINE Login），密鑰不共用。兩個名字只差 `_OA_`，
+複製貼上時填錯的話，會變成「登入壞掉」和「客服驗簽永遠失敗」同時發生，而且兩邊的
+錯誤訊息都不會指向真正的原因。
+
+設定 webhook：LINE Developers Console → Messaging API → Webhook URL 填
+`https://avalokite.xyz/api/line/webhook`，打開 Use webhook；同時到 LINE Official
+Account Manager → 回應設定，把「自動回應訊息」關掉。兩者互斥，沒關掉的話
+客人只會收到罐頭回覆，AI 的回覆根本不會送出。
 
 **`LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET` 留空時，LINE 登入會自動停用**（前台不顯示按鈕，
 手機號碼那條路照常運作），所以不必為了上線硬等客戶交金鑰。
