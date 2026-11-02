@@ -719,3 +719,16 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
 }
+
+/// 已處理過的 LINE webhook 事件 id。
+///
+/// 開了 LINE 的 Webhook redelivery 之後，伺服器沒回 200 的事件會被重送——
+/// 那正是部署 restart 那幾秒掉的訊息。但「重送」與「我們已經回過了，只是
+/// 回應超時」從事件本身看不出來，所以不能一律略過，也不能一律處理。
+/// 靠 webhookEventId 去重：寫得進去才處理，撞到 unique 就代表做過了。
+model LineWebhookEvent {
+  eventId   String   @id
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

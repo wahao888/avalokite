@@ -54,6 +54,7 @@ const LIB_PRISMA_ALLOWED = [
   "src/lib/ecpay-process.ts",
   "src/lib/subscription.ts",
   "src/lib/chat-service.ts",
+  "src/lib/line-events.ts",
 ];
 
 describe("portal 只能透過資料層存取資料", () => {

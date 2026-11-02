@@ -66,6 +66,8 @@ export const pushText = (to: string, text: string) =>
 
 export interface LineEvent {
   type: string;
+  /** 事件的唯一 id，重送時維持不變——去重就靠它。 */
+  webhookEventId?: string;
   replyToken?: string;
   source?: { type: string; userId?: string };
   message?: { type: string; id: string; text?: string };

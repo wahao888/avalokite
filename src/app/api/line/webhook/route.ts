@@ -6,6 +6,7 @@ import {
   type LineEvent,
 } from "@/lib/line";
 import { handleMessage } from "@/lib/chat-service";
+import { claimEvent } from "@/lib/line-events";
 
 // 這條路由永遠要跑在 Node 執行環境：簽章驗證用的是 node:crypto。
 export const runtime = "nodejs";
@@ -43,8 +44,7 @@ export async function POST(req: NextRequest) {
 async function processEvent(event: LineEvent) {
   try {
     if (event.type !== "message" || event.message?.type !== "text") return;
-    // 重送事件代表我們上次可能已經回過了，再回一次客人會看到重複訊息。
-    if (event.deliveryContext?.isRedelivery) return;
+    if (!(await claimEvent(event))) return;
 
     const userId = event.source?.userId;
     const text = event.message.text?.trim();

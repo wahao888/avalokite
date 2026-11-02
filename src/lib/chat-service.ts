@@ -6,6 +6,14 @@ import { answer, HISTORY_TURNS, type AgentTurn } from "@/lib/ai-agent";
 
 export type ChatChannel = "line" | "web";
 
+export interface IncomingMessage {
+  channel: ChatChannel;
+  /** LINE userId，或網站訪客的匿名 id */
+  externalId: string;
+  displayName?: string | null;
+  text: string;
+}
+
 /**
  * 全站每日回覆上限。
  *
@@ -16,53 +24,96 @@ export type ChatChannel = "line" | "web";
  */
 const DAILY_CAP = Number(process.env.AI_DAILY_CAP || 500);
 
+/**
+ * 每月花費上限（美元）。這是真正對得上「我不想付超過多少錢」的那道閘。
+ *
+ * 每日則數上限擋的是單日爆量，但一個月慢慢灌一樣會把錢花完；反過來，
+ * 單價換模型就會變，用則數估錢永遠估不準。所以兩道並存：則數擋突發，
+ * 金額擋累積。
+ */
+const MONTHLY_BUDGET = Number(process.env.AI_MONTHLY_BUDGET_USD || 10);
+
+/**
+ * 每百萬 token 的單價（美元），預設是 gpt-6-luna 的牌價。
+ * 換模型時要一起改，否則這道閘會用錯的單價估錢——估低了就擋不住。
+ */
+const PRICE_IN = Number(process.env.AI_PRICE_IN || 0.1);
+const PRICE_CACHED = Number(process.env.AI_PRICE_CACHED || 0.01);
+const PRICE_OUT = Number(process.env.AI_PRICE_OUT || 0.5);
+
 /** 單則訊息的字數上限。LINE 一則可以送到 5000 字，全塞進去就是五千字的輸入成本。 */
 const MAX_CHARS = 1000;
 
-/** 當天超額時回這句。語氣不提「系統上限」——那等於告訴攻擊者他打中了。 */
+/** 超額時回這句。語氣不提「系統上限」——那等於告訴攻擊者他打中了。 */
 const CAPPED_REPLY =
   "不好意思，目前線上客服忙線中。請留下您的稱呼與聯絡方式，或來信 service@avalokite.xyz，我們會請專人盡快與您聯繫。";
 
-/** 上一次因為超額而寄出警示的日期，避免同一天狂寄。重啟歸零，可接受。 */
+/** 上一次寄出超額警示的日期，避免同一天狂寄。重啟歸零，可接受。 */
 let capAlertedOn = "";
 
 const todayInTaipei = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
 
-async function overDailyCap(): Promise<boolean> {
-  // 以台北時間的今日零時為界，而不是「過去 24 小時」：
-  // 後者會讓昨晚的流量一直壓著今天的額度，說不清楚也查不準。
-  const start = new Date(`${todayInTaipei()}T00:00:00+08:00`);
-  const used = await prisma.chatMessage.count({
-    where: { role: "assistant", createdAt: { gte: start } },
-  });
-  if (used < DAILY_CAP) return false;
+const startOfTodayTaipei = () => new Date(`${todayInTaipei()}T00:00:00+08:00`);
+const startOfMonthTaipei = () =>
+  new Date(`${todayInTaipei().slice(0, 7)}-01T00:00:00+08:00`);
 
+/** 以實際記錄的 token 數換算當月花費。cacheRead 是 input 的子集，要先扣掉。 */
+export async function monthlySpendUsd(): Promise<number> {
+  const agg = await prisma.chatMessage.aggregate({
+    where: { role: "assistant", createdAt: { gte: startOfMonthTaipei() } },
+    _sum: { inputTokens: true, outputTokens: true, cacheReadTokens: true },
+  });
+  const input = agg._sum.inputTokens ?? 0;
+  const output = agg._sum.outputTokens ?? 0;
+  const cached = Math.min(agg._sum.cacheReadTokens ?? 0, input);
+  return (
+    ((input - cached) * PRICE_IN + cached * PRICE_CACHED + output * PRICE_OUT) / 1_000_000
+  );
+}
+
+async function alertOnce(subject: string, lines: string[]): Promise<void> {
   const today = todayInTaipei();
-  if (capAlertedOn !== today) {
-    capAlertedOn = today;
-    await notifyOwner(
+  if (capAlertedOn === today) return;
+  capAlertedOn = today;
+  await notifyOwner(subject, lines.join("\n"));
+}
+
+/** 回 true 代表這則不要送進模型。兩道閘任一踩到就停。 */
+async function overBudget(): Promise<boolean> {
+  const spent = await monthlySpendUsd();
+  if (spent >= MONTHLY_BUDGET) {
+    await alertOnce(
+      `[Avalo] ⚠️ AI 客服已達每月費用上限 US$${MONTHLY_BUDGET}，本月剩餘對話改為人工`,
+      [
+        `本月（台北時間）已花費約 US$${spent.toFixed(2)}，達到上限 US$${MONTHLY_BUDGET}。`,
+        "",
+        "這個數字是用資料庫裡記錄的 token 數乘單價估的，與 OpenAI 帳單會有小幅出入。",
+        "要放寬請改 .env 的 AI_MONTHLY_BUDGET_USD 再 restart。",
+        "期間客人仍會收到請他留聯絡方式的回覆，不會沒人理。",
+      ],
+    );
+    return true;
+  }
+
+  const used = await prisma.chatMessage.count({
+    where: { role: "assistant", createdAt: { gte: startOfTodayTaipei() } },
+  });
+  if (used >= DAILY_CAP) {
+    await alertOnce(
       "[Avalo] ⚠️ AI 客服已達每日回覆上限，當天剩餘對話改為人工",
       [
-        `今日已回覆 ${used} 則，達到上限 ${DAILY_CAP}。`,
+        `今日已回覆 ${used} 則，達到上限 ${DAILY_CAP}（本月花費約 US$${spent.toFixed(2)}）。`,
         "",
         "正常營運不會碰到這個數字，請先確認是不是有人在灌：",
         "  sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head",
         "",
         "確認是真實需求的話，調高 .env 的 AI_DAILY_CAP 再 restart。",
-        "期間客人仍會收到請他留聯絡方式的回覆，不會沒人理。",
-      ].join("\n"),
+      ],
     );
+    return true;
   }
-  return true;
-}
-
-export interface IncomingMessage {
-  channel: ChatChannel;
-  /** LINE userId，或網站訪客的匿名 id */
-  externalId: string;
-  displayName?: string | null;
-  text: string;
+  return false;
 }
 
 export async function handleMessage(msg: IncomingMessage): Promise<string> {
@@ -70,7 +121,7 @@ export async function handleMessage(msg: IncomingMessage): Promise<string> {
   const text = msg.text.slice(0, MAX_CHARS);
   msg = { ...msg, text };
 
-  if (await overDailyCap()) return CAPPED_REPLY;
+  if (await overBudget()) return CAPPED_REPLY;
 
   const convo = await prisma.chatConversation.upsert({
     where: { channel_externalId: { channel: msg.channel, externalId: msg.externalId } },
