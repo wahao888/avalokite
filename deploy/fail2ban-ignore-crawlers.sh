@@ -52,7 +52,10 @@ if len(prefixes) <= 2:
     sys.stderr.write("no crawler prefixes fetched; refusing to overwrite\n")
     sys.exit(1)
 
-print(f"# generated {datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')} by fail2ban-ignore-crawlers.sh")
+# utcnow() 在 Python 3.12 起會噴 DeprecationWarning，而這支的 stdout 就是設定檔本身，
+# 警告雖然走 stderr、只髒了 cron log，但 3.1x 之後它會直接消失。
+stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+print(f"# generated {stamp} by fail2ban-ignore-crawlers.sh")
 if errors:
     for e in errors:
         print(f"# warning: {e}")
