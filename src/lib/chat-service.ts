@@ -6,6 +6,57 @@ import { answer, HISTORY_TURNS, type AgentTurn } from "@/lib/ai-agent";
 
 export type ChatChannel = "line" | "web";
 
+/**
+ * 全站每日回覆上限。
+ *
+ * 每則對話都會打一次外部 API，所以這不是防洗版，是防帳單。每個 IP 的限流
+ * 擋得住一個人，擋不住一百台機器；nginx 的 5r/s 也只是讓攻擊變慢，不是變貴。
+ * 這道是最後一關：超過就停止呼叫模型，當天後續一律回「請留聯絡方式」。
+ * 寧可漏接幾個真客人，也不要隔天看到五位數的帳單。
+ */
+const DAILY_CAP = Number(process.env.AI_DAILY_CAP || 500);
+
+/** 單則訊息的字數上限。LINE 一則可以送到 5000 字，全塞進去就是五千字的輸入成本。 */
+const MAX_CHARS = 1000;
+
+/** 當天超額時回這句。語氣不提「系統上限」——那等於告訴攻擊者他打中了。 */
+const CAPPED_REPLY =
+  "不好意思，目前線上客服忙線中。請留下您的稱呼與聯絡方式，或來信 service@avalokite.xyz，我們會請專人盡快與您聯繫。";
+
+/** 上一次因為超額而寄出警示的日期，避免同一天狂寄。重啟歸零，可接受。 */
+let capAlertedOn = "";
+
+const todayInTaipei = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
+
+async function overDailyCap(): Promise<boolean> {
+  // 以台北時間的今日零時為界，而不是「過去 24 小時」：
+  // 後者會讓昨晚的流量一直壓著今天的額度，說不清楚也查不準。
+  const start = new Date(`${todayInTaipei()}T00:00:00+08:00`);
+  const used = await prisma.chatMessage.count({
+    where: { role: "assistant", createdAt: { gte: start } },
+  });
+  if (used < DAILY_CAP) return false;
+
+  const today = todayInTaipei();
+  if (capAlertedOn !== today) {
+    capAlertedOn = today;
+    await notifyOwner(
+      "[Avalo] ⚠️ AI 客服已達每日回覆上限，當天剩餘對話改為人工",
+      [
+        `今日已回覆 ${used} 則，達到上限 ${DAILY_CAP}。`,
+        "",
+        "正常營運不會碰到這個數字，請先確認是不是有人在灌：",
+        "  sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head",
+        "",
+        "確認是真實需求的話，調高 .env 的 AI_DAILY_CAP 再 restart。",
+        "期間客人仍會收到請他留聯絡方式的回覆，不會沒人理。",
+      ].join("\n"),
+    );
+  }
+  return true;
+}
+
 export interface IncomingMessage {
   channel: ChatChannel;
   /** LINE userId，或網站訪客的匿名 id */
@@ -15,6 +66,12 @@ export interface IncomingMessage {
 }
 
 export async function handleMessage(msg: IncomingMessage): Promise<string> {
+  // 先截斷再做任何事：下面每一步（存檔、帶進歷史、送進模型）都會被長度放大
+  const text = msg.text.slice(0, MAX_CHARS);
+  msg = { ...msg, text };
+
+  if (await overDailyCap()) return CAPPED_REPLY;
+
   const convo = await prisma.chatConversation.upsert({
     where: { channel_externalId: { channel: msg.channel, externalId: msg.externalId } },
     create: {

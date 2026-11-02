@@ -67,6 +67,7 @@ LINE_OA_CHANNEL_ACCESS_TOKEN=""
 OPENAI_API_KEY=""
 AI_MODEL=""                                     # 留空 = gpt-6-luna（最便宜的一級）
 AI_REASONING_EFFORT=""                          # 留空 = none（關閉推理）
+AI_DAILY_CAP=""                                 # 留空 = 500，全站每日回覆上限（防帳單）
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
@@ -611,6 +612,7 @@ node deploy/report-render.js --text   < deploy/report-sample.tsv   # 純文字�
 | 主機 | SSH 金鑰限定＋禁 root、fail2ban（4 個 jail，見 [fail2ban/](fail2ban/)）、unattended-upgrades、UFW、swap |
 | Nginx | 速率限制（表單 6r/min、API 5r/s、頁面 10r/s，綠界回呼白名單）、單 IP 併發上限、掃描路徑 444（:443 與 :80 兩個 server 區塊都 include [nginx-scan-block.conf](nginx-scan-block.conf)）、安全標頭＋CSP、隱藏版本 |
 | 應用 | Zod 驗證所有輸入、價格以伺服器目錄為準、ECPay CheckMacValue 雙向驗章、admin HMAC session＋登入鎖定、systemd 沙箱（NoNewPrivileges/ProtectSystem） |
+| AI 客服 | LINE webhook HMAC 驗章、限流取 `X-Real-IP`（XFF 第一段可偽造）、`/api/chat` 同源檢查、單則截斷 1000 字、全站每日回覆上限 `AI_DAILY_CAP`、知識庫寫明對話內容是資料而非指令（擋提示注入） |
 | 資料 | 卡號完全不經手（綠界頁面處理）、每日備份 S3 保留 30 份 |
 
 ### Certbot 導轉與照片備份監控（2026-10-06）

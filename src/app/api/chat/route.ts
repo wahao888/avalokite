@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { sameOrigin } from "@/lib/portal-http";
 import { handleMessage } from "@/lib/chat-service";
 
 export const runtime = "nodejs";
@@ -20,6 +21,13 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // 擋掉別的網站把我們的客服當免費 API 用。擋不住 curl（它不帶 origin 也不吃
+  // CORS），所以這不是主要防線——主要防線是限流與每日上限；這只是讓最省事的
+  // 那種濫用省不了事。
+  if (!sameOrigin(req)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   if (rateLimited(`chat:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
