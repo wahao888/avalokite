@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { getTenant, tenantOrigin } from "@/lib/tenants";
 import type { Locale } from "@/i18n/routing";
@@ -8,15 +9,10 @@ const SITE_URL = tenantOrigin(getTenant("wenshan")!);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "文山木材行 形象官網｜形象官網案例 · Avalo 阿瓦羅"
-      : "Wenshan Lumber Brand Site｜Brand-Website Case · Avalo",
-    description: zh
-      ? "為傳承三代的北投木材行打造的形象官網：3D 原木互動主視覺、12 大類木料型錄、詢價清單與線上估價、才數計算機與運費試算——把傳統產業的專業搬上線。"
-      : "A brand website for a three-generation lumber yard: interactive 3D log hero, 12-category catalog, quote list and online estimates, plus trade-unit and freight calculators.",
-  };
+  return caseMeta(locale, "/cases/wenshan",
+    { title: "文山木材行 形象官網｜形象官網案例 · Avalo 阿瓦羅", description: "為傳承三代的北投木材行打造的形象官網：3D 原木互動主視覺、12 大類木料型錄、詢價清單與線上估價、才數計算機與運費試算——把傳統產業的專業搬上線。" },
+    { title: "Wenshan Lumber Brand Site｜Brand-Website Case · Avalo", description: "A brand website for a three-generation lumber yard: interactive 3D log hero, 12-category catalog, quote list and online estimates, plus trade-unit and freight calculators." },
+  );
 }
 
 const C = {
@@ -159,7 +155,7 @@ export default async function WenshanCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -167,7 +163,7 @@ export default async function WenshanCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -253,7 +249,7 @@ export default async function WenshanCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

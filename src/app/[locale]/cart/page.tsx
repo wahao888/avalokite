@@ -52,7 +52,7 @@ export default function CartPage() {
       <main className="page-wrap page-wrap-narrow" style={{ textAlign: "center" }}>
         <h1 className="section-title">{t("empty")}</h1>
         <p className="section-intro" style={{ marginBottom: "2.5rem" }}>{t("emptyDesc")}</p>
-        <Link href={{ pathname: "/", hash: "pricing" }} className="btn-primary">
+        <Link href="/pricing" className="btn-primary">
           {t("browse")}
         </Link>
       </main>
@@ -212,7 +212,7 @@ export default function CartPage() {
           ) : (
             <Link href="/checkout" className="btn-primary">{t("checkout")}</Link>
           )}
-          <Link href={{ pathname: "/", hash: "pricing" }} className="btn-ghost">
+          <Link href="/pricing" className="btn-ghost">
             {t("continueShopping")}
           </Link>
         </div>

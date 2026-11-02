@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -6,15 +7,10 @@ const SITE_URL = "https://jeantogo.com/";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "JeanToGo｜Uber Eats 上架獲客平台 · 完全客製案例 · Avalo 阿瓦羅"
-      : "JeanToGo｜Uber Eats Lead-Gen Platform · Fully-Custom Case · Avalo",
-    description: zh
-      ? "SEO 內容與城市方案落地頁帶進搜尋詢問、線上表單一鍵諮詢、後台 CRM 追蹤每筆商機的 Uber Eats 上架獲客平台，完全客製。"
-      : "A fully-custom Uber Eats onboarding lead-gen platform: SEO landing pages, an online enquiry form and a back-office CRM tracking every lead.",
-  };
+  return caseMeta(locale, "/cases/jeantogo",
+    { title: "JeanToGo｜Uber Eats 上架獲客平台 · 完全客製案例 · Avalo 阿瓦羅", description: "SEO 內容與城市方案落地頁帶進搜尋詢問、線上表單一鍵諮詢、後台 CRM 追蹤每筆商機的 Uber Eats 上架獲客平台，完全客製。" },
+    { title: "JeanToGo｜Uber Eats Lead-Gen Platform · Fully-Custom Case · Avalo", description: "A fully-custom Uber Eats onboarding lead-gen platform: SEO landing pages, an online enquiry form and a back-office CRM tracking every lead." },
+  );
 }
 
 const C = {
@@ -155,7 +151,7 @@ export default async function JeanToGoCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -163,7 +159,7 @@ export default async function JeanToGoCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -249,7 +245,7 @@ export default async function JeanToGoCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

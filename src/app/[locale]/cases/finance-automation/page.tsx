@@ -1,18 +1,14 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "企業財務自動化系統｜完全客製案例 · Avalo 阿瓦羅"
-      : "Finance Automation System｜Fully-Custom Case · Avalo",
-    description: zh
-      ? "Telegram 拍照即入帳、後台整合折舊／外匯／月結關帳與財報，完全客製、可治理可稽核的企業會計系統。"
-      : "Snap a receipt on Telegram and it's booked; back office handles depreciation, FX, month-end close and financial statements — a fully custom, governable accounting system.",
-  };
+  return caseMeta(locale, "/cases/finance-automation",
+    { title: "企業財務自動化系統｜完全客製案例 · Avalo 阿瓦羅", description: "Telegram 拍照即入帳、後台整合折舊／外匯／月結關帳與財報，完全客製、可治理可稽核的企業會計系統。" },
+    { title: "Finance Automation System｜Fully-Custom Case · Avalo", description: "Snap a receipt on Telegram and it's booked; back office handles depreciation, FX, month-end close and financial statements — a fully custom, governable accounting system." },
+  );
 }
 
 // 頁面文案（自成一格的中英對照，不塞進全站 messages）
@@ -198,7 +194,7 @@ export default async function FinanceAutomationCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -206,8 +202,8 @@ export default async function FinanceAutomationCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
-          <Link href={{ pathname: "/", hash: "cases" }} className="btn-ghost">{c.ctaGhost}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/cases" className="btn-ghost">{c.ctaGhost}</Link>
         </div>
       </header>
 
@@ -329,7 +325,7 @@ export default async function FinanceAutomationCase({
       <section className="fa-final">
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
-        <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+        <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
       </section>
     </main>
   );

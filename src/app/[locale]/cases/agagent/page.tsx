@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -6,15 +7,10 @@ const SITE_URL = "https://agent.damentec.com/";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "AG Agent 會議智能助手｜完全客製案例 · Avalo 阿瓦羅"
-      : "AG Agent — Meeting Assistant｜Fully-Custom Case · Avalo",
-    description: zh
-      ? "每週自動擷取會議與研究、GPT 摘要結構化、向量檢索 RAG 問答的企業 AI 知識庫平台，完全客製、繁中英雙語。"
-      : "An enterprise AI knowledge platform that auto-captures meetings and research, summarizes with GPT and answers via RAG — fully custom, bilingual.",
-  };
+  return caseMeta(locale, "/cases/agagent",
+    { title: "AG Agent 會議智能助手｜完全客製案例 · Avalo 阿瓦羅", description: "每週自動擷取會議與研究、GPT 摘要結構化、向量檢索 RAG 問答的企業 AI 知識庫平台，完全客製、繁中英雙語。" },
+    { title: "AG Agent — Meeting Assistant｜Fully-Custom Case · Avalo", description: "An enterprise AI knowledge platform that auto-captures meetings and research, summarizes with GPT and answers via RAG — fully custom, bilingual." },
+  );
 }
 
 const C = {
@@ -155,7 +151,7 @@ export default async function AgAgentCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -163,7 +159,7 @@ export default async function AgAgentCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -249,7 +245,7 @@ export default async function AgAgentCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

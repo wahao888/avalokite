@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -6,15 +7,10 @@ const SITE_URL = "https://damenkyt.com/";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "Damen KYT 反詐騙平台｜完全客製案例 · Avalo 阿瓦羅"
-      : "Damen KYT Anti-Fraud Platform｜Fully-Custom Case · Avalo",
-    description: zh
-      ? "輸入錢包地址即時算出風險評分、5 步驟線上報案自動產 PDF 的加密貨幣反詐騙／KYT 平台，完全客製、繁中英雙語。"
-      : "A crypto anti-fraud / KYT platform: instant wallet risk scoring and a 5-step online report with auto PDF — fully custom, bilingual.",
-  };
+  return caseMeta(locale, "/cases/damenkyt",
+    { title: "Damen KYT 反詐騙平台｜完全客製案例 · Avalo 阿瓦羅", description: "輸入錢包地址即時算出風險評分、5 步驟線上報案自動產 PDF 的加密貨幣反詐騙／KYT 平台，完全客製、繁中英雙語。" },
+    { title: "Damen KYT Anti-Fraud Platform｜Fully-Custom Case · Avalo", description: "A crypto anti-fraud / KYT platform: instant wallet risk scoring and a 5-step online report with auto PDF — fully custom, bilingual." },
+  );
 }
 
 const C = {
@@ -179,7 +175,7 @@ export default async function DamenKytCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -187,7 +183,7 @@ export default async function DamenKytCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -284,7 +280,7 @@ export default async function DamenKytCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

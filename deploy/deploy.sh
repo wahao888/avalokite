@@ -69,7 +69,12 @@ echo "=== 4/4 伺服器套用 ==="
 ssh -i "$KEY" "$HOST" 'bash /tmp/app/deploy/server-update.sh'
 
 echo "=== 線上確認 ==="
-for p in / /en /wenshan /cart /admin; do
-  printf "  %-12s -> %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$SITE$p")"
+for p in / /en /pricing /services /faq /guides /tools/geo /about /contact /llms.txt /wenshan /cart /admin; do
+  printf "  %-14s -> %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$SITE$p")"
 done
+
+echo "=== IndexNow ==="
+# 本機打 3000，不經 nginx；沒有 x-forwarded-for 時端點允許 loopback。
+ssh -i "$KEY" "$HOST" 'curl -sS -X POST --max-time 30 http://127.0.0.1:3000/api/cron/indexnow || true'
+echo
 echo "✓ 部署完成"

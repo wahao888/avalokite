@@ -11,6 +11,18 @@ import { taipeiMonthKey, taipeiMonthStart } from "@/lib/tw-time";
 /** 報表往回看幾個月。再久的資料意義不大，而且每個月要跑三個查詢。 */
 export const REPORT_MONTHS = 6;
 
+/**
+ * 對話紀錄保留幾天。
+ *
+ * 隱私權政策寫的是「保留兩年」，所以這不是效能設定，是對外的承諾：
+ * 沒有東西真的去刪，那句話就是假的。清理由 /api/cron/retention 每天執行，
+ * 每日稽核會檢查有沒有逾期還留著的資料。
+ */
+export const CHAT_RETENTION_DAYS = Number(process.env.CHAT_RETENTION_DAYS || 730);
+
+/** webhook 去重紀錄留幾天。只為了擋重送，不需要長期保存。 */
+export const WEBHOOK_RETENTION_DAYS = Number(process.env.WEBHOOK_RETENTION_DAYS || 7);
+
 export interface MonthUsage {
   /** YYYY-MM（台北時間） */
   month: string;
@@ -203,4 +215,36 @@ export async function muteConversation(id: number, hours = MUTE_HOURS): Promise<
       mutedUntil: new Date(Date.now() + hours * 3_600_000),
     },
   });
+}
+
+/**
+ * 清掉超過保留期的對話與 webhook 去重紀錄。
+ *
+ * 分兩步刪：先刪逾期的訊息，再刪「已經沒有任何訊息、而且本身也夠舊」的對話。
+ * 不直接以 lastAt 刪整串，是因為一通今天還在講的對話裡可能夾著兩年前的訊息——
+ * 那幾則逾期了，整通對話沒有。
+ */
+export async function purgeExpiredChat(now: Date = new Date()): Promise<{
+  messages: number;
+  conversations: number;
+  webhookEvents: number;
+}> {
+  const msgCutoff = new Date(now.getTime() - CHAT_RETENTION_DAYS * 86_400_000);
+  const hookCutoff = new Date(now.getTime() - WEBHOOK_RETENTION_DAYS * 86_400_000);
+
+  const messages = await prisma.chatMessage.deleteMany({
+    where: { createdAt: { lt: msgCutoff } },
+  });
+  const conversations = await prisma.chatConversation.deleteMany({
+    where: { lastAt: { lt: msgCutoff }, messages: { none: {} } },
+  });
+  const webhookEvents = await prisma.lineWebhookEvent.deleteMany({
+    where: { createdAt: { lt: hookCutoff } },
+  });
+
+  return {
+    messages: messages.count,
+    conversations: conversations.count,
+    webhookEvents: webhookEvents.count,
+  };
 }

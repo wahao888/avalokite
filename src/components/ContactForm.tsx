@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { track } from "@/lib/track";
 
-type Status = "idle" | "submitting" | "ok" | "err";
+type Status = "idle" | "submitting" | "ok" | "err" | "needContact";
 
 export default function ContactForm() {
   const t = useTranslations("contact.form");
@@ -17,6 +18,12 @@ export default function ContactForm() {
     e.preventDefault();
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
+    const email = String(data.email ?? "").trim();
+    const phone = String(data.phone ?? "").trim();
+    if (!email && !phone) {
+      setStatus("needContact");
+      return;
+    }
     setStatus("submitting");
     try {
       const res = await fetch("/api/contact", {
@@ -26,6 +33,7 @@ export default function ContactForm() {
       });
       if (!res.ok) throw new Error();
       setStatus("ok");
+      track("generate_lead", { via: "form" });
       form.reset();
     } catch {
       setStatus("err");
@@ -50,6 +58,7 @@ export default function ContactForm() {
 
       {status === "ok" && <div className="form-feedback ok">{t("success")}</div>}
       {status === "err" && <div className="form-feedback err">{t("error")}</div>}
+      {status === "needContact" && <div className="form-feedback err">{t("needContact")}</div>}
 
       <div className="form-row">
         <div className="form-group">
@@ -65,13 +74,14 @@ export default function ContactForm() {
       <div className="form-row">
         <div className="form-group">
           <label className="form-label" htmlFor="cf-email">{t("email")}</label>
-          <input id="cf-email" name="email" type="email" required maxLength={200} className="form-input" placeholder={t("emailPh")} />
+          <input id="cf-email" name="email" type="email" maxLength={200} className="form-input" placeholder={t("emailPh")} />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="cf-phone">{t("phone")}</label>
           <input id="cf-phone" name="phone" maxLength={50} className="form-input" placeholder={t("phonePh")} />
         </div>
       </div>
+      <p className="form-note">{t("contactHint")}</p>
 
       <div className="form-group">
         <label className="form-label" htmlFor="cf-service">{t("service")}</label>
@@ -95,7 +105,7 @@ export default function ContactForm() {
 
       <div className="form-group">
         <label className="form-label" htmlFor="cf-message">{t("message")}</label>
-        <textarea id="cf-message" name="message" required maxLength={3000} className="form-textarea" placeholder={t("messagePh")} />
+        <textarea id="cf-message" name="message" maxLength={3000} className="form-textarea" placeholder={t("messagePh")} />
       </div>
 
       <button

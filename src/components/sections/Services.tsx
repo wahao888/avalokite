@@ -1,10 +1,12 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface ServiceItem {
   num: string;
   name: string;
   desc: string;
   tags: string[];
+  href: string;
 }
 
 export default function Services() {
@@ -26,7 +28,7 @@ export default function Services() {
       </div>
       <div className="services-grid fade-in">
         {items.map((item) => (
-          <div className="service-card" key={item.num}>
+          <Link className="service-card" key={item.num} href={item.href}>
             <div className="service-num">{item.num}</div>
             <div className="service-name">{item.name}</div>
             <p className="service-desc">{item.desc}</p>
@@ -35,7 +37,7 @@ export default function Services() {
                 <span className="tag" key={tag}>{tag}</span>
               ))}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

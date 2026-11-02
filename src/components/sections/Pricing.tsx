@@ -12,7 +12,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import PromoPlans from "@/components/sections/PromoPlans";
 import type { Locale } from "@/i18n/routing";
 
-function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
+export function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
   const t = useTranslations("pricing");
   const info = product.i18n[locale];
   const applies = product.type === "monthly" ? plansUsingCare(product.sku) : [];
@@ -129,7 +129,7 @@ export default function Pricing() {
           >
             {t("custom.price")}
           </div>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-ghost">
+          <Link href="/contact" className="btn-ghost">
             {t("custom.cta")}
           </Link>
         </div>

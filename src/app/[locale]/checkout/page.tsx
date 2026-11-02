@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { careRequired, fmt, getProduct, withTax, promoPlanForSkus } from "@/lib/products";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
+import { track } from "@/lib/track";
 
 export default function CheckoutPage() {
   const t = useTranslations("checkout");
@@ -18,6 +19,10 @@ export default function CheckoutPage() {
   const [error, setError] = useState(false);
   const [stale, setStale] = useState(false); // 條款已改版，需重新確認
   const [promoClosed, setPromoClosed] = useState(false); // 促銷檔期已額滿或結束
+
+  useEffect(() => {
+    if (cart.ready && cart.items.length > 0) track("begin_checkout");
+  }, [cart.ready]);
 
   // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
   // 含建置的訂單有 12 個月最短承諾期，這件事必須在按下付款前就講明白

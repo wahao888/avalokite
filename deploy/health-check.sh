@@ -56,6 +56,26 @@ $(systemctl is-active avalo 2>&1)
 $(journalctl -u avalo -n 20 --no-pager 2>&1 | tail -20)"
 fi
 
+# 1b) 從瀏覽器的角度看得到嗎——走 nginx 與真實網域，不是直接打 Next。
+# 上面那一關只證明 Node 還活著。nginx 設定壞掉、憑證掛了、443 的 server 區塊
+# 被 certbot 改爛，症狀都是「127.0.0.1:3000 一切正常，但外面整站打不開」。
+# 用 --resolve 把網域指回本機：走的是真正的 TLS 與 server_name 比對，
+# 又不依賴 EC2 的 hairpin（從機器內連自己的公網 IP 不一定通）。
+https=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+  --resolve "avalokite.xyz:443:127.0.0.1" https://avalokite.xyz/zh-TW || echo "000")
+case "$https" in
+  200|301|302|307|308) recover "nginx-down" ;;
+  *)
+    alert "nginx-down" "[Avalo] 🔴 透過 nginx 打不開（HTTP $https）" \
+      "Next 本身回應正常（$code），但經由 nginx + TLS 的請求回 $https。
+外面的訪客現在很可能整站打不開。
+
+  sudo nginx -t
+  sudo systemctl status nginx
+  sudo tail -50 /var/log/nginx/error.log"
+    ;;
+esac
+
 # 2) 磁碟
 disk=$(df --output=pcent / | tail -1 | tr -dc '0-9')
 if [ -n "$disk" ] && [ "$disk" -ge "$DISK_MAX" ]; then
@@ -85,4 +105,4 @@ if [ -n "$expiry" ]; then
   fi
 fi
 
-echo "[$(date)] 檢查完成 site=$code disk=${disk}% cert=${days:-?}d"
+echo "[$(date)] 檢查完成 site=$code https=$https disk=${disk}% cert=${days:-?}d"

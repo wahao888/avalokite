@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { getTenant, tenantOrigin } from "@/lib/tenants";
 import type { Locale } from "@/i18n/routing";
@@ -8,15 +9,10 @@ const SITE_URL = tenantOrigin(getTenant("monsieurlong")!);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "Monsieur Long 隆先生 品牌官網｜形象官網案例 · Avalo 阿瓦羅"
-      : "Monsieur Long Brand Site｜Brand-Website Case · Avalo",
-    description: zh
-      ? "為大稻埕手工 Gelato 品牌打造的形象官網：融化動態的品牌主視覺、程式生成的口味插畫、共享元素轉場，以及讓店家每天用手機更新「今日口味」的後台。"
-      : "A brand website for an artisan gelato shop in Dadaocheng: a melting-motif hero, procedurally drawn flavour illustrations, shared-element transitions, and a phone-friendly back office for daily flavour updates.",
-  };
+  return caseMeta(locale, "/cases/monsieurlong",
+    { title: "Monsieur Long 隆先生 品牌官網｜形象官網案例 · Avalo 阿瓦羅", description: "為大稻埕手工 Gelato 品牌打造的形象官網：融化動態的品牌主視覺、程式生成的口味插畫、共享元素轉場，以及讓店家每天用手機更新「今日口味」的後台。" },
+    { title: "Monsieur Long Brand Site｜Brand-Website Case · Avalo", description: "A brand website for an artisan gelato shop in Dadaocheng: a melting-motif hero, procedurally drawn flavour illustrations, shared-element transitions, and a phone-friendly back office for daily flavour updates." },
+  );
 }
 
 const C = {
@@ -159,7 +155,7 @@ export default async function MonsieurLongCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -167,7 +163,7 @@ export default async function MonsieurLongCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -253,7 +249,7 @@ export default async function MonsieurLongCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

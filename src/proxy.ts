@@ -79,7 +79,7 @@ export default function proxy(req: NextRequest) {
 
   // 主站的 robots.txt / sitemap.xml 交給 app 目錄自己處理（app/robots.ts、
   // app/sitemap.ts），不進 i18n 路由——否則會被導成 /zh-TW/robots.txt
-  if (path === "/robots.txt" || path === "/sitemap.xml") return NextResponse.next();
+  if (path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt") return NextResponse.next();
 
   return intlProxy(req);
 }
@@ -92,5 +92,6 @@ export const config = {
     // 帶副檔名的路徑被上面排除，但這兩個需要逐租戶產生，單獨列入
     "/robots.txt",
     "/sitemap.xml",
+    "/llms.txt",
   ],
 };

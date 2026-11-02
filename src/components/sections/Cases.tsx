@@ -19,8 +19,9 @@ interface CaseCategory {
   hint: string;
 }
 
-export default function Cases() {
+export default function Cases({ heading = "h2" }: { heading?: "h1" | "h2" }) {
   const t = useTranslations("cases");
+  const Title = heading;
   const items = t.raw("items") as CaseItem[];
   const categories = t.raw("categories") as CaseCategory[];
 
@@ -55,11 +56,11 @@ export default function Cases() {
       <div className="section-header fade-in">
         <div>
           <div className="mono-label">{t("label")}</div>
-          <h2 className="section-title">
+          <Title className="section-title">
             {t("title1")}
             <br />
             {t("title2")}
-          </h2>
+          </Title>
         </div>
         <p className="section-intro">{t("intro")}</p>
       </div>

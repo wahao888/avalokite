@@ -26,6 +26,13 @@ const nextConfig: NextConfig = {
     // redirects 在 proxy 之前執行，所以 proxy.ts 完全看不到 /wenshan。
     const fromApex = [{ type: "host" as const, value: "(www\\.)?avalokite\\.xyz" }];
     return [
+      // www 與裸域都回 200 時，搜尋權重會拆成兩份。應用層先 301；nginx 也要補獨立 server 區塊。
+      {
+        source: "/:path*",
+        has: [{ type: "host" as const, value: "www.avalokite.xyz" }],
+        destination: "https://avalokite.xyz/:path*",
+        permanent: true,
+      },
       { source: "/wenshan", has: fromApex, destination: "https://wenshan.avalokite.xyz/", permanent: true },
       { source: "/wenshan/:path*", has: fromApex, destination: "https://wenshan.avalokite.xyz/:path*", permanent: true },
     ];

@@ -38,7 +38,7 @@ const FONT =
   "-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif";
 
 // ── 解析 stdin 的 TSV ────────────────────────────────────────────────
-const LIST_KEYS = new Set(["top_ip", "top_bad", "top_path", "top_404", "leak_path", "jail"]);
+const LIST_KEYS = new Set(["top_ip", "top_bad", "top_path", "top_404", "leak_path", "jail", "bot", "referrer", "audit"]);
 
 function parse(raw) {
   const s = {};
@@ -94,6 +94,24 @@ if (!s.backup) flag(2, "找不到任何資料庫備份", "檢查 backup-db.sh �
 else if (n(s.backup_age_h) > 48) flag(2, `最近備份是 ${s.backup_age_h} 小時前`, "備份排程掛了，資料庫沒有退路");
 else if (n(s.backup_age_h) > 30) flag(1, `最近備份是 ${s.backup_age_h} 小時前`, "比預期的 24 小時久，確認 cron");
 if (s.db_inquiry === "ERR") flag(1, "讀不到資料庫筆數", "sqlite3 讀 prod.db 失敗，確認檔案權限");
+if (s.content_nudge === "1")
+  flag(1, "本月第一天：寫一篇第一手指南", "到 /guides 補一篇實際做過的事（費用、交期、LINE 客服、某個案例怎麼做），不要改寫別人的文章");
+
+// 應用層的稽核（/api/cron/ops-audit）：待辦、金流、AI 客服、檔期。
+// 這裡只負責轉述，判斷 level 的規則一律在 src/lib/ops-audit.ts，
+// 兩邊各判一次就會出現「信裡說要做、後台說沒事」。
+const audit = l.audit.map(([level, id, label, value, action]) => ({
+  level: n(level),
+  id: String(id || ""),
+  label: String(label || ""),
+  value: String(value || ""),
+  action: String(action || ""),
+}));
+if (s.audit_error)
+  flag(1, "營運稽核沒跑成功", s.audit_error === "nosecret"
+    ? "伺服器 .env 少了 CRON_SECRET，待辦與檔期這幾項今天是空的"
+    : "curl /api/cron/ops-audit 失敗，確認服務還活著、CRON_SECRET 正確");
+for (const a of audit) if (a.level > 0) flag(a.level, `${a.label}：${a.value}`, a.action);
 
 // Verify off-host backup success; photo object ages do not measure sync freshness.
 if (s.s3_backup === "OFF") flag(1, "離線備份未啟用或 AWS 工具不可用", "確認 BACKUP_S3_BUCKET、AWS CLI 與 IAM Role");
@@ -318,6 +336,16 @@ ${section(
       ? `<div style="height:14px;line-height:14px;font-size:0;">&nbsp;</div>
          <div style="font:600 12px/1.4 ${FONT};color:${C.ink};padding-bottom:6px;">最常見的 404（認得出來的路徑＝自家壞連結）</div>
          ${barRows(l.top_404, Math.max(...l.top_404.map((r) => n(r[0])), 1), C.muted)}`
+      : ""}
+   ${l.bot.length
+      ? `<div style="height:14px;line-height:14px;font-size:0;">&nbsp;</div>
+         <div style="font:600 12px/1.4 ${FONT};color:${C.ink};padding-bottom:6px;">搜尋／AI 爬蟲（User-Agent）</div>
+         ${barRows(l.bot, Math.max(...l.bot.map((r) => n(r[0])), 1), C.moss)}`
+      : ""}
+   ${l.referrer.length
+      ? `<div style="height:14px;line-height:14px;font-size:0;">&nbsp;</div>
+         <div style="font:600 12px/1.4 ${FONT};color:${C.ink};padding-bottom:6px;">已知來源（Google／Bing／ChatGPT 等）</div>
+         ${barRows(l.referrer, Math.max(...l.referrer.map((r) => n(r[0])), 1), C.wood)}`
       : ""}`
 )}
 
@@ -333,7 +361,28 @@ ${section(
 )}
 
 ${section(
-  "④ 機器狀況",
+  "④ 待辦與風險",
+  "由 /api/cron/ops-audit 每天重算。要新增檢查項目，改 src/lib/ops-audit.ts 就會出現在這裡。",
+  audit.length
+    ? T(`width="100%" style="border:1px solid ${C.border};border-radius:8px;"`, `<tr><td style="padding:6px 14px;">
+        ${T('width="100%"',
+          audit
+            .map((a) => `<tr>
+              <td width="30%" style="padding:8px 0;border-bottom:1px solid ${C.paper};font:400 12px/1.6 ${FONT};color:${C.muted};">${esc(a.label)}</td>
+              <td style="padding:8px 0;border-bottom:1px solid ${C.paper};font:400 12px/1.6 ${FONT};color:${C.ink};">${esc(a.value)}
+                ${a.level > 0 ? `<div style="font:400 11px/1.6 ${FONT};color:${C.muted};padding-top:2px;">→ ${esc(a.action)}</div>` : ""}</td>
+              <td width="10%" align="right" style="padding:8px 0;border-bottom:1px solid ${C.paper};font:600 12px/1.6 ${FONT};color:${a.level === 2 ? C.bad : a.level === 1 ? C.warn : C.moss};white-space:nowrap;">${a.level === 2 ? "要處理" : a.level === 1 ? "注意" : "正常"}</td>
+            </tr>`)
+            .join("")
+        )}
+      </td></tr>`)
+    : `<div style="padding:14px;background:${C.warnBg};border-left:3px solid ${C.warnLine};font:400 12px/1.7 ${FONT};color:${C.ink};">
+         今天沒有拿到稽核結果，所以待辦、金流、AI 客服與檔期這幾項是空的（不代表沒事）。
+       </div>`
+)}
+
+${section(
+  "⑤ 機器狀況",
   "有問題的項目已經列在最上面的待辦；這裡是完整數值。",
   T(`width="100%" style="border:1px solid ${C.border};border-radius:8px;"`, `<tr><td style="padding:6px 14px;">
     ${T('width="100%"',
@@ -395,6 +444,13 @@ ${l.top_path.map(([c, p]) => `    ${String(c).padStart(6)} ${short(p, 60)}`).joi
 ${l.top_ip.map(([c, p]) => `    ${String(c).padStart(6)} ${p}`).join("\n")}
   產生 4xx 最多的 IP：
 ${l.top_bad.map(([c, p]) => `    ${String(c).padStart(6)} ${p}`).join("\n")}
+${l.bot.length ? `  爬蟲：\n${l.bot.map(([c, p]) => `    ${String(c).padStart(6)} ${p}`).join("\n")}` : ""}
+${l.referrer.length ? `  來源：\n${l.referrer.map(([c, p]) => `    ${String(c).padStart(6)} ${p}`).join("\n")}` : ""}
+
+【待辦與風險】
+${audit.length
+  ? audit.map((a) => `  ${(a.level === 2 ? "要處理" : a.level === 1 ? "注意　" : "正常　")}　${a.label}：${a.value}${a.level > 0 ? `\n        → ${a.action}` : ""}`).join("\n")
+  : "  今天沒有拿到稽核結果，這幾項是空的（不代表沒事）。"}
 
 【生意】
   新詢問單 ${fmt(s.new_inquiry)}　新訂單 ${fmt(s.new_order)}　付款成功 ${fmt(s.new_paid)}

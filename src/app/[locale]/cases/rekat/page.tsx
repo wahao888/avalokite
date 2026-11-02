@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { getTenant, tenantOrigin } from "@/lib/tenants";
 import type { Locale } from "@/i18n/routing";
@@ -8,15 +9,10 @@ const SITE_URL = tenantOrigin(getTenant("rekat")!);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "REKAT ROASTERY 日卡地自然農莊｜品牌官網與線上商店案例 · Avalo 阿瓦羅"
-      : "REKAT ROASTERY｜Brand Site & Online Shop Case · Avalo",
-    description: zh
-      ? "為台東鹿野的自家烘焙咖啡打造品牌官網與線上商店：可點選的 SCA 風味輪、處理法圖解、烘焙曲線，程式生成的豆子插畫，以及讓烘豆師自己上下架的後台。"
-      : "A brand site and online shop for a Taitung roastery: a clickable SCA flavour wheel, processing explainers, a roast curve, procedurally drawn bean illustrations, and a back office the roaster runs himself.",
-  };
+  return caseMeta(locale, "/cases/rekat",
+    { title: "REKAT ROASTERY 日卡地自然農莊｜品牌官網與線上商店案例 · Avalo 阿瓦羅", description: "為台東鹿野的自家烘焙咖啡打造品牌官網與線上商店：可點選的 SCA 風味輪、處理法圖解、烘焙曲線，程式生成的豆子插畫，以及讓烘豆師自己上下架的後台。" },
+    { title: "REKAT ROASTERY｜Brand Site & Online Shop Case · Avalo", description: "A brand site and online shop for a Taitung roastery: a clickable SCA flavour wheel, processing explainers, a roast curve, procedurally drawn bean illustrations, and a back office the roaster runs himself." },
+  );
 }
 
 const C = {
@@ -155,7 +151,7 @@ export default async function RekatCase({ params }: { params: Promise<{ locale: 
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -163,7 +159,7 @@ export default async function RekatCase({ params }: { params: Promise<{ locale: 
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -249,7 +245,7 @@ export default async function RekatCase({ params }: { params: Promise<{ locale: 
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

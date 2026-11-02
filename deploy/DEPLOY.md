@@ -74,6 +74,10 @@ AI_PRICE_CACHED=""                              # 留空 = 0.01
 AI_PRICE_OUT=""                                 # 留空 = 0.50
 AI_MUTE_HOURS=""                                # 留空 = 12，轉人後 AI 在該 LINE 對話閉嘴幾小時
 AI_USD_TWD=""                                   # 留空 = 32，後台報表的美元→台幣概估匯率
+CRON_SECRET="<openssl rand -hex 24>"            # 本機 cron 打 /api/cron/* 用；本機沒有時端點回 401
+NEXT_PUBLIC_GA_MEASUREMENT_ID=""                # 留空 = 不載 GA。填 G-XXXXXXXX 後 nginx CSP 已放行
+NEXT_PUBLIC_GSC_VERIFICATION=""                 # Search Console HTML tag 的 content=
+NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
@@ -549,23 +553,50 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 
 | 排程（avalo crontab） | 做什麼 |
 |---|---|
-| `15 3 * * *` `/opt/avalo/run-care-cron.sh` | 打兩支 cron：`/api/cron/care-links` 追回「已上線但維護未授權」的訂單（最多 2 封信），`/api/cron/dunning` 跑欠費催收階梯。log 在 `/opt/avalo/cron-care.log` |
+| `15 3 * * *` [run-cron.sh](run-cron.sh) `care-links dunning` | 打兩支 cron：`/api/cron/care-links` 追回「已上線但維護未授權」的訂單（最多 2 封信），`/api/cron/dunning` 跑欠費催收階梯。log 在 `/opt/avalo/cron-care.log` |
+| `45 3 * * *` [run-cron.sh](run-cron.sh) `retention` | 刪掉超過保留期的 AI 客服對話紀錄與 webhook 去重列。隱私權政策寫了保留兩年，沒有這支就是沒兌現 |
+| `0 4 1 * *` [run-cron.sh](run-cron.sh) `geo-prompts` | 每月 1 號問同一組問題，看模型回覆有沒有提到 Avalo，結果寄到 MAIL_OWNER |
+| `0 5 * * 1` [run-cron.sh](run-cron.sh) `indexnow` | 每週一再 ping 一次 IndexNow（部署時 [deploy.sh](deploy.sh) 也會 ping） |
 | `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
 | `25 3 * * *` [backup-uploads.sh](backup-uploads.sh) | 商品照片同步到 S3（只累加，不刪） |
 
-`run-care-cron.sh` 刻意住在 repo 外（`/opt/avalo/`），內容是從 `.env` 讀 `CRON_SECRET`
-再 curl 本機端點——秘密只存在 `.env` 一處，不會跟著 rsync 進 repo。兩支 cron 共用這個腳本：
+| 排程（root crontab，額外） | 做什麼 |
+|---|---|
+| `30 4 * * 1` [fail2ban-ignore-crawlers.sh](fail2ban-ignore-crawlers.sh) | 每週一更新 Googlebot／Bingbot ignoreip，避免誤封爬蟲 |
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-CRON_SECRET="$(grep -E '^CRON_SECRET=' /opt/avalo/app/.env | cut -d= -f2- | tr -d '"')"
-for ep in care-links dunning; do
-  echo "--- $(date -Is) $ep"
-  curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" "http://127.0.0.1:3000/api/cron/$ep" || true
-  echo
-done
+`run-cron.sh` 從 `.env` 讀 `CRON_SECRET` 再 curl 本機端點——秘密只存在 `.env` 一處。
+若伺服器上還留著舊的 `/opt/avalo/run-care-cron.sh`，改成呼叫 repo 裡這支即可：
+
 ```
+15 3 * * * /opt/avalo/app/deploy/run-cron.sh care-links dunning >> /opt/avalo/cron-care.log 2>&1
+45 3 * * * /opt/avalo/app/deploy/run-cron.sh retention >> /opt/avalo/cron-retention.log 2>&1
+0 4 1 * * /opt/avalo/app/deploy/run-cron.sh geo-prompts >> /opt/avalo/cron-geo.log 2>&1
+0 5 * * 1 /opt/avalo/app/deploy/run-cron.sh indexnow >> /opt/avalo/cron-indexnow.log 2>&1
+```
+
+root 再加：
+
+```
+30 4 * * 1 /opt/avalo/app/deploy/fail2ban-ignore-crawlers.sh >> /opt/avalo/cron-f2b.log 2>&1
+```
+
+### 每天會自動檢查什麼
+
+三層，壞的東西會自己找上你，不需要你每天去翻：
+
+| 什麼時候 | 誰 | 看什麼 |
+|---|---|---|
+| 每 5 分鐘 | [health-check.sh](health-check.sh)（root cron） | Next 還活著嗎、**經由 nginx + TLS 打得開嗎**、磁碟、憑證剩幾天。只在「從好變壞」時寄信，同一項一小時內不重寄 |
+| 每天 08:00 | [daily-report.sh](daily-report.sh)（root cron） | 昨天的攻擊與攔截、流量與爬蟲、生意數字、機器狀況、離線備份，加上下面那份營運稽核 |
+| 每天 08:00（併進簡報） | `GET /api/cron/ops-audit` → [src/lib/ops-audit.ts](../src/lib/ops-audit.ts) | 未處理詢問單、AI 客服等你回的對話、AI 本月花費對上限、LINE webhook 還有沒有在收事件、逾期未清的對話紀錄、已上線但維護未授權、扣款失敗欠費、90 天內承諾期屆滿、卡住的訂單、沒有條款留證的訂單、限時檔期剩幾天幾席 |
+
+每日簡報本身就是心跳：**某天沒收到那封信，代表伺服器或排程出事了**，這是唯一能偵測
+「整台機器掛掉」的訊號（機器掛了，機器上的警報也寄不出來）。
+
+**要新增每日檢查項目**，改 [src/lib/ops-audit.ts](../src/lib/ops-audit.ts) 的 `runOpsAudit`，
+回一筆 `{ id, label, value, level, action }` 就好：level 1 以上會自動排進簡報最上面的
+「今天需要你做的事」，level 0 也會列在「待辦與風險」那一節。bash 與排版器都不用動。
+
 
 **`CRON_SECRET` 只需要在伺服器的 `.env` 有**；本機沒有時該端點會回 401，這是預期行為
 （本機要測就自己加一個開發用的值，不必與正式站相同）。

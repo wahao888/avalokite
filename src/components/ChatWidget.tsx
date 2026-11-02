@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { track } from "@/lib/track";
 
 interface Turn {
   role: "user" | "assistant";
@@ -21,6 +22,7 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chips = t.raw("chips") as string[];
 
   useEffect(() => {
     try {
@@ -50,6 +52,20 @@ export default function ChatWidget() {
   }, [open]);
 
   useEffect(() => {
+    document.body.classList.toggle("chat-open", open);
+    return () => document.body.classList.remove("chat-open");
+  }, [open]);
+
+  useEffect(() => {
+    const onOpen = () => {
+      setOpen(true);
+      track("open_chat", { place: "event" });
+    };
+    window.addEventListener("avalo:open-chat", onOpen);
+    return () => window.removeEventListener("avalo:open-chat", onOpen);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -58,8 +74,8 @@ export default function ChatWidget() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  async function send() {
-    const message = draft.trim();
+  async function send(text?: string) {
+    const message = (text ?? draft).trim();
     if (!message || busy) return;
     setDraft("");
     setTurns((prev) => [...prev, { role: "user", content: message }]);
@@ -88,7 +104,12 @@ export default function ChatWidget() {
       <button
         type="button"
         className={`chat-fab${open ? " is-open" : ""}`}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            if (!v) track("open_chat", { place: "fab" });
+            return !v;
+          });
+        }}
         aria-label={open ? t("close") : t("launcher")}
         aria-expanded={open}
       >
@@ -116,6 +137,15 @@ export default function ChatWidget() {
 
         <div className="chat-log" ref={listRef}>
           <div className="chat-msg is-bot">{t("greeting")}</div>
+          {turns.length === 0 && (
+            <div className="chat-chips">
+              {chips.map((c) => (
+                <button key={c} type="button" onClick={() => void send(c)} disabled={busy}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
           {turns.map((turn, i) => (
             <div key={i} className={`chat-msg is-${turn.role === "user" ? "me" : "bot"}`}>
               {turn.content}

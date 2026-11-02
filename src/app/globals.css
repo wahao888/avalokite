@@ -15,8 +15,15 @@
   --muted:  #8C8478;
   --border: #D6CDBD;
 
-  --font-display: var(--font-fraunces), "Noto Serif TC", serif;
-  --font-serif: var(--font-noto-serif), "Noto Serif TC", serif;
+  /* 中文一律用系統字，網路字只載拉丁的 Fraunces 與 DM Mono。
+     next/font 的 CJK 家族每個字重要切上百段 unicode-range：原本 Noto Serif TC
+     三個字重時，手機首頁要抓 23 個字型檔、1.7MB，FCP 被拖到 10 秒以上；
+     只留標題用的 600 一個字重也還有 16 個檔、600KB。
+     堆疊「拉丁字在前」，中英混排時拉丁字才會用到 Fraunces。 */
+  --font-display: var(--font-fraunces), "Songti TC", "Noto Serif TC", "Noto Serif CJK TC",
+    "Source Han Serif TC", PMingLiU, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC",
+    "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif;
   --font-mono: var(--font-dm-mono), "Courier New", monospace;
 }
 
@@ -27,8 +34,7 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-serif);
-  font-weight: 300;
+  font-family: var(--font-body);
   overflow-x: hidden;
 }
 
@@ -494,6 +500,9 @@ button { font-family: inherit; }
   position: relative;
   overflow: hidden;
   transition: background 0.3s;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 .service-card::before {
   content: '';
@@ -937,10 +946,10 @@ button { font-family: inherit; }
 .promo-per { font-size: 0.75rem; margin-left: 0.1rem; }
 .promo-free { font-style: normal; color: var(--moss); }
 .promo-plan.featured .promo-free { color: var(--sage); }
-.promo-term .promo-price-value { font-family: var(--font-serif); font-size: 1rem; }
+.promo-term .promo-price-value { font-family: var(--font-body); font-size: 1rem; }
 /* 保留金後面那句「折抵首期月費」——金額與它的條件不該分開兩行讀 */
 .promo-credit {
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: 0.72rem;
   margin-left: 0.4rem;
   color: var(--muted);
@@ -1108,7 +1117,7 @@ button { font-family: inherit; }
   border-bottom: 1px solid var(--border);
 }
 .cases-cat-name {
-  font-family: var(--font-noto-serif);
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 600;
   color: var(--ink);
@@ -1269,7 +1278,7 @@ button { font-family: inherit; }
   background: var(--paper);
   border: 1px solid var(--border);
   padding: 0.75rem 1rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-body);
   font-size: 0.88rem;
   color: var(--ink);
   outline: none;
@@ -1319,12 +1328,10 @@ button { font-family: inherit; }
 .footer {
   background: var(--ink);
   color: rgba(240,235,227,0.5);
-  padding: 3rem 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
+  padding: 3rem 4rem 2.5rem;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.1fr) minmax(0, 2fr);
+  gap: 2.5rem 3rem;
   border-top: 1px solid rgba(240,235,227,0.08);
 }
 .footer-logo { display: flex; align-items: center; gap: 0.6rem; }
@@ -1347,10 +1354,44 @@ button { font-family: inherit; }
   transition: color 0.2s;
 }
 .footer-links a:hover { color: var(--sage); }
+.footer-brand { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+}
+.footer-col-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(240,235,227,0.38);
+  margin-bottom: 0.7rem;
+}
+.footer-cols a {
+  display: block;
+  font-size: 0.82rem;
+  color: rgba(240,235,227,0.72);
+  text-decoration: none;
+  line-height: 1.9;
+  transition: color 0.2s;
+}
+.footer-cols a:hover { color: var(--sage); }
+.footer-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--paper);
+  text-decoration: none;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(240,235,227,0.25);
+  padding-bottom: 0.15rem;
+}
+.footer-line:hover { color: var(--sage); border-color: var(--sage); }
 
 /* 商家資訊：頁尾最下方整排小字（統編／地址／電話／登記信箱） */
 .footer-legal {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem 1.25rem;
@@ -1614,7 +1655,9 @@ button { font-family: inherit; }
   .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
   .form-row { grid-template-columns: 1fr; }
   .form-panel { padding: 2rem 1.5rem; }
-  .footer { flex-direction: column; text-align: center; padding: 3rem 1.5rem; }
+  .footer { grid-template-columns: 1fr; text-align: center; padding: 3rem 1.5rem 5.5rem; }
+  .footer-brand { align-items: center; }
+  .footer-cols { grid-template-columns: 1fr; }
   .footer-legal { justify-content: center; text-align: center; }
   .checkout-grid { grid-template-columns: 1fr; }
   .cart-row { grid-template-columns: 1fr auto; row-gap: 0.8rem; }
@@ -1973,4 +2016,111 @@ button { font-family: inherit; }
   /* 面板展開時直接收掉浮動鈕：面板是貼齊底部的整片，把鈕頂到面板上方
      會讓它孤零零飄在頁面中段，而標題列本來就有關閉鈕了 */
   .chat-fab.is-open { display: none; }
+}
+
+/* ── SEO／CRO 新頁與轉換元件 ── */
+.line-id {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  opacity: 0.72;
+  margin-left: 0.45rem;
+}
+.hero-quiz {
+  margin-top: 1.1rem;
+  font-size: 0.88rem;
+}
+.hero-quiz a { color: var(--moss); }
+.trust-marks {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0;
+  display: grid;
+  gap: 0.85rem;
+}
+.trust-marks li { display: grid; gap: 0.15rem; }
+.trust-marks strong { font-size: 0.88rem; color: var(--ink); }
+.trust-marks span { font-size: 0.78rem; color: var(--muted); line-height: 1.55; }
+.faq-list { display: grid; gap: 0.6rem; margin-top: 1.5rem; }
+.faq-item {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0.9rem 1.1rem;
+}
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.faq-item p { margin: 0.7rem 0 0; color: var(--muted); line-height: 1.7; font-size: 0.88rem; }
+.quiz, .tool-panel {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+.quiz fieldset { border: none; padding: 0; display: grid; gap: 0.4rem; }
+.quiz legend { font-weight: 600; margin-bottom: 0.35rem; }
+.quiz-check, .quiz label { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.5; }
+.quiz-result { display: grid; gap: 0.8rem; }
+.tool-row { display: flex; gap: 0.6rem; }
+.tool-row input { flex: 1; }
+.svc-index { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+.svc-index-card {
+  display: block;
+  padding: 1.4rem 1.3rem;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+.svc-index-card:hover { border-color: var(--moss); }
+.prose-list { margin: 1.25rem 0 1.75rem; padding-left: 1.2rem; line-height: 1.8; color: var(--muted); }
+.form-note { font-size: 0.78rem; color: var(--muted); margin: 0.35rem 0 1rem; }
+.chat-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.4rem; }
+.chat-chips button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+.chat-chips button:hover { border-color: var(--moss); color: var(--moss); }
+
+.sticky-bar {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+  background: var(--ink);
+  color: var(--paper);
+  border-top: 1px solid rgba(240,235,227,0.12);
+}
+.sticky-bar a, .sticky-bar button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--paper);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  padding: 0.9rem 0.4rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sticky-bar a + a, .sticky-bar a + button, .sticky-bar button + a {
+  border-left: 1px solid rgba(240,235,227,0.12);
+}
+
+@media (max-width: 720px) {
+  .sticky-bar { display: flex; }
+  .chat-fab { display: none; }
+  body { padding-bottom: 3.6rem; }
+  body.chat-open .sticky-bar { display: none; }
+  body.chat-open { padding-bottom: 0; }
 }

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Avalo | Web Development & Enterprise AI Automation",
-    "description": "Avalo digital engineering company: professional-grade websites, enterprise AI automation, and AI customer service for individuals and enterprises. Transparent fixed pricing, order online, deployment and long-term care included."
+    "title": "Taipei web design | Brand sites, commerce, LINE AI support | Avalo",
+    "description": "Avalo: Taipei web design and enterprise AI. Brand sites, commerce sites that take payment, LINE OA AI support. Published prices, order online, deployment and care included."
   },
   "nav": {
     "services": "Services",
@@ -14,11 +14,13 @@
   },
   "hero": {
     "label": "Engineering · Design · Automation",
-    "title1": "Run your business on",
-    "title2": "systems that work",
-    "desc": "From brand websites and revenue-ready e-commerce to enterprise AI automation and intelligent support — Avalo delivers professional-grade systems for individuals and enterprises of every size: design, build, deploy, maintain. Every price published. No haggling.",
+    "title1": "Web design and enterprise AI",
+    "title2": "prices, published first",
+    "desc": "From brand websites and revenue-ready commerce sites to enterprise AI automation and LINE support — Avalo delivers professional-grade systems for individuals and enterprises of every size: design, build, deploy, maintain. Every price published. No haggling.",
     "ctaPrimary": "See transparent pricing →",
     "ctaGhost": "View work",
+    "ctaLine": "Free consult on LINE",
+    "quiz": "Not sure which plan? Three questions →",
     "scroll": "Scroll",
     "inkToggle": "Toggle ink flow background",
     "inkClear": "Wash the ink away",
@@ -71,7 +73,8 @@
           "SEO/GEO",
           "Payments",
           "E-commerce"
-        ]
+        ],
+        "href": "/services/website"
       },
       {
         "num": "02",
@@ -83,7 +86,8 @@
           "LINE OA",
           "RAG",
           "Report Automation"
-        ]
+        ],
+        "href": "/services/ai-automation"
       },
       {
         "num": "03",
@@ -95,7 +99,8 @@
           "Data Engineering",
           "Web3",
           "Cloud"
-        ]
+        ],
+        "href": "/services"
       }
     ]
   },
@@ -320,7 +325,8 @@
     "label": "Start a Project",
     "title1": "Let's talk about",
     "title2": "what you need",
-    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form for a free consultation. A project consultant replies within 24 hours.",
+    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form or add LINE. A project consultant replies within 24 hours.",
+    "lineCta": "Free consult on LINE",
     "items": {
       "email": "Email",
       "line": "LINE",
@@ -336,10 +342,12 @@
       "namePh": "Jane Doe",
       "company": "Company / Brand",
       "companyPh": "Acme Inc.",
-      "email": "Email *",
+      "email": "Email",
       "emailPh": "you@example.com",
-      "phone": "LINE ID / Phone",
+      "phone": "Phone or LINE ID",
       "phonePh": "+886 912 345 678",
+      "contactHint": "Email or phone — one is enough. Both is better.",
+      "needContact": "Please leave an email or a phone / LINE ID so we can reply.",
       "service": "Service needed",
       "servicePh": "Select a service",
       "serviceOptions": [
@@ -360,8 +368,8 @@
         "Not sure yet"
       ],
       "honeypot": "Please leave this field empty",
-      "message": "Project description *",
-      "messagePh": "Briefly describe your needs, goals, timeline, or anything you'd like our team to know…",
+      "message": "What you need",
+      "messagePh": "Optional. Scope, timeline, or a site you like.",
       "submit": "Send inquiry →",
       "submitting": "Sending…",
       "success": "Got it! Our team will reply within 24 hours.",
@@ -371,6 +379,21 @@
   "footer": {
     "tagline": "Web Development · Enterprise AI Automation · Systems Integration",
     "rights": "All Rights Reserved",
+    "colServices": "Services",
+    "colIndustries": "Industries",
+    "colTools": "Tools & guides",
+    "colCompany": "Company",
+    "quiz": "Pick a plan",
+    "geoTool": "AI visibility check",
+    "costTool": "Cost calculator",
+    "savingsTool": "Support savings",
+    "guides": "Guides",
+    "faq": "FAQ",
+    "referral": "Referral",
+    "about": "About Avalo",
+    "cases": "Work",
+    "pricing": "Pricing",
+    "contact": "Contact",
     "links": {
       "terms": "Terms",
       "privacy": "Privacy",
@@ -495,7 +518,8 @@
     "contentId": "Content ID",
     "archivedNotice": "You are viewing an archived version. These are the terms that applied to certain existing orders, not the current ones.",
     "versionNotFound": "No archived copy of version {version} was found. If you need the terms that applied to your order, email service@avalokite.xyz and we will send you a full copy.",
-    "viewCurrent": "View current version"
+    "viewCurrent": "View current version",
+    "metaDesc": "Avalo contract terms. Please read before ordering; historical versions are linked from order confirmation emails."
   },
   "promo": {
     "badge": "Limited run · filling up",
@@ -591,6 +615,11 @@
     "close": "Close",
     "thinking": "Typing",
     "error": "Something went wrong. Please try again, or email service@avalokite.xyz.",
-    "disclaimer": "Answered by AI; the pricing page is authoritative"
+    "disclaimer": "Answered by AI; the pricing page is authoritative",
+    "chips": [
+      "What does a brand site cost?",
+      "How long does it take?",
+      "How does LINE AI support work?"
+    ]
   }
 }

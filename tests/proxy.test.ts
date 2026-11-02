@@ -28,6 +28,7 @@ describe("matcher 涵蓋範圍", () => {
     expect(matches("/quote")).toBe(true);
     expect(matches("/portal")).toBe(true);
     expect(matches("/robots.txt")).toBe(true);
+    expect(matches("/llms.txt")).toBe(true);
   });
   it("API 與內部資源不進 proxy", () => {
     expect(matches("/api/wenshan/quote")).toBe(false);

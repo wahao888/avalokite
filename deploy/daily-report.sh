@@ -103,6 +103,67 @@ collect() {
   printf '%s' "$ALL" | awk '$9 == 404 {print $7}' | cut -d'?' -f1 | sort | uniq -c | sort -rn | head -5 \
     | awk '{c=$1; $1=""; sub(/^ /,""); print "top_404\t" c "\t" $0}'
 
+  # 搜尋／AI 爬蟲與來源：UA 在 combined log 的 $12 起，referer 是 $11。
+  # 用來判斷「有沒有人在爬」與「流量從哪裡來」，不是安全指標。
+  printf '%s' "$ALL" | awk '
+    {
+      ua=""
+      for (i=12;i<=NF;i++) ua=ua $i " "
+      bot="other"
+      if (ua ~ /Googlebot/) bot="Googlebot"
+      else if (ua ~ /bingbot|BingPreview/) bot="bingbot"
+      else if (ua ~ /GPTBot|ChatGPT-User|OAI-SearchBot/) bot="GPTBot"
+      else if (ua ~ /ClaudeBot|anthropic-ai/) bot="ClaudeBot"
+      else if (ua ~ /PerplexityBot/) bot="PerplexityBot"
+      else if (ua ~ /Bytespider/) bot="Bytespider"
+      else if (ua ~ /Amazonbot/) bot="Amazonbot"
+      else if (ua ~ /Applebot/) bot="Applebot"
+      else if (ua ~ /CCBot/) bot="CCBot"
+      else if (ua ~ /YandexBot/) bot="YandexBot"
+      else if (ua ~ /facebookexternalhit|meta-externalagent/) bot="Meta"
+      if (bot != "other") print bot
+    }' | sort | uniq -c | sort -rn | head -12 \
+    | awk '{print "bot\t" $1 "\t" $2}'
+
+  printf '%s' "$ALL" | awk '
+    {
+      ref=$11
+      gsub(/"/,"",ref)
+      if (ref == "-" || ref == "") next
+      host=ref
+      sub(/^https?:\/\//,"",host)
+      split(host, a, "/")
+      host=a[1]
+      src="other"
+      if (host ~ /google\./) src="google"
+      else if (host ~ /bing\./) src="bing"
+      else if (host ~ /chatgpt\.|chat\.openai|openai\.com/) src="chatgpt"
+      else if (host ~ /perplexity/) src="perplexity"
+      else if (host ~ /gemini\.google|bard\.google/) src="gemini"
+      else if (host ~ /facebook\.|instagram\.|l\.facebook/) src="meta"
+      else if (host ~ /line\.me/) src="line"
+      if (src != "other") print src
+    }' | sort | uniq -c | sort -rn | head -10 \
+    | awk '{print "referrer\t" $1 "\t" $2}'
+
+  # ── 應用層稽核 ──
+  # 檔期還剩幾天、AI 客服有沒有人在等、欠費催收走到第幾階——這些規則住在程式碼裡
+  # （promo-window.ts、chat-pricing.ts、subscription.ts）。在 bash 裡複製一份 SQL
+  # 與門檻值，改了程式卻忘了改這裡時，簡報會很有自信地報一個錯的數字。
+  # 所以直接問應用自己。⚠ 要新增每日檢查項目是改 src/lib/ops-audit.ts，不是改這裡。
+  CRON_SECRET=$(sed -n 's/^CRON_SECRET=//p' "$APP/.env" 2>/dev/null | tr -d '"'"'" | head -1)
+  if [ -n "$CRON_SECRET" ]; then
+    curl -fsS --max-time 20 -H "x-cron-secret: $CRON_SECRET" \
+      "http://127.0.0.1:3000/api/cron/ops-audit?format=tsv" 2>/dev/null || emit audit_error curl
+  else
+    emit audit_error nosecret
+  fi
+
+  # 每月 1 號提醒寫一篇第一手文章（這支排程是 UTC 00:00 = 台北 08:00）
+  if [ "$(date -u +%d)" = "01" ]; then
+    emit content_nudge 1
+  fi
+
   # 把別人的網域 A 記錄指到這台機器 → default server 回 444，另記一份 log
   emit rejected "$(zgrep -h "$YDAY" /var/log/nginx/rejected.log /var/log/nginx/rejected.log.* 2>/dev/null | grep -c . || true)"
 

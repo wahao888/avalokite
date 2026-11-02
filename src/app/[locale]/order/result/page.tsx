@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import PurchaseTrack from "@/components/PurchaseTrack";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +59,13 @@ export default async function OrderResultPage({
     }
   }
 
+  const paidValue = order?.payments
+    .filter((p) => p.status === "paid")
+    .reduce((sum, p) => sum + p.amount, 0);
+
   return (
     <main className="page-wrap page-wrap-narrow" style={{ textAlign: "center" }}>
+      {order?.status === "paid" && <PurchaseTrack orderId={order.id} value={paidValue} />}
       <div className="mono-label" style={{ justifyContent: "center" }}>
         {t("resultTitle")}
       </div>

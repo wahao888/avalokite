@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -6,15 +7,10 @@ const SITE_URL = "https://gtclub.tw/";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "GT Club 台灣共好交流協會官網｜完全客製案例 · Avalo 阿瓦羅"
-      : "GT Club Taiwan｜Fully-Custom Case · Avalo",
-    description: zh
-      ? "明暗雙主題＋動效的品牌官網、三大主題專區、加入表單與電子報一鍵轉換、造訪分析——為協會打造的社群經營平台，完全客製。"
-      : "A brand website with light/dark themes, topic hubs, one-tap join & newsletter conversion and visit analytics — a fully-custom community platform.",
-  };
+  return caseMeta(locale, "/cases/gtclub",
+    { title: "GT Club 台灣共好交流協會官網｜完全客製案例 · Avalo 阿瓦羅", description: "明暗雙主題＋動效的品牌官網、三大主題專區、加入表單與電子報一鍵轉換、造訪分析——為協會打造的社群經營平台，完全客製。" },
+    { title: "GT Club Taiwan｜Fully-Custom Case · Avalo", description: "A brand website with light/dark themes, topic hubs, one-tap join & newsletter conversion and visit analytics — a fully-custom community platform." },
+  );
 }
 
 const C = {
@@ -155,7 +151,7 @@ export default async function GtClubCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -163,7 +159,7 @@ export default async function GtClubCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -249,7 +245,7 @@ export default async function GtClubCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

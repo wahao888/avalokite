@@ -11,6 +11,9 @@ export const SITE = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 };
 
+/** 加官方帳號好友。手機直接開 LINE；桌機開 line.me 的頁面，上面有 QR code 可掃 */
+export const LINE_URL = `https://line.me/R/ti/p/${SITE.lineId}`;
+
 /**
  * 營運主體的登記資料。
  *

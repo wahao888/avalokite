@@ -7,18 +7,27 @@ import { clientIp, rateLimited } from "@/lib/rate-limit";
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 
-const schema = z.object({
-  name: z.string().trim().min(1).max(100),
-  email: z.string().trim().email().max(200),
-  phone: z.string().trim().max(50).optional().or(z.literal("")),
-  company: z.string().trim().max(200).optional().or(z.literal("")),
-  service: z.string().trim().max(100).optional().or(z.literal("")),
-  budget: z.string().trim().max(100).optional().or(z.literal("")),
-  message: z.string().trim().min(1).max(3000),
-  locale: z.string().max(10).optional(),
-  // honeypot
-  website: z.string().max(500).optional().or(z.literal("")),
-});
+const schema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    email: z.string().trim().max(200).optional().or(z.literal("")),
+    phone: z.string().trim().max(50).optional().or(z.literal("")),
+    company: z.string().trim().max(200).optional().or(z.literal("")),
+    service: z.string().trim().max(100).optional().or(z.literal("")),
+    budget: z.string().trim().max(100).optional().or(z.literal("")),
+    message: z.string().trim().max(3000).optional().or(z.literal("")),
+    locale: z.string().max(10).optional(),
+    // honeypot
+    website: z.string().max(500).optional().or(z.literal("")),
+  })
+  .superRefine((d, ctx) => {
+    if (!d.email && !d.phone) {
+      ctx.addIssue({ code: "custom", message: "email or phone required", path: ["email"] });
+    }
+    if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) {
+      ctx.addIssue({ code: "custom", message: "invalid email", path: ["email"] });
+    }
+  });
 
 export async function POST(req: NextRequest) {
   if (rateLimited(`contact:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
@@ -45,18 +54,18 @@ export async function POST(req: NextRequest) {
   const inquiry = await prisma.inquiry.create({
     data: {
       name: d.name,
-      email: d.email,
+      email: d.email || "-",
       phone: d.phone || null,
       company: d.company || null,
       service: d.service || null,
       budget: d.budget || null,
-      message: d.message,
+      message: d.message || "(未填寫)",
       locale: d.locale ?? "zh-TW",
     },
   });
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
-    `姓名：${d.name}\nEmail：${d.email}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message}`
+    `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message || "(未填寫)"}`
   );
   // 後台會把通知信未送達的單標記出來（SMTP 掛掉時仍不會漏單）
   if (notified) {

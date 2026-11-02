@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
+import { promoOpen } from "@/lib/promo-window";
 import LogoMark from "./LogoMark";
 import PromoBar from "./PromoBar";
 
@@ -25,9 +26,7 @@ export default function Nav() {
   useEffect(() => setOpen(false), [pathname]);
 
   const otherLocale = locale === "zh-TW" ? "en" : "zh-TW";
-
-  // 首頁區塊錨點：非首頁時連回首頁對應區塊
-  const anchor = (hash: string) => ({ pathname: "/", hash });
+  const pricing = promoOpen() ? "/launch" : "/pricing";
 
   return (
     // nav 與限時橫幅包在同一個 fixed 容器裡：橫幅因此自然跟著浮動，
@@ -54,11 +53,11 @@ export default function Nav() {
           onClick={(e) => {
             if ((e.target as HTMLElement).closest("a")) setOpen(false);
           }}>
-          <li><Link href={anchor("services")}>{t("services")}</Link></li>
-          <li><Link href={anchor("pricing")}>{t("pricing")}</Link></li>
-          <li><Link href={anchor("cases")}>{t("cases")}</Link></li>
-          <li><Link href={anchor("about")}>{t("about")}</Link></li>
-          <li><Link href={anchor("contact")}>{t("contact")}</Link></li>
+          <li><Link href="/services">{t("services")}</Link></li>
+          <li><Link href={pricing}>{t("pricing")}</Link></li>
+          <li><Link href="/cases">{t("cases")}</Link></li>
+          <li><Link href="/about">{t("about")}</Link></li>
+          <li><Link href="/contact">{t("contact")}</Link></li>
           <li>
             <Link href="/cart" className="nav-cart">
               {t("cart")}
@@ -66,7 +65,7 @@ export default function Nav() {
             </Link>
           </li>
           <li>
-            <Link href={anchor("pricing")} className="nav-cta">{t("cta")}</Link>
+            <Link href={pricing} className="nav-cta">{t("cta")}</Link>
           </li>
           <li>
             <Link href={pathname} locale={otherLocale} className="lang-switch">

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LEGAL_VERSION, type DocKey } from "@/lib/legal-content";
 import { legalDocAt, legalHash } from "@/lib/legal-consent";
 import { routing } from "@/i18n/routing";
+import { pageMetadata } from "@/lib/seo";
 
 const DOCS: DocKey[] = ["terms", "privacy", "refund"];
 
@@ -10,6 +11,22 @@ export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
     DOCS.map((doc) => ({ locale, doc }))
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; doc: string }>;
+}) {
+  const { locale, doc } = await params;
+  if (!DOCS.includes(doc as DocKey)) return {};
+  const t = await getTranslations({ locale, namespace: "legal" });
+  return pageMetadata({
+    locale,
+    path: `/legal/${doc}`,
+    title: `${t(doc as DocKey)}｜Avalo`,
+    description: t("metaDesc"),
+  });
 }
 
 export default async function LegalPage({

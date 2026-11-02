@@ -4,6 +4,9 @@ export const routing = defineRouting({
   locales: ["zh-TW", "en"],
   defaultLocale: "zh-TW",
   localePrefix: "as-needed",
+  // Googlebot 的 Accept-Language 常是 en；打開偵測會讓主網域首頁被收成英文版。
+  // 語系只跟路徑走：/ 是中文，/en 是英文。
+  localeDetection: false,
 });
 
 export type Locale = (typeof routing.locales)[number];

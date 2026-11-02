@@ -1,35 +1,39 @@
+import { execFileSync } from "node:child_process";
 import type { MetadataRoute } from "next";
-import { SITE } from "@/lib/site";
 import { routing } from "@/i18n/routing";
 import { publicPaths } from "@/lib/site-routes";
+import { languageAlternates, localeUrl } from "@/lib/seo";
 
 // 主站 sitemap。客戶子網域由 proxy.ts 攔下（尚未對外的客戶站不該有 sitemap）。
-//
-// 語系網址規則要跟 next-intl 的 localePrefix: "as-needed" 一致：
-// 預設語系 zh-TW 沒有前綴（/cart），其他語系才有（/en/cart）。
-function urlFor(locale: string, path: string): string {
-  const prefix = locale === routing.defaultLocale ? "" : `/${locale}`;
-  const p = path === "/" ? "" : path;
-  const url = `${SITE.url}${prefix}${p}`;
-  // 預設語系的首頁會變成裸 origin（沒有路徑），補上斜線才是合法的 <loc>
-  return prefix === "" && p === "" ? `${url}/` : url;
+
+/**
+ * lastmod 取「組成這一頁的原始檔」最後一次 commit 的時間。
+ *
+ * 以前填 build 當下的時間：每次部署全站都說自己剛改過，Google 很快就學會不信
+ * 這個欄位，真正改過的頁面也就失去了被優先重爬的機會。
+ * build 在本機跑（見 deploy.sh），取得到 git；取不到時寧可不填，也不要填假的。
+ */
+function lastCommitDate(sources: string[]): Date | undefined {
+  try {
+    const out = execFileSync("git", ["log", "-1", "--format=%cI", "--", ...sources], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return out ? new Date(out) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
-  return publicPaths().flatMap(({ path, priority }) =>
-    routing.locales.map((locale) => ({
-      url: urlFor(locale, path),
-      lastModified: now,
-      changeFrequency: "weekly" as const,
+  return publicPaths().flatMap(({ path, priority, sources }) => {
+    const lastModified = lastCommitDate(sources);
+    return routing.locales.map((locale) => ({
+      url: localeUrl(locale, path),
+      ...(lastModified ? { lastModified } : {}),
       priority,
       // 告訴搜尋引擎同一頁的各語系版本，避免被判成重複內容
-      alternates: {
-        languages: Object.fromEntries(
-          routing.locales.map((l) => [l, urlFor(l, path)]),
-        ),
-      },
-    })),
-  );
+      alternates: { languages: languageAlternates(path) },
+    }));
+  });
 }

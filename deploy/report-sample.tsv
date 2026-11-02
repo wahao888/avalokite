@@ -65,3 +65,7 @@ new_order	0
 new_paid	0
 backup	avalo-20260824-0000.db.gz
 backup_age_h	8
+audit	0	inquiry-open	未處理的詢問單	0 筆	都回完了
+audit	1	chat-handoff	AI 客服等你回的對話	1 筆（最舊 3 小時）	到 /admin/chat 看逐字稿，回完按「標記已處理」讓 AI 接回
+audit	0	ai-budget	AI 客服本月花費	US$0.0009 / 上限 US$10（0%）	在預算內
+audit	2	promo-window	限時檔期	剩 0 天、0/5 席	站上已不再顯示這一檔

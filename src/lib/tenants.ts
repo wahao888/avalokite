@@ -103,6 +103,7 @@ export const TENANTS: Tenant[] = [
 export const RESERVED = [
   "www", "api", "admin", "portal", "mail", "demo", "static", "cdn", "assets",
   "cases", "legal", "cart", "checkout", "order", "sites", "zh-tw", "en",
+  "services", "pricing", "subscription",
 ];
 
 const BY_SLUG = new Map(TENANTS.map((t) => [t.slug, t]));

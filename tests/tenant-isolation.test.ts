@@ -56,6 +56,7 @@ const LIB_PRISMA_ALLOWED = [
   "src/lib/chat-service.ts",
   "src/lib/line-events.ts",
   "src/lib/chat-stats.ts",
+  "src/lib/ops-audit.ts",
 ];
 
 describe("portal 只能透過資料層存取資料", () => {

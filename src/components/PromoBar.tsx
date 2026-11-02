@@ -14,7 +14,7 @@ import { PROMO_PLANS } from "@/lib/products";
 
 /**
  * navbar 下方的限時橫幅。跟著 nav 一起浮動（同在 .topbar 裡），
- * 點擊回首頁的 #promo 區塊——在內頁也要能導回去，所以用 next-intl 的 Link 帶 hash。
+ * 點進獨立的限時方案頁，不再只錨回首頁區塊。
  */
 export default function PromoBar() {
   const t = useTranslations("promo");
@@ -36,7 +36,7 @@ export default function PromoBar() {
   if (PROMO_PLANS.length === 0 || seatsLeft() === 0 || ended) return null;
 
   return (
-    <Link className="promo-bar" href={{ pathname: "/", hash: "promo" }}>
+    <Link className="promo-bar" href="/launch">
       <span className="promo-bar-flag">
         <i className="promo-bar-dot" aria-hidden="true" />
         {t("badge")}

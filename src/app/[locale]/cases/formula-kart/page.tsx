@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { caseMeta } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -6,15 +7,10 @@ const SITE_URL = "https://gtclub.tw/formula-kart/";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const zh = locale !== "en";
-  return {
-    title: zh
-      ? "Formula Kart 3D 賽車遊戲｜完全客製案例 · Avalo 阿瓦羅"
-      : "Formula Kart — 3D Racing Game｜Fully-Custom Case · Avalo",
-    description: zh
-      ? "Three.js／WebGL 打造、免安裝就能玩的瀏覽器 3D 賽車遊戲，含 3 賽道、9 車、動態天氣、44 項成就與最多 10 人即時多人競速。"
-      : "A no-install browser 3D racing game built with Three.js/WebGL — 3 tracks, 9 cars, dynamic weather, 44 achievements and up to 10-player real-time racing.",
-  };
+  return caseMeta(locale, "/cases/formula-kart",
+    { title: "Formula Kart 3D 賽車遊戲｜完全客製案例 · Avalo 阿瓦羅", description: "Three.js／WebGL 打造、免安裝就能玩的瀏覽器 3D 賽車遊戲，含 3 賽道、9 車、動態天氣、44 項成就與最多 10 人即時多人競速。" },
+    { title: "Formula Kart — 3D Racing Game｜Fully-Custom Case · Avalo", description: "A no-install browser 3D racing game built with Three.js/WebGL — 3 tracks, 9 cars, dynamic weather, 44 achievements and up to 10-player real-time racing." },
+  );
 }
 
 const C = {
@@ -155,7 +151,7 @@ export default async function FormulaKartCase({
 
   return (
     <main className="page-wrap fa">
-      <Link href={{ pathname: "/", hash: "cases" }} className="fa-back">{c.back}</Link>
+      <Link href="/cases" className="fa-back">{c.back}</Link>
 
       {/* Hero */}
       <header className="fa-hero">
@@ -163,7 +159,7 @@ export default async function FormulaKartCase({
         <h1 className="fa-title">{c.title}</h1>
         <p className="fa-lede">{c.lede}</p>
         <div className="fa-hero-cta">
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.ctaPrimary}</Link>
+          <Link href="/contact" className="btn-primary">{c.ctaPrimary}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost">{c.ctaVisit}</a>
         </div>
       </header>
@@ -249,7 +245,7 @@ export default async function FormulaKartCase({
         <h2 className="fa-final-t">{c.finalCta.title}</h2>
         <p className="fa-final-d">{c.finalCta.desc}</p>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href={{ pathname: "/", hash: "contact" }} className="btn-primary">{c.finalCta.btn}</Link>
+          <Link href="/contact" className="btn-primary">{c.finalCta.btn}</Link>
           <a href={SITE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost fa-final-visit">{c.finalCta.visit}</a>
         </div>
       </section>

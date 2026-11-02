@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Avalo 阿瓦羅｜網站設計開發・企業 AI 自動化",
-    "description": "Avalo 阿瓦羅數位工程公司：為個人品牌與企業打造專業級網站、企業 AI 自動化與智能客服。公開透明不二價，線上直接下單，含部署與長期維護。"
+    "title": "台北網頁設計｜形象官網、商務網站、LINE AI 客服｜Avalo 阿瓦羅",
+    "description": "Avalo 阿瓦羅：台北網頁設計與企業 AI。形象官網、可收錢的商務網站、LINE 官方帳號 AI 客服，價格公開不二價，可線上下單，含部署與維護。"
   },
   "nav": {
     "services": "服務",
@@ -14,11 +14,13 @@
   },
   "hero": {
     "label": "工程・設計・自動化",
-    "title1": "把你的生意",
-    "title2": "交給會跑的系統",
-    "desc": "從品牌官網、可收錢的電商網站，到企業 AI 自動化與智能客服 —— Avalo 為個人品牌與各規模企業打造專業級系統，設計、開發、部署、維運一站式交付。價格全部公開，不二價。",
+    "title1": "網頁設計與企業 AI",
+    "title2": "價格先講清楚",
+    "desc": "從品牌官網、可收錢的商務網站，到企業 AI 自動化與 LINE 智能客服 —— Avalo 為個人品牌與各規模企業打造專業級系統，設計、開發、部署、維運一站式交付。價格全部公開，不二價。",
     "ctaPrimary": "看透明定價 →",
     "ctaGhost": "查看案例",
+    "ctaLine": "加 LINE 免費諮詢",
+    "quiz": "不確定方案？三題挑一個 →",
     "scroll": "往下捲動",
     "inkToggle": "開關墨流背景",
     "inkClear": "洗去墨跡",
@@ -71,7 +73,8 @@
           "SEO/GEO",
           "金流串接",
           "購物車"
-        ]
+        ],
+        "href": "/services/website"
       },
       {
         "num": "02",
@@ -83,7 +86,8 @@
           "LINE OA",
           "RAG 知識庫",
           "報表自動化"
-        ]
+        ],
+        "href": "/services/ai-automation"
       },
       {
         "num": "03",
@@ -95,7 +99,8 @@
           "資料工程",
           "Web3",
           "雲端架構"
-        ]
+        ],
+        "href": "/services"
       }
     ]
   },
@@ -320,7 +325,8 @@
     "label": "開始合作",
     "title1": "聊聊你的",
     "title2": "專案需求",
-    "intro": "標準服務可直接線上下單；客製專案或還不確定要什麼，填表單免費諮詢，專案顧問將在 24 小時內回覆。",
+    "intro": "標準服務可直接線上下單；客製專案或還不確定要什麼，填表單或加 LINE 免費諮詢，專案顧問將在 24 小時內回覆。",
+    "lineCta": "加 LINE 免費諮詢",
     "items": {
       "email": "Email",
       "line": "LINE",
@@ -336,10 +342,12 @@
       "namePh": "王小明",
       "company": "公司 / 品牌名稱",
       "companyPh": "XX 有限公司",
-      "email": "Email *",
+      "email": "Email",
       "emailPh": "you@example.com",
-      "phone": "LINE ID / 手機",
+      "phone": "電話或 LINE ID",
       "phonePh": "0912345678",
+      "contactHint": "Email 或電話擇一即可，兩個都留更好回。",
+      "needContact": "請至少留 Email 或電話／LINE，我們才回得了你。",
       "service": "需要的服務",
       "servicePh": "請選擇服務類型",
       "serviceOptions": [
@@ -360,8 +368,8 @@
         "尚未確定，想先了解"
       ],
       "honeypot": "請勿填寫",
-      "message": "專案描述 *",
-      "messagePh": "請簡單描述你的需求、目標、時程，或任何想讓我們了解的事…",
+      "message": "需求說明",
+      "messagePh": "選填。想先講的需求、時程、參考網站都可以寫。",
       "submit": "送出詢問 →",
       "submitting": "送出中…",
       "success": "已收到你的詢問！專案顧問將在 24 小時內回覆。",
@@ -371,6 +379,21 @@
   "footer": {
     "tagline": "網站設計開發 · 企業 AI 自動化 · 系統整合",
     "rights": "版權所有",
+    "colServices": "服務",
+    "colIndustries": "產業",
+    "colTools": "工具與指南",
+    "colCompany": "公司",
+    "quiz": "三題挑方案",
+    "geoTool": "AI 能見度檢測",
+    "costTool": "費用試算",
+    "savingsTool": "客服省工試算",
+    "guides": "指南",
+    "faq": "常見問題",
+    "referral": "合作轉介",
+    "about": "關於 Avalo",
+    "cases": "案例",
+    "pricing": "定價",
+    "contact": "聯絡",
     "links": {
       "terms": "服務條款",
       "privacy": "隱私權政策",
@@ -495,7 +518,8 @@
     "contentId": "內容識別碼",
     "archivedNotice": "你正在檢視已封存的歷史版本。這是某些既有訂單成立時所適用的條款，並非現行版本。",
     "versionNotFound": "找不到版本 {version} 的封存內容。若你是為了查詢訂單所適用的條款，請來信 service@avalokite.xyz，我們會提供完整副本。",
-    "viewCurrent": "檢視現行版本"
+    "viewCurrent": "檢視現行版本",
+    "metaDesc": "Avalo 阿瓦羅的契約條款。下單前請閱讀；歷史版本可從訂單確認信的連結查回。"
   },
   "promo": {
     "badge": "限時檔期・即將額滿",
@@ -591,6 +615,11 @@
     "close": "關閉",
     "thinking": "輸入中",
     "error": "連線出了點狀況，請再試一次，或來信 service@avalokite.xyz。",
-    "disclaimer": "由 AI 回覆，報價以官網方案頁為準"
+    "disclaimer": "由 AI 回覆，報價以官網方案頁為準",
+    "chips": [
+      "形象官網多少錢？",
+      "交期怎麼算？",
+      "LINE AI 客服怎麼接？"
+    ]
   }
 }

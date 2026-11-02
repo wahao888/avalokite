@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import HeroInkCanvas from "@/components/HeroInkCanvas";
+import LineCta from "@/components/LineCta";
 
 interface Stat {
   num: string;
@@ -23,13 +24,17 @@ export default function Hero() {
         </h1>
         <p className="hero-desc">{t("desc")}</p>
         <div className="hero-actions">
-          <Link href={{ pathname: "/", hash: "pricing" }} className="btn-primary">
+          <Link href="/pricing" className="btn-primary">
             {t("ctaPrimary")}
           </Link>
-          <Link href={{ pathname: "/", hash: "cases" }} className="btn-ghost">
+          <Link href="/cases" className="btn-ghost">
             {t("ctaGhost")}
           </Link>
+          <LineCta label={t("ctaLine")} className="btn-ghost" />
         </div>
+        <p className="hero-quiz">
+          <Link href="/quiz">{t("quiz")}</Link>
+        </p>
         <div className="scroll-line">
           <span className="scroll-text">{t("scroll")}</span>
         </div>

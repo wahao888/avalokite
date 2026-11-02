@@ -23,7 +23,7 @@ export default function About() {
         <p className="about-text">{t("p1")}</p>
         <p className="about-text">{t("p2")}</p>
         <Link
-          href={{ pathname: "/", hash: "contact" }}
+          href="/contact"
           className="btn-primary"
           style={{ alignSelf: "flex-start", marginTop: "1rem" }}
         >

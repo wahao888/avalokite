@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { getProduct } from "./products";
+import { track } from "./track";
 
 export interface CartItem {
   sku: string;
@@ -55,6 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const add = useCallback((sku: string) => {
     const prod = getProduct(sku);
     if (!prod) return;
+    track("add_to_cart", { sku });
     setItems((prev) => {
       const found = prev.find((i) => i.sku === sku);
       // 月費方案同品項不重複加（一個網站一份維護）；一次性可加量

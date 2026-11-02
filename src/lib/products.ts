@@ -756,6 +756,7 @@ export const earlyExitTierLabels = (zh: boolean): string[] =>
 // 客戶可自由挑選組合；因客製範圍會影響價格，最終以諮詢確認報價為準。
 // 價格為未稅參考價（TWD），可自由調整。
 export interface Addon {
+  id: string; // 服務頁文案以 {addon:id} 引用價格（見 services.ts）
   price: number;
   i18n: { "zh-TW": { name: string; desc: string }; en: { name: string; desc: string } };
 }
@@ -764,6 +765,7 @@ export const ADDONS: Addon[] = [
     // 代客申請而不是叫客戶自己去買：多數店家不會操作 DNS，也不該為了這件事卡住。
     // 登記人一律填客戶本人——客戶站掛在 Avalo 的網域下，這條是「不綁架你」的具體
     // 證明，不是漂亮話（搭配服務條款的資料主權與解約 6 個月轉址）。
+    id: "domain",
     price: 3000,
     i18n: {
       "zh-TW": {
@@ -779,6 +781,7 @@ export const ADDONS: Addon[] = [
   {
     // 方案本身已含 GA4／sitemap／結構化資料，這包是「再往上」的部分：
     // 關鍵字怎麼選、頁面怎麼改、Search Console 怎麼看。
+    id: "seo-starter",
     price: 8000,
     i18n: {
       "zh-TW": { name: "SEO 起步包", desc: "關鍵字規劃、頁面 meta 與結構優化、Search Console 設定" },
@@ -786,6 +789,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "payment",
     price: 12000,
     i18n: {
       "zh-TW": { name: "金流串接", desc: "綠界／藍新，含定期定額" },
@@ -793,6 +797,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "einvoice",
     price: 8000,
     i18n: {
       "zh-TW": { name: "電子發票串接", desc: "開立、作廢、寄送一條龍" },
@@ -800,6 +805,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "membership",
     price: 20000,
     i18n: {
       "zh-TW": { name: "會員／登入系統", desc: "註冊、登入、權限、個人頁" },
@@ -807,6 +813,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "booking",
     price: 16000,
     i18n: {
       "zh-TW": { name: "線上預約系統", desc: "時段、通知、後台管理" },
@@ -814,6 +821,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "receipt-entry",
     price: 22000,
     i18n: {
       "zh-TW": { name: "Telegram／LINE 憑證入帳", desc: "拍照上傳，AI 抽取自動記錄" },
@@ -821,6 +829,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "reports",
     price: 9000,
     i18n: {
       "zh-TW": { name: "自動報表", desc: "Sheets／Excel／Email 定時寄送" },
@@ -828,6 +837,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "rag",
     price: 25000,
     i18n: {
       "zh-TW": { name: "AI 知識庫問答（RAG）", desc: "用你的文件訓練的問答" },
@@ -835,6 +845,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "roles",
     price: 14000,
     i18n: {
       "zh-TW": { name: "後台權限與角色管理", desc: "多帳號、分權、操作紀錄" },
@@ -842,6 +853,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "api",
     price: 10000,
     i18n: {
       "zh-TW": { name: "第三方 API 串接", desc: "每支既有系統／服務串接" },
@@ -849,6 +861,7 @@ export const ADDONS: Addon[] = [
     },
   },
   {
+    id: "i18n",
     price: 12000,
     i18n: {
       "zh-TW": { name: "多語系網站", desc: "雙語或多語切換、內容管理" },
