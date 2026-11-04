@@ -15,7 +15,7 @@ export const PROMO_WINDOW = {
   /** 本檔開放席次 */
   seatsTotal: 5,
   /** 已認購席次（顯示用；小於等於 seatsTotal） */
-  seatsTaken: 3,
+  seatsTaken: 2,
   /** 檔期截止時間；null 表示開放式檔期，改用下面的滾動週期 */
   endsAt: Date.UTC(2026, 10, 30, 16, 0, 0) as number | null, // UTC+8 的 2026-12-01 00:00（11/30 結束）
   /** 滾動模式的倒數起算點（UTC+8 的 2026-09-01 00:00） */
