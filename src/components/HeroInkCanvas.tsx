@@ -260,6 +260,8 @@ export default function HeroInkCanvas() {
   const washRef = useRef<(() => void) | null>(null);
   const [enabled, setEnabled] = useState(true);
   const [supported, setSupported] = useState(true);
+  // context 真的遺失並還原之後，用這個計數器讓整個 effect 重跑一次，重建所有 GL 資源
+  const [glEpoch, setGlEpoch] = useState(0);
 
   useEffect(() => {
     if (!enabled) return;
@@ -282,6 +284,29 @@ export default function HeroInkCanvas() {
       setSupported(false);
       return;
     }
+
+    let raf = 0;
+    /* ── context 遺失／還原 ──
+       WebGL context 遺失的預設行為是「永久遺失」，必須在 webglcontextlost 裡
+       preventDefault，瀏覽器才會嘗試還原（GPU reset、驅動更新、分頁背景太久都會遇到）。
+       還原之後把 glEpoch 加一，讓整個 effect 重跑一次重建所有資源。 */
+    let contextLost = false;
+    const onContextLost = (e: Event) => {
+      e.preventDefault();
+      contextLost = true;
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    const onContextRestored = () => setGlEpoch((n) => n + 1);
+    canvas.addEventListener("webglcontextlost", onContextLost);
+    canvas.addEventListener("webglcontextrestored", onContextRestored);
+    const detachContextEvents = () => {
+      canvas.removeEventListener("webglcontextlost", onContextLost);
+      canvas.removeEventListener("webglcontextrestored", onContextRestored);
+    };
+    // 還沒還原就先什麼都別建，等 webglcontextrestored 再重跑一次
+    if (gl.isContextLost()) return detachContextEvents;
+
     const isWebGL2 = !!gl2;
 
     let halfFloatType: number;
@@ -889,7 +914,6 @@ export default function HeroInkCanvas() {
     };
 
     /* ── 主迴圈 ── */
-    let raf = 0;
     let lastTime = performance.now();
     let lastOffscreenTick = 0;
     // 墨是慢慢鋪開的，太早取樣只會拿到一張幾乎空白的紙，所以分三次重抓、留最後一張。
@@ -943,17 +967,25 @@ export default function HeroInkCanvas() {
       document.removeEventListener("visibilitychange", onVisibility);
       io.disconnect();
       ro.disconnect();
-      releaseFBOs();
-      gl.deleteBuffer(quadBuf);
-      gl.deleteBuffer(indexBuf);
-      programs.forEach((p) => gl.deleteProgram(p));
-      shaders.forEach((s) => gl.deleteShader(s));
+      // context 遺失時所有資源已經跟著舊 context 一起消失，再 delete 只會換來
+      // 一整排「object does not belong to this context」的警告
+      if (!contextLost) {
+        releaseFBOs();
+        gl.deleteBuffer(quadBuf);
+        gl.deleteBuffer(indexBuf);
+        programs.forEach((p) => gl.deleteProgram(p));
+        shaders.forEach((s) => gl.deleteShader(s));
+        if (washFbo) gl.deleteFramebuffer(washFbo);
+        if (washTex) gl.deleteTexture(washTex);
+      }
       document.documentElement.style.removeProperty("--ink-wash");
-      if (washFbo) gl.deleteFramebuffer(washFbo);
-      if (washTex) gl.deleteTexture(washTex);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      detachContextEvents();
+      // 這裡刻意不呼叫 loseContext()：上面已經把所有 GL 資源逐一刪掉，
+      // 而 canvas 的 context 一旦摧毀就拿不回來 —— getContext() 會把同一個死掉的
+      // context 再交出來。React StrictMode 在 dev 會「掛載→卸載→再掛載」，
+      // Ink 開關也會重跑這個 effect，兩種情況都會因此變成一張空白的紙。
     };
-  }, [enabled]);
+  }, [enabled, glEpoch]);
 
   if (!supported) return null;
 
