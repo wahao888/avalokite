@@ -59,14 +59,13 @@
   ],
   "services": {
     "label": "Core Services",
-    "title1": "Three core",
-    "title2": "service areas",
-    "intro": "Avalo unites design, full-stack engineering, and cloud architecture under one roof — one accountable team from discovery to long-term operations, with no layers of subcontracting. We also cover what the market underserves: LINE OA AI support, report automation, and AI search optimization (getting ChatGPT to recommend your business).",
+    "title1": "Three things we do",
+    "title2": "shown step by step",
+    "intro": "Design, full-stack engineering and cloud architecture under one roof, with no subcontracting. Below, each service is laid out step by step — exactly how it runs.",
     "items": [
       {
         "num": "01",
         "name": "Web Design & Development",
-        "desc": "Fully custom design, responsive layouts, SEO, payments and admin dashboards — websites that bring customers and orders, not just pretty facades.",
         "tags": [
           "Custom Design",
           "RWD",
@@ -74,12 +73,46 @@
           "Payments",
           "E-commerce"
         ],
-        "href": "/services/website"
+        "href": "/services/website",
+        "headline": "From the first design file to a site that brings in orders — one team, start to finish.",
+        "caption": "Live in 10 working days once we have your content. Bug fixes free for 14 days after launch.",
+        "cta": "Web design & development →",
+        "flow": [
+          {
+            "icon": "design",
+            "name": "Design",
+            "meta": "Fully custom"
+          },
+          {
+            "icon": "code",
+            "name": "Build",
+            "meta": "Responsive"
+          },
+          {
+            "icon": "payment",
+            "name": "Payments",
+            "meta": "ECPay / NewebPay"
+          },
+          {
+            "icon": "admin",
+            "name": "Admin",
+            "meta": "Orders & content"
+          },
+          {
+            "icon": "deploy",
+            "name": "Launch",
+            "meta": "SSL included"
+          },
+          {
+            "icon": "monitor",
+            "name": "Operations",
+            "meta": "365 days"
+          }
+        ]
       },
       {
         "num": "02",
         "name": "Enterprise AI Automation",
-        "desc": "AI customer service, workflow automation, auto-generated reports. Hand repetitive work to systems — the labor saved pays it back within a year.",
         "tags": [
           "AI Support",
           "n8n",
@@ -87,12 +120,46 @@
           "RAG",
           "Report Automation"
         ],
-        "href": "/services/ai-automation"
+        "href": "/services/ai-automation",
+        "headline": "Customers ask, the system answers — and hands over to a human when it can't.",
+        "caption": "Self-hosted and yours. No third-party software subscriptions. Report automation runs the same path.",
+        "cta": "Enterprise AI automation →",
+        "flow": [
+          {
+            "icon": "chat",
+            "name": "Question",
+            "meta": "LINE / web"
+          },
+          {
+            "icon": "knowledge",
+            "name": "Retrieval",
+            "meta": "RAG"
+          },
+          {
+            "icon": "ai",
+            "name": "Answer",
+            "meta": "Your own data"
+          },
+          {
+            "icon": "person",
+            "name": "Handover",
+            "meta": "Low confidence"
+          },
+          {
+            "icon": "log",
+            "name": "Transcripts",
+            "meta": "In your admin"
+          },
+          {
+            "icon": "report",
+            "name": "Usage report",
+            "meta": "Monthly"
+          }
+        ]
       },
       {
         "num": "03",
         "name": "Systems & Custom Development",
-        "desc": "Membership systems, ERP/POS integration, API development, data engineering. When off-the-shelf software can't do it, Avalo builds it for you.",
         "tags": [
           "API Development",
           "ERP/POS",
@@ -100,7 +167,42 @@
           "Web3",
           "Cloud"
         ],
-        "href": "/services"
+        "href": "/services",
+        "headline": "When off-the-shelf software can't do it, we grow one around how you actually work.",
+        "caption": "The finance automation system below was built along exactly this path.",
+        "cta": "Systems & custom development →",
+        "flow": [
+          {
+            "icon": "survey",
+            "name": "Discovery",
+            "meta": "On-site audit"
+          },
+          {
+            "icon": "blocks",
+            "name": "System design",
+            "meta": "Data model"
+          },
+          {
+            "icon": "link",
+            "name": "Integration",
+            "meta": "ERP / POS"
+          },
+          {
+            "icon": "shield",
+            "name": "Access & audit",
+            "meta": "Governable"
+          },
+          {
+            "icon": "deploy",
+            "name": "Handover",
+            "meta": "Training included"
+          },
+          {
+            "icon": "loop",
+            "name": "Iteration",
+            "meta": "Care plan"
+          }
+        ]
       }
     ]
   },
@@ -127,6 +229,11 @@
       "desc": "Mix the features above, or describe your needs — accounting systems, ERP integration, high-traffic architecture, AI products, all doable. A written fixed quote after a free consultation, final as always.",
       "price": "Free consultation",
       "cta": "Book a free consultation →"
+    },
+    "tabs": {
+      "build": "Build plans",
+      "care": "Care plans",
+      "addon": "Add-ons"
     }
   },
   "cases": {
@@ -150,7 +257,8 @@
           "Online Shop",
           "Interactive Explainers"
         ],
-        "url": "/cases/rekat"
+        "url": "/cases/rekat",
+        "short": "Clickable flavor wheel, 15 program-drawn bean illustrations, sold-out toggled from a phone."
       },
       {
         "id": "monsieurlong",
@@ -165,7 +273,8 @@
           "Motion design",
           "Daily content CMS"
         ],
-        "url": "/cases/monsieurlong"
+        "url": "/cases/monsieurlong",
+        "short": "Melting hero type, 16 program-drawn gelato flavors, a daily-flavor admin."
       },
       {
         "id": "wenshan",
@@ -180,7 +289,8 @@
           "Online estimates",
           "3D interactive"
         ],
-        "url": "/cases/wenshan"
+        "url": "/cases/wenshan",
+        "short": "3D timber hero, 12 lumber categories, board-foot and shipping calculators."
       },
       {
         "id": "finance",
@@ -195,7 +305,8 @@
           "Governance"
         ],
         "url": "/cases/finance-automation",
-        "category": "system"
+        "category": "system",
+        "short": "Photograph a receipt in Telegram and it posts itself — through to depreciation and closing."
       },
       {
         "id": "jeantogo",
@@ -210,7 +321,8 @@
           "Back-office CRM"
         ],
         "url": "/cases/jeantogo",
-        "category": "web"
+        "category": "web",
+        "short": "SEO landing pages per city, one-tap inquiry form, CRM tracking every lead."
       },
       {
         "id": "gtclub",
@@ -225,7 +337,8 @@
           "Newsletter"
         ],
         "url": "/cases/gtclub",
-        "category": "web"
+        "category": "web",
+        "short": "Light and dark immersive themes, three topic hubs, sign-up form and newsletter."
       },
       {
         "id": "damenkyt",
@@ -240,7 +353,8 @@
           "Anti-Fraud"
         ],
         "url": "/cases/damenkyt",
-        "category": "system"
+        "category": "system",
+        "short": "Wallet risk scoring on the spot, plus a 5-step report flow that outputs a PDF."
       },
       {
         "id": "agagent",
@@ -255,7 +369,8 @@
           "Meeting Automation"
         ],
         "url": "/cases/agagent",
-        "category": "system"
+        "category": "system",
+        "short": "Weekly reports pulled automatically, summarized by GPT, vectorized and queryable."
       },
       {
         "id": "formula-kart",
@@ -270,7 +385,8 @@
           "Game Dev"
         ],
         "url": "/cases/formula-kart",
-        "category": "interactive"
+        "category": "interactive",
+        "short": "Three.js 3D racing, dynamic weather, up to 10 players racing in real time."
       }
     ],
     "categories": [
@@ -289,35 +405,37 @@
         "name": "Interactive & Games",
         "hint": "Fully custom · project pricing"
       }
-    ]
+    ],
+    "scrollHint": "← scroll sideways　·　5 of 9 shown here",
+    "seeAll": "See all 9 case studies →"
   },
   "about": {
     "label": "About Avalo",
     "title1": "Design to operations,",
     "title2": "end-to-end ownership",
     "p1": "Avalo is a digital engineering company focused on professional-grade websites and enterprise AI automation, serving clients from personal brands to enterprises. Our capabilities span design, full-stack development, cloud architecture, and security — every project above was architected, built, deployed, and maintained by Avalo end to end.",
-    "p2": "Working with Avalo means a transparent process with clear accountability: a dedicated point of contact, regular progress updates, and someone to call when things break — no quality lost in layers of subcontracting.",
+    "p2": "You deal with a transparent, accountable organization: a dedicated point of contact, regular progress updates, and someone to call when things break.",
     "cta": "Book a free consultation",
     "features": [
       {
         "num": "01",
         "title": "Fixed prices, published first",
-        "desc": "Every standard service is priced on this site with the market range alongside. No worrying about being overcharged, no time wasted negotiating."
+        "desc": "Every standard service is priced on this site with the market range alongside. No negotiating, no guessing."
       },
       {
         "num": "02",
         "title": "Talk directly to the engineering team",
-        "desc": "Every point of contact has an engineering background — no layers of retelling. Feasibility and timelines get answered on the spot."
+        "desc": "Your point of contact is an engineer. Whether it can be done, and how long it takes, gets answered on the spot."
       },
       {
         "num": "03",
         "title": "Deployment & security included",
-        "desc": "Every build ships to production with HTTPS, firewall, and security hardening — you don't just get a zip file and a goodbye."
+        "desc": "Every build includes production deployment, HTTPS and firewall hardening — not a zip file and goodbye."
       },
       {
         "num": "04",
         "title": "Long-term care is the commitment",
-        "desc": "Monthly care plans keep your site looked after year-round: backups, updates, monitoring, changes. You run the business; Avalo runs the systems."
+        "desc": "A care plan keeps the site looked after all year: backups, updates, monitoring, changes."
       }
     ]
   },
@@ -346,7 +464,7 @@
       "emailPh": "you@example.com",
       "phone": "Phone or LINE ID",
       "phonePh": "+886 912 345 678",
-      "contactHint": "Email or phone — one is enough. Both is better.",
+      "contactHint": "Either one works — we'll reply on whichever you leave.",
       "needContact": "Please leave an email or a phone / LINE ID so we can reply.",
       "service": "Service needed",
       "servicePh": "Select a service",
@@ -368,12 +486,16 @@
         "Not sure yet"
       ],
       "honeypot": "Please leave this field empty",
-      "message": "What you need",
-      "messagePh": "Optional. Scope, timeline, or a site you like.",
+      "message": "What do you need?",
+      "messagePh": "A sentence or two is plenty. Scope, timeline, reference sites — anything helps.",
       "submit": "Send inquiry →",
       "submitting": "Sending…",
       "success": "Got it! Our team will reply within 24 hours.",
-      "error": "Failed to send. Please try again, or email our team directly."
+      "error": "Failed to send. Please try again, or email our team directly.",
+      "contact": "Email or LINE ID *",
+      "contactPh": "you@example.com or @yourline",
+      "badEmail": "That email doesn't look right. Mind checking it?",
+      "moreToggle": "Add more details (optional)"
     }
   },
   "footer": {
@@ -621,5 +743,55 @@
       "How long does it take?",
       "How does LINE AI support work?"
     ]
+  },
+  "market": {
+    "label": "Where we sit",
+    "title1": "Our prices",
+    "title2": "against the market",
+    "intro": "The same numbers that used to sit as one line of small print under each plan, drawn to scale. The bar is the Taiwan market range; the green line is Avalo's published price, before tax.",
+    "ticks": [
+      "0",
+      "100k",
+      "200k",
+      "300k",
+      "400k",
+      "500k"
+    ],
+    "legendRange": "Taiwan market range",
+    "legendOurs": "Avalo list price (pre-tax)"
+  },
+  "process": {
+    "label": "How we work",
+    "title1": "What happens",
+    "title2": "after you get in touch",
+    "intro": "Four steps from first message to launch, with how long each one takes.",
+    "steps": [
+      {
+        "num": "01",
+        "name": "Free consultation",
+        "desc": "Message us on LINE or send the form. You talk to a consultant with an engineering background, not a salesperson.",
+        "meta": "Reply within 24 hours"
+      },
+      {
+        "num": "02",
+        "name": "Fixed written quote",
+        "desc": "Scope, deliverables and price on one document. Once quoted, the price doesn't move.",
+        "meta": "2–3 working days"
+      },
+      {
+        "num": "03",
+        "name": "Design & build",
+        "desc": "Designs are approved before we build. Progress reported regularly; say the word if something needs to change.",
+        "meta": "2–4 weeks for a brand site"
+      },
+      {
+        "num": "04",
+        "name": "Launch & care",
+        "desc": "Production deployment, HTTPS and security hardening included, then a care plan takes over.",
+        "meta": "Free bug fixes for 14 days"
+      }
+    ],
+    "ctaText": "Not sure which one you need? Have a chat first — no charge, no pitch.",
+    "cta": "Chat on LINE, free"
   }
 }

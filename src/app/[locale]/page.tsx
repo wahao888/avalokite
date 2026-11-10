@@ -1,11 +1,14 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import Hero from "@/components/sections/Hero";
 import Ticker from "@/components/sections/Ticker";
-import Services from "@/components/sections/Services";
+import ServiceCinema from "@/components/sections/ServiceCinema";
+import CaseGallery from "@/components/sections/CaseGallery";
+import MarketChart from "@/components/sections/MarketChart";
 import Pricing from "@/components/sections/Pricing";
-import Cases from "@/components/sections/Cases";
+import Process from "@/components/sections/Process";
 import About from "@/components/sections/About";
 import Contact from "@/components/sections/Contact";
+import InkParallax from "@/components/InkParallax";
 import JsonLd from "@/components/JsonLd";
 import { faqLd, homeGraphLd, pageMetadata } from "@/lib/seo";
 import { SITE_FAQ } from "@/lib/faq";
@@ -30,11 +33,15 @@ export default async function HomePage({
     <main>
       <JsonLd data={homeGraphLd(locale, t("description"))} />
       <JsonLd data={faqLd(faq)} />
+      <InkParallax />
       <Hero />
       <Ticker />
-      <Services />
+      {/* 看懂在做什麼 → 相信做得到 → 知道價格在哪 → 知道怎麼開始 → 聯絡 */}
+      <ServiceCinema />
+      <CaseGallery />
+      <MarketChart />
       <Pricing />
-      <Cases />
+      <Process />
       <About />
       <Contact />
     </main>

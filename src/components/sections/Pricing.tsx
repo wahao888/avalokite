@@ -10,6 +10,7 @@ import {
 } from "@/lib/products";
 import AddToCartButton from "@/components/AddToCartButton";
 import PromoPlans from "@/components/sections/PromoPlans";
+import PricingTabs from "@/components/PricingTabs";
 import type { Locale } from "@/i18n/routing";
 
 export function PriceCard({ product, locale }: { product: Product; locale: Locale }) {
@@ -81,38 +82,60 @@ export default function Pricing() {
           渲染成兩張商品卡會讓人以為是兩個不同的產品（實際踩過） */}
       <PromoPlans />
 
-      <div className="pricing-subhead">{t("onetimeHeading")}</div>
-      <div className="pricing-grid fade-in">
-        {oneTimeProducts().map((p) => (
-          <PriceCard key={p.sku} product={p} locale={locale} />
-        ))}
-      </div>
-
-      <div className="pricing-subhead">{t("monthlyHeading")}</div>
-      <div className="pricing-grid fade-in">
-        {monthlyProducts().map((p) => (
-          <PriceCard key={p.sku} product={p} locale={locale} />
-        ))}
-      </div>
-
-      {/* 單項功能・自由組合（完全客製的入口） */}
-      <div className="pricing-subhead">{t("addonHeading")}</div>
-      <p className="section-intro addon-intro fade-in">{t("addonIntro")}</p>
-      <div className="addon-grid fade-in">
-        {ADDONS.map((a) => (
-          <div className="addon-item" key={a.i18n[locale].name}>
-            <div className="addon-main">
-              <div className="addon-name">{a.i18n[locale].name}</div>
-              <div className="addon-desc">{a.i18n[locale].desc}</div>
-            </div>
-            <div className="addon-price">
-              NT${fmt(a.price)}
-              <span className="addon-from">{t("addonFrom")}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <p className="addon-note fade-in">{t("addonNote")}</p>
+      {/* 22 個項目改成三個分頁，一次只看一組 */}
+      <PricingTabs
+        tabs={[
+          {
+            id: "build",
+            label: t("tabs.build"),
+            panel: (
+              <div className="pricing-grid">
+                {oneTimeProducts().map((p) => (
+                  <PriceCard key={p.sku} product={p} locale={locale} />
+                ))}
+              </div>
+            ),
+          },
+          {
+            id: "care",
+            label: t("tabs.care"),
+            panel: (
+              <>
+                <p className="ptabs-intro">{t("monthlyHeading")}</p>
+                <div className="pricing-grid">
+                  {monthlyProducts().map((p) => (
+                    <PriceCard key={p.sku} product={p} locale={locale} />
+                  ))}
+                </div>
+              </>
+            ),
+          },
+          {
+            id: "addon",
+            label: t("tabs.addon"),
+            panel: (
+              <>
+                <p className="ptabs-intro">{t("addonIntro")}</p>
+                <div className="addon-grid">
+                  {ADDONS.map((a) => (
+                    <div className="addon-item" key={a.i18n[locale].name}>
+                      <div className="addon-main">
+                        <div className="addon-name">{a.i18n[locale].name}</div>
+                        <div className="addon-desc">{a.i18n[locale].desc}</div>
+                      </div>
+                      <div className="addon-price">
+                        NT${fmt(a.price)}
+                        <span className="addon-from">{t("addonFrom")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="addon-note">{t("addonNote")}</p>
+              </>
+            ),
+          },
+        ]}
+      />
 
       <div className="custom-quote fade-in">
         <div>

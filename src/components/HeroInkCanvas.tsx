@@ -24,6 +24,61 @@ const INKS: { name: string; absorb: [number, number, number] }[] = [
 // 淡金棕 #b99a63 — 只在自動演出偶爾出現
 const GOLD: [number, number, number] = [0.26, 0.42, 0.82];
 
+/**
+ * 把一張「紙 × 墨」的像素資料轉成去背的墨跡圖，回傳 data URL。
+ *
+ * canvas 畫出來的是合成結果，整張貼到下面的區塊只會讓那一區整片變暗。
+ * 所以逐點把「比紙色暗多少」換算成 alpha：沒有墨的地方全透明，疊上去時
+ * 只有真正的墨會 multiply 進該區的底色。
+ *
+ * 來源像素是 gl.readPixels 讀出來的，原點在左下角，寫進 ImageData 時 y 要翻轉。
+ */
+const WASH_W = 720;
+const PAPER_8BIT = [PAPER[0] * 255, PAPER[1] * 255, PAPER[2] * 255];
+/** 墨量低於這個比例就當作還沒鋪開，不更新底紋 */
+const WASH_MIN_INK = 0.015;
+
+function washImageUrl(buf: Uint8Array, w: number, h: number): string | null {
+  const off = document.createElement("canvas");
+  off.width = w;
+  off.height = h;
+  const ctx = off.getContext("2d");
+  if (!ctx) return null;
+
+  const img = ctx.createImageData(w, h);
+  const out = img.data;
+  let inked = 0;
+  for (let y = 0; y < h; y++) {
+    const srcRow = (h - 1 - y) * w;
+    for (let x = 0; x < w; x++) {
+      const si = (srcRow + x) * 4;
+      const di = (y * w + x) * 4;
+      const r = buf[si];
+      const g = buf[si + 1];
+      const b = buf[si + 2];
+      // 墨讓紙變暗，取三個色版裡被壓得最多的那一個當墨的濃度
+      const density = Math.max(
+        PAPER_8BIT[0] - r,
+        PAPER_8BIT[1] - g,
+        PAPER_8BIT[2] - b,
+        0
+      );
+      // 紙本身有紋理雜訊，先扣掉一段再放大，底紋才不會變成一層髒霧
+      const a = density > 10 ? Math.min(255, (density - 10) * 2.8) : 0;
+      out[di] = r;
+      out[di + 1] = g;
+      out[di + 2] = b;
+      out[di + 3] = a;
+      if (a > 28) inked++;
+    }
+  }
+  if (inked < w * h * WASH_MIN_INK) return null;
+
+  ctx.putImageData(img, 0, 0);
+  const url = off.toDataURL("image/webp", 0.8);
+  return url.startsWith("data:image") ? url : null;
+}
+
 interface FBO {
   texture: WebGLTexture;
   fbo: WebGLFramebuffer;
@@ -769,10 +824,78 @@ export default function HeroInkCanvas() {
     });
     ro.observe(canvas);
 
+    /* ── 整頁墨跡底紋 ──
+       default framebuffer 讀出來是空的（已實測），所以另外開一張自己的
+       RGBA8 FBO，把 display pass 再畫一次進去再 readPixels。順帶只渲染
+       720px 寬，讀回來的量只有全尺寸的十幾分之一。 */
+    let washFbo: WebGLFramebuffer | null = null;
+    let washTex: WebGLTexture | null = null;
+    let washBuf: Uint8Array | null = null;
+    let washH = 0;
+
+    const captureWash = () => {
+      try {
+        const w = WASH_W;
+        const h = Math.max(1, Math.round((canvas.height / Math.max(1, canvas.width)) * w));
+        if (!washFbo || washH !== h) {
+          if (washFbo) gl.deleteFramebuffer(washFbo);
+          if (washTex) gl.deleteTexture(washTex);
+          washH = h;
+          washBuf = new Uint8Array(w * h * 4);
+          washTex = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, washTex);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          // WebGL2 的 color attachment 要 sized internal format，給 gl.RGBA 會拿到
+          // FRAMEBUFFER_UNSUPPORTED（實測 36061）
+          const washInternal = isWebGL2 ? (gl as WebGL2RenderingContext).RGBA8 : gl.RGBA;
+          gl.texImage2D(gl.TEXTURE_2D, 0, washInternal, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+          washFbo = gl.createFramebuffer();
+          gl.bindFramebuffer(gl.FRAMEBUFFER, washFbo);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, washTex, 0);
+          if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            washTakes = 0;
+            return;
+          }
+        }
+        if (!washBuf) return;
+
+        // 與 render() 同一組 uniform，只是畫到自己的 FBO
+        gl.disable(gl.BLEND);
+        displayProg.bind();
+        gl.uniform1i(displayProg.uniforms.uTexture, dye.read.attach(0));
+        const aspect = canvas.width / Math.max(1, canvas.height);
+        gl.uniform2f(
+          displayProg.uniforms.uNoiseScale,
+          aspect >= 1 ? aspect : 1,
+          aspect >= 1 ? 1 : 1 / aspect
+        );
+        gl.uniform3f(displayProg.uniforms.uPaper, PAPER[0], PAPER[1], PAPER[2]);
+        gl.viewport(0, 0, w, washH);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, washFbo);
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+        gl.readPixels(0, 0, w, washH, gl.RGBA, gl.UNSIGNED_BYTE, washBuf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        const url = washImageUrl(washBuf, w, washH);
+        if (url) document.documentElement.style.setProperty("--ink-wash", `url("${url}")`);
+      } catch {
+        // 取樣失敗就維持沒有延伸層，Hero 本身不受影響
+        washTakes = 0;
+      }
+    };
+
     /* ── 主迴圈 ── */
     let raf = 0;
     let lastTime = performance.now();
     let lastOffscreenTick = 0;
+    // 墨是慢慢鋪開的，太早取樣只會拿到一張幾乎空白的紙，所以分三次重抓、留最後一張。
+    // readPixels 會讓 GPU 同步一次，次數刻意壓低。
+    let washTakes = 3;
+    let nextWashAt = performance.now() + 9000;
     const frame = () => {
       raf = requestAnimationFrame(frame);
       const now = performance.now();
@@ -790,6 +913,12 @@ export default function HeroInkCanvas() {
       updateWash(now);
       step(dt);
       render();
+      // 自動演出鋪開之後抓一次，供整頁的墨跡視差層使用
+      if (washTakes > 0 && now >= nextWashAt) {
+        nextWashAt = now + 12000;
+        washTakes -= 1;
+        captureWash();
+      }
     };
     raf = requestAnimationFrame(frame);
 
@@ -819,6 +948,9 @@ export default function HeroInkCanvas() {
       gl.deleteBuffer(indexBuf);
       programs.forEach((p) => gl.deleteProgram(p));
       shaders.forEach((s) => gl.deleteShader(s));
+      document.documentElement.style.removeProperty("--ink-wash");
+      if (washFbo) gl.deleteFramebuffer(washFbo);
+      if (washTex) gl.deleteTexture(washTex);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [enabled]);

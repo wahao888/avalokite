@@ -23,16 +23,17 @@ export default function Hero() {
           <span>{t("title2")}</span>
         </h1>
         <p className="hero-desc">{t("desc")}</p>
+        {/* CTA 主從：免費諮詢是首頁第一順位動作，定價降為次要，
+            案例與選方案測驗收成一行文字連結，避免三顆同權重按鈕互相稀釋 */}
         <div className="hero-actions">
-          <Link href="/pricing" className="btn-primary">
+          <LineCta label={t("ctaLine")} className="btn-primary" />
+          <Link href="/pricing" className="btn-ghost">
             {t("ctaPrimary")}
           </Link>
-          <Link href="/cases" className="btn-ghost">
-            {t("ctaGhost")}
-          </Link>
-          <LineCta label={t("ctaLine")} className="btn-ghost" />
         </div>
         <p className="hero-quiz">
+          <Link href="/cases">{t("ctaGhost")}</Link>
+          <span className="hero-quiz-sep" aria-hidden="true">／</span>
           <Link href="/quiz">{t("quiz")}</Link>
         </p>
         <div className="scroll-line">

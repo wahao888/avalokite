@@ -2124,3 +2124,561 @@ button { font-family: inherit; }
   body.chat-open .sticky-bar { display: none; }
   body.chat-open { padding-bottom: 0; }
 }
+
+/* ══════════════ 首頁改版：捲動分鏡版面 ══════════════
+   方向 A。Hero 的墨流背景與全站色票不動，改的是 Hero 以下的
+   結構、圖像化程度與互動方式。 */
+
+/* ── Hero：CTA 降級後的那行文字連結 ── */
+.hero-quiz-sep { color: var(--border); margin: 0 0.55rem; }
+
+/* ── 服務分鏡 ── */
+/* 左欄釘住、右欄三幕依序捲過。三幕全部留在 DOM 的一般流裡，
+   爬蟲讀得到完整內容，不靠 JS 才渲染。 */
+.cinema {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  border-top: 1px solid var(--border);
+}
+.cinema-rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem 3rem 6rem 4rem;
+  border-right: 1px solid rgba(240, 235, 227, 0.12);
+}
+.cinema-title { margin-bottom: 1.2rem; font-size: clamp(2rem, 3.2vw, 3rem); }
+.cinema-rail .mono-label { margin-bottom: 1.6rem; }
+.cinema-intro {
+  font-size: 0.88rem;
+  line-height: 1.95;
+  color: rgba(240, 235, 227, 0.55);
+  max-width: 38ch;
+  margin-bottom: 2.4rem;
+}
+.cinema-steps { list-style: none; border-top: 1px solid rgba(240, 235, 227, 0.1); }
+.cinema-steps li { border-bottom: 1px solid rgba(240, 235, 227, 0.1); }
+.cinema-step {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  color: rgba(240, 235, 227, 0.55);
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.25s, background 0.25s, border-color 0.25s;
+}
+.cinema-step:hover { background: rgba(240, 235, 227, 0.05); color: var(--paper); }
+.cinema-step.is-active {
+  border-left-color: var(--sage);
+  background: rgba(240, 235, 227, 0.07);
+  color: var(--paper);
+}
+.cinema-step:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
+.cinema-step-num {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--wood);
+}
+
+.cinema-stages { padding: 4rem 4rem 4rem 3rem; }
+.cinema-stage {
+  min-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 3rem;
+  border-bottom: 1px solid rgba(240, 235, 227, 0.1);
+}
+.cinema-stage:last-child { border-bottom: none; }
+.cinema-stage-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.6rem; }
+.cinema-stage-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--wood);
+}
+.cinema-stage-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  letter-spacing: 0.02em;
+  color: var(--paper);
+}
+.cinema-stage-headline {
+  font-size: 0.98rem;
+  line-height: 1.9;
+  color: rgba(240, 235, 227, 0.6);
+  max-width: 48ch;
+  margin-bottom: 2rem;
+}
+
+/* 流程圖解：捲到這一幕時節點依序點亮（延遲由元件逐一設定） */
+.cinema-flow {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1px;
+  background: rgba(240, 235, 227, 0.14);
+  border: 1px solid rgba(240, 235, 227, 0.14);
+}
+.cinema-node {
+  background: var(--ink);
+  padding: 1.5rem 0.7rem 1.3rem;
+  text-align: center;
+  color: rgba(240, 235, 227, 0.3);
+  opacity: 0.45;
+  transform: translateY(8px);
+  transition: opacity 0.55s ease, transform 0.55s ease, background 0.4s, color 0.4s;
+}
+.cinema-stage.is-live .cinema-node {
+  opacity: 1;
+  transform: none;
+  background: var(--ink-soft);
+  color: var(--sage);
+}
+.cinema-node-icon { margin: 0 auto 0.65rem; }
+.cinema-node-name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--paper);
+}
+.cinema-node-meta {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  color: rgba(240, 235, 227, 0.42);
+  margin-top: 0.35rem;
+}
+.cinema-caption {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  line-height: 1.9;
+  color: rgba(240, 235, 227, 0.4);
+  margin-top: 1rem;
+}
+.cinema-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.8rem;
+}
+.cinema-foot .tag {
+  color: var(--sage);
+  border-color: color-mix(in srgb, var(--sage) 35%, transparent);
+}
+.cinema-link {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid color-mix(in srgb, var(--sage) 45%, transparent);
+  padding-bottom: 0.2rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+.cinema-link:hover { color: var(--paper); border-bottom-color: var(--paper); }
+
+/* ── 案例長廊 ── */
+.gallery-section { border-top: 1px solid var(--border); }
+.gallery-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(290px, 31%);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+}
+.gallery-card {
+  background: var(--paper);
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  min-width: 0;
+  transition: background 0.25s;
+}
+.gallery-card:hover { background: var(--cream); }
+.gallery-shot { overflow: hidden; border-bottom: 1px solid var(--border); }
+.gallery-shot img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.6s ease;
+}
+.gallery-card:hover .gallery-shot img { transform: scale(1.045); }
+.gallery-meta {
+  padding: 1.4rem 1.5rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+.gallery-type {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wood);
+}
+.gallery-year { color: var(--muted); }
+.gallery-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+.gallery-short { font-size: 0.82rem; line-height: 1.8; color: var(--muted); flex: 1; }
+.gallery-link {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+.gallery-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.8rem;
+}
+.gallery-hint {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* ── 行情對照圖表 ── */
+.market-section { background: var(--cream); border-top: 1px solid var(--border); }
+.market-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  padding: 2.4rem 2.6rem 2rem;
+}
+.market-row { display: grid; grid-template-columns: 11rem 1fr; gap: 1.4rem; align-items: center; }
+.market-name { font-size: 0.9rem; line-height: 1.5; }
+.market-unit {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+.market-track {
+  position: relative;
+  height: 38px;
+  border-bottom: 1px solid var(--border);
+  background-image: linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 20% 100%;
+}
+.market-band {
+  position: absolute;
+  top: 9px;
+  height: 20px;
+  min-width: 2px;
+  background: color-mix(in srgb, var(--wood) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wood) 48%, transparent);
+}
+.market-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--moss); }
+.market-mark-label {
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--moss-deep);
+  background: var(--paper);
+  padding: 0 0.25rem;
+}
+.market-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 12.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.market-legend { display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 1.3rem; }
+.market-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.market-legend-band {
+  width: 18px;
+  height: 11px;
+  background: color-mix(in srgb, var(--wood) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wood) 48%, transparent);
+}
+.market-legend-mark { width: 3px; height: 14px; background: var(--moss); }
+
+/* ── 合作四步 ── */
+.process-section { border-top: 1px solid var(--border); }
+.process-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.process-step {
+  background: var(--paper);
+  padding: 2.2rem 1.8rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.process-num {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--wood);
+}
+.process-icon { color: var(--moss); margin: 0.7rem 0 0.4rem; }
+.process-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
+.process-desc { font-size: 0.82rem; line-height: 1.85; color: var(--muted); flex: 1; }
+.process-meta {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--moss);
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+  margin-top: 0.7rem;
+}
+.process-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 2.5rem;
+  padding: 1.6rem 2rem;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--moss);
+}
+.process-cta-text { font-size: 0.95rem; color: var(--ink-soft); }
+
+/* ── 定價分頁切換 ── */
+.ptabs { margin-top: 3rem; }
+.ptabs-nav {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.ptab {
+  flex: 1 1 160px;
+  background: var(--paper);
+  border: none;
+  cursor: pointer;
+  padding: 1rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: background 0.2s, color 0.2s;
+}
+.ptab:hover { background: var(--cream); color: var(--ink); }
+.ptab.is-active { background: var(--ink); color: var(--paper); }
+.ptab:focus-visible { outline: 2px solid var(--moss); outline-offset: -2px; }
+.ptabs-panel { display: none; padding-top: 2.5rem; }
+.ptabs-panel.is-active { display: block; }
+.ptabs-intro {
+  color: var(--muted);
+  line-height: 1.9;
+  font-size: 0.9rem;
+  max-width: 72ch;
+  margin-bottom: 1.6rem;
+}
+
+/* ── 表單的選填折疊區 ── */
+.form-more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.6rem 0;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+.form-more-toggle:hover { color: var(--moss-deep); }
+.form-more-toggle:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.form-more-sign { font-size: 0.9rem; line-height: 1; }
+.form-more { border-left: 2px solid var(--border); padding-left: 1.1rem; margin-bottom: 1.2rem; }
+
+/* ── 分鏡版面的 RWD：手機一律降級成靜態堆疊 ── */
+@media (max-width: 900px) {
+  .cinema { grid-template-columns: 1fr; }
+  .cinema-rail {
+    position: static;
+    height: auto;
+    padding: 4.5rem 1.5rem 2rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(240, 235, 227, 0.12);
+  }
+  .cinema-steps { display: none; }
+  .cinema-stages { padding: 0 1.5rem 3.5rem; }
+  .cinema-stage { min-height: 0; padding-block: 2.5rem; }
+  .cinema-flow { grid-template-columns: repeat(2, 1fr); }
+  .cinema-node {
+    opacity: 1;
+    transform: none;
+    background: var(--ink-soft);
+    color: var(--sage);
+  }
+  .gallery-rail { grid-auto-columns: minmax(250px, 82%); }
+  .market-row { grid-template-columns: 1fr; gap: 0.5rem; }
+  .market-axis { margin-left: 0; }
+  .market-chart { padding: 1.6rem 1.2rem 1.4rem; }
+  .process-grid { grid-template-columns: repeat(2, 1fr); }
+  .process-cta { padding: 1.3rem 1.4rem; }
+}
+
+@media (max-width: 560px) {
+  .process-grid { grid-template-columns: 1fr; }
+  .cinema-foot { gap: 1rem; }
+}
+
+/* 使用者要求減少動態時，分鏡一次全部亮好，不做進場位移 */
+@media (prefers-reduced-motion: reduce) {
+  .cinema-node {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    background: var(--ink-soft);
+    color: var(--sage);
+  }
+  .gallery-card:hover .gallery-shot img { transform: none; }
+}
+
+/* ── 墨跡往下延伸的視差層 ──
+   Hero 的墨流 canvas 在墨鋪開後把那張畫面存進 :root 的 --ink-wash，
+   下面三個淺色區塊各取一塊不同的裁切當底紋，隨捲動緩慢位移。
+   沒有 --ink-wash 時 background-image 解析成 none，整層自然隱形。 */
+.gallery-section,
+.market-section,
+.process-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+/* 內容一律浮在墨跡之上 */
+.gallery-section > *:not(.ink-wash),
+.market-section > *:not(.ink-wash),
+.process-section > *:not(.ink-wash) {
+  position: relative;
+  z-index: 1;
+}
+.ink-wash {
+  position: absolute;
+  inset: -90px 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--ink-wash, none);
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* 墨是深色、紙是淺色：用 multiply 讓墨像沉進這一區的底色裡，而不是浮在上面 */
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+/* 墨跡已經是去背的，只有墨本身會 multiply 進底色，所以可以給到看得見的濃度 */
+.ink-wash[data-ink="1"] { background-position: 18% 12%; opacity: 0.4; }
+/* 用獨立的 scale 屬性水平翻轉，transform 留給 InkParallax 的位移，兩者才不會互相覆蓋 */
+.ink-wash[data-ink="2"] { background-position: 72% 64%; opacity: 0.32; scale: -1 1; }
+.ink-wash[data-ink="3"] { background-position: 42% 88%; opacity: 0.36; }
+
+/* 手機不做視差，也把底紋再壓淡一點，避免在小螢幕上壓到文字 */
+@media (max-width: 900px) {
+  .ink-wash { inset: 0; opacity: 0.2 !important; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-wash { transform: none !important; will-change: auto; }
+}
+
+/* ── 分鏡區的墨：深色底要走遮罩，不能 multiply ──
+   服務分鏡的底色是 --ink，深色疊深色用 multiply 等於整層消失。
+   這裡反過來用墨跡的 alpha 當遮罩、填一層紙色與青苔色的光，
+   墨濃到哪裡就亮到哪裡，看起來像同一攤墨在深色紙上的負片。
+   --ink-wash 還沒設定時遮罩退回全透明漸層，整層一樣隱形。 */
+.cinema {
+  position: relative;
+  isolation: isolate;
+  /* 一定是 clip 不是 hidden：hidden 會讓左欄的 sticky 失效 */
+  overflow: clip;
+}
+/* 左欄本來就是 sticky（已經有定位），只補 z-index；右欄要自己定位才吃得到 */
+.cinema-rail { z-index: 1; }
+.cinema-stages { position: relative; z-index: 1; }
+
+.ink-wash[data-ink="4"] {
+  inset: -70px 0 auto 0;
+  height: min(880px, 78%);
+  /* 往下自然收掉，省掉第二層遮罩合成（mask-composite 的相容性沒那麼好） */
+  background: linear-gradient(
+    168deg,
+    rgba(240, 235, 227, 0.95),
+    rgba(138, 154, 123, 0.62) 42%,
+    rgba(169, 132, 103, 0.38) 70%,
+    rgba(240, 235, 227, 0) 100%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  -webkit-mask-image: var(--ink-wash, linear-gradient(#0000, #0000));
+  mask-image: var(--ink-wash, linear-gradient(#0000, #0000));
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 66% 24%;
+  mask-position: 66% 24%;
+}
+
+@media (max-width: 900px) {
+  .ink-wash[data-ink="4"] { inset: 0 0 auto 0; height: 62%; }
+}

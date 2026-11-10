@@ -27,6 +27,8 @@ export interface Product {
   // 維護自第一個月起計費；建置費不含任何維護月份。
   recommendedCareSku?: string;
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
+  // 行情區間的數值版，給首頁的行情對照圖表畫橫條用；沒有可對照區間的方案留空
+  marketBand?: { low: number; high: number };
   i18n: { "zh-TW": ProductI18n; en: ProductI18n };
 }
 
@@ -41,6 +43,7 @@ export const PRODUCTS: Product[] = [
     price: 39000,
     recommendedCareSku: "care-basic",
     marketRange: { "zh-TW": "市場行情 NT$30,000–100,000", en: "Market rate NT$30k–100k" },
+    marketBand: { low: 30000, high: 100000 },
     i18n: {
       "zh-TW": {
         label: "網站建置",
@@ -77,6 +80,7 @@ export const PRODUCTS: Product[] = [
     featured: true,
     recommendedCareSku: "care-growth",
     marketRange: { "zh-TW": "市場行情 NT$75,000–400,000", en: "Market rate NT$75k–400k" },
+    marketBand: { low: 75000, high: 400000 },
     i18n: {
       "zh-TW": {
         label: "網站建置",
@@ -112,6 +116,7 @@ export const PRODUCTS: Product[] = [
     price: 69000,
     recommendedCareSku: "care-ai",
     marketRange: { "zh-TW": "市場行情 NT$100,000–500,000", en: "Market rate NT$100k–500k" },
+    marketBand: { low: 100000, high: 500000 },
     i18n: {
       "zh-TW": {
         label: "AI 應用",
@@ -147,6 +152,7 @@ export const PRODUCTS: Product[] = [
     price: 29000,
     recommendedCareSku: "care-ai",
     marketRange: { "zh-TW": "企業年投入約 NT$60,000–450,000", en: "Typical annual spend NT$60k–450k" },
+    marketBand: { low: 60000, high: 450000 },
     i18n: {
       "zh-TW": {
         label: "AI 應用",
