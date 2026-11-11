@@ -57,6 +57,30 @@
     "AI Search Optimization",
     "Systems Integration"
   ],
+  "aiBand": {
+    "label": "AI Customer Service",
+    "title1": "After hours,",
+    "title2": "someone still answers on LINE",
+    "lede": "Opening hours, prices, plan differences, how to pay — most of what support answers every day is the same few dozen questions. AI support runs on your LINE Official Account and your website, answering from your own data, and fetching a human when one is needed.",
+    "proof": "The chat window at the bottom right of this page is the product itself. Ask it what a brand site costs. When it cannot answer, it asks for your contact details — that is by design too.",
+    "points": [
+      {
+        "t": "Answers from your data",
+        "d": "Your FAQ, price list and service notes become the knowledge base. When something is not in it, it says so instead of inventing an answer."
+      },
+      {
+        "t": "The model never does the arithmetic",
+        "d": "Prices come from the system; the model may quote but not add up. A wrong total reads as a promise — we hit that on our own site, so we switched it off."
+      },
+      {
+        "t": "It steps aside for you",
+        "d": "Once you reply yourself on LINE, the AI goes quiet while still logging and forwarding everything the customer says, then resumes automatically."
+      }
+    ],
+    "priceLine": "From {lite} excl. VAT, in three tiers from single channel to full system integration; enterprise from {enterprise}.",
+    "ctaPlans": "See the three tiers →",
+    "ctaLine": "Ask us on LINE"
+  },
   "services": {
     "label": "Core Services",
     "title1": "Three things we do",
@@ -244,6 +268,22 @@
     "visit": "Visit site →",
     "viewCase": "View full case →",
     "items": [
+      {
+        "id": "avalo-ai-support",
+        "category": "system",
+        "type": "AI customer service · our own",
+        "year": "2026",
+        "name": "Avalo's own AI support",
+        "label": "AVALO",
+        "desc": "The chat window on this site and our LINE account run the same system we sell. Real production numbers: US$0.000116 per reply, about one NT cent per conversation, an 88.8% prompt cache hit rate — plus the two holes real conversations found after launch: it added a total up and got it wrong, and a customer left a phone number that notified nobody. Both fixes are now the default for every customer.",
+        "tags": [
+          "AI support",
+          "LINE",
+          "measured cost"
+        ],
+        "url": "/cases/avalo-ai-support",
+        "short": "NT$0.011 a conversation, 88.8% cache hits, and the two things we got wrong."
+      },
       {
         "id": "rekat",
         "category": "web",
@@ -562,10 +602,13 @@
     "contactInfo": "Contact Details",
     "name": "Name *",
     "email": "Email *",
-    "emailNote": "Order confirmation and lookup use this email",
+    "emailNote": "We use this email for order confirmation and lookup. ECPay processes invoice details and sends invoice notifications to this address.",
     "phone": "Phone *",
     "company": "Company (optional)",
     "taxId": "Tax ID (optional)",
+    "invoiceAddress": "Billing address (required with a tax ID)",
+    "invoiceCarrier": "E-invoice carrier (optional)",
+    "invoiceCarrierNote": "Enter a Taiwan mobile or Citizen Digital Certificate barcode, or leave it blank to use the ECPay carrier.",
     "note": "Notes (optional)",
     "notePh": "Anything you'd like our team to know up front — requirements, timeline…",
     "orderSummary": "Order Summary",

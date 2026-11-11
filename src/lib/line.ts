@@ -10,8 +10,34 @@ import crypto from "node:crypto";
 
 const API = "https://api.line.me/v2/bot";
 
-export const lineConfigured = () =>
-  !!process.env.LINE_OA_CHANNEL_SECRET && !!process.env.LINE_OA_CHANNEL_ACCESS_TOKEN;
+/**
+ * 一組官方帳號的憑證。
+ *
+ * 每個客戶有自己的 LINE 官方帳號，secret 與 token 都不一樣——共用一組等於
+ * 所有客戶的對話都進同一個帳號，而且任何一個客戶的 secret 外洩就能偽造
+ * 所有人的 webhook。所以憑證一路當參數傳，不在這一層讀全域設定。
+ */
+export interface LineCreds {
+  secret?: string;
+  token?: string;
+}
+
+/** 主站自己的官方帳號（@958nplck）。沒傳憑證時就用這組。 */
+export const houseCreds = (): LineCreds => ({
+  secret: process.env.LINE_OA_CHANNEL_SECRET,
+  token: process.env.LINE_OA_CHANNEL_ACCESS_TOKEN,
+});
+
+/** 客戶站的官方帳號。環境變數名寫在 tenants.ts，值只存在伺服器的 .env。 */
+export const tenantCreds = (t: {
+  aiSupport?: { lineSecretEnv?: string; lineTokenEnv?: string };
+}): LineCreds => ({
+  secret: t.aiSupport?.lineSecretEnv ? process.env[t.aiSupport.lineSecretEnv] : undefined,
+  token: t.aiSupport?.lineTokenEnv ? process.env[t.aiSupport.lineTokenEnv] : undefined,
+});
+
+export const lineConfigured = (creds: LineCreds = houseCreds()) =>
+  !!creds.secret && !!creds.token;
 
 /**
  * 驗證 x-line-signature。
@@ -20,8 +46,12 @@ export const lineConfigured = () =>
  * 字串和 LINE 送來的位元組不保證一樣，簽章就會對不起來。
  * 用 timingSafeEqual 而不是 ===：字串比較會提早回傳，洩漏比對進度。
  */
-export function verifyLineSignature(rawBody: string, signature: string | null): boolean {
-  const secret = process.env.LINE_OA_CHANNEL_SECRET;
+export function verifyLineSignature(
+  rawBody: string,
+  signature: string | null,
+  creds: LineCreds = houseCreds(),
+): boolean {
+  const secret = creds.secret;
   if (!secret || !signature) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("base64");
   const a = Buffer.from(expected);
@@ -30,10 +60,10 @@ export function verifyLineSignature(rawBody: string, signature: string | null): 
   return crypto.timingSafeEqual(a, b);
 }
 
-async function call(path: string, body: unknown): Promise<boolean> {
-  const token = process.env.LINE_OA_CHANNEL_ACCESS_TOKEN;
+async function call(path: string, body: unknown, creds: LineCreds): Promise<boolean> {
+  const token = creds.token;
   if (!token) {
-    console.warn("[line] 未設定 LINE_OA_CHANNEL_ACCESS_TOKEN，略過送出");
+    console.warn(`[line] 沒有 access token，略過送出 ${path}`);
     return false;
   }
   try {
@@ -57,12 +87,12 @@ async function call(path: string, body: unknown): Promise<boolean> {
 }
 
 /** 回覆訊息。replyToken 只能用一次、約一分鐘內有效，且這條不計入 LINE 的訊息則數。 */
-export const replyText = (replyToken: string, text: string) =>
-  call("/message/reply", { replyToken, messages: [{ type: "text", text }] });
+export const replyText = (replyToken: string, text: string, creds: LineCreds = houseCreds()) =>
+  call("/message/reply", { replyToken, messages: [{ type: "text", text }] }, creds);
 
 /** 主動推播。這條會吃掉方案的免費則數，只在真的必要時使用。 */
-export const pushText = (to: string, text: string) =>
-  call("/message/push", { to, messages: [{ type: "text", text }] });
+export const pushText = (to: string, text: string, creds: LineCreds = houseCreds()) =>
+  call("/message/push", { to, messages: [{ type: "text", text }] }, creds);
 
 export interface LineEvent {
   type: string;
@@ -76,8 +106,11 @@ export interface LineEvent {
 }
 
 /** 取得使用者顯示名稱；失敗不是致命錯誤，回 null 讓呼叫端自己決定。 */
-export async function getDisplayName(userId: string): Promise<string | null> {
-  const token = process.env.LINE_OA_CHANNEL_ACCESS_TOKEN;
+export async function getDisplayName(
+  userId: string,
+  creds: LineCreds = houseCreds(),
+): Promise<string | null> {
+  const token = creds.token;
   if (!token) return null;
   try {
     const res = await fetch(`${API}/profile/${userId}`, {

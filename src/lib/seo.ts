@@ -234,7 +234,29 @@ export function serviceLd({
   serviceType: string;
   skus: string[];
 }) {
-  const offers = skus.map(getProduct).filter((p): p is Product => !!p).map((p) => offerLd(p, locale));
+  const products = skus.map(getProduct).filter((p): p is Product => !!p);
+  const offers = products.map((p) => offerLd(p, locale));
+
+  // 一項服務有多個級距時，額外給 AggregateOffer。
+  // 逐筆 Offer 只說「有這些方案」，lowPrice/highPrice 才是 Google 拿來在
+  // 搜尋結果上顯示價格區間的欄位——對一個主打「價格公開」的站，
+  // 那一行等於免費的廣告。
+  const prices = products.map((p) => p.price);
+  const aggregate =
+    products.length > 1
+      ? {
+          aggregateOffer: {
+            "@type": "AggregateOffer",
+            priceCurrency: "TWD",
+            lowPrice: Math.min(...prices),
+            highPrice: Math.max(...prices),
+            offerCount: products.length,
+            valueAddedTaxIncluded: false,
+            url: localeUrl(locale, path),
+          },
+        }
+      : {};
+
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -246,6 +268,7 @@ export function serviceLd({
     provider: providerLd(),
     areaServed: TAIWAN,
     ...(offers.length ? { offers } : {}),
+    ...aggregate,
   };
 }
 

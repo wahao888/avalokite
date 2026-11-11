@@ -17,6 +17,9 @@ import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import { consentRecord } from "@/lib/legal-consent";
+import {
+  INVOICE_ADDRESS_LIMIT, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT, invoiceCarrierPattern, validTaxId,
+} from "@/lib/invoice-details";
 
 // 每筆結帳都會寫入 Order＋Payment（＋Subscription）。沒有限流的話，
 // 通用 /api/ 的 5r/s 等於每天可灌 43 萬筆進 SQLite。
@@ -26,15 +29,17 @@ const MAX_PER_WINDOW = 10;
 
 const schema = z.object({
   name: z.string().trim().min(1).max(100),
-  email: z.string().trim().email().max(200),
+  email: z.string().trim().email().max(INVOICE_EMAIL_LIMIT),
   phone: z.string().trim().min(1).max(50),
-  company: z.string().trim().max(200).optional().or(z.literal("")),
+  company: z.string().trim().max(INVOICE_COMPANY_LIMIT).optional(),
   taxId: z
     .string()
     .trim()
-    .regex(/^\d{8}$/)
+    .refine(validTaxId)
     .optional()
     .or(z.literal("")),
+  invoiceAddress: z.string().trim().max(INVOICE_ADDRESS_LIMIT).optional(),
+  invoiceCarrier: z.string().trim().toUpperCase().regex(invoiceCarrierPattern).optional().or(z.literal("")),
   note: z.string().trim().max(2000).optional().or(z.literal("")),
   locale: z.string().max(10).optional(),
   // 契約同意：勾選值與客戶當下看到的條款版本
@@ -44,7 +49,7 @@ const schema = z.object({
     .array(z.object({ sku: z.string().max(50), qty: z.number().int().min(1).max(9) }))
     .min(1)
     .max(20),
-});
+}).refine((data) => !data.taxId || Boolean(data.company && data.invoiceAddress));
 
 export async function POST(req: NextRequest) {
   if (rateLimited(`checkout:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
@@ -124,6 +129,8 @@ export async function POST(req: NextRequest) {
       phone: d.phone,
       company: d.company || null,
       taxId: d.taxId || null,
+      invoiceAddress: d.taxId ? d.invoiceAddress : null,
+      invoiceCarrier: d.taxId ? null : d.invoiceCarrier || null,
       note: d.note || null,
       locale: d.locale ?? "zh-TW",
       items: JSON.stringify(d.items),

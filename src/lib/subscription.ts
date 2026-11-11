@@ -3,6 +3,7 @@ import { cancelPeriod } from "@/lib/ecpay";
 import { getProduct, prepaidPeriodsFor, withTax } from "@/lib/products";
 import { notifyOwner, sendMail } from "@/lib/mail";
 import { localePath } from "@/i18n/routing";
+import type { Prisma } from "@prisma/client";
 
 // 訂閱生命週期的單一入口：後台、客戶自助頁、排程都走這裡，
 // 才不會有三份「終止＋重建」的邏輯各自漂移。
@@ -25,8 +26,8 @@ export function subscriptionUrl(mtn: string, locale: string) {
  * - 「還沒付」不等於「付失敗」。這支不只在綠界回傳時被呼叫，換方案時也會，
  *   那時全部款項都可能還是 pending——不能因此把訂單標成 failed。
  */
-export async function recalcOrderStatus(orderId: string) {
-  const payments = await prisma.payment.findMany({ where: { orderId } });
+export async function recalcOrderStatus(orderId: string, db: Prisma.TransactionClient = prisma) {
+  const payments = await db.payment.findMany({ where: { orderId } });
   const live = payments.filter((p) => p.status !== "cancelled");
   const paid = live.filter((p) => p.status === "paid").length;
   const failed = live.filter((p) => p.status === "failed").length;
@@ -42,7 +43,7 @@ export async function recalcOrderStatus(orderId: string) {
           : paid > 0
             ? "partial"
             : "pending";
-  return prisma.order.update({ where: { id: orderId }, data: { status } });
+  return db.order.update({ where: { id: orderId }, data: { status } });
 }
 
 /** 訂單下一個可用的綠界交易編號尾碼（1＝一次性、2＝首次授權，之後遞增） */

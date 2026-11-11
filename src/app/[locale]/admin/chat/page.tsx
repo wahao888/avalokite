@@ -4,11 +4,14 @@ import { isAdmin } from "@/lib/admin-auth";
 import { DAILY_CAP, MONTHLY_BUDGET, MUTE_HOURS } from "@/lib/chat-service";
 import {
   cacheHitRate,
+  getKnowledge,
   money,
   monthlyUsage,
   recentConversations,
   type ConversationSummary,
 } from "@/lib/chat-stats";
+import { getTenant, TENANTS } from "@/lib/tenants";
+import { planOf } from "@/lib/ai-plans";
 import { cellStyle, headStyle, fmtDate } from "../_table";
 
 export { NOINDEX as metadata } from "@/lib/site-routes";
@@ -69,16 +72,29 @@ const preview = (c: ConversationSummary) =>
 
 export default async function AdminChatPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ kbok?: string; kberr?: string }>;
 }) {
   const { locale } = await params;
+  const { kbok, kberr } = await searchParams;
   setRequestLocale(locale);
 
   // 未登入就送回 /admin，登入表單在那裡——在這裡再放一份只會多一個要維護的入口
   if (!(await isAdmin())) redirect("/admin");
 
   const [months, conversations] = await Promise.all([monthlyUsage(), recentConversations()]);
+
+  // 有買 AI 客服的客戶站，連同他們目前的知識庫原文
+  const aiTenants = await Promise.all(
+    TENANTS.filter((t) => t.aiSupport).map(async (t) => ({
+      tenant: t,
+      plan: planOf(t.aiSupport!.plan),
+      knowledge: await getKnowledge(t.slug),
+      usage: (await monthlyUsage(1, t.slug))[0],
+    })),
+  );
   const now = new Date();
   const thisMonth = months[0];
   const open = conversations.filter((c) => c.handoff);
@@ -140,6 +156,51 @@ export default async function AdminChatPage({
 
       <div className="cart-section-head">所有對話（{conversations.length}）</div>
       <ConversationTable rows={conversations} now={now} />
+
+      <div className="cart-section-head">客戶站的 AI 客服（{aiTenants.length}）</div>
+      {kbok === "1" && <div className="form-feedback ok">知識庫已更新，下一則訊息就會用新的內容。</div>}
+      {kberr === "1" && (
+        <div className="form-feedback err">這個站沒有啟用 AI 客服，先到 tenants.ts 加上 aiSupport。</div>
+      )}
+      {aiTenants.length === 0 ? (
+        <p className="form-note">
+          目前沒有客戶站啟用 AI 客服。要開通一個站：在 src/lib/tenants.ts 的該筆加上
+          <code> aiSupport: {"{"} plan: &quot;lite&quot; {"}"}</code>，部署後這裡就會出現知識庫編輯欄位。
+        </p>
+      ) : (
+        aiTenants.map(({ tenant, plan, knowledge, usage }) => (
+          <div key={tenant.slug} style={{ marginBottom: "2rem" }}>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "baseline", flexWrap: "wrap" }}>
+              <strong>{tenant.name}</strong>
+              <span className="badge active">{plan.tier}</span>
+              <span style={{ color: "var(--muted)", fontSize: "0.78rem" }}>
+                本月 {usage.conversations} / {plan.monthlyConversations.toLocaleString("en-US")} 組對話
+                {money(usage.costUsd).usd} / 上限 US${plan.monthlyBudgetUsd}
+                webhook：/api/line/webhook/{tenant.slug}
+              </span>
+            </div>
+            <form method="post" action="/api/admin/chat-knowledge" style={{ marginTop: "0.6rem" }}>
+              <input type="hidden" name="tenantId" value={tenant.slug} />
+              <textarea
+                name="content"
+                defaultValue={knowledge}
+                rows={10}
+                className="form-input"
+                style={{ width: "100%", fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}
+                placeholder="貼上這個客戶的 FAQ、價目與服務說明。AI 只會用這裡面的內容回答。"
+              />
+              <button type="submit" className="btn-ghost" style={{ marginTop: "0.5rem" }}>
+                儲存知識庫
+              </button>
+            </form>
+          </div>
+        ))
+      )}
+      <p className="form-note" style={{ marginTop: "-0.6rem" }}>
+        ✦ 這裡存的內容會原封不動變成那個站客服的參考資料。寫得越具體（價格、時間、條件）
+        它越答得出來；寫不到的事它會說不確定並請客人留聯絡方式，不會自己編。
+        主站自己的知識庫不在這裡——它是從價目表當場算出來的，調價後客服立刻跟著改口。
+      </p>
 
       <div className="cart-section-head">月用量報表</div>
       <div style={{ overflowX: "auto" }}>
@@ -208,6 +269,7 @@ function ConversationTable({ rows, now }: { rows: ConversationSummary[]; now: Da
         <thead>
           <tr>
             <th style={headStyle}>#</th>
+            <th style={headStyle}>站別</th>
             <th style={headStyle}>來源</th>
             <th style={headStyle}>對象</th>
             <th style={headStyle}>狀態</th>
@@ -223,6 +285,9 @@ function ConversationTable({ rows, now }: { rows: ConversationSummary[]; now: Da
                 <a href={`/admin/chat/${c.id}`} style={{ color: "var(--moss)" }}>
                   {c.id}
                 </a>
+              </td>
+              <td style={cellStyle}>
+                {c.tenantId === "avalo" ? "Avalo 主站" : (getTenant(c.tenantId)?.name ?? c.tenantId)}
               </td>
               <td style={cellStyle}>{c.channel === "line" ? "LINE" : "官網"}</td>
               <td style={cellStyle}>

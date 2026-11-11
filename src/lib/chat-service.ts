@@ -1,14 +1,19 @@
 // 一則訊息進來到一則回覆出去的完整流程。LINE webhook 與網站聊天都走這裡。
 
 import { prisma } from "@/lib/prisma";
-import { notifyOwner } from "@/lib/mail";
+import { notifyOwner, notifyTenant } from "@/lib/mail";
 import { answer, HISTORY_TURNS, type AgentTurn } from "@/lib/ai-agent";
+import { houseKnowledge, tenantKnowledge } from "@/lib/ai-knowledge";
 import { estimateCostUsd } from "@/lib/chat-pricing";
+import { dailyReplyCap, planOf } from "@/lib/ai-plans";
+import { getTenant, HOUSE_TENANT } from "@/lib/tenants";
 import { taipeiDateKey, taipeiDayStart, taipeiMonthStart } from "@/lib/tw-time";
 
 export type ChatChannel = "line" | "web";
 
 export interface IncomingMessage {
+  /** "avalo" = 主站自己的客服，其餘為 tenants.ts 的 slug */
+  tenantId: string;
   channel: ChatChannel;
   /** LINE userId，或網站訪客的匿名 id */
   externalId: string;
@@ -53,13 +58,27 @@ const MAX_CHARS = 1000;
 const CAPPED_REPLY =
   "不好意思，目前線上客服忙線中。請留下您的稱呼與聯絡方式，或來信 service@avalokite.xyz，我們會請專人盡快與您聯繫。";
 
-/** 上一次寄出超額警示的日期，避免同一天狂寄。重啟歸零，可接受。 */
-let capAlertedOn = "";
+/**
+ * 已經寄過超額警示的「租戶＋項目＋日期」。重啟歸零，可接受。
+ *
+ * 一定要把租戶放進鍵裡：共用一個旗標的話，某個客戶站今天打到上限之後，
+ * 其他客戶站與主站當天再怎麼爆也不會有人收到信——而那正是最需要收到信的一天。
+ */
+const capAlerted = new Set<string>();
 
-/** 以實際記錄的 token 數換算當月花費（台北時間的月界線）。 */
-export async function monthlySpendUsd(): Promise<number> {
+/**
+ * 某個租戶本月的模型花費（台北時間的月界線）。
+ *
+ * 用關聯過濾而不是在 ChatMessage 上另存一份 tenantId：同一筆事實存兩個地方，
+ * 遲早會有一邊沒更新。資料量到十萬則以上再考慮反正規化。
+ */
+export async function monthlySpendUsd(tenantId: string): Promise<number> {
   const agg = await prisma.chatMessage.aggregate({
-    where: { role: "assistant", createdAt: { gte: taipeiMonthStart() } },
+    where: {
+      role: "assistant",
+      createdAt: { gte: taipeiMonthStart() },
+      conversation: { tenantId },
+    },
     _sum: { inputTokens: true, outputTokens: true, cacheReadTokens: true },
   });
   return estimateCostUsd({
@@ -69,24 +88,58 @@ export async function monthlySpendUsd(): Promise<number> {
   });
 }
 
-async function alertOnce(subject: string, lines: string[]): Promise<void> {
-  const today = taipeiDateKey();
-  if (capAlertedOn === today) return;
-  capAlertedOn = today;
+/**
+ * 這個租戶的上限。主站沿用環境變數（它不是 TENANTS 的一員）；
+ * 客戶站一律查方案等級，所以定價頁寫的數字跟實際擋的是同一個。
+ *
+ * 回 null = 這個 slug 沒有買 AI 客服。那種情況下訊息根本不該進來，
+ * 代表路由或設定有錯，寧可一律不回也不要默默幫對方付錢跑模型。
+ */
+function limitsFor(tenantId: string) {
+  if (tenantId === HOUSE_TENANT) {
+    return { daily: DAILY_CAP, monthlyUsd: MONTHLY_BUDGET, label: "Avalo 主站", tenant: null };
+  }
+  const tenant = getTenant(tenantId);
+  if (!tenant?.aiSupport) return null;
+  const plan = planOf(tenant.aiSupport.plan);
+  return {
+    daily: dailyReplyCap(plan),
+    monthlyUsd: plan.monthlyBudgetUsd,
+    label: tenant.name,
+    tenant,
+  };
+}
+
+/** 超額警示一律寄給 Avalo：那是帳單與容量的事，不是客戶站該處理的。 */
+async function alertOnce(key: string, subject: string, lines: string[]): Promise<void> {
+  const stamp = key + ":" + taipeiDateKey();
+  if (capAlerted.has(stamp)) return;
+  capAlerted.add(stamp);
   await notifyOwner(subject, lines.join("\n"));
 }
 
 /** 回 true 代表這則不要送進模型。兩道閘任一踩到就停。 */
-async function overBudget(): Promise<boolean> {
-  const spent = await monthlySpendUsd();
-  if (spent >= MONTHLY_BUDGET) {
+async function overBudget(tenantId: string): Promise<boolean> {
+  const limits = limitsFor(tenantId);
+  if (!limits) {
+    console.warn(`[chat] ${tenantId} 沒有啟用 AI 客服，不呼叫模型`);
+    return true;
+  }
+  const { daily: DAILY_LIMIT, monthlyUsd: MONTHLY_LIMIT, label } = limits;
+
+  const spent = await monthlySpendUsd(tenantId);
+  if (spent >= MONTHLY_LIMIT) {
     await alertOnce(
-      `[Avalo] ⚠️ AI 客服已達每月費用上限 US$${MONTHLY_BUDGET}，本月剩餘對話改為人工`,
+      tenantId + ":month",
+      `[Avalo] ⚠️ ${label} 的 AI 客服已達每月費用上限 US$${MONTHLY_LIMIT}，本月剩餘對話改為人工`,
       [
-        `本月（台北時間）已花費約 US$${spent.toFixed(2)}，達到上限 US$${MONTHLY_BUDGET}。`,
+        `本月（台北時間）已花費約 US$${spent.toFixed(2)}，達到上限 US$${MONTHLY_LIMIT}。`,
+        `站別：${label}（${tenantId}）`,
         "",
         "這個數字是用資料庫裡記錄的 token 數乘單價估的，與 OpenAI 帳單會有小幅出入。",
-        "要放寬請改 .env 的 AI_MONTHLY_BUDGET_USD 再 restart。",
+        tenantId === HOUSE_TENANT
+          ? "要放寬請改 .env 的 AI_MONTHLY_BUDGET_USD 再 restart。"
+          : "要放寬就是升級方案：改 tenants.ts 的 aiSupport.plan 再部署。",
         "期間客人仍會收到請他留聯絡方式的回覆，不會沒人理。",
       ],
     );
@@ -94,23 +147,43 @@ async function overBudget(): Promise<boolean> {
   }
 
   const used = await prisma.chatMessage.count({
-    where: { role: "assistant", createdAt: { gte: taipeiDayStart() } },
+    where: {
+      role: "assistant",
+      createdAt: { gte: taipeiDayStart() },
+      conversation: { tenantId },
+    },
   });
-  if (used >= DAILY_CAP) {
+  if (used >= DAILY_LIMIT) {
     await alertOnce(
-      "[Avalo] ⚠️ AI 客服已達每日回覆上限，當天剩餘對話改為人工",
+      tenantId + ":day",
+      `[Avalo] ⚠️ ${label} 的 AI 客服已達每日回覆上限，當天剩餘對話改為人工`,
       [
-        `今日已回覆 ${used} 則，達到上限 ${DAILY_CAP}（本月花費約 US$${spent.toFixed(2)}）。`,
+        `今日已回覆 ${used} 則，達到上限 ${DAILY_LIMIT}（本月花費約 US$${spent.toFixed(2)}）。`,
+        `站別：${label}（${tenantId}）`,
         "",
         "正常營運不會碰到這個數字，請先確認是不是有人在灌：",
         "  sudo awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head",
         "",
-        "確認是真實需求的話，調高 .env 的 AI_DAILY_CAP 再 restart。",
+        tenantId === HOUSE_TENANT
+          ? "確認是真實需求的話，調高 .env 的 AI_DAILY_CAP 再 restart。"
+          : "確認是真實需求的話，跟客戶談升級方案。",
       ],
     );
     return true;
   }
   return false;
+}
+
+/**
+ * 這個租戶要餵給模型的知識庫。
+ *
+ * 主站是當場算的（調價後客服立刻改口），客戶站是存著的一份文字。
+ * 兩者都放在 messages[0] 且內容穩定，prompt caching 才吃得到。
+ */
+async function knowledgeFor(tenantId: string): Promise<string> {
+  if (tenantId === HOUSE_TENANT) return houseKnowledge();
+  const row = await prisma.chatKnowledge.findUnique({ where: { tenantId } });
+  return tenantKnowledge(getTenant(tenantId)?.name ?? tenantId, row?.content ?? "");
 }
 
 /** 回 null 代表「這則不要回覆」——真人已接手，AI 安靜聽著就好。 */
@@ -119,11 +192,18 @@ export async function handleMessage(msg: IncomingMessage): Promise<string | null
   const text = msg.text.slice(0, MAX_CHARS);
   msg = { ...msg, text };
 
-  if (await overBudget()) return CAPPED_REPLY;
+  if (await overBudget(msg.tenantId)) return CAPPED_REPLY;
 
   const convo = await prisma.chatConversation.upsert({
-    where: { channel_externalId: { channel: msg.channel, externalId: msg.externalId } },
+    where: {
+      tenantId_channel_externalId: {
+        tenantId: msg.tenantId,
+        channel: msg.channel,
+        externalId: msg.externalId,
+      },
+    },
     create: {
+      tenantId: msg.tenantId,
       channel: msg.channel,
       externalId: msg.externalId,
       displayName: msg.displayName ?? null,
@@ -158,7 +238,7 @@ export async function handleMessage(msg: IncomingMessage): Promise<string | null
     .reverse()
     .map((m) => ({ role: m.role as AgentTurn["role"], content: m.content }));
 
-  const result = await answer(history, msg.text);
+  const result = await answer(history, msg.text, await knowledgeFor(msg.tenantId));
 
   // 一筆 transaction 寫兩則訊息：只存到一半的對話會讓下一輪的脈絡是錯的。
   await prisma.$transaction([
@@ -240,9 +320,10 @@ async function notifyIfNeeded(
 
   const who = convo.displayName ?? msg.displayName ?? msg.externalId;
   const hasContact = looksLikeContact(msg.text);
+  const brand = msg.tenantId === HOUSE_TENANT ? "Avalo" : (getTenant(msg.tenantId)?.name ?? msg.tenantId);
   const subject = firstTime
-    ? `[Avalo] AI 客服請求轉接 — ${who}（${msg.channel}）`
-    : `[Avalo] 客人補充訊息${hasContact ? "（含聯絡方式）" : ""} — ${who}（${msg.channel}）`;
+    ? `[${brand}] AI 客服請求轉接 — ${who}（${msg.channel}）`
+    : `[${brand}] 客人補充訊息${hasContact ? "（含聯絡方式）" : ""} — ${who}（${msg.channel}）`;
 
   const muteNote = muteUntil
     ? `AI 已在此對話靜音至 ${muteUntil.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}，` +
@@ -254,9 +335,7 @@ async function notifyIfNeeded(
     .map((t) => `${t.role === "user" ? "客人" : "客服"}：${t.content}`)
     .join("\n");
 
-  await notifyOwner(
-    subject,
-    [
+  const body = [
       `來源：${msg.channel}`,
       `對象：${who}`,
       firstTime ? `原因：${result?.handoffReason || "未說明"}` : "狀態：已轉接，這是客人後續補充",
@@ -267,6 +346,12 @@ async function notifyIfNeeded(
       ...(result ? [`客服：${result.reply}`] : ["（AI 靜音中，未回覆）"]),
       "",
       `對話 ID：${convo.id}`,
-    ].join("\n"),
-  );
+  ].join("\n");
+
+  // 寄給真正要回這個客人的人：客戶站的轉接通知進客戶自己的收件匣，
+  // 全部塞給 Avalo 的話，等於我們變成每個客戶的第一線總機。
+  // notifyTenant 沒設收件人時會自動退回 MAIL_OWNER，不會整封掉。
+  const tenant = msg.tenantId === HOUSE_TENANT ? null : getTenant(msg.tenantId);
+  if (tenant) await notifyTenant(tenant, { subject, text: body });
+  else await notifyOwner(subject, body);
 }

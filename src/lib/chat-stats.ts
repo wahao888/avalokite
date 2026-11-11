@@ -48,9 +48,16 @@ export interface MonthUsage {
  * 要嘛用 strftime 綁死方言，要嘛把整張表撈回來自己分。資料量是幾千筆的量級，
  * 多跑幾個 count 比引入任何一種都便宜。
  */
-export async function monthlyUsage(months = REPORT_MONTHS): Promise<MonthUsage[]> {
+export async function monthlyUsage(
+  months = REPORT_MONTHS,
+  tenantId?: string,
+): Promise<MonthUsage[]> {
   const now = new Date();
   const out: MonthUsage[] = [];
+  // 不給 tenantId＝全站（Avalo 後台要看的是總量）；
+  // 給了就是那一個客戶的報表，也就是方案裡承諾的「每月對話用量報表」。
+  const scope = tenantId ? { conversation: { tenantId } } : {};
+  const convoScope = tenantId ? { tenantId } : {};
 
   for (let i = 0; i < months; i += 1) {
     const gte = taipeiMonthStart(i, now);
@@ -59,16 +66,16 @@ export async function monthlyUsage(months = REPORT_MONTHS): Promise<MonthUsage[]
 
     const [assistant, inbound, convos, handoffs] = await Promise.all([
       prisma.chatMessage.aggregate({
-        where: { role: "assistant", createdAt: range },
+        where: { role: "assistant", createdAt: range, ...scope },
         _count: true,
         _sum: { inputTokens: true, outputTokens: true, cacheReadTokens: true },
       }),
-      prisma.chatMessage.count({ where: { role: "user", createdAt: range } }),
+      prisma.chatMessage.count({ where: { role: "user", createdAt: range, ...scope } }),
       prisma.chatMessage.groupBy({
         by: ["conversationId"],
-        where: { createdAt: range },
+        where: { createdAt: range, ...scope },
       }),
-      prisma.chatConversation.count({ where: { handoffAt: range } }),
+      prisma.chatConversation.count({ where: { handoffAt: range, ...convoScope } }),
     ]);
 
     const tokens = {
@@ -115,6 +122,8 @@ export function money(usd: number): { usd: string; twd: string } {
 
 export interface ConversationSummary {
   id: number;
+  /** 哪一個站的對話。"avalo" = 主站自己 */
+  tenantId: string;
   channel: string;
   externalId: string;
   displayName: string | null;
@@ -143,6 +152,7 @@ export async function recentConversations(limit = 200): Promise<ConversationSumm
 
   return rows.map((c) => ({
     id: c.id,
+    tenantId: c.tenantId,
     channel: c.channel,
     externalId: c.externalId,
     displayName: c.displayName,
@@ -247,4 +257,27 @@ export async function purgeExpiredChat(now: Date = new Date()): Promise<{
     conversations: conversations.count,
     webhookEvents: webhookEvents.count,
   };
+}
+
+/** 讀某個客戶站的知識庫原文（後台編輯用）。 */
+export async function getKnowledge(tenantId: string): Promise<string> {
+  const row = await prisma.chatKnowledge.findUnique({ where: { tenantId } });
+  return row?.content ?? "";
+}
+
+/**
+ * 存客戶站的知識庫。
+ *
+ * 內容會原封不動變成模型的 system prompt，所以這裡是整套系統裡最該小心的
+ * 輸入之一——但它只來自後台（isAdmin 之後），不是客人送的。真正要防的是
+ * 手滑清空：存成空字串時，AI 會變成什麼都不知道卻還在回話，所以
+ * tenantKnowledge() 對空內容有自己的保底說法。
+ */
+export async function saveKnowledge(tenantId: string, content: string): Promise<void> {
+  const text = content.trim().slice(0, 200_000);
+  await prisma.chatKnowledge.upsert({
+    where: { tenantId },
+    create: { tenantId, content: text },
+    update: { content: text },
+  });
 }

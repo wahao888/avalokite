@@ -15,6 +15,8 @@ model Order {
   phone              String
   company            String?
   taxId              String? // 統編
+  invoiceAddress     String?
+  invoiceCarrier     String?
   note               String?
   locale             String         @default("zh-TW")
   items              String // JSON: [{ sku, qty }]
@@ -32,6 +34,27 @@ model Order {
   updatedAt          DateTime       @updatedAt
   payments           Payment[]
   subscriptions      Subscription[]
+  invoices           Invoice[]
+}
+
+// 每筆實收款各有一個發票識別碼。發票工作與付款在同一筆交易中寫入。
+model Invoice {
+  reference     String    @id
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id])
+  environment   String
+  amount        Int
+  itemName      String
+  status        String    @default("pending") // pending | issued | manual
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  invoiceNo     String?
+  invoiceDate   String?
+  lastError     String?
+  createdAt     DateTime  @default(now())
+
+  @@index([environment, status, nextAttemptAt])
+  @@index([orderId])
 }
 
 // 一次綠界交易（一次性付款一筆；定期定額授權一筆）
@@ -683,7 +706,13 @@ model DgLedger {
 /// 一個 LINE 使用者永遠只有一段對話（靠 channel + externalId 唯一），
 /// 不切 session：客人隔三天再問一句，脈絡還在才像客服而不是重新認識。
 model ChatConversation {
-  id          Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
+  /// 哪一個站的對話。"avalo" = 主站自己的客服，其餘為 tenants.ts 的 slug。
+  /// 刻意用非 null 的預設值而不是 nullable：唯一鍵裡只要有 NULL，SQLite 就
+  /// 認定每一列都不相同（NULL != NULL），同一個客人會被當成新對話一直長出來。
+  tenantId String @default("avalo")
+
   channel     String // line | web
   externalId  String // LINE userId，或網站訪客的匿名 cookie id
   displayName String?
@@ -704,8 +733,18 @@ model ChatConversation {
 
   messages ChatMessage[]
 
-  @@unique([channel, externalId])
-  @@index([lastAt])
+  @@unique([tenantId, channel, externalId])
+  @@index([tenantId, lastAt])
+}
+
+/// 每個租戶的 AI 客服知識庫。
+///
+/// 主站（"avalo"）不走這張表——它的知識庫是從 products.ts 當場算出來的，
+/// 調價後客服立刻跟著改口。客戶站沒有那個程式來源，內容只能存著。
+model ChatKnowledge {
+  tenantId  String   @id
+  content   String
+  updatedAt DateTime @updatedAt
 }
 
 /// 單則訊息。token 數記在 assistant 這一側，供每月用量報表統計。

@@ -241,7 +241,8 @@ export const SERVICES: Service[] = [
   {
     slug: "line-ai-chatbot",
     serviceType: "AI customer service chatbot",
-    skus: ["ai-chatbot"],
+    // 三階都列進來：JSON-LD 的 offers 會逐階輸出，搜尋結果才顯示得出價格區間
+    skus: ["ai-chatbot-lite", "ai-chatbot", "ai-chatbot-enterprise"],
     addons: ["rag"],
     cases: ["/cases/agagent"],
     i18n: {

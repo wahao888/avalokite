@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/admin-auth";
 import { getProduct } from "@/lib/products";
 import { getTenant } from "@/lib/tenants";
+import { invoiceEnvironment, invoiceStartAt } from "@/lib/ecpay-invoice";
 import CancelSubButton from "@/components/CancelSubButton";
 import LaunchSubButton from "@/components/LaunchSubButton";
 import { cellStyle, headStyle, fmtDate } from "./_table";
@@ -42,7 +43,7 @@ export default async function AdminPage({
     );
   }
 
-  const [orders, subscriptions, inquiries, openHandoffs] = await Promise.all([
+  const [orders, subscriptions, inquiries, openHandoffs, invoices] = await Promise.all([
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -55,6 +56,11 @@ export default async function AdminPage({
     }),
     prisma.inquiry.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.chatConversation.count({ where: { handoff: true } }),
+    prisma.invoice.findMany({
+      where: { environment: invoiceEnvironment() },
+      orderBy: [{ status: "desc" }, { createdAt: "desc" }],
+      take: 50,
+    }),
   ]);
 
   // 建置款已付、維護卻還沒授權——服務在跑但月費沒進來，這種訂單要最先被看到
@@ -152,6 +158,35 @@ export default async function AdminPage({
           </tbody>
         </table>
       </div>
+
+      <div className="cart-section-head">電子發票（{invoiceStartAt() <= Date.now() ? "已啟用" : "未啟用"}）</div>
+      {invoices.length > 0 && (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={headStyle}>訂單／發票識別碼</th>
+                <th style={headStyle}>實收金額</th>
+                <th style={headStyle}>狀態</th>
+                <th style={headStyle}>發票號碼</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => (
+                <tr key={invoice.reference}>
+                  <td style={cellStyle}><code>{invoice.orderId}<br />{invoice.reference}</code></td>
+                  <td style={cellStyle}>NT${invoice.amount.toLocaleString()}</td>
+                  <td style={cellStyle}>
+                    {invoice.status === "issued" ? "已開立" : invoice.status === "manual" ? "待人工處理" : "待開立"}
+                    {invoice.lastError && <><br />{invoice.lastError}</>}
+                  </td>
+                  <td style={cellStyle}>{invoice.invoiceNo ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {awaitingAuth.length > 0 && (
         <>

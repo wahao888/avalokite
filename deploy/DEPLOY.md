@@ -74,6 +74,8 @@ AI_PRICE_CACHED=""                              # 留空 = 0.01
 AI_PRICE_OUT=""                                 # 留空 = 0.50
 AI_MUTE_HOURS=""                                # 留空 = 12，轉人後 AI 在該 LINE 對話閉嘴幾小時
 AI_USD_TWD=""                                   # 留空 = 32，後台報表的美元→台幣概估匯率
+TENANT_LINE_SECRET_<SLUG>=""                    # 客戶站各自的 LINE 官方帳號憑證，一站一組
+TENANT_LINE_TOKEN_<SLUG>=""                     # 變數名寫在 tenants.ts 的 aiSupport
 CRON_SECRET="<openssl rand -hex 24>"            # 本機 cron 打 /api/cron/* 用；本機沒有時端點回 401
 NEXT_PUBLIC_GA_MEASUREMENT_ID=""                # 留空 = 不載 GA。填 G-XXXXXXXX 後 nginx CSP 已放行
 NEXT_PUBLIC_GSC_VERIFICATION=""                 # Search Console HTML tag 的 content=
@@ -81,6 +83,24 @@ NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
 ```
 
 > 改完 .env 後 `sudo systemctl restart avalo`。
+
+### 幫一個客戶開通 AI 客服
+
+1. 客戶申請自己的 LINE 官方帳號，啟用 Messaging API，拿到 channel secret 與 access token
+2. 伺服器 `.env` 加兩行（名字自己取，對得起來就好）：
+   `TENANT_LINE_SECRET_WENSHAN="..."`、`TENANT_LINE_TOKEN_WENSHAN="..."`
+3. `src/lib/tenants.ts` 的那一筆加上：
+   `aiSupport: { plan: "lite", lineSecretEnv: "TENANT_LINE_SECRET_WENSHAN", lineTokenEnv: "TENANT_LINE_TOKEN_WENSHAN" }`
+   plan 是 `lite` / `business` / `enterprise`，界線與上限查 [ai-plans.ts](../src/lib/ai-plans.ts)
+4. 部署，然後在客戶的 LINE Developers Console 把 Webhook URL 設成
+   `https://avalokite.xyz/api/line/webhook/wenshan`（**網址結尾是該站的 slug**），並關掉「自動回應訊息」
+5. 到 `/admin/chat` 的「客戶站的 AI 客服」區塊貼上他們的 FAQ 與價目，按儲存
+
+只開官網通道的話，第 1、2 步與 `lineSecretEnv`／`lineTokenEnv` 可以省略。
+
+**每個客戶的用量與費用是分開計算的**：上限來自方案等級而不是 `.env`，
+某個客戶被灌爆只會關掉他自己的客服，不會波及主站或其他客戶。
+每日簡報的稽核會逐站列出本月花費。
 
 **AI 客服後台**在 `/admin` → 右上角「AI 客服」（待處理的轉接筆數會直接標在入口上）。
 那裡看得到每一通對話的逐字稿、每月用量與估算費用，以及兩顆按鈕：
@@ -375,6 +395,23 @@ sudo systemctl restart avalo
 5. 真卡小額測試一筆（可下單「網站健檢」NT$9,900）並退款驗證流程。
    另建議測一筆維護訂閱授權，確認 `/api/ecpay/period-return` 有收到每期通知。
 6. 停止某客戶訂閱扣款：綠界後台 → 信用卡收單 → 定期定額查詢 → 以 admin 後台顯示的授權單號（gwsr）終止授權。
+
+### 4.1 Avalo 主站電子發票
+
+1. 在綠界正式廠商專區開通 B2C 電子發票（同一套 API 可開統編發票）。完成財政部授權與字軌配號，在後台確認當期一般稅額字軌已啟用且有餘額。[開通與字軌](https://support.ecpay.com.tw/8354/) · [授權](https://support.ecpay.com.tw/8403/) · [字軌與配號](https://support.ecpay.com.tw/8426/)
+2. 到「發票／收據 → 資料管理與維護 → 發票通知方式設定」，切換 B2C，將「開立」設為「通知」及「僅以 Email 通知」。若需要統編發票隨信附 PDF，另向綠界申請。[通知設定](https://support.ecpay.com.tw/6463/) · [發票服務申請](https://support.ecpay.com.tw/19369/)
+3. 確認電子發票適用的 MerchantID、HashKey、HashIV。直接在正式主機 `/opt/avalo/app/.env` 分別設定 `ECPAY_INVOICE_MERCHANT_ID`、`ECPAY_INVOICE_HASH_KEY`、`ECPAY_INVOICE_HASH_IV`。開票環境沿用 `ECPAY_ENV`。測試環境用官方測試商家與虛構資料。[介接資訊](https://developers.ecpay.com.tw/7849/)
+4. 部署後於 `avalo` 的 crontab 加入下列排程。字軌和通知設定驗證完成後，將 `ECPAY_INVOICE_START_AT` 設為啟用時間（ISO 8601，例如 `2026-11-10T15:30:00+08:00`），再重啟 `avalo`。留空會停用發票排程。啟用時間前的扣款請依會計紀錄處理。
+
+   ```cron
+   * * * * * /opt/avalo/app/deploy/run-cron.sh invoices >> /opt/avalo/cron-invoices.log 2>&1
+   ```
+
+5. 用一筆實際應開票的交易驗證。對照 Avalo 營運後台的發票號碼、綠界「發票查詢與異動」的金額與上傳狀態，以及「發票通知發送紀錄」。綠界測試環境只驗開票 API，正式收信須另外驗證。[開票與通知紀錄](https://support.ecpay.com.tw/8531/) · [開票 API](https://developers.ecpay.com.tw/7896/)
+
+單筆付款、維護首期及之後每筆成功扣款各有一個發票識別碼。排程使用該識別碼查詢及重試。
+遇到「待人工處理」時，請先依識別碼查綠界再開立或補開。席次保留金、舊訂單缺少統編抬頭或地址，以及退款後作廢或折讓，由會計處理。
+每期通知若未送達，須以綠界「信用卡定期定額訂單查詢」和 Avalo 發票清單對帳，依實收明細補開。[定期定額結果通知](https://developers.ecpay.com.tw/5631/)
 
 ## 5. 備份（每日 SQLite ＋ 商品照片 → S3）
 

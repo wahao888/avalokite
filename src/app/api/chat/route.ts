@@ -4,6 +4,7 @@ import { z } from "zod";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { sameOrigin } from "@/lib/portal-http";
 import { handleMessage } from "@/lib/chat-service";
+import { HOUSE_TENANT, tenantFromHost } from "@/lib/tenants";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  if (rateLimited(`chat:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })) {
+  // 哪一個站在問。主網域＝Avalo 自己；客戶子網域＝那個客戶，對話紀錄、
+  // 用量上限與轉人通知都跟著分開。
+  const site = tenantFromHost(req.headers.get("host"));
+  const tenantId = site?.slug ?? HOUSE_TENANT;
+  if (site && !site.aiSupport) {
+    // 這個客戶站沒買 AI 客服。給 404 而不是錯誤訊息：那一頁本來就不該有聊天視窗，
+    // 會打到這裡的只有自己試出來的人。
+    return NextResponse.json({ error: "not found" }, { status: 404 });
+  }
+
+  // 限流的鍵要帶租戶：同一個 IP 同時逛兩個客戶站時，不該互相吃掉配額。
+  if (
+    rateLimited(`chat:${tenantId}:${clientIp(req)}`, { windowMs: WINDOW_MS, max: MAX_PER_WINDOW })
+  ) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
@@ -50,6 +64,7 @@ export async function POST(req: NextRequest) {
 
   // 官網不靜音（那裡沒有真人介面），所以這裡實際上永遠拿得到字串
   const reply = await handleMessage({
+    tenantId,
     channel: "web",
     externalId: visitorId,
     text: parsed.data.message,

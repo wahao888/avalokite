@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { verifyCheckMac } from "@/lib/ecpay";
+import { ecpayConfig, verifyCheckMac } from "@/lib/ecpay";
 import { notifyOwner, sendMail } from "@/lib/mail";
 import { recalcOrderStatus, subscriptionUrl } from "@/lib/subscription";
 import { getProduct } from "@/lib/products";
+import { queueInvoice } from "@/lib/invoices";
 
 export async function formToParams(req: Request): Promise<Record<string, string>> {
   const text = await req.text();
@@ -15,7 +16,7 @@ export async function formToParams(req: Request): Promise<Record<string, string>
 
 // 處理一次性付款／定期定額「首次授權」結果（ReturnURL 與 OrderResultURL 共用）
 export async function processPaymentResult(params: Record<string, string>) {
-  if (!verifyCheckMac(params)) {
+  if (params.MerchantID !== ecpayConfig().merchantId || !verifyCheckMac(params)) {
     throw new Error("CheckMacValue mismatch");
   }
   const mtn = params.MerchantTradeNo;
@@ -27,34 +28,47 @@ export async function processPaymentResult(params: Record<string, string>) {
   });
   if (!payment) throw new Error(`payment not found: ${mtn}`);
 
-  // 已處理過（ReturnURL 與 client return 都會打）→ 冪等
-  if (payment.status === "paid") return payment.order.id;
+  if (params.SimulatePaid === "1" || payment.status === "paid" || payment.status === "cancelled") {
+    return payment.order.id;
+  }
+  if (success && Number(params.TradeAmt) !== payment.amount) throw new Error("TradeAmt mismatch");
 
-  await prisma.payment.update({
-    where: { merchantTradeNo: mtn },
-    data: {
-      status: success ? "paid" : "failed",
-      ecpayTradeNo: params.TradeNo ?? null,
-      paymentType: params.PaymentType ?? null,
-      paidAt: success ? new Date() : null,
-      rawReturn: JSON.stringify(params),
-    },
-  });
-
-  if (payment.kind === "period") {
-    await prisma.subscription.updateMany({
-      where: { merchantTradeNo: mtn },
+  const order = await prisma.$transaction(async (tx) => {
+    const updated = await tx.payment.updateMany({
+      where: { id: payment.id, status: { notIn: ["paid", "cancelled"] } },
       data: {
-        status: success ? "active" : "failed",
-        gwsr: params.Gwsr ?? params.gwsr ?? null,
-        totalSuccessTimes: success ? 1 : 0,
-        lastChargeAt: success ? new Date() : null,
+        status: success ? "paid" : "failed",
+        ecpayTradeNo: params.TradeNo ?? null,
+        paymentType: params.PaymentType ?? null,
+        paidAt: success ? new Date() : null,
         rawReturn: JSON.stringify(params),
       },
     });
-  }
+    if (!updated.count) return null;
 
-  const order = await recalcOrderStatus(payment.orderId);
+    const isPeriod = payment.kind === "period";
+    const sub = isPeriod ? await tx.subscription.findUnique({ where: { merchantTradeNo: mtn } }) : null;
+    if (sub) {
+      await tx.subscription.updateMany({
+        where: { id: sub.id, totalSuccessTimes: 0, status: { notIn: ["cancelled", "replaced"] } },
+        data: {
+          status: success ? "active" : "failed",
+          gwsr: params.Gwsr ?? params.gwsr ?? null,
+          totalSuccessTimes: success ? 1 : 0,
+          lastChargeAt: success ? new Date() : null,
+          rawReturn: JSON.stringify(params),
+        },
+      });
+    }
+    if (success) {
+      await queueInvoice(tx, payment.order, {
+        mtn, amount: payment.amount, chargedAt: params.PaymentDate ?? "",
+        period: isPeriod ? 1 : undefined, subscriptionSku: sub?.sku,
+      });
+    }
+    return recalcOrderStatus(payment.orderId, tx);
+  });
+  if (!order) return payment.order.id;
 
   if (success) {
     const zh = order.locale !== "en";
@@ -102,9 +116,10 @@ export async function processPaymentResult(params: Record<string, string>) {
 
 // 定期定額每期扣款通知（PeriodReturnURL）
 export async function processPeriodCharge(params: Record<string, string>) {
-  if (!verifyCheckMac(params)) {
+  if (params.MerchantID !== ecpayConfig().merchantId || !verifyCheckMac(params)) {
     throw new Error("CheckMacValue mismatch");
   }
+  if (params.SimulatePaid === "1") return;
   const mtn = params.MerchantTradeNo;
   const success = params.RtnCode === "1";
   const sub = await prisma.subscription.findUnique({
@@ -113,30 +128,50 @@ export async function processPeriodCharge(params: Record<string, string>) {
   });
   if (!sub) throw new Error(`subscription not found: ${mtn}`);
 
-  const times = Number(params.TotalSuccessTimes ?? sub.totalSuccessTimes + 1);
-  await prisma.subscription.update({
-    where: { merchantTradeNo: mtn },
-    data: success
-      ? {
-          status: "active",
-          totalSuccessTimes: times,
-          lastChargeAt: new Date(),
-          gwsr: params.Gwsr ?? params.gwsr ?? sub.gwsr,
-          rawReturn: JSON.stringify(params),
-          // 收到錢就把催收整組歸零：客戶更新了卡片卻還繼續收到催繳信，
-          // 比沒催更傷關係。
-          pastDueSince: null,
-          dunningStage: 0,
-        }
-      : {
-          status: "failed",
-          rawReturn: JSON.stringify(params),
-          // 只在「第一次」失敗時記時間。綠界不重試失敗的期別、下一期仍照排程扣，
-          // 所以連續欠費會一期一期回傳 failed；每次都覆寫的話，欠費天數永遠歸零，
-          // D+15／D+30 的門檻就再也不會到達。
-          pastDueSince: sub.pastDueSince ?? new Date(),
-        },
+  const times = Number(params.TotalSuccessTimes);
+  if (success) {
+    if (!Number.isSafeInteger(times) || times < 1) throw new Error("TotalSuccessTimes invalid");
+    if (Number(params.Amount ?? params.amount) !== sub.monthlyAmount) throw new Error("Amount mismatch");
+    if (times === 1) return; // 首次扣款由 ReturnURL / OrderResultURL 處理。
+  }
+
+  const changed = await prisma.$transaction(async (tx) => {
+    const updated = await tx.subscription.updateMany({
+      where: {
+        id: sub.id,
+        status: { notIn: ["cancelled", "replaced"] },
+        ...(success ? { totalSuccessTimes: { lt: times } } : {}),
+      },
+      data: success
+        ? {
+            status: "active",
+            totalSuccessTimes: times,
+            lastChargeAt: new Date(),
+            gwsr: params.Gwsr ?? params.gwsr ?? sub.gwsr,
+            rawReturn: JSON.stringify(params),
+            // 收到錢就把催收整組歸零：客戶更新了卡片卻還繼續收到催繳信，
+            // 比沒催更傷關係。
+            pastDueSince: null,
+            dunningStage: 0,
+          }
+        : {
+            status: "failed",
+            rawReturn: JSON.stringify(params),
+            // 只在「第一次」失敗時記時間。綠界不重試失敗的期別、下一期仍照排程扣，
+            // 所以連續欠費會一期一期回傳 failed；每次都覆寫的話，欠費天數永遠歸零，
+            // D+15／D+30 的門檻就再也不會到達。
+            pastDueSince: sub.pastDueSince ?? new Date(),
+          },
+    });
+    if (success) {
+      await queueInvoice(tx, sub.order, {
+        mtn, amount: sub.monthlyAmount, period: times, subscriptionSku: sub.sku,
+        chargedAt: params.ProcessDate ?? params.process_date ?? "",
+      });
+    }
+    return updated.count > 0;
   });
+  if (!changed) return;
 
   // 每期都要讓客戶收到憑據。訂閱制最怕的是客戶在信用卡帳單上看到一筆
   // 認不出來的「綠界」扣款——那通常直接變成爭議請款或退訂。

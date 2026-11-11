@@ -46,6 +46,14 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
       q: "零元啟動跟標準形象官網差在哪？",
       a: "零元啟動把建置費攤進 24 個月月費，下單只收席次保留金，上線驗收後折抵第一期。承諾期較長，期內提前終止須補付尚未攤完的建置費。檔期與席次以定價頁為準。",
     },
+    {
+      q: "AI 客服多少錢？有幾種方案？",
+      a: `三階：輕量 ${p("ai-chatbot-lite")} 建置＋${p("care-ai-lite")}／月，單一通道、每月 1,000 組對話，適合微型企業；商務 ${p("ai-chatbot")} 建置＋${p("care-ai")}／月，LINE 與官網雙通道、每月 5,000 組；企業 ${p("ai-chatbot-enterprise")} 起，含系統整合與多語言。價格均為未稅，結帳加 5% 營業稅。`,
+    },
+    {
+      q: "AI 客服會不會亂報價？用量會不會爆？",
+      a: "報價由系統帶入，模型只能照抄、不做任何加總——這是我們在自己站上踩過坑之後關掉的。用量有每日與每月兩道上限，超過就改成請客人留聯絡方式，不會產生預期外的帳單。想先看它怎麼回答，本站右下角的聊天視窗就是同一套系統。",
+    },
   ],
   en: [
     {
@@ -79,6 +87,14 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
     {
       q: "How does Zero Setup differ from the standard brand site?",
       a: "Zero Setup spreads the build fee across 24 months of care. You pay a seat deposit at checkout, credited to month one after launch. Leaving during the term means paying the unamortised build fee. Seats and dates are as shown on the pricing page.",
+    },
+    {
+      q: "How much does AI customer service cost?",
+      a: `Three tiers: Lite at ${p("ai-chatbot-lite")} build plus ${p("care-ai-lite")}/month for one channel and 1,000 conversations; Business at ${p("ai-chatbot")} plus ${p("care-ai")}/month for LINE and web with 5,000 conversations; Enterprise from ${p("ai-chatbot-enterprise")} with system integration and multilingual replies. Prices exclude 5% VAT.`,
+    },
+    {
+      q: "Can the AI quote the wrong price, or run up a surprise bill?",
+      a: "Prices are injected by the system and the model may only quote them, never add them up — we switched that off after hitting it on our own site. Usage has daily and monthly caps; past them the bot asks for contact details instead. The chat window on this site runs the same system, so you can test it before buying.",
     },
   ],
 };

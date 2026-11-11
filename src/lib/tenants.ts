@@ -2,7 +2,9 @@
 //
 // 刻意不建 Prisma Tenant table：客戶站的頁面與樣式本來就住在程式碼裡、
 // 本來就要重 build 才會變，多一份 DB 記錄只會產生第二個真實來源與「記得 seed」的步驟。
-// Inquiry.tenantId 存的就是這裡的 slug（字串，非 FK）。
+// Inquiry.tenantId 與 ChatConversation.tenantId 存的就是這裡的 slug（字串，非 FK）。
+
+import type { AiPlanTier } from "@/lib/ai-plans";
 
 export type Tenant = {
   /** 子網域，同時是內部路徑 /sites/<slug>。只允許 a-z 0-9 與連字號 */
@@ -46,7 +48,29 @@ export type Tenant = {
    * 收款與運費在結單上，兩者共用一個旗標只會讓兩邊都顯示錯的東西。
    */
   daigou?: boolean;
+  /**
+   * 這個站有沒有買 AI 客服，以及買的是哪一階。
+   *
+   * 方案界線（每月對話量、費用上限）一律查 ai-plans.ts，不在這裡重寫一份——
+   * 定價頁寫 5,000 組、閘門設 1,000 組，客人會在第 1,001 組看到「客服忙線中」。
+   *
+   * LINE 的憑證一站一組：每個客戶有自己的官方帳號，secret 與 token 都不同，
+   * 共用一組等於所有客戶的對話都進同一個帳號。值放環境變數，不進 repo。
+   */
+  aiSupport?: {
+    plan: AiPlanTier;
+    /** 該站 LINE 官方帳號的 channel secret 環境變數名；沒有＝只開官網通道 */
+    lineSecretEnv?: string;
+    /** 該站 LINE 官方帳號的 access token 環境變數名 */
+    lineTokenEnv?: string;
+  };
 };
+
+/**
+ * 主站自己在租戶欄位裡的代號。Avalo 不是 TENANTS 的一員（它沒有子網域、
+ * 沒有 notifyEnv），但對話資料需要一個非 null 的值來跟客戶站分開。
+ */
+export const HOUSE_TENANT = "avalo";
 
 /** 客戶站掛載的主網域 */
 export const BASE_DOMAIN = "avalokite.xyz";

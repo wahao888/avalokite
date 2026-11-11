@@ -14,7 +14,8 @@ import { prisma } from "@/lib/prisma";
 import { MONTHLY_BUDGET, monthlySpendUsd } from "@/lib/chat-service";
 import { CHAT_RETENTION_DAYS } from "@/lib/chat-stats";
 import { PROMO_WINDOW, currentDeadline, isExpired, seatsLeft } from "@/lib/promo-window";
-import { getTenant } from "@/lib/tenants";
+import { getTenant, HOUSE_TENANT, TENANTS } from "@/lib/tenants";
+import { planOf } from "@/lib/ai-plans";
 
 /** 0 = 正常、1 = 留意、2 = 今天就要處理 */
 export type Severity = 0 | 1 | 2;
@@ -93,11 +94,11 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
       : "沒有人在等",
   });
 
-  const spend = await monthlySpendUsd();
+  const spend = await monthlySpendUsd(HOUSE_TENANT);
   const ratio = MONTHLY_BUDGET > 0 ? spend / MONTHLY_BUDGET : 0;
   add({
     id: "ai-budget",
-    label: "AI 客服本月花費",
+    label: "AI 客服本月花費（主站）",
     value: `US$${spend.toFixed(4)} / 上限 US$${MONTHLY_BUDGET}（${Math.round(ratio * 100)}%）`,
     level: ratio >= 1 ? 2 : ratio >= 0.7 ? 1 : 0,
     action:
@@ -107,6 +108,26 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
           ? "用量偏高，先確認是真客人還是有人在灌"
           : "在預算內",
   });
+
+  // 客戶站各自一列。混在同一個數字裡的話，某個客戶的機器人被灌爆時，
+  // 你只會看到「總花費變高」，不知道要打給誰。
+  for (const t of TENANTS.filter((x) => x.aiSupport)) {
+    const plan = planOf(t.aiSupport!.plan);
+    const used = await monthlySpendUsd(t.slug);
+    const r = plan.monthlyBudgetUsd > 0 ? used / plan.monthlyBudgetUsd : 0;
+    add({
+      id: `ai-budget-${t.slug}`,
+      label: `AI 客服本月花費（${t.name}）`,
+      value: `US$${used.toFixed(4)} / 上限 US$${plan.monthlyBudgetUsd}（${Math.round(r * 100)}%，${plan.tier} 方案）`,
+      level: r >= 1 ? 2 : r >= 0.7 ? 1 : 0,
+      action:
+        r >= 1
+          ? `已達上限，${t.name} 的客服本月剩餘對話一律改為請客人留聯絡方式。要放寬就是談升級方案。`
+          : r >= 0.7
+            ? `用量接近上限，先確認是真的成長還是被灌，必要時跟客戶談升級。`
+            : "在方案額度內",
+    });
+  }
 
   // LINE webhook 是「沒有消息不代表沒事」的那種東西：token 被撤銷、
   // webhook 被關掉、憑證換了，症狀都是安安靜靜地沒有任何事件進來。

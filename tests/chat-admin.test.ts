@@ -80,6 +80,10 @@ afterEach(async () => {
   ids.length = 0;
 });
 
+// 每一檔測試用自己的租戶命名空間：報表是全站聚合，別的測試檔同時在寫資料時，
+// 「做了事之後的差值」會被對方的列數污染（vitest 的檔案是平行跑的）。
+const TEST_TENANT = "test-chat-admin";
+
 async function seed(opts: {
   channel?: string;
   handoff?: boolean;
@@ -89,6 +93,7 @@ async function seed(opts: {
 }) {
   return prisma.chatConversation.create({
     data: {
+      tenantId: TEST_TENANT,
       channel: opts.channel ?? "line",
       externalId: newId("c"),
       displayName: opts.displayName ?? "測試客人",
@@ -102,7 +107,7 @@ async function seed(opts: {
 
 describe("月用量報表", () => {
   it("把本月的訊息、token 與費用算進本月那一列", async () => {
-    const before = (await monthlyUsage(1))[0];
+    const before = (await monthlyUsage(1, TEST_TENANT))[0];
 
     const convo = await seed({});
     await prisma.chatMessage.createMany({
@@ -119,7 +124,7 @@ describe("月用量報表", () => {
       ],
     });
 
-    const after = (await monthlyUsage(1))[0];
+    const after = (await monthlyUsage(1, TEST_TENANT))[0];
     expect(after.month).toBe(taipeiMonthKey());
     expect(after.inbound - before.inbound).toBe(1);
     expect(after.replies - before.replies).toBe(1);
@@ -134,11 +139,11 @@ describe("月用量報表", () => {
   });
 
   it("轉人次數以首次判定的時間歸月", async () => {
-    const before = await monthlyUsage(2);
+    const before = await monthlyUsage(2, TEST_TENANT);
     await seed({ handoff: true, handoffAt: new Date() });
     await seed({ handoff: true, handoffAt: taipeiMonthStart(1) });
 
-    const after = await monthlyUsage(2);
+    const after = await monthlyUsage(2, TEST_TENANT);
     expect(after[0].handoffs - before[0].handoffs).toBe(1);
     expect(after[1].handoffs - before[1].handoffs).toBe(1);
   });

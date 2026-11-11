@@ -3,7 +3,6 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import { buildKnowledge } from "@/lib/ai-knowledge";
 
 // 客服問答短、量大，luna 等級已足夠；要換模型改這個環境變數即可，不必動程式。
 const MODEL = process.env.AI_MODEL || "gpt-6-luna";
@@ -51,7 +50,21 @@ const FALLBACK: AgentAnswer = {
   usage: { input: 0, output: 0, cacheRead: 0 },
 };
 
-export async function answer(history: AgentTurn[], userText: string): Promise<AgentAnswer> {
+/**
+ * 問一次模型。
+ *
+ * knowledge 由呼叫端決定——主站用 products.ts 當場算出來的那份，客戶站用
+ * 自己存的。這一層刻意不知道租戶是誰：它只負責「把這份知識餵進去、把結構化
+ * 的回答拿回來」，租戶的判斷留在 chat-service 一個地方做。
+ *
+ * knowledge 放在 messages[0] 且內容穩定，是 prompt caching 命中的前提：
+ * 實測快取命中率約九成，輸入成本因此只有牌價的十分之一。
+ */
+export async function answer(
+  history: AgentTurn[],
+  userText: string,
+  knowledge: string,
+): Promise<AgentAnswer> {
   if (!aiConfigured()) return FALLBACK;
 
   try {
@@ -62,7 +75,7 @@ export async function answer(history: AgentTurn[], userText: string): Promise<Ag
       // 知識庫固定擺在最前面：OpenAI 會自動快取夠長的共同前綴，
       // 順序一變就整段失效，所以這一則永遠是 messages[0]。
       messages: [
-        { role: "system", content: buildKnowledge() },
+        { role: "system", content: knowledge },
         ...history.map((t) => ({ role: t.role, content: t.content })),
         { role: "user" as const, content: userText },
       ],

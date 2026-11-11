@@ -8,6 +8,9 @@ import { careRequired, fmt, getProduct, withTax, promoPlanForSkus } from "@/lib/
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
 import { track } from "@/lib/track";
+import {
+  INVOICE_ADDRESS_LIMIT, INVOICE_CARRIER_PATTERN, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT,
+} from "@/lib/invoice-details";
 
 export default function CheckoutPage() {
   const t = useTranslations("checkout");
@@ -19,6 +22,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState(false);
   const [stale, setStale] = useState(false); // 條款已改版，需重新確認
   const [promoClosed, setPromoClosed] = useState(false); // 促銷檔期已額滿或結束
+  const [taxId, setTaxId] = useState("");
+  const corporateInvoice = taxId.trim().length > 0;
 
   useEffect(() => {
     if (cart.ready && cart.items.length > 0) track("begin_checkout");
@@ -108,20 +113,36 @@ export default function CheckoutPage() {
 
           <div className="form-group">
             <label className="form-label" htmlFor="co-email">{t("email")}</label>
-            <input id="co-email" name="email" type="email" required maxLength={200} className="form-input" />
+            <input id="co-email" name="email" type="email" required maxLength={INVOICE_EMAIL_LIMIT} className="form-input" />
             <div className="form-note">{t("emailNote")}</div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label className="form-label" htmlFor="co-company">{t("company")}</label>
-              <input id="co-company" name="company" maxLength={200} className="form-input" />
+              <input id="co-company" name="company" required={corporateInvoice} maxLength={INVOICE_COMPANY_LIMIT} className="form-input" />
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="co-taxid">{t("taxId")}</label>
-              <input id="co-taxid" name="taxId" maxLength={8} pattern="\d{8}" className="form-input" />
+              <input id="co-taxid" name="taxId" maxLength={8} inputMode="numeric" pattern="\d{8}" value={taxId}
+                onChange={(event) => setTaxId(event.target.value)} className="form-input" />
             </div>
           </div>
+
+          {corporateInvoice ? (
+            <div className="form-group">
+              <label className="form-label" htmlFor="co-invoice-address">{t("invoiceAddress")}</label>
+              <input id="co-invoice-address" name="invoiceAddress" required maxLength={INVOICE_ADDRESS_LIMIT} className="form-input" />
+            </div>
+          ) : (
+            <div className="form-group">
+              <label className="form-label" htmlFor="co-invoice-carrier">{t("invoiceCarrier")}</label>
+              <input id="co-invoice-carrier" name="invoiceCarrier" maxLength={16} pattern={INVOICE_CARRIER_PATTERN}
+                autoCapitalize="characters" onChange={(event) => { event.currentTarget.value = event.currentTarget.value.toUpperCase(); }}
+                className="form-input" />
+              <div className="form-note">{t("invoiceCarrierNote")}</div>
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label" htmlFor="co-note">{t("note")}</label>
