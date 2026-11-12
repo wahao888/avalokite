@@ -11,6 +11,7 @@ import ScrollFx from "@/components/ScrollFx";
 import ChatWidget from "@/components/ChatWidget";
 import StickyBar from "@/components/StickyBar";
 import Analytics from "@/components/Analytics";
+import OpenAIAdsPixel from "@/components/OpenAIAdsPixel";
 import "../globals.css";
 
 const fraunces = Fraunces({
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
           </CartProvider>
         </NextIntlClientProvider>
       </body>
+      <OpenAIAdsPixel />
     </html>
   );
 }

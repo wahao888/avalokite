@@ -26,3 +26,14 @@ export function track(event: TrackEvent, extra: Record<string, string | number |
   const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
   gtag?.("event", event, extra);
 }
+
+export function measureItemsAdded() {
+  try {
+    const { oaiq } = window as Window & {
+      oaiq?: (command: "measure", event: "items_added", data: { type: "contents" }) => void;
+    };
+    oaiq?.("measure", "items_added", { type: "contents" });
+  } catch {
+    /* 廣告追蹤失敗不影響購物車 */
+  }
+}

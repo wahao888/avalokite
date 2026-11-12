@@ -41,8 +41,7 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
   const closed = soldOut || expired;
 
   const choose = () => {
-    // cart 的 add 用函式式更新，連續呼叫可安全累加
-    for (const sku of plan.skus) add(sku);
+    add(plan.skus);
     router.push("/cart");
   };
 

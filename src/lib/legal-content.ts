@@ -12,6 +12,7 @@ import { COMPANY, SITE } from "./site";
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
 export const LEGAL_VERSION = "2026-11-02";
+const PRIVACY_UPDATED = "2026-11-12";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -308,7 +309,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
   },
   privacy: {
     "zh-TW": {
-      updated: LEGAL_VERSION,
+      updated: PRIVACY_UPDATED,
       sections: [
         {
           h: "一、蒐集之個人資料",
@@ -342,6 +343,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "五、Cookie 與分析",
           body: [
             "本站使用必要之 Cookie 維持購物車與登入狀態，並可能使用 Google Analytics 進行匿名流量分析。",
+            "本站可能使用 OpenAI 的 ChatGPT Ads Measurement Pixel 衡量廣告成效。Pixel 會使用第一方 Cookie 儲存廣告點擊與瀏覽器識別碼，並向 OpenAI 回報加入購物車事件。",
           ],
         },
         {
@@ -353,7 +355,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
       ],
     },
     en: {
-      updated: LEGAL_VERSION,
+      updated: PRIVACY_UPDATED,
       sections: [
         {
           h: "1. Data We Collect",
@@ -387,6 +389,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "5. Cookies & Analytics",
           body: [
             "We use essential cookies for the cart and admin sessions, and may use Google Analytics for anonymized traffic analysis.",
+            "We may use OpenAI’s ChatGPT Ads Measurement Pixel to measure ad performance. The Pixel uses first-party cookies to store ad click and browser identifiers and reports add-to-cart events to OpenAI.",
           ],
         },
         {

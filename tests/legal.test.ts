@@ -33,12 +33,14 @@ describe("條款版本與封存", () => {
     expect([...AGREED_DOCS]).toEqual(["terms", "refund"]);
   });
 
-  it("條款頁的 updated 與版本號一致（避免文件自稱沒改過）", () => {
-    for (const doc of ["terms", "refund", "privacy"] as const) {
+  it("結帳同意的文件使用契約版本，中英文隱私權政策使用同一更新日期", () => {
+    for (const doc of AGREED_DOCS) {
       for (const locale of ["zh-TW", "en"] as const) {
         expect(LEGAL[doc][locale].updated, `${doc}.${locale}`).toBe(LEGAL_VERSION);
       }
     }
+    expect(LEGAL.privacy["zh-TW"].updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(LEGAL.privacy.en.updated).toBe(LEGAL.privacy["zh-TW"].updated);
   });
 });
 

@@ -23,8 +23,7 @@ export default function PlanQuiz() {
     if (launch) {
       router.push("/launch");
     } else {
-      add(sku);
-      if (a.ai) add("ai-chatbot");
+      add(a.ai ? [sku, "ai-chatbot"] : sku);
       router.push("/cart");
     }
     track("quiz_complete", { sku, launch: launch ? 1 : 0, ai: a.ai ? 1 : 0 });

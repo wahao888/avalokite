@@ -6,10 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { getProduct } from "./products";
-import { track } from "./track";
+import { measureItemsAdded, track } from "./track";
 
 export interface CartItem {
   sku: string;
@@ -19,7 +20,7 @@ export interface CartItem {
 interface CartContextValue {
   items: CartItem[];
   ready: boolean; // localStorage 已載入
-  add: (sku: string) => void;
+  add: (sku: string | readonly string[]) => void;
   remove: (sku: string) => void;
   setQty: (sku: string, qty: number) => void;
   clear: () => void;
@@ -35,57 +36,76 @@ const STORAGE_KEY = "avalo-cart";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const currentItems = useRef(items);
+
+  // 同一個操作可以連續修改購物車，追蹤則在 React 更新函式外執行。
+  const updateItems = useCallback((next: CartItem[]) => {
+    currentItems.current = next;
+    setItems(next);
+  }, []);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: CartItem[] = JSON.parse(raw);
-        setItems(parsed.filter((i) => getProduct(i.sku) && i.qty > 0));
+        updateItems(parsed.filter((i) => getProduct(i.sku) && i.qty > 0));
       }
     } catch {
       /* 壞資料直接重置 */
     }
     setHydrated(true);
-  }, []);
+  }, [updateItems]);
 
   useEffect(() => {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
-  const add = useCallback((sku: string) => {
-    const prod = getProduct(sku);
-    if (!prod) return;
-    track("add_to_cart", { sku });
-    setItems((prev) => {
-      const found = prev.find((i) => i.sku === sku);
+  const add = useCallback((selection: string | readonly string[]) => {
+    const previous = currentItems.current;
+    let next = previous;
+
+    for (const sku of typeof selection === "string" ? [selection] : selection) {
+      const prod = getProduct(sku);
+      if (!prod) continue;
+      track("add_to_cart", { sku });
+      const found = next.some((i) => i.sku === sku);
       // 月費方案同品項不重複加（一個網站一份維護）；一次性可加量
       if (found) {
-        if (prod.type === "monthly") return prev;
-        return prev.map((i) => (i.sku === sku ? { ...i, qty: i.qty + 1 } : i));
+        if (prod.type !== "monthly") {
+          next = next.map((i) => (i.sku === sku ? { ...i, qty: i.qty + 1 } : i));
+        }
+        continue;
       }
       // 月費互斥：一個網站只保留一份維護，加入新維護時移除既有維護
       const base =
         prod.type === "monthly"
-          ? prev.filter((i) => getProduct(i.sku)?.type !== "monthly")
-          : prev;
-      return [...base, { sku, qty: 1 }];
-    });
-  }, []);
+          ? next.filter((i) => getProduct(i.sku)?.type !== "monthly")
+          : next;
+      next = [...base, { sku, qty: 1 }];
+    }
+
+    if (next === previous) return;
+    updateItems(next);
+    measureItemsAdded();
+  }, [updateItems]);
 
   const remove = useCallback((sku: string) => {
-    setItems((prev) => prev.filter((i) => i.sku !== sku));
-  }, []);
+    updateItems(currentItems.current.filter((i) => i.sku !== sku));
+  }, [updateItems]);
 
   const setQty = useCallback((sku: string, qty: number) => {
-    setItems((prev) =>
-      qty <= 0
-        ? prev.filter((i) => i.sku !== sku)
-        : prev.map((i) => (i.sku === sku ? { ...i, qty: Math.min(qty, 9) } : i))
-    );
-  }, []);
+    const previous = currentItems.current;
+    const item = previous.find((i) => i.sku === sku);
+    const nextQty = Math.min(qty, 9);
+    if (!item || item.qty === nextQty) return;
+    updateItems(nextQty <= 0
+      ? previous.filter((i) => i.sku !== sku)
+      : previous.map((i) => (i.sku === sku ? { ...i, qty: nextQty } : i)));
+    if (nextQty > item.qty) measureItemsAdded();
+  }, [updateItems]);
 
-  const clear = useCallback(() => setItems([]), []);
+  const clear = useCallback(() => updateItems([]), [updateItems]);
 
   const value = useMemo<CartContextValue>(() => {
     let oneTime = 0;
