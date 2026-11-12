@@ -46,6 +46,7 @@ prisma/*.db-journal
 # SSH 金鑰絕不進版控
 *.pem
 
-# 宣傳影片的算繪結果：製作流程在 docs/marketing/build/ 完全可重現，
-# 每改一次文案就多一份 3.5MB 的二進位檔在歷史裡並不划算
+# 宣傳影片的算繪結果：製作流程在各支短片的 build/ 裡完全可重現，
+# 每改一次文案就多一份 3.5–31MB 的二進位檔在歷史裡並不划算
 docs/marketing/promo-reel.mp4
+docs/marketing/*/*.mp4

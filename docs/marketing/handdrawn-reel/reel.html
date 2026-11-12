@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>阿瓦羅 手繪風廣告短片</title>
+<meta name="description" content="Avalo 阿瓦羅的 9:16 平面手繪風廣告短片：老闆的待辦清單被一件件劃掉。約 57 秒，含旁白、字幕與配樂。">
+<!-- 時間軸由 build/make-vo.py 依旁白實際長度產生 -->
+<script src="build/timeline.js"></script>
+<style>
+:root{
+  --ink:#2B2722; --paper:#F3ECDF; --green:#12B55A;
+  /* 手寫字：翩翩體寫標題與清單，手札體寫字幕（筆畫比較穩，小字好讀）。兩者都是 macOS 內建 */
+  --hand:"HanziPen TC","Hannotate TC","Kaiti TC",cursive;
+  --note:"Hannotate TC","HanziPen TC","PingFang TC",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0c0b0a;overflow:hidden;color:var(--ink);font-family:var(--note)}
+#stage{position:absolute;left:50%;top:50%;width:1080px;height:1920px;transform-origin:center center;overflow:hidden;
+  background:var(--paper);box-shadow:0 40px 120px rgba(0,0,0,.6)}
+/* 筆記本的紙：橫線、左邊一條紅色的邊界線、再疊一層紙的顆粒 */
+#paper{position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,transparent 104px,rgba(232,115,90,.5) 104px,rgba(232,115,90,.5) 108px,transparent 108px),
+    repeating-linear-gradient(180deg,transparent 0,transparent 124px,rgba(110,146,170,.3) 124px,rgba(110,146,170,.3) 127px,transparent 127px,transparent 128px);
+  background-position:0 0,0 12px}
+#grain{position:absolute;inset:0;width:1080px;height:1920px;opacity:.5;mix-blend-mode:multiply;pointer-events:none}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 45%,transparent 58%,rgba(90,70,40,.2) 100%)}
+/* 所有手繪的東西都在這一層，整層套「抖動」濾鏡：線條每 1/6 秒換一次微小的變形，
+   就是手繪動畫一張一張重畫時線會抖的那個感覺 */
+#art{position:absolute;inset:0;filter:url(#boil)}
+#svg,#txt,#txt2{position:absolute;inset:0;width:1080px;height:1920px}
+#txt div.t,#txt2 div.t{position:absolute;white-space:nowrap;font-family:var(--hand);line-height:1.15;color:var(--ink)}
+
+.bob{animation:bob 1.7s ease-in-out infinite}
+.bob2{animation:bob 2.1s ease-in-out infinite reverse}
+.spin{animation:spin 7s linear infinite}
+.spinr{animation:spin 5s linear infinite reverse}
+.wig{animation:wig 1s ease-in-out infinite}
+.pulse{animation:pulse 1.3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wig{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+/* 字幕：一張貼上去的紙條，強調的字用螢光筆畫過 */
+#caps{position:absolute;left:0;right:0;top:1372px;height:150px;z-index:200;pointer-events:none}
+.cap{position:absolute;left:50%;top:50%;translate:-50% -50%;rotate:-1.2deg;white-space:nowrap;opacity:0;
+  background:#FFFDF7;color:var(--ink);font-family:var(--note);font-weight:700;font-size:60px;letter-spacing:.04em;
+  padding:20px 46px 24px;border:5px solid var(--ink);border-radius:18px 26px 16px 28px/26px 16px 28px 18px;
+  box-shadow:8px 9px 0 rgba(43,39,34,.9)}
+.cap em{font-style:normal;background:linear-gradient(transparent 52%,rgba(18,181,90,.5) 52%,rgba(18,181,90,.5) 94%,transparent 94%);padding:0 4px}
+.cap em.w{background:linear-gradient(transparent 52%,rgba(238,138,114,.6) 52%,rgba(238,138,114,.6) 94%,transparent 94%)}
+
+#ui{position:fixed;left:0;right:0;bottom:0;padding:14px 18px;display:flex;gap:10px;align-items:center;background:rgba(20,18,15,.88);
+  font-family:monospace;font-size:12px;color:#C9C1B2;z-index:500}
+#ui button{font-family:monospace;font-size:12px;padding:8px 14px;border:1px solid #4a443c;background:#241f1a;color:#E7E1D6;cursor:pointer}
+#track{flex:1;height:6px;background:#332c25;cursor:pointer;position:relative}
+#fill{position:absolute;inset:0;right:auto;width:0;background:var(--green)}
+body.record #ui{display:none}
+body.record{background:#000}
+body.record #stage{box-shadow:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="paper"></div>
+  <svg id="grain"><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .5 -.12"/></filter><rect width="1080" height="1920" filter="url(#gr)"/></svg>
+  <div id="art">
+    <div id="txt"></div>
+    <svg id="svg" viewBox="0 0 1080 1920" fill="none" stroke-linecap="round" stroke-linejoin="round"></svg>
+    <div id="txt2"></div>
+  </div>
+  <div id="vig"></div>
+  <div id="caps"></div>
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="boil" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.019" numOctaves="2" seed="1" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="6.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+</div>
+<div id="ui">
+  <button id="replay">↻ 重播</button>
+  <button id="rec">● 錄影模式</button>
+  <div id="track"><div id="fill"></div></div>
+  <span id="clock"></span>
+</div>
+<audio id="aud" src="build/audio.m4a" preload="auto"></audio>
+
+<script>
+const TL = window.TL, TOTAL = TL.total;
+const SC = Object.fromEntries(TL.scenes.map(s => [s.id, s]));
+const stage = document.getElementById("stage"), svg = document.getElementById("svg"), txt = document.getElementById("txt"), txt2 = document.getElementById("txt2");
+const NS = "http://www.w3.org/2000/svg";
+const INK = "#2B2722", GREEN = "#12B55A", MOSS = "#5F7155", SAGE = "#B9CBA6", WOOD = "#DDB790", CORAL = "#EE8A72",
+      BUTTER = "#F6D878", SKY = "#BFE0EE", WHITE = "#FFFDF7", LGREEN = "#A8E6B8";
+const HAND = "cubic-bezier(.4,0,.3,1)";      // 下筆慢、中間快、收筆慢
+
+/* ── 固定的亂數：每次渲染畫出來的「手抖」都一樣 ── */
+let _s = 20261112;
+const rnd = () => { _s |= 0; _s = _s + 0x6D2B79F5 | 0; let t = Math.imul(_s ^ _s >>> 15, 1 | _s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const jit = a => (rnd() * 2 - 1) * a;
+
+/* ── 手繪的線：端點不準、線有一點弓、同一條線描兩次 ── */
+function polyD(pts, closed, r = 2.6) {
+  const P = pts.map(([x, y]) => [x + jit(r), y + jit(r)]);
+  if (closed) P.push([P[0][0] + jit(r), P[0][1] + jit(r)]);
+  let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for (let i = 1; i < P.length; i++) {
+    const a = P[i - 1], b = P[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L, bow = jit(Math.min(7, L * 0.028));
+    const c1 = [a[0] + (b[0] - a[0]) * 0.35 + nx * bow, a[1] + (b[1] - a[1]) * 0.35 + ny * bow];
+    const c2 = [a[0] + (b[0] - a[0]) * 0.7 + nx * bow * 0.6, a[1] + (b[1] - a[1]) * 0.7 + ny * bow * 0.6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}`;
+  }
+  return d;
+}
+/* 穿過一串點的平滑曲線（Catmull-Rom 轉貝茲） */
+function smoothD(pts, r = 1.6) {
+  const P = pts.map(([x, y]) => [x + jit(r), y + jit(r)]);
+  let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    d += `C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)} ${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)} ${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+/* 手畫的圓：半徑忽大忽小，收尾多畫一小段蓋過起點 */
+function ellPts(cx, cy, rx, ry, over = 2) {
+  const n = 16, a0 = rnd() * 6.28, out = [];
+  for (let k = 0; k <= n + over; k++) { const a = a0 + (k / n) * Math.PI * 2, q = 1 + jit(0.028); out.push([cx + Math.cos(a) * rx * q, cy + Math.sin(a) * ry * q]); }
+  return out;
+}
+
+/* ── 時間 ── */
+function at(id, v) {
+  if (typeof v === "number") return SC[id].start + v;
+  const m = /^@(\w+)([+-][\d.]+)?$/.exec(String(v).trim());
+  if (m) { if (!(m[1] in SC[id].cues)) throw new Error(`第 ${id} 幕沒有 cue「${m[1]}」`); return SC[id].start + SC[id].cues[m[1]] + (m[2] ? +m[2] : 0); }
+  const e = /^end([+-][\d.]+)?$/.exec(String(v).trim());
+  if (e) return SC[id].start + SC[id].dur + (e[1] ? +e[1] : 0);
+  return SC[id].start + +v;
+}
+const W = (el, kf, t, dur, ease = "ease-out", n = 1) => el.animate(kf, { delay: t * 1000, duration: dur * 1000, fill: "forwards", easing: ease, iterations: n });
+const SFX = [];
+
+/* ── 一幕的畫布：所有畫圖的方法都掛在這上面 ── */
+class Ctx {
+  constructor(id, g, h, h2) { this.id = id; this.g = g; this.h = h; this.h2 = h2; }
+  T(v) { return at(this.id, v); }
+  sfx(name, v, d) { SFX.push({ t: +this.T(v).toFixed(3), name, ...(d ? { d } : {}) }); return this; }
+  /** 子群組：拿來做「整組一起動」的循環動畫（轉、晃、上下漂） */
+  sub(cls, ox, oy) { const g = document.createElementNS(NS, "g"); if (cls) g.setAttribute("class", cls); g.style.transformOrigin = `${ox}px ${oy}px`; this.g.appendChild(g); return new Ctx(this.id, g, this.h, this.h2); }
+  /** 一筆畫：路徑先藏起來（dashoffset = 全長），到時間再一路畫出來 */
+  stroke(d, o = {}) {
+    const { at: a = 0, d: dur = 0.5, w = 7, col = INK, op = 1, twice = true } = o;
+    for (let pass = 0; pass < (twice ? 2 : 1); pass++) {
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("d", typeof d === "function" ? d() : d);
+      p.setAttribute("stroke", col); p.setAttribute("stroke-width", pass ? w * 0.72 : w); p.setAttribute("opacity", pass ? op * 0.5 : op);
+      this.g.appendChild(p);
+      const len = p.getTotalLength() + 2;
+      p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      W(p, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], this.T(a) + pass * 0.05, dur, HAND);
+    }
+    return this;
+  }
+  line(pts, o = {}) { return this.stroke(() => polyD(pts, o.close, o.r), o); }
+  curve(pts, o = {}) { return this.stroke(() => smoothD(pts, o.r), o); }
+  /** 色塊：故意跟外框錯開幾個像素，像麥克筆塗到線外面 */
+  fill(d, col, a, o = {}) {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d); p.setAttribute("fill", col); p.setAttribute("stroke", "none");
+    p.setAttribute("transform", `translate(${o.dx ?? 7} ${o.dy ?? 8})`); p.style.mixBlendMode = o.blend ?? "multiply"; p.style.opacity = 0;
+    this.g.insertBefore(p, o.under ?? null);
+    W(p, [{ opacity: 0 }, { opacity: o.op ?? 0.92 }], this.T(a), 0.28);
+    return this;
+  }
+  rect(x, y, w, h, o = {}) {
+    const pts = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+    if (o.fill) this.fill(polyD(pts, true, 3) + "Z", o.fill, this.rel(o.at, (o.d ?? 0.5) * 0.75), o);
+    if (o.hatch) this.hatch(x, y, w, h, o.hatch, this.rel(o.at, (o.d ?? 0.5) * 0.6));
+    return o.nostroke ? this : this.line(pts, { ...o, close: true });
+  }
+  ell(cx, cy, rx, ry = rx, o = {}) {
+    if (o.fill) this.fill(smoothD(ellPts(cx, cy, rx, ry, 0)) + "Z", o.fill, this.rel(o.at, (o.d ?? 0.5) * 0.75), o);
+    return o.nostroke ? this : this.stroke(() => smoothD(ellPts(cx, cy, rx, ry)), o);
+  }
+  shape(pts, o = {}) {                 // 封閉的多邊形，可上色
+    if (o.fill) this.fill(polyD(pts, true, 3) + "Z", o.fill, this.rel(o.at, (o.d ?? 0.5) * 0.75), o);
+    return this.line(pts, { ...o, close: true });
+  }
+  blob(pts, o = {}) {                  // 封閉的圓滑形狀，可上色
+    const closed = [...pts, pts[0], pts[1]];
+    if (o.fill) this.fill(smoothD([...pts, pts[0]]) + "Z", o.fill, this.rel(o.at, (o.d ?? 0.5) * 0.75), o);
+    return this.stroke(() => smoothD(closed), o);
+  }
+  /** 斜線塗色：一條一條畫上去 */
+  hatch(x, y, w, h, col, a, gap = 24) {
+    let i = 0;
+    for (let c = x - h + gap / 2; c < x + w; c += gap) {
+      const x1 = Math.max(c, x), x2 = Math.min(c + h, x + w);
+      if (x2 - x1 < 6) continue;
+      this.stroke(polyD([[x1, y + h - (x1 - c)], [x2, y + h - (x2 - c)]], false, 2), { at: this.rel(a, i * 0.025), d: 0.16, w: 6, col, op: 0.85, twice: false });
+      i++;
+    }
+    return this;
+  }
+  rel(v, plus) { return this.T(v ?? 0) - SC[this.id].start + plus; }     // 把任何時間寫法換成「進場後幾秒」
+  /** 手寫字：從左到右寫出來 */
+  text(str, x, y, size, o = {}) {
+    const el = document.createElement("div"); el.className = "t"; el.textContent = str;
+    el.style.cssText = `left:${x}px;top:${y}px;font-size:${size}px;color:${o.col ?? INK};font-weight:${o.weight ?? 400};` +
+      (o.font ? `font-family:${o.font};` : "") + (o.anchor === "middle" ? "translate:-50% 0;" : "") + (o.rot ? `rotate:${o.rot}deg;` : "") + (o.ls ? `letter-spacing:${o.ls};` : "");
+    el.style.clipPath = "inset(-12% 100% -12% -6%)";
+    (o.under ? this.h : this.h2).appendChild(el);      // under：寫在線條下面，才能被麥克筆劃掉
+    W(el, [{ clipPath: "inset(-12% 100% -12% -6%)" }, { clipPath: "inset(-12% -6% -12% -6%)" }], this.T(o.at ?? 0), o.d ?? Math.max(0.25, str.length * 0.075), "linear");
+    return el;
+  }
+  /** 整組東西掉下來／彈出來 */
+  drop(v, dy = -260) { this.g.style.opacity = 0; W(this.g, [{ opacity: 0, transform: `translateY(${dy}px)` }, { opacity: 1, transform: "translateY(18px)", offset: 0.7 }, { opacity: 1, transform: "none" }], this.T(v), 0.5, "cubic-bezier(.3,0,.4,1)"); return this; }
+  pop(v) { this.g.style.opacity = 0; W(this.g, [{ opacity: 0, transform: "scale(.3)" }, { opacity: 1, transform: "scale(1.15)", offset: 0.7 }, { opacity: 1, transform: "scale(1)" }], this.T(v), 0.38); return this; }
+  /** 四角星 */
+  star(cx, cy, r, o = {}) { const k = r * 0.3; return this.shape([[cx, cy - r], [cx + k, cy - k], [cx + r, cy], [cx + k, cy + k], [cx, cy + r], [cx - k, cy + k], [cx - r, cy], [cx - k, cy - k]], { w: 5, d: 0.3, fill: BUTTER, ...o }); }
+}
+
+function scene(id, build) {
+  const g = document.createElementNS(NS, "g"), h = document.createElement("div"), h2 = document.createElement("div");
+  g.style.opacity = 0; [h, h2].forEach(el => { el.style.cssText = "opacity:0;position:absolute;inset:0"; });
+  svg.appendChild(g); txt.appendChild(h); txt2.appendChild(h2);
+  const s = SC[id], last = id === TL.scenes[TL.scenes.length - 1].id;
+  [g, h, h2].forEach(el => {
+    W(el, [{ opacity: 0 }, { opacity: 1 }], s.start, 0.1);
+    if (!last) W(el, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateX(-60px)" }], s.start + s.dur - 0.24, 0.22, "ease-in");   // 翻頁
+  });
+  if (id !== TL.scenes[0].id) SFX.push({ t: +(s.start - 0.12).toFixed(3), name: "page" });
+  build(new Ctx(id, g, h, h2));
+}
+
+/* ── 共用的小圖 ── */
+const ITEMS = ["做官網", "接訂單、收款", "回 LINE 訊息", "做報表、跑流程", "讓客人找得到", "顧網站"];
+/** 打勾＋劃掉：綠色麥克筆 */
+function crossOut(c, v, x, y, box, textW, size) {
+  c.line([[x + box * 0.12, y + box * 0.5], [x + box * 0.42, y + box * 0.9], [x + box * 1.15, y - box * 0.3]], { at: v, d: 0.28, w: box * 0.2, col: GREEN, r: 2 });
+  c.line([[x + box + 22, y + size * 0.62], [x + box + 60 + textW, y + size * 0.52]], { at: c.rel(v, 0.2), d: 0.34, w: size * 0.17, col: GREEN, op: 0.82, twice: false });
+}
+/** 功能幕的頁首：清單上的那一項，放大寫在最上面，講到的時候劃掉 */
+function header(c, n) {
+  const x = 150, y = 262, box = 86, size = 100;
+  c.rect(x, y + 20, box, box, { at: 0.08, d: 0.35, w: 8 });
+  const el = c.text(ITEMS[n], x + box + 36, y, size, { at: 0.16, d: 0.45, under: true });
+  c.sfx("pencil", 0.1, 0.5);
+  crossOut(c, "@done", x, y + 20, box, el.offsetWidth, size);
+  c.sfx("check", "@done").sfx("marker", "@done+.2");
+  c.ell(930, 225, 62, 46, { at: 0.3, d: 0.3, w: 5 });
+  c.text(`${n + 1}/6`, 930, 192, 50, { at: 0.35, d: 0.2, anchor: "middle" });
+}
+/** 老闆：一顆頭、一撮頭髮、圍裙。mood 決定表情 */
+function owner(c, cx, cy, mood, t0) {
+  c.ell(cx, cy, 78, 76, { at: t0, d: 0.5, fill: "#F8DCC4" });
+  c.curve([[cx - 76, cy - 22], [cx - 50, cy - 82], [cx, cy - 96], [cx + 54, cy - 80], [cx + 78, cy - 20], [cx + 40, cy - 52], [cx - 10, cy - 44], [cx - 46, cy - 56], [cx - 76, cy - 22]], { at: t0 + 0.3, d: 0.5, w: 7 });
+  c.fill(smoothD([[cx - 76, cy - 22], [cx - 50, cy - 82], [cx, cy - 96], [cx + 54, cy - 80], [cx + 78, cy - 20], [cx + 40, cy - 52], [cx - 10, cy - 44], [cx - 46, cy - 56]]) + "Z", "#8A6A52", t0 + 0.65);
+  c.blob([[cx - 120, cy + 190], [cx - 96, cy + 104], [cx, cy + 78], [cx + 96, cy + 104], [cx + 120, cy + 190]], { at: t0 + 0.55, d: 0.5, fill: mood > 0 ? LGREEN : "#D9D2C4" });
+  if (mood > 0) {
+    c.curve([[cx - 46, cy - 6], [cx - 30, cy - 22], [cx - 14, cy - 6]], { at: t0 + 0.8, d: 0.15, w: 7 });
+    c.curve([[cx + 14, cy - 6], [cx + 30, cy - 22], [cx + 46, cy - 6]], { at: t0 + 0.9, d: 0.15, w: 7 });
+    c.curve([[cx - 34, cy + 22], [cx, cy + 52], [cx + 34, cy + 22]], { at: t0 + 1.0, d: 0.2, w: 7 });
+    c.ell(cx - 50, cy + 22, 13, 9, { at: t0 + 1.1, d: 0.1, nostroke: true, fill: CORAL, op: 0.6 }); c.ell(cx + 50, cy + 22, 13, 9, { at: t0 + 1.1, d: 0.1, nostroke: true, fill: CORAL, op: 0.6 });
+  } else {
+    c.line([[cx - 48, cy - 8], [cx - 16, cy - 2]], { at: t0 + 0.8, d: 0.12, w: 7 }); c.line([[cx + 16, cy - 2], [cx + 48, cy - 8]], { at: t0 + 0.9, d: 0.12, w: 7 });
+    c.curve([[cx - 30, cy + 38], [cx - 14, cy + 28], [cx, cy + 38], [cx + 14, cy + 28], [cx + 30, cy + 38]], { at: t0 + 1.0, d: 0.25, w: 6 });
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   1 ── 寫不完的待辦清單
+   ══════════════════════════════════════════════════════════ */
+scene("list", c => {
+  c.text("開店待辦", 150, 176, 132, { at: 0.25, d: 0.6, weight: 700 }); c.sfx("pencil", 0.25, 0.6);
+  c.curve([[146, 336], [240, 348], [340, 334], [450, 350], [560, 336], [690, 346]], { at: 0.8, d: 0.4, w: 8, col: CORAL });
+  const ts = ["@i1-.2", "@i2-.2", "@i3-.2", "@i4-.2", "@wait+.1", "@wait+.55"];
+  ITEMS.forEach((s, i) => {
+    const y = 420 + i * 128;
+    c.rect(150, y + 22, 62, 62, { at: ts[i], d: 0.22, w: 7 });
+    c.text(s, 246, y, 84, { at: c.rel(ts[i], 0.1), d: 0.4, under: true });
+    c.sfx("pencil", ts[i], 0.45);
+  });
+  c.text("⋯⋯還有、還有", 246, 1196, 66, { at: "@wait+1.1", d: 0.5, col: "#9a8f7e" });
+  // 老闆在紙的右下角，頭上一團亂麻
+  const o = c.sub("", 0, 0);
+  owner(o, 850, 1150, -1, c.rel("@todo", -0.9));
+  c.sfx("pencil", c.rel("@todo", -0.9), 1.0);
+  const sw = c.sub("wig", 850, 990);
+  sw.curve([[850, 1010], [880, 990], [868, 962], [836, 966], [826, 996], [856, 1022], [900, 1000], [902, 950], [850, 934], [800, 962], [802, 1016]], { at: "@todo+.2", d: 0.7, w: 6, col: CORAL });
+  c.sfx("sigh", "@todo+.5");
+  const dr = c.sub("bob", 960, 1100);
+  dr.blob([[962, 1076], [976, 1104], [962, 1122], [948, 1104]], { at: "@todo+.7", d: 0.2, w: 5, fill: SKY });
+  dr.blob([[742, 1096], [754, 1120], [742, 1136], [730, 1120]], { at: "@todo+.9", d: 0.2, w: 5, fill: SKY });
+});
+
+/* ══════════════════════════════════════════════════════════
+   2 ── 交給阿瓦羅
+   ══════════════════════════════════════════════════════════ */
+function logo(c, cx, cy, s, t0) {
+  c.stroke(() => smoothD(ellPts(cx, cy, 200 * s, 200 * s)), { at: t0, d: 0.6, w: 13 * s, col: "#C89B74" });
+  c.stroke(() => smoothD(ellPts(cx, cy, 152 * s, 152 * s)), { at: t0 + 0.25, d: 0.5, w: 13 * s, col: "#8FA680" });
+  c.stroke(() => smoothD(ellPts(cx, cy, 106 * s, 106 * s)), { at: t0 + 0.45, d: 0.4, w: 12 * s, col: "#C89B74" });
+  c.line([[cx - 62 * s, cy + 88 * s], [cx, cy - 92 * s], [cx + 62 * s, cy + 88 * s]], { at: t0 + 0.7, d: 0.4, w: 26 * s, col: MOSS, r: 2 });
+  c.curve([[cx - 36 * s, cy + 30 * s], [cx, cy + 12 * s], [cx + 36 * s, cy + 30 * s]], { at: t0 + 1.05, d: 0.2, w: 22 * s, col: MOSS });
+}
+scene("avalo", c => {
+  logo(c, 540, 620, 1.15, c.rel("@but", -0.2)); c.sfx("logo", "@but-.2");
+  c.text("交給阿瓦羅", 540, 900, 168, { at: "@give-.1", d: 0.7, anchor: "middle", weight: 700 }); c.sfx("pencil", "@give-.1", 0.7);
+  c.curve([[190, 1112], [360, 1128], [540, 1108], [720, 1130], [900, 1110]], { at: "@name+.45", d: 0.4, w: 22, col: GREEN, op: 0.8, twice: false }); c.sfx("marker", "@name+.45");
+  [[170, 420, 44, 0.2], [900, 470, 34, 0.35], [130, 860, 30, 0.5], [950, 820, 46, 0.65]].forEach(([x, y, r, d]) => c.sub("pulse", x, y).star(x, y, r, { at: c.rel("@name", d) }));
+  c.sfx("sparkle", "@name+.3");
+  c.text("六件事，一次交出去", 540, 1190, 66, { at: "@name+.9", d: 0.6, anchor: "middle", col: MOSS });
+});
+
+/* ══════════════════════════════════════════════════════════
+   3 ── 做官網
+   ══════════════════════════════════════════════════════════ */
+scene("web", c => {
+  header(c, 0);
+  c.rect(190, 520, 700, 640, { at: 0.35, d: 0.7, w: 9, fill: WHITE }); c.sfx("pencil", 0.35, 1.5);
+  c.line([[190, 612], [890, 612]], { at: 0.75, d: 0.3 });
+  [[244, CORAL], [292, BUTTER], [340, LGREEN]].forEach(([x, col], i) => c.ell(x, 566, 15, 15, { at: 0.85 + i * 0.06, d: 0.15, w: 5, fill: col }));
+  c.rect(410, 542, 420, 48, { at: 0.95, d: 0.3, w: 5 });
+  c.rect(228, 650, 624, 230, { at: 1.05, d: 0.45, w: 7, hatch: SAGE });
+  c.text("你的品牌", 262, 668, 84, { at: 1.3, d: 0.4, weight: 700 });
+  c.line([[266, 800], [520, 800]], { at: 1.5, d: 0.2, w: 8, col: MOSS });
+  c.rect(266, 906, 200, 70, { at: "@done-.2", d: 0.3, w: 7, fill: LGREEN });
+  [[228, WOOD], [444, SAGE], [660, CORAL]].forEach(([x, col], i) => {
+    c.rect(x, 1004, 192, 124, { at: c.rel("@done", 0.1 + i * 0.12), d: 0.3, w: 6 });
+    c.rect(x + 16, 1018, 160, 62, { at: c.rel("@done", 0.2 + i * 0.12), d: 0.2, nostroke: true, fill: col });
+  });
+  // 游標點下按鈕
+  const cu = c.sub("", 0, 0);
+  cu.shape([[430, 930], [430, 1020], [454, 998], [474, 1040], [496, 1030], [476, 990], [508, 988]], { at: "@done+.5", d: 0.3, w: 6, fill: INK, op: 1, dx: 0, dy: 0 });
+  [[396, 906], [380, 950], [404, 996]].forEach(([x, y], i) => c.line([[x, y], [x - 26, y + (i - 1) * 16]], { at: c.rel("@done", 0.85 + i * 0.04), d: 0.12, w: 6, col: CORAL }));
+  c.sfx("pop", "@done+.85");
+  [[940, 560, 36], [140, 1090, 30], [960, 1090, 28]].forEach(([x, y, r], i) => c.sub("pulse", x, y).star(x, y, r, { at: c.rel("@done", 0.9 + i * 0.1) }));
+  c.sfx("sparkle", "@done+.95");
+});
+
+/* ══════════════════════════════════════════════════════════
+   4 ── 接訂單、收款
+   ══════════════════════════════════════════════════════════ */
+scene("shop", c => {
+  header(c, 1);
+  // 包裹先畫，推車的線才會壓在上面
+  const b1 = c.sub("", 0, 0); b1.rect(400, 640, 170, 150, { at: 0, d: 0.01, w: 7, fill: WOOD }); b1.line([[400, 700], [570, 700]], { at: 0, d: 0.01, w: 5 }); b1.drop("@done-.5");
+  const b2 = c.sub("", 0, 0); b2.rect(590, 600, 190, 190, { at: 0, d: 0.01, w: 7, fill: SAGE }); b2.line([[685, 600], [685, 790]], { at: 0, d: 0.01, w: 5 }); b2.drop("@done-.25");
+  c.sfx("thud", "@done-.15").sfx("thud", "@done+.1");
+  c.line([[170, 640], [262, 640], [300, 770]], { at: 0.35, d: 0.3, w: 10 }); c.sfx("pencil", 0.35, 1.2);
+  c.shape([[290, 770], [850, 770], [796, 1010], [338, 1010]], { at: 0.55, d: 0.6, w: 10 });
+  [[420, 0], [560, 0], [700, 0]].forEach(([x], i) => c.line([[x, 774], [x + (540 - x) * -0.08, 1006]], { at: 0.95 + i * 0.07, d: 0.15, w: 5 }));
+  c.line([[312, 890], [824, 890]], { at: 1.15, d: 0.2, w: 5 });
+  c.line([[338, 1010], [352, 1080], [800, 1080]], { at: 1.25, d: 0.3, w: 9 });
+  const w1 = c.sub("spin", 420, 1140), w2 = c.sub("spin", 740, 1140);
+  [[w1, 420], [w2, 740]].forEach(([g, x]) => { g.ell(x, 1140, 44, 44, { at: 1.4, d: 0.3, w: 9, fill: "#CFC8BA" }); g.line([[x - 22, 1140], [x + 22, 1140]], { at: 1.55, d: 0.1, w: 5 }); });
+  // 金幣與「訂單 +1」
+  [[900, 560, 0], [960, 720, 0.12], [190, 900, 0.24]].forEach(([x, y, d], i) => {
+    const g = c.sub(i % 2 ? "bob2" : "bob", x, y);
+    g.ell(x, y, 52, 52, { at: c.rel("@done", 0.3 + d), d: 0.25, w: 7, fill: BUTTER });
+    g.line([[x, y - 26], [x, y + 26]], { at: c.rel("@done", 0.45 + d), d: 0.1, w: 6 });
+    g.curve([[x + 16, y - 14], [x, y - 20], [x - 14, y - 8], [x + 14, y + 8], [x, y + 20], [x - 16, y + 14]], { at: c.rel("@done", 0.5 + d), d: 0.18, w: 6 });
+  });
+  c.sfx("coin", "@done+.35");
+  const tg = c.sub("", 288, 526);
+  tg.rect(140, 478, 296, 96, { at: 0, d: 0.01, w: 7, fill: LGREEN }); tg.pop("@done+.8");
+  const ot = c.text("訂單 +1", 288, 474, 76, { at: "@done+.8", d: 0.2, anchor: "middle", weight: 700 });
+  c.sfx("ding", "@done+.8");
+});
+
+/* ══════════════════════════════════════════════════════════
+   5 ── 回 LINE 訊息
+   ══════════════════════════════════════════════════════════ */
+scene("ai", c => {
+  header(c, 2);
+  c.rect(330, 500, 430, 700, { at: 0.35, d: 0.7, w: 10, fill: WHITE }); c.sfx("pencil", 0.35, 0.9);
+  c.line([[480, 540], [610, 540]], { at: 0.9, d: 0.15, w: 9 });
+  // 月亮與星星：半夜
+  c.curve([[176, 520], [130, 560], [130, 624], [178, 664], [236, 656], [196, 628], [180, 586], [196, 544], [176, 520]], { at: 0.6, d: 0.5, w: 7 });
+  c.fill(smoothD([[176, 520], [130, 560], [130, 624], [178, 664], [236, 656], [196, 628], [180, 586], [196, 544]]) + "Z", BUTTER, 0.95);
+  c.sub("pulse", 250, 500).star(250, 500, 22, { at: 1.0 }); c.sub("pulse", 120, 720).star(120, 720, 18, { at: 1.1 });
+  // 一來一往的訊息
+  const msg = (x, y, w, col, v, side) => {
+    const g = c.sub("", x + (side ? w : 0), y + 80);
+    g.rect(x, y, w, 84, { at: 0, d: 0.01, w: 6, fill: col });
+    g.line([[x + 26, y + 30], [x + w - 30, y + 30]], { at: 0, d: 0.01, w: 6 }); g.line([[x + 26, y + 56], [x + w * 0.6, y + 56]], { at: 0, d: 0.01, w: 6 });
+    g.pop(v);
+  };
+  msg(520, 600, 210, LGREEN, 1.0, 1); c.sfx("pop", 1.0);
+  msg(360, 716, 270, "#EDE6D8", "@done+.15", 0); c.sfx("ding", "@done+.15");
+  msg(540, 832, 190, LGREEN, "@done+.75", 1); c.sfx("pop", "@done+.75");
+  msg(360, 948, 250, "#EDE6D8", "@done+1.05", 0); c.sfx("ding", "@done+1.05");
+  // 機器人
+  const r = c.sub("bob", 880, 900);
+  r.rect(790, 820, 190, 150, { at: "@done-.45", d: 0.4, w: 8, fill: WHITE }); c.sfx("pencil", "@done-.45", 0.5);
+  r.line([[885, 820], [885, 776]], { at: "@done-.15", d: 0.1, w: 7 }); r.ell(885, 760, 16, 16, { at: "@done-.1", d: 0.12, w: 6, fill: GREEN });
+  r.ell(846, 884, 15, 20, { at: "@done", d: 0.1, w: 6, fill: GREEN }); r.ell(924, 884, 15, 20, { at: "@done+.05", d: 0.1, w: 6, fill: GREEN });
+  r.curve([[856, 930], [885, 946], [914, 930]], { at: "@done+.1", d: 0.12, w: 6 });
+  r.rect(820, 980, 130, 110, { at: "@done-.25", d: 0.3, w: 8, fill: "#EDE6D8" });
+  c.text("AI", 885, 990, 70, { at: "@done+.2", d: 0.15, anchor: "middle", weight: 700 });
+  c.ell(190, 1010, 104, 62, { at: "@done+.5", d: 0.3, w: 7, fill: LGREEN });
+  c.text("LINE", 190, 972, 62, { at: "@done+.6", d: 0.2, anchor: "middle", weight: 700, font: "var(--note)" });
+});
+
+/* ══════════════════════════════════════════════════════════
+   6 ── 做報表、跑流程
+   ══════════════════════════════════════════════════════════ */
+function gear(c, cx, cy, ro, ri, teeth, o) {
+  const pts = [];
+  for (let i = 0; i < teeth; i++) {
+    const a = (i / teeth) * Math.PI * 2, s = Math.PI * 2 / teeth;
+    [[a, ri], [a + s * 0.14, ro], [a + s * 0.42, ro], [a + s * 0.56, ri]].forEach(([q, r]) => pts.push([cx + Math.cos(q) * r, cy + Math.sin(q) * r]));
+  }
+  c.shape(pts, o); c.ell(cx, cy, ri * 0.36, ri * 0.36, { at: c.rel(o.at, 0.5), d: 0.2, w: o.w - 1, fill: WHITE });
+}
+scene("auto", c => {
+  header(c, 3);
+  gear(c.sub("spin", 400, 800), 400, 800, 190, 148, 10, { at: 0.35, d: 0.9, w: 8, fill: BUTTER, r: 2 }); c.sfx("pencil", 0.35, 1.6);
+  gear(c.sub("spinr", 640, 990), 640, 990, 130, 98, 8, { at: 0.8, d: 0.7, w: 8, fill: CORAL, r: 2 });
+  gear(c.sub("spin", 250, 1060), 250, 1060, 92, 68, 7, { at: 1.2, d: 0.5, w: 7, fill: SAGE, r: 2 });
+  c.sfx("gears", "@done-.3");
+  // 報表：三根長高的長條＋往上的箭頭
+  c.line([[730, 1250], [1000, 1250]], { at: "@done-.1", d: 0.2, w: 8 });
+  [[750, 150, SAGE], [834, 250, WOOD], [918, 370, LGREEN]].forEach(([x, h, col], i) => c.rect(x, 1250 - h, 62, h, { at: c.rel("@done", 0.1 + i * 0.18), d: 0.25, w: 7, hatch: col }));
+  [0, 1, 2].forEach(i => c.sfx("tick", c.rel("@done", 0.1 + i * 0.18)));
+  c.curve([[720, 1010], [800, 930], [880, 840], [960, 760]], { at: "@done+.7", d: 0.3, w: 9, col: GREEN });
+  c.line([[900, 760], [962, 758], [956, 822]], { at: "@done+.95", d: 0.15, w: 9, col: GREEN });
+  c.sfx("ding", "@done+.9");
+  // 文件飛進去
+  [[150, 520, -8], [300, 500, 6]].forEach(([x, y, rot], i) => {
+    const g = c.sub("bob", x + 60, y + 80);
+    g.shape([[x, y], [x + 118, y + rot], [x + 124, y + 150 + rot], [x + 6, y + 152]], { at: 1.5 + i * 0.15, d: 0.3, w: 6, fill: WHITE });
+    [0, 1, 2].forEach(k => g.line([[x + 22, y + 40 + k * 32], [x + 96 - k * 14, y + 40 + k * 32 + rot * 0.6]], { at: 1.7 + i * 0.15 + k * 0.04, d: 0.08, w: 5, col: "#9a8f7e" }));
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   7 ── 讓客人找得到
+   ══════════════════════════════════════════════════════════ */
+scene("geo", c => {
+  header(c, 4);
+  c.ell(480, 850, 250, 250, { at: 0.3, d: 0.7, w: 16, fill: SKY }); c.sfx("pencil", 0.3, 1.1);
+  c.line([[664, 1030], [840, 1206]], { at: 0.85, d: 0.25, w: 30, r: 2 });
+  c.curve([[330, 740], [370, 680], [440, 650]], { at: 1.0, d: 0.15, w: 9, col: WHITE });
+  // 地標
+  const pin = c.sub("bob", 480, 850);
+  pin.blob([[480, 990], [400, 880], [384, 800], [420, 732], [480, 706], [540, 732], [576, 800], [560, 880]], { at: "@done-.4", d: 0.5, w: 9, fill: CORAL, blend: "normal", op: 1 });
+  pin.ell(480, 808, 42, 42, { at: "@done", d: 0.2, w: 8, fill: WHITE, blend: "normal", op: 1 });
+  c.sfx("pop", "@done-.2");
+  // 搜尋列與 AI
+  c.rect(560, 470, 420, 96, { at: "@done+.1", d: 0.4, w: 7, fill: WHITE });
+  c.ell(612, 516, 20, 20, { at: "@done+.35", d: 0.12, w: 6 }); c.line([[626, 532], [642, 548]], { at: "@done+.42", d: 0.06, w: 6 });
+  c.text("你的店", 664, 474, 70, { at: "@done+.4", d: 0.3, weight: 700 });
+  c.sfx("pencil", "@done+.1", 0.6);
+  const ai = c.sub("pulse", 190, 620);
+  ai.star(190, 620, 62, { at: "@done+.5", w: 7 });
+  c.text("AI", 190, 690, 76, { at: "@done+.65", d: 0.15, anchor: "middle", weight: 700, col: MOSS });
+  c.sfx("sparkle", "@done+.5");
+  [[150, 1180, 26], [960, 760, 24], [900, 1010, 20]].forEach(([x, y, r], i) => c.sub("pulse", x, y).star(x, y, r, { at: c.rel("@done", 0.7 + i * 0.1) }));
+});
+
+/* ══════════════════════════════════════════════════════════
+   8 ── 顧網站
+   ══════════════════════════════════════════════════════════ */
+scene("care", c => {
+  header(c, 5);
+  const sh = c.sub("pulse", 540, 860);
+  sh.blob([[540, 500], [690, 560], [820, 584], [816, 800], [750, 990], [540, 1200], [330, 990], [264, 800], [260, 584], [390, 560]], { at: 0.3, d: 0.9, w: 13, fill: LGREEN, r: 1 }); c.sfx("pencil", 0.3, 0.9);
+  sh.line([[400, 850], [506, 968], [704, 700]], { at: "@done", d: 0.3, w: 40, col: GREEN, r: 2 }); c.sfx("check", "@done+.02");
+  const yr = c.sub("wig", 880, 1130);
+  yr.ell(880, 1130, 118, 72, { at: "@done+.3", d: 0.3, w: 7, fill: BUTTER });
+  c.text("365 天", 880, 1088, 66, { at: "@done+.4", d: 0.25, anchor: "middle", weight: 700 });
+  c.sfx("ding", "@done+.35");
+  // 扳手
+  const wr = c.sub("wig", 180, 1100);
+  wr.line([[130, 1180], [226, 1040]], { at: 1.0, d: 0.25, w: 24, col: "#8f9aa3", r: 2 });
+  wr.curve([[196, 1010], [214, 972], [256, 966], [244, 1004], [270, 1024], [296, 1000], [292, 1048], [252, 1066]], { at: 1.2, d: 0.3, w: 9 });
+  // 心電圖：一直都有人看著
+  c.line([[150, 1290], [330, 1290], [372, 1232], [420, 1330], [462, 1268], [500, 1290], [700, 1290]], { at: "@done+.6", d: 0.7, w: 8, col: CORAL, r: 1.5 });
+});
+
+/* ══════════════════════════════════════════════════════════
+   9 ── 清單劃完了
+   ══════════════════════════════════════════════════════════ */
+scene("done", c => {
+  c.text("開店待辦", 150, 176, 132, { at: 0.05, d: 0.25, weight: 700 });
+  c.curve([[146, 336], [240, 348], [340, 334], [450, 350], [560, 336], [690, 346]], { at: 0.2, d: 0.25, w: 8, col: CORAL });
+  ITEMS.forEach((s, i) => {
+    const y = 420 + i * 128;
+    c.rect(150, y + 22, 62, 62, { at: 0.08 + i * 0.03, d: 0.15, w: 7 });
+    const el = c.text(s, 246, y, 84, { at: 0.1 + i * 0.03, d: 0.2, under: true });
+    crossOut(c, 0.5 + i * 0.13, 150, y + 22, 62, el.offsetWidth, 84);
+    c.sfx("marker", 0.5 + i * 0.13);
+  });
+  // 太陽
+  const sun = c.sub("spin", 900, 250);
+  sun.ell(900, 250, 62, 62, { at: "@clear-.2", d: 0.3, w: 8, fill: BUTTER });
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; sun.line([[900 + Math.cos(a) * 86, 250 + Math.sin(a) * 86], [900 + Math.cos(a) * 122, 250 + Math.sin(a) * 122]], { at: c.rel("@clear", i * 0.03), d: 0.08, w: 8, col: "#E9B93A" }); }
+  // 「全部完成」的章
+  const st = c.sub("", 380, 1270);
+  st.rect(140, 1196, 480, 136, { at: 0, d: 0.01, w: 10, col: GREEN, fill: "#D8F5E0" }); st.g.style.rotate = "-5deg"; st.pop("@clear+.1");
+  const se = c.text("全部完成！", 380, 1200, 96, { at: "@clear+.1", d: 0.25, anchor: "middle", weight: 700, col: "#0E8F47", rot: -5 });
+  c.sfx("stamp", "@clear+.15");
+  // 老闆：這次是笑的，手上一杯咖啡
+  const o = c.sub("bob", 850, 1150);
+  owner(o, 850, 1130, 1, c.rel("@you", -0.9));
+  o.rect(952, 1200, 76, 86, { at: "@you+.1", d: 0.25, w: 7, fill: WHITE });
+  o.curve([[1028, 1218], [1056, 1230], [1050, 1262], [1028, 1268]], { at: "@you+.3", d: 0.12, w: 6 });
+  const stm = c.sub("bob2", 990, 1150);
+  stm.curve([[972, 1180], [962, 1156], [980, 1136], [970, 1112]], { at: "@you+.45", d: 0.2, w: 5, col: "#9a8f7e" });
+  stm.curve([[1006, 1180], [996, 1156], [1014, 1136], [1004, 1112]], { at: "@you+.55", d: 0.2, w: 5, col: "#9a8f7e" });
+  c.sfx("pencil", c.rel("@you", -0.9), 1.0).sfx("sparkle", "@you+.5");
+});
+
+/* ══════════════════════════════════════════════════════════
+   10 ── 阿瓦羅
+   ══════════════════════════════════════════════════════════ */
+scene("cta", c => {
+  logo(c, 540, 500, 1.0, c.rel("@brand", -0.45)); c.sfx("logo", "@brand-.45");
+  c.text("阿瓦羅", 540, 742, 200, { at: "@brand+.25", d: 0.5, anchor: "middle", weight: 700 }); c.sfx("pencil", "@brand+.25", 0.5);
+  c.text("Avalo", 540, 978, 76, { at: "@brand+.75", d: 0.3, anchor: "middle", col: MOSS, ls: ".3em", font: "var(--note)" });
+  c.line([[184, 1150], [896, 1138]], { at: "@fixed-.1", d: 0.4, w: 64, col: BUTTER, op: 0.75, twice: false, r: 2 }); c.sfx("marker", "@fixed-.1");
+  c.text("價格全部公開・不二價", 540, 1094, 72, { at: "@price-.05", d: 0.8, anchor: "middle", weight: 700 }); c.sfx("pencil", "@price-.05", 0.8);
+  c.rect(232, 1222, 616, 112, { at: "@fixed+.55", d: 0.5, w: 8, fill: WHITE });
+  c.text("avalokite.xyz", 540, 1232, 74, { at: "@fixed+.75", d: 0.5, anchor: "middle", weight: 700, font: "var(--note)" });
+  c.sfx("pencil", "@fixed+.55", 0.7).sfx("hit", "@fixed+1.3");
+  [[160, 330, 44, 0.3], [930, 300, 36, 0.45], [120, 700, 30, 0.6], [960, 700, 40, 0.75], [900, 1010, 26, 0.9]].forEach(([x, y, r, d]) => c.sub("pulse", x, y).star(x, y, r, { at: c.rel("@brand", d) }));
+  c.sfx("sparkle", "@brand+.4");
+});
+
+/* ── 字幕 ── */
+(() => {
+  const box = document.getElementById("caps");
+  TL.captions.forEach((cp, i) => {
+    const el = document.createElement("div"); el.className = "cap";
+    el.innerHTML = cp.text.replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/~(.+?)~/g, '<em class="w">$1</em>');
+    box.appendChild(el);
+    const nxt = TL.captions[i + 1], out = nxt ? Math.min(cp.end, nxt.start) : cp.end;
+    el.animate([{ opacity: 0, transform: "translateY(18px) scale(.94)" }, { opacity: 1, transform: "none" }], { delay: cp.start * 1000, duration: 140, fill: "forwards", easing: "ease-out" });
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { delay: out * 1000, duration: 1, fill: "forwards" });
+  });
+})();
+
+SFX.sort((a, b) => a.t - b.t);
+window.SFX = SFX;      // render.js --sfx 會把這份音效時間表存成 sfx.json，交給 make-bgm.py
+
+/* ── 播放控制 ── */
+const turb = document.getElementById("turb");
+const all = () => document.getAnimations();
+const boil = t => turb.setAttribute("seed", 1 + (Math.floor(t * 6) % 5));      // 一秒換六張，五種抖法輪流
+function seek(t) { all().forEach(a => { try { a.currentTime = t * 1000; } catch (e) {} }); boil(t); }
+function play() { all().forEach(a => a.play()); }
+function pause() { all().forEach(a => a.pause()); }
+function fit() {
+  const rec = document.body.classList.contains("record");
+  const s = Math.min(innerWidth / 1080, (innerHeight - (rec ? 0 : 52)) / 1920);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener("resize", fit); fit();
+// 一條跟影片等長的空動畫，專門拿來讀「現在播到第幾秒」
+const probe = stage.animate([{ outlineOffset: "0px" }, { outlineOffset: "1px" }], { duration: TOTAL * 1000, fill: "forwards" });
+const aud = document.getElementById("aud");
+function restart() { seek(0); play(); try { aud.currentTime = 0; aud.play().catch(() => {}); } catch (e) {} }
+const fillEl = document.getElementById("fill"), clock = document.getElementById("clock");
+document.getElementById("replay").onclick = restart;
+document.getElementById("rec").onclick = () => { document.body.classList.toggle("record"); fit(); restart(); };
+document.getElementById("track").onclick = e => { const r = e.currentTarget.getBoundingClientRect(), t = ((e.clientX - r.left) / r.width) * TOTAL; seek(t); try { aud.currentTime = t; } catch (err) {} };
+const REC = new URLSearchParams(location.search).get("rec") === "1";
+if (REC) document.body.classList.add("record");
+(function tick() {
+  const t = Math.min(TOTAL, (probe.currentTime || 0) / 1000);
+  if (!REC) boil(t);
+  fillEl.style.width = (t / TOTAL) * 100 + "%"; clock.textContent = t.toFixed(1) + " / " + TOTAL.toFixed(1) + "s";
+  requestAnimationFrame(tick);
+})();
+pause();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => new Promise(r => setTimeout(r, 250))).then(() => { seek(0); if (!REC) restart(); });
+</script>
+</body>
+</html>

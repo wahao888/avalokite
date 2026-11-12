@@ -1,0 +1,8 @@
+vo/
+bgm.wav
+sfx.wav
+audio.m4a
+sfx.json
+node_modules/
+package*.json
+frames/
