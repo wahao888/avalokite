@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { estimateCostUsd, USD_TO_TWD } from "@/lib/chat-pricing";
 import { MUTE_HOURS } from "@/lib/chat-service";
 import { taipeiMonthKey, taipeiMonthStart } from "@/lib/tw-time";
+import { getTenant } from "@/lib/tenants";
+import { AI_PLANS, planOf } from "@/lib/ai-plans";
 
 /** 報表往回看幾個月。再久的資料意義不大，而且每個月要跑三個查詢。 */
 export const REPORT_MONTHS = 6;
@@ -265,6 +267,17 @@ export async function getKnowledge(tenantId: string): Promise<string> {
   return row?.content ?? "";
 }
 
+/** 每個租戶留幾版歷史。這是「手滑的那一次」的保險，不是版本控制系統。 */
+export const KNOWLEDGE_VERSIONS_KEPT = 10;
+
+export interface SaveKnowledgeResult {
+  ok: boolean;
+  /** 這次送來的字數（已去頭尾空白） */
+  chars: number;
+  /** 方案允許的字數上限 */
+  limit: number;
+}
+
 /**
  * 存客戶站的知識庫。
  *
@@ -272,12 +285,77 @@ export async function getKnowledge(tenantId: string): Promise<string> {
  * 輸入之一——但它只來自後台（isAdmin 之後），不是客人送的。真正要防的是
  * 手滑清空：存成空字串時，AI 會變成什麼都不知道卻還在回話，所以
  * tenantKnowledge() 對空內容有自己的保底說法。
+ *
+ * ⚠ 超過方案字數就拒收，不截斷。以前這裡是 slice(0, 200_000)——靜靜地砍掉
+ * 後半段，後台顯示儲存成功，客戶要到客人問起被砍掉的那一段才會發現。
+ * 字數上限不是技術限制而是方案內容：知識庫每多一倍，那個客戶的每段對話
+ * 成本就跟著漲，而他付的月費沒有跟著動。貼超過的人通常不是惡意，是很
+ * 認真地把整本產品手冊貼進來，所以要明確告訴他超出多少。
  */
-export async function saveKnowledge(tenantId: string, content: string): Promise<void> {
-  const text = content.trim().slice(0, 200_000);
+export async function saveKnowledge(
+  tenantId: string,
+  content: string,
+): Promise<SaveKnowledgeResult> {
+  const tenant = getTenant(tenantId);
+  const limit = tenant?.aiSupport
+    ? planOf(tenant.aiSupport.plan).knowledgeChars
+    : AI_PLANS.lite.knowledgeChars;
+  const text = content.trim();
+  if (text.length > limit) return { ok: false, chars: text.length, limit };
+
+  // 先把舊的搬進歷史再覆蓋。順序很重要：先寫歷史、後覆蓋，中間斷掉的話
+  // 頂多多出一份一模一樣的歷史，不會兩邊都沒有。
+  const prev = await prisma.chatKnowledge.findUnique({ where: { tenantId } });
+  if (prev && prev.content !== text) {
+    await prisma.chatKnowledgeVersion.create({
+      data: { tenantId, content: prev.content },
+    });
+    const stale = await prisma.chatKnowledgeVersion.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      skip: KNOWLEDGE_VERSIONS_KEPT,
+      select: { id: true },
+    });
+    if (stale.length) {
+      await prisma.chatKnowledgeVersion.deleteMany({
+        where: { id: { in: stale.map((v) => v.id) } },
+      });
+    }
+  }
+
   await prisma.chatKnowledge.upsert({
     where: { tenantId },
     create: { tenantId, content: text },
     update: { content: text },
   });
+  return { ok: true, chars: text.length, limit };
+}
+
+export interface KnowledgeVersion {
+  id: number;
+  createdAt: Date;
+  chars: number;
+}
+
+/** 某個站的歷史版本摘要（後台列表用，不回內容避免整頁塞爆）。 */
+export async function knowledgeVersions(tenantId: string): Promise<KnowledgeVersion[]> {
+  const rows = await prisma.chatKnowledgeVersion.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: "desc" },
+    take: KNOWLEDGE_VERSIONS_KEPT,
+  });
+  return rows.map((r) => ({ id: r.id, createdAt: r.createdAt, chars: r.content.length }));
+}
+
+/**
+ * 把某一版還原成現行知識庫。
+ *
+ * 走 saveKnowledge 而不是直接寫：還原本身也要留一份歷史，否則「還原錯版本」
+ * 就變成真正救不回來的那一步。
+ */
+export async function restoreKnowledge(tenantId: string, versionId: number): Promise<boolean> {
+  const row = await prisma.chatKnowledgeVersion.findUnique({ where: { id: versionId } });
+  if (!row || row.tenantId !== tenantId) return false;
+  const res = await saveKnowledge(tenantId, row.content);
+  return res.ok;
 }

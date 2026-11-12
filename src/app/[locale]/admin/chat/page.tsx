@@ -75,10 +75,10 @@ export default async function AdminChatPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ kbok?: string; kberr?: string }>;
+  searchParams: Promise<{ kbok?: string; kberr?: string; kbover?: string; chars?: string; limit?: string }>;
 }) {
   const { locale } = await params;
-  const { kbok, kberr } = await searchParams;
+  const { kbok, kberr, kbover, chars, limit } = await searchParams;
   setRequestLocale(locale);
 
   // 未登入就送回 /admin，登入表單在那裡——在這裡再放一份只會多一個要維護的入口
@@ -159,6 +159,12 @@ export default async function AdminChatPage({
 
       <div className="cart-section-head">客戶站的 AI 客服（{aiTenants.length}）</div>
       {kbok === "1" && <div className="form-feedback ok">知識庫已更新，下一則訊息就會用新的內容。</div>}
+      {kbover === "1" && (
+        <div className="form-feedback err">
+          沒有儲存：這個站的方案上限是 {limit} 字，你貼了 {chars} 字。
+          請精簡內容，或把方案升一階（上限寫在 src/lib/ai-plans.ts 的 knowledgeChars）。
+        </div>
+      )}
       {kberr === "1" && (
         <div className="form-feedback err">這個站沒有啟用 AI 客服，先到 tenants.ts 加上 aiSupport。</div>
       )}

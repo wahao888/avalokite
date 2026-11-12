@@ -747,6 +747,20 @@ model ChatKnowledge {
   updatedAt DateTime @updatedAt
 }
 
+/// 知識庫的歷史版本：每次儲存前先把舊內容搬一份進來。
+///
+/// 為什麼需要：知識庫是客戶自己在後台編輯的，貼錯、清空、覆蓋都只要一下。
+/// 每天 03:15 的 DB 備份雖然救得回來，但要人工撈備份檔、而且會掉當天的編輯。
+/// 只留最近幾版：這是「手滑的那一次」的保險，不是版本控制系統。
+model ChatKnowledgeVersion {
+  id        Int      @id @default(autoincrement())
+  tenantId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+}
+
 /// 單則訊息。token 數記在 assistant 這一側，供每月用量報表統計。
 model ChatMessage {
   id             Int              @id @default(autoincrement())

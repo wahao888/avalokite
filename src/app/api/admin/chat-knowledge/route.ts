@@ -18,6 +18,14 @@ export async function POST(req: NextRequest) {
   if (!getTenant(tenantId)?.aiSupport) {
     return NextResponse.redirect(`${site}/admin/chat?kberr=1`, 303);
   }
-  await saveKnowledge(tenantId, content);
+  // 超過方案字數要讓後台看到，不能靜靜地沒存成功——以前這裡會截斷後半段，
+  // 顯示儲存成功，客戶要到客人問起被砍掉的那一段才會發現。
+  const res = await saveKnowledge(tenantId, content);
+  if (!res.ok) {
+    return NextResponse.redirect(
+      `${site}/admin/chat?kbover=1&chars=${res.chars}&limit=${res.limit}`,
+      303,
+    );
+  }
   return NextResponse.redirect(`${site}/admin/chat?kbok=1`, 303);
 }
