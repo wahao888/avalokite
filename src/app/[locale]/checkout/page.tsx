@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
@@ -24,16 +24,20 @@ export default function CheckoutPage() {
   const [promoClosed, setPromoClosed] = useState(false); // 促銷檔期已額滿或結束
   const [taxId, setTaxId] = useState("");
   const corporateInvoice = taxId.trim().length > 0;
+  const checkoutTracked = useRef(false);
+  const hasItems = cart.items.length > 0;
 
   useEffect(() => {
-    if (cart.ready && cart.items.length > 0) track("begin_checkout");
-  }, [cart.ready]);
+    if (!cart.ready || !hasItems || checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    track("begin_checkout");
+  }, [cart.ready, hasItems]);
 
   // 等 localStorage 載入完成才判斷是否為空車（避免誤導回 /cart）
   // 含建置的訂單有 12 個月最短承諾期，這件事必須在按下付款前就講明白
   const hasBuild = careRequired(cart.items.map((i) => i.sku));
   const promo = promoPlanForSkus(cart.items.map((i) => i.sku));
-  const empty = cart.ready && cart.items.length === 0;
+  const empty = cart.ready && !hasItems;
   useEffect(() => {
     if (empty && !submitting) router.replace("/cart");
   }, [empty, submitting, router]);

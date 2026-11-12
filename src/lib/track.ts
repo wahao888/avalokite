@@ -23,17 +23,31 @@ export function track(event: TrackEvent, extra: Record<string, string | number |
   } catch {
     /* 追蹤失敗不能擋下單 */
   }
+  if (event === "begin_checkout") {
+    measureOpenAIAds("checkout_started", { type: "contents" });
+  } else if (event === "click_line") {
+    measureOpenAIAds("custom", { type: "custom" }, { custom_event_name: "clickline" });
+  }
   const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
   gtag?.("event", event, extra);
 }
 
+type OpenAIAdsEvent =
+  | [event: "items_added" | "checkout_started", data: { type: "contents" }]
+  | [event: "page_viewed", data: { type: "contents"; contents: { id: string; content_type: "page" }[] }]
+  | [event: "custom", data: { type: "custom" }, options: { custom_event_name: "clickline" }];
+
 export function measureItemsAdded() {
+  measureOpenAIAds("items_added", { type: "contents" });
+}
+
+export function measureOpenAIAds(...event: OpenAIAdsEvent) {
   try {
     const { oaiq } = window as Window & {
-      oaiq?: (command: "measure", event: "items_added", data: { type: "contents" }) => void;
+      oaiq?: (command: "measure", ...event: OpenAIAdsEvent) => void;
     };
-    oaiq?.("measure", "items_added", { type: "contents" });
+    oaiq?.("measure", ...event);
   } catch {
-    /* 廣告追蹤失敗不影響購物車 */
+    /* 廣告追蹤失敗不影響網站操作 */
   }
 }

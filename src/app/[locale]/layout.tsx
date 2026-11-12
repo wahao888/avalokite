@@ -59,6 +59,7 @@ export default async function LocaleLayout({
       className={`${fraunces.variable} ${dmMono.variable}`}
     >
       <body>
+        <OpenAIAdsPixel locale={locale} />
         <NextIntlClientProvider>
           <CartProvider>
             <Nav />
@@ -71,7 +72,6 @@ export default async function LocaleLayout({
           </CartProvider>
         </NextIntlClientProvider>
       </body>
-      <OpenAIAdsPixel />
     </html>
   );
 }
