@@ -13,7 +13,12 @@
   --ink:    #2F2B26;
   --ink-soft: #3A352E;
   --muted:  #8C8478;
+  /* --muted 在紙色底上對比只有 3.3:1，當標籤可以、當內文太淡。
+     內文級的次要文字改用這個（約 5.3:1）。 */
+  --muted-strong: #6B6358;
   --border: #D6CDBD;
+  /* 卡片底色：比紙色亮一階的暖白，不用純白（純白在紙色旁邊會刺眼） */
+  --card:   #FAF7F1;
 
   /* 中文一律用系統字，網路字只載拉丁的 Fraunces 與 DM Mono。
      next/font 的 CJK 家族每個字重要切上百段 unicode-range：原本 Noto Serif TC
@@ -986,14 +991,28 @@ button { font-family: inherit; }
 .promo-plan.featured .btn-ghost { color: var(--paper); border-color: rgba(240,235,227,0.4); }
 .promo-plan.featured .btn-ghost:hover { background: var(--paper); color: var(--ink); }
 
+/* 附註原本是一整段置中的小字、用 ✦ 隔開，六條條件擠成一團沒人讀得完。
+   拆成兩欄清單，一條一行。 */
 .promo-foot {
   position: relative;
+  list-style: none;
   margin: 1.8rem 0 0;
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  line-height: 2;
-  color: var(--muted);
-  text-align: center;
+  padding: 0 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 2.2rem;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--muted-strong);
+}
+.promo-foot li { position: relative; padding-left: 1.1rem; }
+.promo-foot li::before {
+  content: "✦";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  font-size: 0.6rem;
+  color: var(--wood);
 }
 
 @media (max-width: 980px) {
@@ -1014,6 +1033,7 @@ button { font-family: inherit; }
 @media (max-width: 780px) {
   .promo-box { padding: 2rem 1.2rem 1.5rem; }
   .promo-plans { grid-template-columns: 1fr; }
+  .promo-foot { grid-template-columns: 1fr; }
   .promo-urgency {
     grid-template-columns: 1fr;
     gap: 1.4rem;
@@ -2031,28 +2051,56 @@ button { font-family: inherit; }
   font-size: 0.88rem;
 }
 .hero-quiz a { color: var(--moss); }
+/* 四項保證：圖示在左、標題與一句說明在右。欄數跟著容器寬度走，
+   放在半欄的聯絡區會自己排成兩欄或一欄。 */
 .trust-marks {
   list-style: none;
   padding: 0;
   margin: 2rem 0 0;
   display: grid;
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.3rem 1.6rem;
 }
-.trust-marks li { display: grid; gap: 0.15rem; }
-.trust-marks strong { font-size: 0.88rem; color: var(--ink); }
-.trust-marks span { font-size: 0.78rem; color: var(--muted); line-height: 1.55; }
+.trust-marks li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.85rem;
+  row-gap: 0.2rem;
+  align-content: start;
+}
+.trust-marks .doodle { grid-row: 1 / span 2; margin-top: 0.1rem; }
+.trust-marks strong { font-size: 0.95rem; line-height: 1.45; color: var(--ink); }
+.trust-marks span { font-size: 0.84rem; color: var(--muted-strong); line-height: 1.6; text-wrap: pretty; }
 .faq-list { display: grid; gap: 0.6rem; margin-top: 1.5rem; }
 .faq-item {
   border: 1px solid var(--border);
-  background: #fff;
-  padding: 0.9rem 1.1rem;
+  background: var(--card);
+  padding: 1rem 1.2rem;
+  transition: border-color 0.2s;
 }
+.faq-item:hover, .faq-item[open] { border-color: var(--sage); }
 .faq-item summary {
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
 }
-.faq-item p { margin: 0.7rem 0 0; color: var(--muted); line-height: 1.7; font-size: 0.88rem; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--moss);
+}
+.faq-item[open] summary::after { content: "−"; }
+.faq-item p { margin: 0.75rem 0 0; color: var(--muted-strong); line-height: 1.75; font-size: 0.92rem; }
 .quiz, .tool-panel {
   display: grid;
   gap: 1.1rem;
@@ -2067,17 +2115,6 @@ button { font-family: inherit; }
 .quiz-result { display: grid; gap: 0.8rem; }
 .tool-row { display: flex; gap: 0.6rem; }
 .tool-row input { flex: 1; }
-.svc-index { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
-.svc-index-card {
-  display: block;
-  padding: 1.4rem 1.3rem;
-  border: 1px solid var(--border);
-  text-decoration: none;
-  color: inherit;
-  background: #fff;
-  transition: border-color 0.2s;
-}
-.svc-index-card:hover { border-color: var(--moss); }
 .prose-list { margin: 1.25rem 0 1.75rem; padding-left: 1.2rem; line-height: 1.8; color: var(--muted); }
 .form-note { font-size: 0.78rem; color: var(--muted); margin: 0.35rem 0 1rem; }
 .chat-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.4rem; }
@@ -2827,3 +2864,305 @@ button { font-family: inherit; }
   .cs-grid-2 { grid-template-columns: 1fr; gap: 1.5rem; }
   .cs-table th { width: 50%; }
 }
+
+/* ══════════════ 手繪圖示與插圖（Doodle 元件）══════════════ */
+/* 圖形由 src/lib/doodle.ts 算出來，這裡只管上色。線寬以 viewBox 單位計：
+   64 單位的小圖示畫成 44–64px、380 單位的插圖畫成 400px 左右，兩者線條粗細接近。 */
+.doodle {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+  color: var(--ink);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dd-ink { stroke: currentColor; stroke-width: 1.5; }
+.dd-accent { stroke: var(--moss); stroke-width: 1.9; }
+.dd-hatch { stroke: var(--sage); stroke-width: 1.1; }
+.dd-fill { fill: color-mix(in srgb, var(--sage) 30%, transparent); }
+.dd-fill2 { fill: color-mix(in srgb, var(--wood) 26%, transparent); }
+.dd-solid { fill: currentColor; }
+.dd-spark { fill: var(--wood); }
+
+/* ══════════════ 內頁版面（服務／零元啟動／關於）══════════════ */
+/* 前綴 ip-（inner page）。原則：一段只講一件事、每件事配一個圖示，
+   次要文字用 --muted-strong，不用對比不足的 --muted。 */
+
+/* ── 頁首：左文右圖 ── */
+.ip-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 2rem 3.5rem;
+  align-items: center;
+  margin-bottom: 4.5rem;
+}
+.ip-hero-art { justify-self: end; width: 100%; max-width: 400px; }
+.ip-hero-art .doodle { width: 100%; height: auto; }
+.ip-title { position: relative; display: inline-block; margin: 1.2rem 0 1.9rem; }
+/* 標題底下那一筆麥克筆：橫向拉到跟標題一樣寬，線寬不跟著被拉粗 */
+.ip-title > .doodle {
+  position: absolute;
+  left: 0;
+  bottom: -0.75rem;
+  width: 100%;
+  height: 0.75rem;
+}
+.ip-title .dd-accent { stroke: var(--sage); stroke-width: 3.5px; vector-effect: non-scaling-stroke; }
+.ip-lede { max-width: 32rem; font-size: 1.1rem; line-height: 1.8; color: var(--ink-soft); }
+.ip-lede b { font-weight: 600; color: var(--moss-deep); }
+.ip-hero .fa-hero-cta { margin-top: 1.8rem; }
+
+.ip-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+.ip-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+.ip-chips li::before { content: "✓"; font-size: 0.78rem; font-weight: 700; color: var(--moss); }
+
+/* 三個數字一排：建置費／月費／名額 */
+.ip-facts {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  margin-top: 1.8rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  width: fit-content;
+  max-width: 100%;
+}
+.ip-fact { padding: 1rem 1.5rem 0.95rem 1.2rem; }
+.ip-fact + .ip-fact { border-left: 1px dashed var(--border); }
+.ip-fact-label {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--muted-strong);
+  margin-bottom: 0.45rem;
+}
+.ip-fact-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  color: var(--moss-deep);
+  white-space: nowrap;
+}
+.ip-fact-value small {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--muted-strong);
+  margin-left: 0.25rem;
+}
+
+/* ── 區段標題 ── */
+.ip-section { margin-bottom: 4.5rem; }
+.ip-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+.ip-num { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em; color: var(--walnut); }
+.ip-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  line-height: 1.3;
+  color: var(--ink);
+}
+.ip-head-note { margin-left: auto; font-size: 0.88rem; color: var(--muted-strong); }
+.ip-head-note a { color: var(--moss-deep); }
+
+/* ── 服務卡 ── */
+.svc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.svc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.5rem 1.4rem 1.15rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.svc-card:hover {
+  border-color: var(--moss);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(47, 43, 38, 0.08);
+}
+.svc-card-top { display: flex; align-items: center; gap: 1rem; }
+.svc-card-name { font-family: var(--font-display); font-weight: 600; font-size: 1.22rem; line-height: 1.3; }
+.svc-card-blurb { flex: 1; font-size: 0.92rem; line-height: 1.7; color: var(--muted-strong); text-wrap: pretty; }
+.svc-card-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--border);
+}
+.svc-card-price { font-family: var(--font-display); font-weight: 600; font-size: 1.08rem; color: var(--moss-deep); }
+.svc-card-price small {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--muted-strong);
+  margin-left: 0.2rem;
+}
+.svc-card-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--muted-strong);
+  white-space: nowrap;
+}
+.svc-card-go { color: var(--moss); font-size: 0.9rem; transition: transform 0.2s; }
+.svc-card:hover .svc-card-go { transform: translateX(4px); }
+
+/* ── 通用圖示卡（做什麼／條件）── */
+.ip-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.ip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.5rem 1.4rem 1.3rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+a.ip-card:hover {
+  border-color: var(--moss);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(47, 43, 38, 0.08);
+}
+.ip-card .doodle { margin-bottom: 0.3rem; }
+.ip-card-t { font-family: var(--font-display); font-weight: 600; font-size: 1.14rem; line-height: 1.35; }
+.ip-card-d { font-size: 0.9rem; line-height: 1.7; color: var(--muted-strong); text-wrap: pretty; }
+.ip-card-go {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--moss-deep);
+}
+
+/* 圖示在卡片被指到時歪一下，像被碰到的便條 */
+.svc-card .doodle, .ip-card .doodle { transition: transform 0.25s; transform-origin: 50% 60%; }
+.svc-card:hover .doodle, a.ip-card:hover .doodle { transform: rotate(-5deg) scale(1.06); }
+
+/* ── 步驟流程：桌機橫排、中間畫箭頭；窄螢幕改成直排清單 ── */
+.ip-flow {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem 3rem;
+}
+.ip-flow.is-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2rem 2.6rem; }
+.ip-step { position: relative; display: flex; flex-direction: column; gap: 0.45rem; }
+.ip-step-num { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.2em; color: var(--walnut); }
+.ip-step-icon { margin: 0.2rem 0 0.3rem; }
+.ip-step-t { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; line-height: 1.35; }
+.ip-step-d { font-size: 0.88rem; line-height: 1.7; color: var(--muted-strong); text-wrap: pretty; }
+/* 箭頭畫在兩欄之間的空隙裡，高度對齊圖示中線 */
+.ip-step-arrow { position: absolute; top: 2.7rem; right: -2.8rem; width: 2.6rem; height: auto; }
+.ip-flow.is-5 .ip-step-arrow { right: -2.4rem; width: 2.2rem; }
+.ip-step:last-child .ip-step-arrow { display: none; }
+
+/* ── 公司登記資料 ── */
+.co-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.co-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+  align-content: center;
+  padding: 1.15rem 1.4rem;
+  background: var(--card);
+}
+.co-row.is-wide { grid-column: 1 / -1; }
+/* dt 用 contents：圖示與欄位名直接成為這一列的格子，dd 排在欄位名正下方 */
+.co-row dt { display: contents; }
+.co-row dt .doodle { grid-row: 1 / span 2; align-self: center; }
+.co-row dt span {
+  align-self: end;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  color: var(--muted-strong);
+}
+.co-row dd { grid-column: 2; align-self: start; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.co-row dd a { text-decoration: none; border-bottom: 1px solid var(--border); transition: color 0.2s, border-color 0.2s; }
+.co-row dd a:hover { color: var(--moss-deep); border-color: var(--moss); }
+
+/* ── 頁尾行動列 ── */
+.ip-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem 2rem;
+  padding: 1.5rem 2rem;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--moss);
+}
+.ip-cta-text { display: flex; align-items: center; gap: 1.1rem; }
+.ip-cta-t { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; line-height: 1.35; }
+.ip-cta-d { font-size: 0.9rem; line-height: 1.6; color: var(--muted-strong); margin-top: 0.15rem; }
+.ip-cta-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+
+@media (max-width: 900px) {
+  .ip-hero { grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 3.5rem; }
+  .ip-hero-art { justify-self: center; max-width: 300px; }
+  .ip-section { margin-bottom: 3.5rem; }
+  .svc-grid, .ip-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ip-flow, .ip-flow.is-5 { grid-template-columns: 1fr; gap: 1.6rem; }
+  .ip-step {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1.1rem;
+    row-gap: 0.2rem;
+    align-content: start;
+  }
+  .ip-step-icon { grid-row: 1 / span 3; margin: 0; }
+  .ip-step-arrow { display: none; }
+  .ip-head-note { margin-left: 0; width: 100%; }
+}
+@media (max-width: 600px) {
+  .svc-grid, .ip-cards, .co-card { grid-template-columns: 1fr; }
+  .ip-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .ip-fact { padding: 0.9rem 0.7rem; }
+  .ip-fact-value { font-size: 1.12rem; }
+  .ip-fact-value small { font-size: 0.72rem; margin-left: 0.15rem; }
+  .ip-cta { padding: 1.3rem 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-card, .ip-card, .svc-card .doodle, .ip-card .doodle, .svc-card-go { transition: none; }
+  .svc-card:hover, a.ip-card:hover, .svc-card:hover .doodle, a.ip-card:hover .doodle { transform: none; }
+}
+/* 區段標題底下已經有間距，這兩個元件自帶的上邊距就不要了 */
+.ip-section > .trust-marks, .ip-section > .faq-list { margin-top: 0; }

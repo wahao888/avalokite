@@ -165,7 +165,16 @@ export default function PromoPlans() {
         ))}
       </div>
 
-      <p className="promo-foot">{t("foot")}</p>
+      {/* 文案仍是一整串、以 ✦ 分隔（翻譯檔不必改結構），顯示時拆成一條一行 */}
+      <ul className="promo-foot">
+        {t("foot")
+          .split("✦")
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .map((x) => (
+            <li key={x}>{x}</li>
+          ))}
+      </ul>
     </section>
   );
 }
