@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
 import { isExpired, seatsLeft } from "@/lib/promo-window";
 import PromoUrgency from "@/components/sections/PromoUrgency";
@@ -15,9 +15,8 @@ import {
 } from "@/lib/products";
 import type { Locale } from "@/i18n/routing";
 
-function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
-  const t = useTranslations("promo");
-  const info = plan.i18n[locale];
+/** 方案的購買狀態：完整卡片與首頁精簡版共用同一份判斷 */
+function usePlanState(plan: PromoPlan) {
   const { add, has } = useCart();
   const router = useRouter();
 
@@ -44,6 +43,31 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
     add(plan.skus);
     router.push("/cart");
   };
+
+  return { chosen, soldOut, closed, choose, goCart: () => router.push("/cart") };
+}
+
+function ClaimButton({ plan }: { plan: PromoPlan }) {
+  const t = useTranslations("promo");
+  const { chosen, soldOut, closed, choose, goCart } = usePlanState(plan);
+  return closed ? (
+    <button className="btn-ghost promo-cta" disabled>
+      {soldOut ? t("soldOutCta") : t("endedCta")}
+    </button>
+  ) : chosen ? (
+    <button className="btn-ghost promo-cta" onClick={goCart}>
+      {t("inCart")}
+    </button>
+  ) : (
+    <button className="btn-primary promo-cta" onClick={choose}>
+      {t("claim")}
+    </button>
+  );
+}
+
+function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
+  const t = useTranslations("promo");
+  const info = plan.i18n[locale];
 
   return (
     <div className={`promo-plan${plan.featured ? " featured" : ""}`}>
@@ -114,19 +138,7 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
           <b>NT${fmt(promoPlanTotal(plan))}</b>
         </div>
 
-        {closed ? (
-          <button className="btn-ghost promo-cta" disabled>
-            {soldOut ? t("soldOutCta") : t("endedCta")}
-          </button>
-        ) : chosen ? (
-          <button className="btn-ghost promo-cta" onClick={() => router.push("/cart")}>
-            {t("inCart")}
-          </button>
-        ) : (
-          <button className="btn-primary promo-cta" onClick={choose}>
-            {t("claim")}
-          </button>
-        )}
+        <ClaimButton plan={plan} />
       </div>
 
       <div className="promo-plan-includes">
@@ -141,10 +153,70 @@ function PlanCard({ plan, locale }: { plan: PromoPlan; locale: Locale }) {
   );
 }
 
-export default function PromoPlans() {
+/**
+ * 首頁用的精簡版：名額倒數＋四個關鍵數字＋按鈕，完整條款交給 /launch。
+ *
+ * 首頁原本放完整卡片，在手機上一塊就兩千多像素、還帶六條附註小字。
+ * 「建置費 0 元」與「下單付 NT$2,000」仍然擺在一起——只寫 0 元、到結帳才冒出
+ * 保留金，那是行銷陷阱不是促銷；承諾期也一定要在按鈕之前看得到。
+ */
+function CompactPromo({ plan }: { plan: PromoPlan }) {
+  const t = useTranslations("promo");
+  return (
+    <div className="promo-compact">
+      <dl className="promo-facts">
+        <div>
+          <dt>{t("setupFee")}</dt>
+          <dd>{plan.setup === 0 ? <em className="promo-free">{t("noSetupFee")}</em> : `NT$${fmt(plan.setup)}`}</dd>
+        </div>
+        {plan.deposit > 0 && (
+          <div>
+            <dt>{t("depositFee")}</dt>
+            <dd>
+              NT${fmt(plan.deposit)}
+              <small>{t("depositCredit")}</small>
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt>{t("monthlyFee")}</dt>
+          <dd>
+            NT${fmt(plan.monthly)}
+            <small className="is-inline">{t("perMonth")}</small>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("term")}</dt>
+          <dd>{t("months", { n: plan.termMonths })}</dd>
+        </div>
+      </dl>
+      <div className="promo-compact-cta">
+        <ClaimButton plan={plan} />
+        <Link href="/launch" className="promo-compact-more">{t("detailsCta")}</Link>
+      </div>
+    </div>
+  );
+}
+
+export default function PromoPlans({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("promo");
   const locale = useLocale() as Locale;
   if (PROMO_PLANS.length === 0) return null;
+
+  if (compact) {
+    return (
+      <section id="promo" className="promo-box is-compact fade-in" aria-labelledby="promo-heading">
+        <div className="promo-box-head">
+          <div className="promo-badge">{t("badge")}</div>
+          <h3 id="promo-heading" className="promo-title">{t("title")}</h3>
+        </div>
+        <PromoUrgency />
+        {PROMO_PLANS.map((p) => (
+          <CompactPromo key={p.id} plan={p} />
+        ))}
+      </section>
+    );
+  }
 
   return (
     <section id="promo" className="promo-box fade-in" aria-labelledby="promo-heading">

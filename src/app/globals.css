@@ -374,6 +374,8 @@ button { font-family: inherit; }
   letter-spacing: 0.01em;
   color: var(--ink);
   margin-bottom: 2.5rem;
+  /* 文案裡的 \n 是指定的斷點：不指定時「AI」會被擠到自己一行 */
+  white-space: pre-line;
 }
 .hero-title span { color: var(--moss); display: block; }
 
@@ -2803,17 +2805,6 @@ a.ip-card:hover {
 .hp-name { font-size: 0.92rem; color: var(--muted-strong); line-height: 1.4; }
 .hp-price { font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; line-height: 1.1; color: var(--ink); }
 .hp-price small { font-size: 0.8rem; color: var(--muted-strong); margin: 0 0.15rem; }
-.hp-from {
-  position: absolute;
-  top: 0.8rem;
-  right: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  color: var(--walnut);
-  border: 1px solid color-mix(in srgb, var(--walnut) 40%, transparent);
-  padding: 0.1rem 0.45rem;
-}
 
 /* ── 合作四步：沿用內頁的步驟圖解，時間標示用 process-meta ── */
 .process-section .ip-step .process-meta { border-top: 0; padding-top: 0; margin-top: 0.1rem; font-size: 0.66rem; }
@@ -2858,3 +2849,66 @@ a.ip-card:hover {
   .hs-tile, .hs-icon, .mosaic-card img, .hp-tile { transition: none; }
   .hs-tile:hover, .hs-tile:hover .hs-icon, .mosaic-card:hover img, .hp-tile:hover { transform: none; }
 }
+
+/* ══════════════ 可讀性修正（2026-11-13）══════════════ */
+
+/* 首頁頂端說明疊在墨流上，--muted 只有 3:1 左右，改用內文級的次要色 */
+.hero-desc { color: var(--muted-strong); }
+
+/* 最小字級：手機上 11px 以下的字幾乎讀不到。資訊性的小字一律拉到 12px，
+   純裝飾（往下捲動提示、LINE ID 小字）至少 11px。 */
+.mono-label, .hero-label,
+.form-label, .form-footnote-label, .form-subtitle,
+.ip-step-num, .ip-num, .ip-fact-label, .co-row dt span,
+.svc-card-meta, .ip-card-go,
+.process-meta, .process-section .ip-step .process-meta,
+.market-unit, .market-axis, .market-mark-label,
+.mosaic-type,
+.promo-badge, .promo-price-label, .promo-urgency-label, .promo-clock-cell span { font-size: 0.75rem; }
+.line-id { font-size: 0.9em; }
+.scroll-text { font-size: 0.7rem; }
+.market-axis { margin-left: 12.6rem; }
+
+/* 首頁定價卡的「起」接在價格後面 */
+.hp-price .hp-from { font-family: var(--font-body); font-weight: 400; margin: 0 0.25rem; }
+
+/* 首頁精簡版的限時方案：名額倒數＋四個數字＋按鈕 */
+.promo-box.is-compact { padding-bottom: 2.2rem; }
+.promo-box.is-compact .promo-box-head { margin-bottom: 1.6rem; }
+.promo-box.is-compact .promo-title { margin-bottom: 0; }
+.promo-compact {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.6rem 2.4rem;
+  align-items: center;
+}
+.promo-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.promo-facts > div { background: var(--paper); padding: 0.95rem 1.1rem; }
+.promo-facts dt { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--muted-strong); margin-bottom: 0.35rem; }
+.promo-facts dd { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; line-height: 1.2; color: var(--ink); }
+.promo-facts dd small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 0.75rem; color: var(--muted-strong); margin-top: 0.2rem; }
+.promo-compact-cta { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; min-width: 15rem; }
+.promo-compact-cta .promo-cta { margin-top: 0; }
+.promo-compact-more { font-size: 0.88rem; color: var(--moss-deep); }
+
+/* 格狀清單依序進場：序號由 ScrollFx 寫進 --stagger。只動 li 本身，
+   裡面連結的滑鼠效果不受延遲影響。 */
+.fade-in:is(.hs-grid, .hp-grid, .mosaic, .ip-flow) > li {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  transition-delay: calc(var(--stagger, 0) * 70ms);
+}
+.fade-in.visible:is(.hs-grid, .hp-grid, .mosaic, .ip-flow) > li { opacity: 1; transform: none; }
+
+@media (max-width: 900px) {
+  .promo-compact { grid-template-columns: 1fr; }
+  .promo-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .promo-compact-cta { min-width: 0; }
+  .market-axis { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-in:is(.hs-grid, .hp-grid, .mosaic, .ip-flow) > li { opacity: 1; transform: none; transition: none; }
+}
+.promo-facts dd small.is-inline { display: inline; margin: 0 0 0 0.15rem; }

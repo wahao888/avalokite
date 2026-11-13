@@ -14,7 +14,7 @@
   },
   "hero": {
     "label": "Engineering · Design · Automation",
-    "title1": "Web design and enterprise AI",
+    "title1": "Web design and\nenterprise AI",
     "title2": "prices, published first",
     "desc": "Websites, commerce, LINE AI support and automation, delivered end to end. Every price published.",
     "ctaPrimary": "See transparent pricing →",
@@ -31,9 +31,9 @@
         "label": "Prices published"
       },
       {
-        "num": "1",
-        "suffix": "-2",
-        "label": "Months to delivery"
+        "num": "2",
+        "suffix": "-3wk",
+        "label": "To launch a brand site"
       },
       {
         "num": "24",
@@ -580,7 +580,8 @@
       "m": "min",
       "s": "sec"
     },
-    "claim": "Claim your seat →"
+    "claim": "Claim your seat →",
+    "detailsCta": "Plan details and terms →"
   },
   "sub": {
     "title": "Manage your care subscription",
@@ -680,7 +681,7 @@
       {
         "num": "03",
         "name": "Design & build",
-        "meta": "2–4 weeks for a brand site"
+        "meta": "2–3 weeks for a brand site"
       },
       {
         "num": "04",

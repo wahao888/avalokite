@@ -26,7 +26,9 @@ export default function Nav() {
   useEffect(() => setOpen(false), [pathname]);
 
   const otherLocale = locale === "zh-TW" ? "en" : "zh-TW";
-  const pricing = promoOpen() ? "/launch" : "/pricing";
+  // 「定價」永遠是完整價目表；只有「立即下單」跟著檔期走。兩顆都連促銷頁時，
+  // 導覽列就找不到 /pricing 了（只剩頁尾一個入口）。
+  const order = promoOpen() ? "/launch" : "/pricing";
 
   return (
     // nav 與限時橫幅包在同一個 fixed 容器裡：橫幅因此自然跟著浮動，
@@ -54,7 +56,7 @@ export default function Nav() {
             if ((e.target as HTMLElement).closest("a")) setOpen(false);
           }}>
           <li><Link href="/services">{t("services")}</Link></li>
-          <li><Link href={pricing}>{t("pricing")}</Link></li>
+          <li><Link href="/pricing">{t("pricing")}</Link></li>
           <li><Link href="/cases">{t("cases")}</Link></li>
           <li><Link href="/about">{t("about")}</Link></li>
           <li><Link href="/contact">{t("contact")}</Link></li>
@@ -65,7 +67,7 @@ export default function Nav() {
             </Link>
           </li>
           <li>
-            <Link href={pricing} className="nav-cta">{t("cta")}</Link>
+            <Link href={order} className="nav-cta">{t("cta")}</Link>
           </li>
           <li>
             <Link href={pathname} locale={otherLocale} className="lang-switch">

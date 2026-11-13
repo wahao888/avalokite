@@ -248,12 +248,12 @@ export const SERVICES: Service[] = [
     i18n: {
       "zh-TW": {
         name: "LINE AI 客服",
-        title: "LINE AI 客服・聊天機器人建置 {price:ai-chatbot} 起｜用你的資料回答｜Avalo 阿瓦羅",
+        title: "LINE AI 客服・聊天機器人建置 {price:ai-chatbot-lite} 起｜用你的資料回答｜Avalo 阿瓦羅",
         description:
-          "LINE 官方帳號＋網站雙通道 AI 客服：以你的 FAQ 與文件建立知識庫（RAG）、真人轉接與對話紀錄後台，{price:ai-chatbot}（未稅）起，含部署與知識庫首次建置，約 2–3 週上線。",
+          "LINE 官方帳號與網站的 AI 客服：以你的 FAQ 與文件建立知識庫（RAG）、真人轉接與對話紀錄後台。單一通道 {price:ai-chatbot-lite}、LINE＋網站雙通道 {price:ai-chatbot}（未稅），含部署與知識庫首次建置，約 2–3 週上線。",
         label: "LINE AI 客服・智能客服",
         h1: "LINE AI 客服：\n用你的資料，回答客人的問題",
-        lede: "營業時間、價格、方案差異、怎麼付款——客服每天回答的，多半是同樣的幾十個問題。Avalo 的 AI 客服接在 LINE 官方帳號與網站上，用你的 FAQ、價目與文件建立知識庫來回答；需要真人的時候，就交給你。{price:ai-chatbot}（未稅）起，含部署上線與知識庫首次建置。",
+        lede: "營業時間、價格、方案差異、怎麼付款——客服每天回答的，多半是同樣的幾十個問題。Avalo 的 AI 客服接在 LINE 官方帳號與網站上，用你的 FAQ、價目與文件建立知識庫來回答；需要真人的時候，就交給你。單一通道 {price:ai-chatbot-lite}（未稅）起，LINE＋網站雙通道 {price:ai-chatbot}，含部署上線與知識庫首次建置。",
         fit: [
           "LINE 官方帳號訊息多到回不完，或下班後沒人回",
           "同樣的問題每天要回答幾十次的客服與業務",
@@ -290,12 +290,12 @@ export const SERVICES: Service[] = [
       },
       en: {
         name: "LINE AI Customer Service",
-        title: "LINE AI Chatbot for Business | from {price:ai-chatbot} | Avalo",
+        title: "LINE AI Chatbot for Business | from {price:ai-chatbot-lite} | Avalo",
         description:
-          "AI customer service on your LINE Official Account and website, answering from a knowledge base built on your own FAQ and documents (RAG), with human handoff and conversation logs. From {price:ai-chatbot} excl. VAT, live in about 2–3 weeks.",
+          "AI customer service on your LINE Official Account and website, answering from a knowledge base built on your own FAQ and documents (RAG), with human handoff and conversation logs. One channel {price:ai-chatbot-lite}, LINE plus website {price:ai-chatbot} excl. VAT, live in about 2–3 weeks.",
         label: "LINE AI customer service",
         h1: "LINE AI customer service\nthat answers from your own data",
-        lede: "Opening hours, prices, plan differences, how to pay — most of what support answers every day is the same few dozen questions. Avalo's AI support runs on your LINE Official Account and your website, answering from a knowledge base built on your FAQ, price list and documents, and handing over to you when a human is needed. From {price:ai-chatbot} (excl. VAT), including deployment and the initial knowledge base.",
+        lede: "Opening hours, prices, plan differences, how to pay — most of what support answers every day is the same few dozen questions. Avalo's AI support runs on your LINE Official Account and your website, answering from a knowledge base built on your FAQ, price list and documents, and handing over to you when a human is needed. One channel from {price:ai-chatbot-lite}, LINE plus website {price:ai-chatbot} (excl. VAT), including deployment and the initial knowledge base.",
         fit: [
           "LINE Official Accounts with more messages than anyone can answer, or none answered after hours",
           "Support and sales teams answering the same questions dozens of times a day",

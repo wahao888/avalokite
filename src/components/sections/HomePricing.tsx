@@ -24,6 +24,7 @@ const TILES: { sku: string; icon: DoodleName }[] = [
 export default function HomePricing() {
   const t = useTranslations("pricing");
   const locale = useLocale() as Locale;
+  const zh = locale !== "en";
 
   return (
     <section id="pricing" className="section pricing-section">
@@ -39,7 +40,7 @@ export default function HomePricing() {
         <p className="section-intro">{t("homeIntro")}</p>
       </div>
 
-      <PromoPlans />
+      <PromoPlans compact />
 
       <ul className="hp-grid fade-in">
         {TILES.map(({ sku, icon }) => {
@@ -50,12 +51,14 @@ export default function HomePricing() {
               <Link href="/pricing" className="hp-tile">
                 <Doodle name={icon} size={56} />
                 <span className="hp-name">{p.i18n[locale].name}</span>
+                {/* 「起」直接接在價格後面讀；英文是 from 放前面 */}
                 <span className="hp-price">
+                  {!zh && <small className="hp-from">{t("homeFrom")}</small>}
                   <small>NT$</small>
                   {fmt(p.price)}
                   {p.type === "monthly" && <small>{t("perMonth")}</small>}
+                  {zh && <small className="hp-from">{t("homeFrom")}</small>}
                 </span>
-                <span className="hp-from">{t("homeFrom")}</span>
               </Link>
             </li>
           );

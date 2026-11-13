@@ -11,8 +11,7 @@ import About from "@/components/sections/About";
 import Contact from "@/components/sections/Contact";
 import InkParallax from "@/components/InkParallax";
 import JsonLd from "@/components/JsonLd";
-import { faqLd, homeGraphLd, pageMetadata } from "@/lib/seo";
-import { SITE_FAQ } from "@/lib/faq";
+import { homeGraphLd, pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -28,12 +27,12 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "meta" });
-  const faq = SITE_FAQ[locale === "en" ? "en" : "zh-TW"];
 
   return (
     <main>
       <JsonLd data={homeGraphLd(locale, t("description"))} />
-      <JsonLd data={faqLd(faq)} />
+      {/* 常見問題的結構化標記只放在真的有顯示常見問題的頁面（/pricing、/faq）：
+          Google 要求標記對應看得到的內容，首頁沒有常見問題區塊。 */}
       <InkParallax />
       <Hero />
       <Ticker />

@@ -13,11 +13,11 @@ export default function ScrollFx() {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add("visible");
-          const children = entry.target.querySelectorAll(
-            ".service-card, .price-card, .case-card, .feature-item, .stat-card"
-          );
-          children.forEach((child, i) => {
-            (child as HTMLElement).style.transitionDelay = `${i * 0.08}s`;
+          // 格狀清單的每一格依序進場：只寫序號，延遲由 CSS 的 --stagger 計算。
+          // 原本直接改子元素的 transitionDelay，連帶把滑鼠移上去的效果也延遲了，
+          // 而且指到的類別（service-card、feature-item）在改版後已經不存在。
+          entry.target.querySelectorAll(":scope > li").forEach((child, i) => {
+            (child as HTMLElement).style.setProperty("--stagger", String(i));
           });
         });
       },
