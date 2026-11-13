@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { prepareLeadConversion } from "@/lib/openai-ads-conversions";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
@@ -17,6 +18,8 @@ const schema = z
     budget: z.string().trim().max(100).optional().or(z.literal("")),
     message: z.string().trim().max(3000).optional().or(z.literal("")),
     locale: z.string().max(10).optional(),
+    adsMeasurement: z.literal("yes").optional(),
+    placement: z.enum(["home", "contact"]).optional(),
     // honeypot
     website: z.string().max(500).optional().or(z.literal("")),
   })
@@ -63,6 +66,13 @@ export async function POST(req: NextRequest) {
       locale: d.locale ?? "zh-TW",
     },
   });
+  const sendLead = prepareLeadConversion(req, inquiry, {
+    consent: d.adsMeasurement === "yes",
+    locale: inquiry.locale,
+    placement: d.placement ?? "contact",
+  });
+  if (sendLead) after(sendLead);
+
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
     `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message || "(未填寫)"}`

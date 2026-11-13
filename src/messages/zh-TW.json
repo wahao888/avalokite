@@ -363,6 +363,8 @@
       "phone": "電話或 LINE ID",
       "phonePh": "0912345678",
       "contactHint": "填 Email 或 LINE ID 都可以，我們用你留的那個回你。",
+      "adsMeasurement": "我同意將雜湊後的 Email（如有提供）及可用的廣告識別碼提供給 OpenAI，以衡量這次諮詢的廣告成效（選填）。",
+      "privacyLink": "隱私權政策",
       "needContact": "請至少留 Email 或電話／LINE，我們才回得了你。",
       "service": "需要的服務",
       "servicePh": "請選擇服務類型",

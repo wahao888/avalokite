@@ -363,6 +363,8 @@
       "phone": "Phone or LINE ID",
       "phonePh": "+886 912 345 678",
       "contactHint": "Either one works — we'll reply on whichever you leave.",
+      "adsMeasurement": "I agree to share my hashed email (if provided) and available ad identifiers with OpenAI to measure ad performance for this inquiry (optional).",
+      "privacyLink": "Privacy Policy",
       "needContact": "Please leave an email or a phone / LINE ID so we can reply.",
       "service": "Service needed",
       "servicePh": "Select a service",

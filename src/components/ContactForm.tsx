@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { track } from "@/lib/track";
 
 type Status = "idle" | "submitting" | "ok" | "err" | "badEmail";
@@ -17,6 +18,7 @@ type Status = "idle" | "submitting" | "ok" | "err" | "badEmail";
 export default function ContactForm() {
   const t = useTranslations("contact.form");
   const locale = useLocale();
+  const pathname = usePathname();
   const [status, setStatus] = useState<Status>("idle");
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -49,6 +51,7 @@ export default function ContactForm() {
           email: looksLikeEmail ? contact : "",
           phone: looksLikeEmail ? "" : contact,
           locale,
+          placement: pathname === "/" ? "home" : "contact",
         }),
       });
       if (!res.ok) throw new Error();
@@ -152,6 +155,14 @@ export default function ContactForm() {
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-note">
+          <input type="checkbox" name="adsMeasurement" value="yes" />
+          {" "}{t("adsMeasurement")}
+        </label>
+        {" "}<Link className="form-note" href="/legal/privacy" target="_blank" rel="noopener noreferrer">{t("privacyLink")}</Link>
       </div>
 
       <button

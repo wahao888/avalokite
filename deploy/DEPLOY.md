@@ -79,6 +79,7 @@ TENANT_LINE_TOKEN_<SLUG>=""                     # 變數名寫在 tenants.ts 的
 CRON_SECRET="<openssl rand -hex 24>"            # 本機 cron 打 /api/cron/* 用；本機沒有時端點回 401
 NEXT_PUBLIC_GA_MEASUREMENT_ID=""                # 留空 = 不載 GA。填 G-XXXXXXXX 後 nginx CSP 已放行
 NEXT_PUBLIC_OPENAI_ADS_PIXEL_ID=""               # 留空 = 不載 ChatGPT Ads Pixel。變更後需重新建置
+OPENAI_ADS_CONVERSIONS_API_KEY=""                # Ads Manager 的轉換金鑰，僅放伺服器。留空不回報諮詢
 NEXT_PUBLIC_GSC_VERIFICATION=""                 # Search Console HTML tag 的 content=
 NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
 ```
