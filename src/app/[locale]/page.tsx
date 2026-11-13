@@ -2,10 +2,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import Hero from "@/components/sections/Hero";
 import Ticker from "@/components/sections/Ticker";
 import AiSupport from "@/components/sections/AiSupport";
-import ServiceCinema from "@/components/sections/ServiceCinema";
+import HomeServices from "@/components/sections/HomeServices";
 import CaseGallery from "@/components/sections/CaseGallery";
 import MarketChart from "@/components/sections/MarketChart";
-import Pricing from "@/components/sections/Pricing";
+import HomePricing from "@/components/sections/HomePricing";
 import Process from "@/components/sections/Process";
 import About from "@/components/sections/About";
 import Contact from "@/components/sections/Contact";
@@ -40,10 +40,10 @@ export default async function HomePage({
       {/* 主打項排在服務分鏡之前：它是唯一一個客人能在這一頁當場驗證的服務 */}
       <AiSupport />
       {/* 看懂在做什麼 → 相信做得到 → 知道價格在哪 → 知道怎麼開始 → 聯絡 */}
-      <ServiceCinema />
+      <HomeServices />
       <CaseGallery />
       <MarketChart />
-      <Pricing />
+      <HomePricing />
       <Process />
       <About />
       <Contact />

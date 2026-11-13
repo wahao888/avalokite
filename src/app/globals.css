@@ -486,69 +486,6 @@ button { font-family: inherit; }
 }
 .section-intro { color: var(--muted); line-height: 1.9; font-size: 0.95rem; }
 
-/* ── SERVICES（深色區）── */
-.services-section { background: var(--ink); color: var(--paper); }
-.services-section .mono-label { color: var(--wood); }
-.services-section .mono-label::before { background: var(--wood); }
-.services-section .section-title { color: var(--paper); }
-.services-section .section-intro { color: rgba(240,235,227,0.6); }
-
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: rgba(240,235,227,0.12);
-}
-.service-card {
-  background: var(--ink);
-  padding: 3rem 2.5rem;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.3s;
-  display: block;
-  text-decoration: none;
-  color: inherit;
-}
-.service-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--sage);
-  transform: scaleX(0);
-  transition: transform 0.3s;
-  transform-origin: left;
-}
-.service-card:hover { background: var(--ink-soft); }
-.service-card:hover::before { transform: scaleX(1); }
-
-.service-num {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--wood);
-  margin-bottom: 1.5rem;
-}
-.service-name {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.5rem;
-  letter-spacing: 0.03em;
-  color: var(--paper);
-  margin-bottom: 1rem;
-}
-.service-desc {
-  font-size: 0.85rem;
-  line-height: 1.8;
-  color: rgba(240,235,227,0.55);
-  margin-bottom: 2rem;
-}
-.service-card .tag {
-  color: var(--sage);
-  border-color: color-mix(in srgb, var(--sage) 35%, transparent);
-}
-.service-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-
 /* ── PRICING ── */
 .pricing-section { background: var(--cream); }
 .pricing-notice {
@@ -1198,48 +1135,6 @@ button { font-family: inherit; }
 }
 .case-link:hover { gap: 0.8rem; }
 
-/* ── ABOUT（深色區）── */
-.about-section {
-  background: var(--ink);
-  color: var(--paper);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 0;
-}
-.about-left { padding: 8rem 4rem; display: flex; flex-direction: column; justify-content: center; }
-.about-left .mono-label { color: var(--wood); }
-.about-left .mono-label::before { background: var(--wood); }
-.about-left .section-title { color: var(--paper); }
-.about-text { color: rgba(240,235,227,0.6); line-height: 2; font-size: 0.95rem; margin-bottom: 2rem; }
-.about-right {
-  background: var(--ink-soft);
-  padding: 8rem 4rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2rem;
-  border-left: 1px solid rgba(240,235,227,0.08);
-}
-.feature-item { display: flex; gap: 1.5rem; align-items: flex-start; }
-.feature-num {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 2.6rem;
-  color: rgba(240,235,227,0.1);
-  line-height: 1;
-  flex-shrink: 0;
-  width: 3.5rem;
-}
-.feature-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.15rem;
-  letter-spacing: 0.03em;
-  color: var(--paper);
-  margin-bottom: 0.4rem;
-}
-.feature-desc { font-size: 0.82rem; line-height: 1.8; color: rgba(240,235,227,0.5); }
-
 /* ── CONTACT ── */
 .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: start; }
 .contact-intro { color: var(--muted); line-height: 1.9; margin-bottom: 3rem; font-size: 0.95rem; }
@@ -1667,11 +1562,9 @@ button { font-family: inherit; }
   .hero-ink-btn-clear { display: none; }
   .section { padding: 5rem 1.5rem; }
   .section-header { grid-template-columns: 1fr; gap: 1.5rem; }
-  .services-grid, .pricing-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
   .cases-grid { grid-template-columns: 1fr; }
   .case-card.case-wide { grid-column: span 1; grid-template-columns: 1fr; }
-  .about-section { grid-template-columns: 1fr; }
-  .about-left, .about-right { padding: 4rem 1.5rem; }
   .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
   .form-row { grid-template-columns: 1fr; }
   .form-panel { padding: 2rem 1.5rem; }
@@ -2162,240 +2055,12 @@ button { font-family: inherit; }
   body.chat-open { padding-bottom: 0; }
 }
 
-/* ══════════════ 首頁改版：捲動分鏡版面 ══════════════
-   方向 A。Hero 的墨流背景與全站色票不動，改的是 Hero 以下的
-   結構、圖像化程度與互動方式。 */
-
 /* ── Hero：CTA 降級後的那行文字連結 ── */
 .hero-quiz-sep { color: var(--border); margin: 0 0.55rem; }
 
-/* ── 服務分鏡 ── */
-/* 左欄釘住、右欄三幕依序捲過。三幕全部留在 DOM 的一般流裡，
-   爬蟲讀得到完整內容，不靠 JS 才渲染。 */
-.cinema {
-  display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  border-top: 1px solid var(--border);
-}
-.cinema-rail {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 6rem 3rem 6rem 4rem;
-  border-right: 1px solid rgba(240, 235, 227, 0.12);
-}
-.cinema-title { margin-bottom: 1.2rem; font-size: clamp(2rem, 3.2vw, 3rem); }
-.cinema-rail .mono-label { margin-bottom: 1.6rem; }
-.cinema-intro {
-  font-size: 0.88rem;
-  line-height: 1.95;
-  color: rgba(240, 235, 227, 0.55);
-  max-width: 38ch;
-  margin-bottom: 2.4rem;
-}
-.cinema-steps { list-style: none; border-top: 1px solid rgba(240, 235, 227, 0.1); }
-.cinema-steps li { border-bottom: 1px solid rgba(240, 235, 227, 0.1); }
-.cinema-step {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.95rem 0.9rem;
-  background: transparent;
-  border: none;
-  border-left: 2px solid transparent;
-  color: rgba(240, 235, 227, 0.55);
-  font-family: inherit;
-  font-size: 0.92rem;
-  text-align: left;
-  cursor: pointer;
-  transition: color 0.25s, background 0.25s, border-color 0.25s;
-}
-.cinema-step:hover { background: rgba(240, 235, 227, 0.05); color: var(--paper); }
-.cinema-step.is-active {
-  border-left-color: var(--sage);
-  background: rgba(240, 235, 227, 0.07);
-  color: var(--paper);
-}
-.cinema-step:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
-.cinema-step-num {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  color: var(--wood);
-}
-
-.cinema-stages { padding: 4rem 4rem 4rem 3rem; }
-.cinema-stage {
-  min-height: 84vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-block: 3rem;
-  border-bottom: 1px solid rgba(240, 235, 227, 0.1);
-}
-.cinema-stage:last-child { border-bottom: none; }
-.cinema-stage-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.6rem; }
-.cinema-stage-num {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--wood);
-}
-.cinema-stage-name {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
-  letter-spacing: 0.02em;
-  color: var(--paper);
-}
-.cinema-stage-headline {
-  font-size: 0.98rem;
-  line-height: 1.9;
-  color: rgba(240, 235, 227, 0.6);
-  max-width: 48ch;
-  margin-bottom: 2rem;
-}
-
-/* 流程圖解：捲到這一幕時節點依序點亮（延遲由元件逐一設定） */
-.cinema-flow {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1px;
-  background: rgba(240, 235, 227, 0.14);
-  border: 1px solid rgba(240, 235, 227, 0.14);
-}
-.cinema-node {
-  background: var(--ink);
-  padding: 1.5rem 0.7rem 1.3rem;
-  text-align: center;
-  color: rgba(240, 235, 227, 0.3);
-  opacity: 0.45;
-  transform: translateY(8px);
-  transition: opacity 0.55s ease, transform 0.55s ease, background 0.4s, color 0.4s;
-}
-.cinema-stage.is-live .cinema-node {
-  opacity: 1;
-  transform: none;
-  background: var(--ink-soft);
-  color: var(--sage);
-}
-.cinema-node-icon { margin: 0 auto 0.65rem; }
-.cinema-node-name {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--paper);
-}
-.cinema-node-meta {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.54rem;
-  letter-spacing: 0.1em;
-  color: rgba(240, 235, 227, 0.42);
-  margin-top: 0.35rem;
-}
-.cinema-caption {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  line-height: 1.9;
-  color: rgba(240, 235, 227, 0.4);
-  margin-top: 1rem;
-}
-.cinema-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-top: 1.8rem;
-}
-.cinema-foot .tag {
-  color: var(--sage);
-  border-color: color-mix(in srgb, var(--sage) 35%, transparent);
-}
-.cinema-link {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sage);
-  text-decoration: none;
-  white-space: nowrap;
-  border-bottom: 1px solid color-mix(in srgb, var(--sage) 45%, transparent);
-  padding-bottom: 0.2rem;
-  transition: color 0.2s, border-color 0.2s;
-}
-.cinema-link:hover { color: var(--paper); border-bottom-color: var(--paper); }
-
-/* ── 案例長廊 ── */
+/* ── 案例拼貼 ── */
 .gallery-section { border-top: 1px solid var(--border); }
-.gallery-rail {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(290px, 31%);
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  overscroll-behavior-x: contain;
-}
-.gallery-card {
-  background: var(--paper);
-  color: inherit;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  scroll-snap-align: start;
-  min-width: 0;
-  transition: background 0.25s;
-}
-.gallery-card:hover { background: var(--cream); }
-.gallery-shot { overflow: hidden; border-bottom: 1px solid var(--border); }
-.gallery-shot img {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-  transition: transform 0.6s ease;
-}
-.gallery-card:hover .gallery-shot img { transform: scale(1.045); }
-.gallery-meta {
-  padding: 1.4rem 1.5rem 1.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-}
-.gallery-type {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.56rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--wood);
-}
-.gallery-year { color: var(--muted); }
-.gallery-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
-.gallery-short { font-size: 0.82rem; line-height: 1.8; color: var(--muted); flex: 1; }
-.gallery-link {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--moss);
-}
+
 .gallery-foot {
   display: flex;
   justify-content: space-between;
@@ -2403,12 +2068,6 @@ button { font-family: inherit; }
   gap: 1.5rem;
   flex-wrap: wrap;
   margin-top: 1.8rem;
-}
-.gallery-hint {
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  color: var(--muted);
 }
 
 /* ── 行情對照圖表 ── */
@@ -2486,30 +2145,7 @@ button { font-family: inherit; }
 
 /* ── 合作四步 ── */
 .process-section { border-top: 1px solid var(--border); }
-.process-grid {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-}
-.process-step {
-  background: var(--paper);
-  padding: 2.2rem 1.8rem 1.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-.process-num {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--wood);
-}
-.process-icon { color: var(--moss); margin: 0.7rem 0 0.4rem; }
-.process-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; }
-.process-desc { font-size: 0.82rem; line-height: 1.85; color: var(--muted); flex: 1; }
+
 .process-meta {
   font-family: var(--font-mono);
   font-size: 0.58rem;
@@ -2589,49 +2225,12 @@ button { font-family: inherit; }
 .form-more-sign { font-size: 0.9rem; line-height: 1; }
 .form-more { border-left: 2px solid var(--border); padding-left: 1.1rem; margin-bottom: 1.2rem; }
 
-/* ── 分鏡版面的 RWD：手機一律降級成靜態堆疊 ── */
+/* ── 行情圖與流程的 RWD ── */
 @media (max-width: 900px) {
-  .cinema { grid-template-columns: 1fr; }
-  .cinema-rail {
-    position: static;
-    height: auto;
-    padding: 4.5rem 1.5rem 2rem;
-    border-right: none;
-    border-bottom: 1px solid rgba(240, 235, 227, 0.12);
-  }
-  .cinema-steps { display: none; }
-  .cinema-stages { padding: 0 1.5rem 3.5rem; }
-  .cinema-stage { min-height: 0; padding-block: 2.5rem; }
-  .cinema-flow { grid-template-columns: repeat(2, 1fr); }
-  .cinema-node {
-    opacity: 1;
-    transform: none;
-    background: var(--ink-soft);
-    color: var(--sage);
-  }
-  .gallery-rail { grid-auto-columns: minmax(250px, 82%); }
   .market-row { grid-template-columns: 1fr; gap: 0.5rem; }
   .market-axis { margin-left: 0; }
   .market-chart { padding: 1.6rem 1.2rem 1.4rem; }
-  .process-grid { grid-template-columns: repeat(2, 1fr); }
   .process-cta { padding: 1.3rem 1.4rem; }
-}
-
-@media (max-width: 560px) {
-  .process-grid { grid-template-columns: 1fr; }
-  .cinema-foot { gap: 1rem; }
-}
-
-/* 使用者要求減少動態時，分鏡一次全部亮好，不做進場位移 */
-@media (prefers-reduced-motion: reduce) {
-  .cinema-node {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    background: var(--ink-soft);
-    color: var(--sage);
-  }
-  .gallery-card:hover .gallery-shot img { transform: none; }
 }
 
 /* ── 墨跡往下延伸的視差層 ──
@@ -2678,48 +2277,6 @@ button { font-family: inherit; }
   .ink-wash { transform: none !important; will-change: auto; }
 }
 
-/* ── 分鏡區的墨：深色底要走遮罩，不能 multiply ──
-   服務分鏡的底色是 --ink，深色疊深色用 multiply 等於整層消失。
-   這裡反過來用墨跡的 alpha 當遮罩、填一層紙色與青苔色的光，
-   墨濃到哪裡就亮到哪裡，看起來像同一攤墨在深色紙上的負片。
-   --ink-wash 還沒設定時遮罩退回全透明漸層，整層一樣隱形。 */
-.cinema {
-  position: relative;
-  isolation: isolate;
-  /* 一定是 clip 不是 hidden：hidden 會讓左欄的 sticky 失效 */
-  overflow: clip;
-}
-/* 左欄本來就是 sticky（已經有定位），只補 z-index；右欄要自己定位才吃得到 */
-.cinema-rail { z-index: 1; }
-.cinema-stages { position: relative; z-index: 1; }
-
-.ink-wash[data-ink="4"] {
-  inset: -70px 0 auto 0;
-  height: min(880px, 78%);
-  /* 往下自然收掉，省掉第二層遮罩合成（mask-composite 的相容性沒那麼好） */
-  background: linear-gradient(
-    168deg,
-    rgba(240, 235, 227, 0.95),
-    rgba(138, 154, 123, 0.62) 42%,
-    rgba(169, 132, 103, 0.38) 70%,
-    rgba(240, 235, 227, 0) 100%
-  );
-  mix-blend-mode: screen;
-  opacity: 0.3;
-  -webkit-mask-image: var(--ink-wash, linear-gradient(#0000, #0000));
-  mask-image: var(--ink-wash, linear-gradient(#0000, #0000));
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: 66% 24%;
-  mask-position: 66% 24%;
-}
-
-@media (max-width: 900px) {
-  .ink-wash[data-ink="4"] { inset: 0 0 auto 0; height: 62%; }
-}
-
 /* ── 首頁 AI 客服主打區塊 ── */
 .ai-band { border-top: 1px solid var(--border); }
 .ai-band-proof {
@@ -2733,7 +2290,6 @@ button { font-family: inherit; }
   border-radius: 10px;
   background: color-mix(in srgb, var(--sage) 10%, transparent);
 }
-.ai-band-proof p { margin: 0; font-size: 0.9rem; line-height: 1.85; color: var(--ink-soft); }
 /* 會呼吸的點：告訴讀者那個聊天視窗是活的，不是截圖 */
 .ai-band-dot {
   flex: none;
@@ -2748,40 +2304,16 @@ button { font-family: inherit; }
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--moss) 55%, transparent); }
   50% { opacity: 0.65; box-shadow: 0 0 0 7px transparent; }
 }
-.ai-band-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rem;
-}
-.ai-band-point-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.08rem;
-  margin-bottom: 0.5rem;
-}
-.ai-band-point-desc { font-size: 0.84rem; line-height: 1.9; color: var(--muted); margin: 0; }
-.ai-band-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.2rem;
-  margin-top: 3rem;
-  padding-top: 1.8rem;
-  border-top: 1px solid var(--border);
-}
+
 .ai-band-price { font-size: 0.95rem; color: var(--ink-soft); max-width: 46ch; }
 .ai-band-cta { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; }
 
-@media (max-width: 860px) {
-  .ai-band-grid { grid-template-columns: 1fr; gap: 1.6rem; }
-}
 @media (prefers-reduced-motion: reduce) {
   .ai-band-dot { animation: none; }
 }
 
 /* ── 自家案例頁（/cases/avalo-ai-support）── */
-/* 前綴刻意用 cs-：case-card／case-tags 已經是首頁案例長廊在用的，共用會互相汙染 */
+/* 前綴刻意用 cs-：case-card／case-tags 已經是案例列表頁在用的，共用會互相汙染 */
 .cs-page { padding-bottom: 2rem; }
 .cs-hero { padding-bottom: 3rem; }
 .cs-back {
@@ -3076,6 +2608,7 @@ a.ip-card:hover {
   gap: 2rem 3rem;
 }
 .ip-flow.is-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2rem 2.6rem; }
+.ip-flow.is-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem 3.4rem; }
 .ip-step { position: relative; display: flex; flex-direction: column; gap: 0.45rem; }
 .ip-step-num { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.2em; color: var(--walnut); }
 .ip-step-icon { margin: 0.2rem 0 0.3rem; }
@@ -3140,7 +2673,7 @@ a.ip-card:hover {
   .ip-hero-art { justify-self: center; max-width: 300px; }
   .ip-section { margin-bottom: 3.5rem; }
   .svc-grid, .ip-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ip-flow, .ip-flow.is-5 { grid-template-columns: 1fr; gap: 1.6rem; }
+  .ip-flow, .ip-flow.is-4, .ip-flow.is-5 { grid-template-columns: 1fr; gap: 1.6rem; }
   .ip-step {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -3166,3 +2699,162 @@ a.ip-card:hover {
 }
 /* 區段標題底下已經有間距，這兩個元件自帶的上邊距就不要了 */
 .ip-section > .trust-marks, .ip-section > .faq-list { margin-top: 0; }
+
+/* ══════════════ 首頁：圖多字少 ══════════════ */
+/* 每個區塊先給一張圖，文字只留標題與一句話；細節一律交給內頁。 */
+
+/* ── 八項服務格 ── */
+.hs-section { border-top: 1px solid var(--border); }
+.hs-grid { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.hs-tile {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.6rem 1.4rem 1.3rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.hs-tile:hover { border-color: var(--moss); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(47, 43, 38, 0.09); }
+.hs-icon { width: 76px; height: 76px; margin-bottom: 0.6rem; transition: transform 0.25s; transform-origin: 50% 60%; }
+.hs-tile:hover .hs-icon { transform: rotate(-6deg) scale(1.08); }
+.hs-name { font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; line-height: 1.35; flex: 1; }
+.hs-price { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--moss-deep); }
+.hs-price small { font-family: var(--font-body); font-weight: 400; font-size: 0.78rem; color: var(--muted-strong); margin-left: 0.2rem; }
+.hs-foot { display: flex; justify-content: center; margin-top: 2.2rem; }
+
+/* ── AI 客服：左圖右文 ── */
+.ai-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 3rem 4.5rem;
+  align-items: center;
+}
+.ai-art .doodle, .about-band-art .doodle { width: 100%; height: auto; }
+.ai-band-proof { align-items: center; margin: 0 0 2rem; font-size: 0.95rem; line-height: 1.6; color: var(--ink-soft); }
+.ai-band-proof .ai-band-dot { margin-top: 0; }
+.ai-points, .about-band-grid { list-style: none; display: grid; gap: 1.2rem; margin-bottom: 2rem; }
+.ai-points li, .about-band-grid li { display: flex; align-items: center; gap: 1rem; }
+.ai-point-t { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; line-height: 1.35; }
+.ai-point-d { font-size: 0.9rem; line-height: 1.6; color: var(--muted-strong); margin-top: 0.15rem; }
+.ai-band .ai-band-price { margin-bottom: 1.2rem; font-size: 0.9rem; color: var(--muted-strong); }
+
+/* ── 案例拼貼：第一張放大佔兩欄兩列 ── */
+.mosaic { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.mosaic .is-big { grid-column: span 2; grid-row: span 2; }
+.mosaic-card {
+  position: relative;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
+.mosaic-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 0.6s ease;
+}
+.mosaic-card:hover img { transform: scale(1.04); }
+/* 文字壓在圖的下緣：漸層從透明到墨色，截圖再亮也讀得到 */
+.mosaic-cap {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 2.6rem 1.2rem 1rem;
+  background: linear-gradient(transparent, rgba(30, 27, 23, 0.88));
+}
+.mosaic-type { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; color: #D9D2C4; }
+.mosaic-name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; line-height: 1.3; }
+.mosaic .is-big .mosaic-cap { padding: 4rem 1.8rem 1.5rem; }
+.mosaic .is-big .mosaic-name { font-size: 1.6rem; }
+.gallery-foot { justify-content: center; }
+
+/* ── 首頁定價：四張入門價 ── */
+.hp-grid { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.hp-tile {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  padding: 1.7rem 1rem 1.5rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.hp-tile:hover { border-color: var(--moss); transform: translateY(-3px); }
+.hp-name { font-size: 0.92rem; color: var(--muted-strong); line-height: 1.4; }
+.hp-price { font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; line-height: 1.1; color: var(--ink); }
+.hp-price small { font-size: 0.8rem; color: var(--muted-strong); margin: 0 0.15rem; }
+.hp-from {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--walnut);
+  border: 1px solid color-mix(in srgb, var(--walnut) 40%, transparent);
+  padding: 0.1rem 0.45rem;
+}
+
+/* ── 合作四步：沿用內頁的步驟圖解，時間標示用 process-meta ── */
+.process-section .ip-step .process-meta { border-top: 0; padding-top: 0; margin-top: 0.1rem; font-size: 0.66rem; }
+.ip-flow.is-4 .ip-step-arrow { top: 3rem; right: -3.1rem; width: 2.8rem; }
+
+/* ── 關於：右圖左文的淺色帶 ── */
+.about-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem 4.5rem;
+  align-items: center;
+  background: var(--cream);
+  border-top: 1px solid var(--border);
+}
+.about-band-art { order: 2; }
+.about-band .section-intro { margin-bottom: 2rem; max-width: 36rem; }
+.about-band-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem 1.8rem; }
+.about-band-grid li { align-items: flex-start; }
+
+@media (max-width: 1100px) {
+  .hs-grid, .hp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .ai-split, .about-band { grid-template-columns: 1fr; }
+  .ai-art, .about-band-art { max-width: 340px; margin: 0 auto; order: 0; }
+  .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mosaic .is-big { grid-row: auto; }
+  .process-section .ip-step .process-meta { grid-column: 2; }
+}
+@media (max-width: 560px) {
+  .hs-tile { padding: 1.2rem 1rem 1rem; }
+  .hs-icon { width: 60px; height: 60px; }
+  .hs-name { font-size: 1rem; }
+  .mosaic { grid-template-columns: 1fr; }
+  .mosaic .is-big { grid-column: auto; }
+  .mosaic .is-big .mosaic-name { font-size: 1.2rem; }
+  .mosaic .is-big .mosaic-cap { padding: 2.6rem 1.2rem 1rem; }
+  .hp-price { font-size: 1.4rem; }
+  .about-band-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs-tile, .hs-icon, .mosaic-card img, .hp-tile { transition: none; }
+  .hs-tile:hover, .hs-tile:hover .hs-icon, .mosaic-card:hover img, .hp-tile:hover { transform: none; }
+}

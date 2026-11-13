@@ -16,7 +16,7 @@
     "label": "Engineering · Design · Automation",
     "title1": "Web design and enterprise AI",
     "title2": "prices, published first",
-    "desc": "From brand websites and revenue-ready commerce sites to enterprise AI automation and LINE support — Avalo delivers professional-grade systems for individuals and enterprises of every size: design, build, deploy, maintain. Every price published. No haggling.",
+    "desc": "Websites, commerce, LINE AI support and automation, delivered end to end. Every price published.",
     "ctaPrimary": "See transparent pricing →",
     "ctaGhost": "View work",
     "ctaLine": "Free consult on LINE",
@@ -61,174 +61,31 @@
     "label": "AI Customer Service",
     "title1": "After hours,",
     "title2": "someone still answers on LINE",
-    "lede": "Opening hours, prices, plan differences, how to pay — most of what support answers every day is the same few dozen questions. AI support runs on your LINE Official Account and your website, answering from your own data, and fetching a human when one is needed.",
-    "proof": "The chat window at the bottom right of this page is the product itself. Ask it what a brand site costs. When it cannot answer, it asks for your contact details — that is by design too.",
+    "proof": "The chat window at the bottom right is the real thing — ask it now.",
     "points": [
       {
         "t": "Answers from your data",
-        "d": "Your FAQ, price list and service notes become the knowledge base. When something is not in it, it says so instead of inventing an answer."
+        "d": "Your FAQ and prices become the knowledge base."
       },
       {
-        "t": "The model never does the arithmetic",
-        "d": "Prices come from the system; the model may quote but not add up. A wrong total reads as a promise — we hit that on our own site, so we switched it off."
+        "t": "No AI arithmetic",
+        "d": "Prices come from the system, so quotes add up."
       },
       {
-        "t": "It steps aside for you",
-        "d": "Once you reply yourself on LINE, the AI goes quiet while still logging and forwarding everything the customer says, then resumes automatically."
+        "t": "A human steps in, AI steps back",
+        "d": "Reply on LINE and the AI pauses itself."
       }
     ],
-    "priceLine": "From {lite} excl. VAT, in three tiers from single channel to full system integration; enterprise from {enterprise}.",
+    "priceLine": "Builds from {lite}; enterprise integration from {enterprise} (excl. VAT)",
     "ctaPlans": "See the three tiers →",
     "ctaLine": "Ask us on LINE"
   },
   "services": {
-    "label": "Core Services",
-    "title1": "Three things we do",
-    "title2": "shown step by step",
-    "intro": "Design, full-stack engineering and cloud architecture under one roof, with no subcontracting. Below, each service is laid out step by step — exactly how it runs.",
-    "items": [
-      {
-        "num": "01",
-        "name": "Web Design & Development",
-        "tags": [
-          "Custom Design",
-          "RWD",
-          "SEO/GEO",
-          "Payments",
-          "E-commerce"
-        ],
-        "href": "/services/website",
-        "headline": "From the first design file to a site that brings in orders — one team, start to finish.",
-        "caption": "Live in 10 working days once we have your content. Bug fixes free for 14 days after launch.",
-        "cta": "Web design & development →",
-        "flow": [
-          {
-            "icon": "design",
-            "name": "Design",
-            "meta": "Fully custom"
-          },
-          {
-            "icon": "code",
-            "name": "Build",
-            "meta": "Responsive"
-          },
-          {
-            "icon": "payment",
-            "name": "Payments",
-            "meta": "ECPay / NewebPay"
-          },
-          {
-            "icon": "admin",
-            "name": "Admin",
-            "meta": "Orders & content"
-          },
-          {
-            "icon": "deploy",
-            "name": "Launch",
-            "meta": "SSL included"
-          },
-          {
-            "icon": "monitor",
-            "name": "Operations",
-            "meta": "365 days"
-          }
-        ]
-      },
-      {
-        "num": "02",
-        "name": "Enterprise AI Automation",
-        "tags": [
-          "AI Support",
-          "n8n",
-          "LINE OA",
-          "RAG",
-          "Report Automation"
-        ],
-        "href": "/services/ai-automation",
-        "headline": "Customers ask, the system answers — and hands over to a human when it can't.",
-        "caption": "Self-hosted and yours. No third-party software subscriptions. Report automation runs the same path.",
-        "cta": "Enterprise AI automation →",
-        "flow": [
-          {
-            "icon": "chat",
-            "name": "Question",
-            "meta": "LINE / web"
-          },
-          {
-            "icon": "knowledge",
-            "name": "Retrieval",
-            "meta": "RAG"
-          },
-          {
-            "icon": "ai",
-            "name": "Answer",
-            "meta": "Your own data"
-          },
-          {
-            "icon": "person",
-            "name": "Handover",
-            "meta": "Low confidence"
-          },
-          {
-            "icon": "log",
-            "name": "Transcripts",
-            "meta": "In your admin"
-          },
-          {
-            "icon": "report",
-            "name": "Usage report",
-            "meta": "Monthly"
-          }
-        ]
-      },
-      {
-        "num": "03",
-        "name": "Systems & Custom Development",
-        "tags": [
-          "API Development",
-          "ERP/POS",
-          "Data Engineering",
-          "Web3",
-          "Cloud"
-        ],
-        "href": "/services",
-        "headline": "When off-the-shelf software can't do it, we grow one around how you actually work.",
-        "caption": "The finance automation system below was built along exactly this path.",
-        "cta": "Systems & custom development →",
-        "flow": [
-          {
-            "icon": "survey",
-            "name": "Discovery",
-            "meta": "On-site audit"
-          },
-          {
-            "icon": "blocks",
-            "name": "System design",
-            "meta": "Data model"
-          },
-          {
-            "icon": "link",
-            "name": "Integration",
-            "meta": "ERP / POS"
-          },
-          {
-            "icon": "shield",
-            "name": "Access & audit",
-            "meta": "Governable"
-          },
-          {
-            "icon": "deploy",
-            "name": "Handover",
-            "meta": "Training included"
-          },
-          {
-            "icon": "loop",
-            "name": "Iteration",
-            "meta": "Care plan"
-          }
-        ]
-      }
-    ]
+    "label": "Services",
+    "title1": "Eight services,",
+    "title2": "price on every card",
+    "intro": "Open any card for what it covers, how long, and what it costs.",
+    "all": "All services →"
   },
   "pricing": {
     "label": "Transparent Pricing",
@@ -258,13 +115,16 @@
       "build": "Build plans",
       "care": "Care plans",
       "addon": "Add-ons"
-    }
+    },
+    "homeIntro": "The four most-chosen plans. Prices exclude 5% VAT.",
+    "homeAll": "Full pricing and add-ons →",
+    "homeFrom": "from"
   },
   "cases": {
     "label": "Selected Work",
     "title1": "Real projects,",
     "title2": "all live right now",
-    "intro": "No concept mockups, no fake screenshots. Every project below was built by Avalo and is running in production — click through and verify.",
+    "intro": "Every one is live in production — click through and check.",
     "visit": "Visit site →",
     "viewCase": "View full case →",
     "items": [
@@ -446,36 +306,34 @@
         "hint": "Fully custom · project pricing"
       }
     ],
-    "scrollHint": "← scroll sideways　·　5 of 9 shown here",
-    "seeAll": "See all 9 case studies →"
+    "seeAll": "See all {n} case studies →"
   },
   "about": {
     "label": "About Avalo",
     "title1": "Design to operations,",
     "title2": "end-to-end ownership",
-    "p1": "Avalo is a digital engineering company focused on professional-grade websites and enterprise AI automation, serving clients from personal brands to enterprises. Our capabilities span design, full-stack development, cloud architecture, and security — every project above was architected, built, deployed, and maintained by Avalo end to end.",
-    "p2": "You deal with a transparent, accountable organization: a dedicated point of contact, regular progress updates, and someone to call when things break.",
+    "p1": "Avalo is the brand of Lien Dun Co., Ltd.: design, full-stack engineering, cloud and security under one team.",
     "cta": "Book a free consultation",
     "features": [
       {
         "num": "01",
         "title": "Fixed prices, published first",
-        "desc": "Every standard service is priced on this site with the market range alongside. No negotiating, no guessing."
+        "desc": "Listed with the market range alongside."
       },
       {
         "num": "02",
-        "title": "Talk directly to the engineering team",
-        "desc": "Your point of contact is an engineer. Whether it can be done, and how long it takes, gets answered on the spot."
+        "title": "Engineers on the call",
+        "desc": "Feasibility and timing answered on the spot."
       },
       {
         "num": "03",
-        "title": "Deployment & security included",
-        "desc": "Every build includes production deployment, HTTPS and firewall hardening — not a zip file and goodbye."
+        "title": "Deployment and security included",
+        "desc": "HTTPS and hardening are part of delivery."
       },
       {
         "num": "04",
-        "title": "Long-term care is the commitment",
-        "desc": "A care plan keeps the site looked after all year: backups, updates, monitoring, changes."
+        "title": "Care is the commitment",
+        "desc": "Backups, updates and monitoring all year."
       }
     ]
   },
@@ -483,7 +341,7 @@
     "label": "Start a Project",
     "title1": "Let's talk about",
     "title2": "what you need",
-    "intro": "Standard services can be ordered online directly. For custom projects — or if you're not sure what you need — fill in the form or add LINE. A project consultant replies within 24 hours.",
+    "intro": "Order standard plans online; for custom work, send a note or add LINE. We reply within 24 hours.",
     "lineCta": "Free consult on LINE",
     "items": {
       "email": "Email",
@@ -791,7 +649,7 @@
     "label": "Where we sit",
     "title1": "Our prices",
     "title2": "against the market",
-    "intro": "The same numbers that used to sit as one line of small print under each plan, drawn to scale. The bar is the Taiwan market range; the green line is Avalo's published price, before tax.",
+    "intro": "Bars are the Taiwan market range; the green line is Avalo's list price (excl. VAT).",
     "ticks": [
       "0",
       "100k",
@@ -807,30 +665,26 @@
     "label": "How we work",
     "title1": "What happens",
     "title2": "after you get in touch",
-    "intro": "Four steps from first message to launch, with how long each one takes.",
+    "intro": "Four steps, each with its timing up front.",
     "steps": [
       {
         "num": "01",
         "name": "Free consultation",
-        "desc": "Message us on LINE or send the form. You talk to a consultant with an engineering background, not a salesperson.",
         "meta": "Reply within 24 hours"
       },
       {
         "num": "02",
         "name": "Fixed written quote",
-        "desc": "Scope, deliverables and price on one document. Once quoted, the price doesn't move.",
         "meta": "2–3 working days"
       },
       {
         "num": "03",
         "name": "Design & build",
-        "desc": "Designs are approved before we build. Progress reported regularly; say the word if something needs to change.",
         "meta": "2–4 weeks for a brand site"
       },
       {
         "num": "04",
         "name": "Launch & care",
-        "desc": "Production deployment, HTTPS and security hardening included, then a care plan takes over.",
         "meta": "Free bug fixes for 14 days"
       }
     ],

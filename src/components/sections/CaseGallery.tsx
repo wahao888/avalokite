@@ -3,22 +3,20 @@ import { Link } from "@/i18n/navigation";
 import InkWash from "@/components/InkWash";
 
 /**
- * 案例長廊
+ * 案例拼貼牆
  *
- * 首頁原本把九個案例全部直式展開、每個一百多字，是第二長的區塊。
- * 這裡只露精選五件、改成橫向捲動的真機大圖，文字砍成一句話；
- * 想看細節的人點進案例頁，首頁不再承擔說明責任。
+ * 首頁只負責「讓人看到真的做過」：六張真機截圖排成拼貼，第一張放大，
+ * 每張只留類型與名字，說明交給案例頁。原本的橫向捲動長廊每張還帶一句說明，
+ * 而且一次只看得到四張半。
  */
 
-/** 精選順序：先放最能代表「完全客製」的財務系統，再放三個品牌官網與一個互動案例 */
-const FEATURED = ["finance", "rekat", "monsieurlong", "wenshan", "formula-kart"];
+/** 精選順序：第一張是大圖，放最能代表「完全客製」的財務系統 */
+const FEATURED = ["finance", "rekat", "monsieurlong", "wenshan", "formula-kart", "gtclub"];
 
 interface CaseItem {
   id: string;
   type: string;
-  year: string;
   name: string;
-  short: string;
   url: string;
 }
 
@@ -43,45 +41,39 @@ export default function CaseGallery() {
         <p className="section-intro">{t("intro")}</p>
       </div>
 
-      <div className="gallery-rail fade-in">
-        {featured.map((item) => {
+      <ul className="mosaic fade-in">
+        {featured.map((item, i) => {
           const inner = (
             <>
-              <div className="gallery-shot">
-                <img src={`/cases/${item.id}.jpg`} alt={item.name} loading="lazy" />
-              </div>
-              <div className="gallery-meta">
-                <div className="gallery-type">
-                  {item.type}
-                  <span className="gallery-year">{item.year}</span>
-                </div>
-                <h3 className="gallery-name">{item.name}</h3>
-                <p className="gallery-short">{item.short}</p>
-                <span className="gallery-link">{t("viewCase")}</span>
-              </div>
+              <img
+                src={`/cases/${item.id}.jpg`}
+                alt={item.name}
+                width={1200}
+                height={750}
+                loading={i < 3 ? "eager" : "lazy"}
+              />
+              <span className="mosaic-cap">
+                <span className="mosaic-type">{item.type}</span>
+                <span className="mosaic-name">{item.name}</span>
+              </span>
             </>
           );
-          return item.url.startsWith("/cases/") ? (
-            <Link className="gallery-card" key={item.id} href={item.url}>
-              {inner}
-            </Link>
-          ) : (
-            <a
-              className="gallery-card"
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {inner}
-            </a>
+          return (
+            <li key={item.id} className={i === 0 ? "is-big" : undefined}>
+              {item.url.startsWith("/cases/") ? (
+                <Link className="mosaic-card" href={item.url}>{inner}</Link>
+              ) : (
+                <a className="mosaic-card" href={item.url} target="_blank" rel="noopener noreferrer">
+                  {inner}
+                </a>
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
 
       <div className="gallery-foot fade-in">
-        <span className="gallery-hint">{t("scrollHint")}</span>
-        <Link href="/cases" className="btn-ghost">{t("seeAll")}</Link>
+        <Link href="/cases" className="btn-ghost">{t("seeAll", { n: items.length })}</Link>
       </div>
     </section>
   );
