@@ -59,8 +59,10 @@ echo "=== 3/4 上傳（含建置產物，排除 dev 快取）==="
 # 少了它，伺服器啟動時會噴
 #   Failed to load external module sharp-<hash>: Cannot find package
 # 而且只有圖片上傳會 500，其他頁面全部正常，非常難聯想。2026-09-08 上線時踩到。
+# docs/marketing 是短片原稿：mp4、旁白、各自的 node_modules 加起來兩百多 MB，
+# 網站完全用不到，傳上去只是吃 t3.micro 的磁碟。
 rsync -az --delete -e "ssh -i $KEY" \
-  --exclude /node_modules --exclude .git --exclude .env \
+  --exclude /node_modules --exclude .git --exclude .env --exclude /docs/marketing \
   --exclude '*.pem' --exclude .claude --exclude 'prisma/*.db*' --exclude suminagashi \
   --exclude '.next/dev' --exclude '.next/cache' \
   ./ "$HOST":/tmp/app/
