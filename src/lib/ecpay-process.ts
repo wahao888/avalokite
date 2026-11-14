@@ -4,6 +4,7 @@ import { notifyOwner, sendMail } from "@/lib/mail";
 import { recalcOrderStatus, subscriptionUrl } from "@/lib/subscription";
 import { getProduct } from "@/lib/products";
 import { queueInvoice } from "@/lib/invoices";
+import { queueAdsConversion } from "@/lib/openai-ads-conversions";
 
 export async function formToParams(req: Request): Promise<Record<string, string>> {
   const text = await req.text();
@@ -32,6 +33,7 @@ export async function processPaymentResult(params: Record<string, string>) {
     return payment.order.id;
   }
   if (success && Number(params.TradeAmt) !== payment.amount) throw new Error("TradeAmt mismatch");
+  const paidAt = success ? new Date() : null;
 
   const order = await prisma.$transaction(async (tx) => {
     const updated = await tx.payment.updateMany({
@@ -40,7 +42,7 @@ export async function processPaymentResult(params: Record<string, string>) {
         status: success ? "paid" : "failed",
         ecpayTradeNo: params.TradeNo ?? null,
         paymentType: params.PaymentType ?? null,
-        paidAt: success ? new Date() : null,
+        paidAt,
         rawReturn: JSON.stringify(params),
       },
     });
@@ -65,6 +67,17 @@ export async function processPaymentResult(params: Record<string, string>) {
         mtn, amount: payment.amount, chargedAt: params.PaymentDate ?? "",
         period: isPeriod ? 1 : undefined, subscriptionSku: sub?.sku,
       });
+    }
+    const { order } = payment;
+    const firstCharge = isPeriod
+      ? order.oneTimeTotal === 0 && payment.kind === "period" && mtn === `${order.id}2`
+      : payment.kind === "onetime" && mtn === `${order.id}1`;
+    if (paidAt && firstCharge && order.adsMeasurementAt && process.env.ECPAY_ENV === "production") {
+      await queueAdsConversion(tx, {
+        id: `avalo-order-${order.id}`, type: "order_created", amountTwd: payment.amount,
+        email: order.email, locale: order.locale, path: "/checkout", occurredAt: paidAt, matching: order,
+      });
+      await tx.order.update({ where: { id: order.id }, data: { adsOppref: null, adsObref: null } });
     }
     return recalcOrderStatus(payment.orderId, tx);
   });

@@ -12,7 +12,7 @@ import { COMPANY, SITE } from "./site";
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
 export const LEGAL_VERSION = "2026-11-02";
-const PRIVACY_UPDATED = "2026-11-13";
+const PRIVACY_UPDATED = "2026-11-14";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -345,6 +345,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
             "本站使用必要之 Cookie 維持購物車與登入狀態，並可能使用 Google Analytics 進行匿名流量分析。",
             "本站可能使用 OpenAI 的 ChatGPT Ads Measurement Pixel 衡量廣告成效。Pixel 會使用第一方 Cookie 儲存廣告點擊與瀏覽器識別碼，並向 OpenAI 回報公開頁面瀏覽、加入購物車、開始結帳及點擊 LINE 諮詢等事件。",
             "您可在諮詢表單選擇同意廣告配對。經您同意且諮詢送出成功時，本站可能透過 OpenAI Conversions API 傳送該事件、雜湊後的 Email（如有提供）及可用的廣告點擊與瀏覽器識別碼。您可以不勾選並照常送出諮詢。",
+            "您也可在結帳時選擇同意廣告配對。經您同意且綠界確認訂單首次收款後，本站可能透過同一 API 回報付款事件及實收金額，並附上雜湊後的 Email 和可用的廣告識別碼。您可以不勾選並照常付款。",
           ],
         },
         {
@@ -392,6 +393,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
             "We use essential cookies for the cart and admin sessions, and may use Google Analytics for anonymized traffic analysis.",
             "We may use OpenAI’s ChatGPT Ads Measurement Pixel to measure ad performance. The Pixel uses first-party cookies to store ad click and browser identifiers and reports public page views, add-to-cart actions, checkout starts, and clicks on LINE contact links to OpenAI.",
             "The inquiry form lets you opt in to ad matching. If you opt in and submit a successful inquiry, we may send that event, your hashed email (if provided), and available ad click and browser identifiers through the OpenAI Conversions API. The form works without opting in.",
+            "At checkout, you can separately opt in to ad matching. If you opt in and ECPay confirms the first payment, we may report the payment event and amount paid through the same API, with your hashed email and available ad identifiers. You can pay without opting in.",
           ],
         },
         {

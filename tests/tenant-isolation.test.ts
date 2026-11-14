@@ -53,6 +53,7 @@ const LIB_PRISMA_ALLOWED = [
   "src/lib/daigou-data.ts",
   "src/lib/ecpay-process.ts",
   "src/lib/invoices.ts",
+  "src/lib/openai-ads-conversions.ts", // Avalo 主站的訂單與轉換佇列，沒有客戶站入口
   "src/lib/subscription.ts",
   "src/lib/chat-service.ts",
   "src/lib/line-events.ts",

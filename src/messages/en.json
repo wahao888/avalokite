@@ -480,6 +480,7 @@
     "payHint": "Checkout collects the one-time build fee first via ECPay's secure page; once it clears, the same flow takes you to authorize the recurring care payment. They are two separate authorizations, not a double charge.",
     "payHintCareOnly": "You'll be redirected to ECPay's secure page to complete the recurring card authorization. Billing starts monthly once authorized, and can be cancelled anytime.",
     "agreement": "I have read and agree to the",
+    "adsMeasurement": "I agree to share the payment event, amount paid, hashed email and available ad identifiers with OpenAI to measure ad performance (optional).",
     "and": "and",
     "submit": "Pay with ECPay →",
     "submitting": "Creating order…",

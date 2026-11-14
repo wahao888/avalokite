@@ -17,6 +17,7 @@ import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import { consentRecord } from "@/lib/legal-consent";
+import { adsMatchingFields } from "@/lib/openai-ads-conversions";
 import {
   INVOICE_ADDRESS_LIMIT, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT, invoiceCarrierPattern, validTaxId,
 } from "@/lib/invoice-details";
@@ -45,6 +46,7 @@ const schema = z.object({
   // 契約同意：勾選值與客戶當下看到的條款版本
   agree: z.literal("yes"),
   termsVersion: z.string().max(20),
+  adsMeasurement: z.literal("yes").optional(),
   items: z
     .array(z.object({ sku: z.string().max(50), qty: z.number().int().min(1).max(9) }))
     .min(1)
@@ -136,6 +138,7 @@ export async function POST(req: NextRequest) {
       items: JSON.stringify(d.items),
       // 同意紀錄：雜湊以伺服器自己的條款內容計算，不採信前端傳來的值
       ...consentRecord(d.locale ?? "zh-TW", clientIp(req)),
+      ...adsMatchingFields(req, d.adsMeasurement === "yes" && process.env.ECPAY_ENV === "production"),
       oneTimeTotal,
       monthlyTotal,
     },

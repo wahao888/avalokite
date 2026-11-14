@@ -30,11 +30,26 @@ model Order {
   agreedTermsHash    String?
   agreedAt           DateTime?
   agreedIp           String?
+  adsMeasurementAt   DateTime?
+  adsOppref          String?
+  adsObref           String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   payments           Payment[]
   subscriptions      Subscription[]
   invoices           Invoice[]
+}
+
+model AdsConversion {
+  id            String    @id
+  payload       String
+  createdAt     DateTime  @default(now())
+  nextAttemptAt DateTime  @default(now())
+  attempts      Int       @default(0)
+  sentAt        DateTime?
+  lastError     String?
+
+  @@index([sentAt, nextAttemptAt])
 }
 
 // 每筆實收款各有一個發票識別碼。發票工作與付款在同一筆交易中寫入。

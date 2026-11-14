@@ -170,6 +170,14 @@ export default function CheckoutPage() {
             <div className="form-note">{t("agreementRecord", { version: LEGAL_VERSION })}</div>
           </div>
 
+          <div className="form-group">
+            <label className="form-note">
+              <input type="checkbox" name="adsMeasurement" value="yes" />
+              {" "}{t("adsMeasurement")}
+            </label>
+            {" "}<Link className="form-note" href="/legal/privacy" target="_blank" rel="noopener noreferrer">{tl("privacy")}</Link>
+          </div>
+
           <button
             type="submit"
             className="btn-primary"

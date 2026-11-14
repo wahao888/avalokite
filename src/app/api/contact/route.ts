@@ -1,9 +1,9 @@
-import { after, NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
-import { prepareLeadConversion } from "@/lib/openai-ads-conversions";
+import { adsMatchingFields, queueAdsConversion } from "@/lib/openai-ads-conversions";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
@@ -54,24 +54,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const inquiry = await prisma.inquiry.create({
-    data: {
-      name: d.name,
-      email: d.email || "-",
-      phone: d.phone || null,
-      company: d.company || null,
-      service: d.service || null,
-      budget: d.budget || null,
-      message: d.message || "(未填寫)",
-      locale: d.locale ?? "zh-TW",
-    },
+  const matching = adsMatchingFields(req, d.adsMeasurement === "yes");
+  const inquiry = await prisma.$transaction(async (tx) => {
+    const saved = await tx.inquiry.create({
+      data: {
+        name: d.name,
+        email: d.email || "-",
+        phone: d.phone || null,
+        company: d.company || null,
+        service: d.service || null,
+        budget: d.budget || null,
+        message: d.message || "(未填寫)",
+        locale: d.locale ?? "zh-TW",
+      },
+    });
+    if (matching) {
+      await queueAdsConversion(tx, {
+        id: `avalo-lead-${saved.id}`, type: "lead_created", email: saved.email,
+        locale: saved.locale, path: d.placement === "home" ? "/" : "/contact",
+        occurredAt: saved.createdAt, matching,
+      });
+    }
+    return saved;
   });
-  const sendLead = prepareLeadConversion(req, inquiry, {
-    consent: d.adsMeasurement === "yes",
-    locale: inquiry.locale,
-    placement: d.placement ?? "contact",
-  });
-  if (sendLead) after(sendLead);
 
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,

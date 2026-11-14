@@ -79,7 +79,7 @@ TENANT_LINE_TOKEN_<SLUG>=""                     # 變數名寫在 tenants.ts 的
 CRON_SECRET="<openssl rand -hex 24>"            # 本機 cron 打 /api/cron/* 用；本機沒有時端點回 401
 NEXT_PUBLIC_GA_MEASUREMENT_ID=""                # 留空 = 不載 GA。填 G-XXXXXXXX 後 nginx CSP 已放行
 NEXT_PUBLIC_OPENAI_ADS_PIXEL_ID=""               # 留空 = 不載 ChatGPT Ads Pixel。變更後需重新建置
-OPENAI_ADS_CONVERSIONS_API_KEY=""                # Ads Manager 的轉換金鑰，僅放伺服器。留空不回報諮詢
+OPENAI_ADS_CONVERSIONS_API_KEY=""                # Ads Manager 的轉換金鑰，僅放伺服器。留空停送伺服器事件
 NEXT_PUBLIC_GSC_VERIFICATION=""                 # Search Console HTML tag 的 content=
 NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
 ```
@@ -91,6 +91,14 @@ NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
 1. 從 Ads Manager 的 **Conversions → Data Source** 取得 Web Pixel ID，填入正式機 `/opt/avalo/app/.env` 的 `NEXT_PUBLIC_OPENAI_ADS_PIXEL_ID`。
 2. 參照 `deploy/nginx.conf`，把 `bzrcdn.openai.com` 加入正式機 HTTPS 站台 CSP 的 `script-src`、`connect-src`，把 `bzr.openai.com` 加入 `connect-src`、`img-src`。保留 Certbot 設定，確認 `sudo nginx -t` 成功後重新載入 Nginx。
 3. 執行 `bash deploy/deploy.sh` 重新建置與部署。用 Ads Manager 的 **Test** 開啟正式站，加入購物車後在 **Event Stream** 確認收到 `items_added`。
+
+伺服器排程每分鐘傳送已同意廣告配對的 `lead_created`（諮詢成立）與
+`order_created`（正式綠界確認訂單首次實收），失敗時隔一段時間用同一事件 ID 重送。
+在 `avalo` 的 crontab 加入下列排程：
+
+```cron
+* * * * * /opt/avalo/app/deploy/run-cron.sh ads-conversions >> /opt/avalo/cron-ads-conversions.log 2>&1
+```
 
 ### 幫一個客戶開通 AI 客服
 
