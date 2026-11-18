@@ -547,7 +547,7 @@ export const SERVICES: Service[] = [
         name: "網站維護代管",
         title: "網站維護・網站代管 {price:care-basic}／月起｜主機、備份、資安更新｜Avalo 阿瓦羅",
         description:
-          "網站上線後的主機代管、SSL 憑證、每日自動備份、安全更新與監控告警，每月 {price:care-basic}（未稅）起；成長維護含每月 4 小時修改與 SEO＋GEO 調整，AI 託管含 AI 用量額度。信用卡每月自動扣款。",
+          "網站上線後的主機代管、SSL 憑證、每日自動備份、安全更新與監控告警，每月 {price:care-basic}（未稅）起；成長維護含每月 4 小時修改與 SEO＋GEO 調整。AI 客服與流程自動化的託管需搭配對應建置方案。信用卡每月自動扣款。",
         label: "網站維護・網站代管",
         h1: "網站維護與代管：\n上線之後，有人一直顧著",
         lede: "網站上線才是開始：主機要有人看、SSL 憑證要續、套件要更新、備份要真的還原得回來。這些事平常沒人注意，出事那天才發現沒人做。Avalo 的維護方案每月 {price:care-basic}（未稅）起，信用卡每月自動扣款；資料屬於你，隨時可以匯出。",
@@ -588,7 +588,7 @@ export const SERVICES: Service[] = [
         name: "Website Maintenance & Hosting",
         title: "Website Maintenance & Hosting from {price:care-basic}/month | Avalo",
         description:
-          "Hosting, SSL, daily backups, security updates and uptime alerts after launch, from {price:care-basic}/month excl. VAT. Growth Care adds four hours of changes a month plus SEO and GEO tuning; AI Operations includes an AI usage allowance. Billed monthly by card.",
+          "Hosting, SSL, daily backups, security updates and uptime alerts after launch, from {price:care-basic}/month excl. VAT. Growth Care adds four hours of changes a month plus SEO and GEO tuning. AI support and automation operations come with their build plans. Billed monthly by card.",
         label: "Website maintenance · Hosting",
         h1: "Website maintenance and hosting:\nsomeone keeps watch after launch",
         lede: "Launch is the beginning: servers need watching, SSL certificates need renewing, software needs updating and backups need to actually restore. Nobody notices this work until the day it wasn't done. Avalo's care plans start at {price:care-basic}/month (excl. VAT), billed automatically by card — and your data is always yours to export.",
