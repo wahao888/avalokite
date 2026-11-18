@@ -20,7 +20,7 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
     },
     {
       q: "為什麼建置一定要搭配維護？",
-      a: `網站上線後要有人顧主機、SSL、備份與安全更新。形象官網建議安心維護 ${p("care-basic")}／月，自驗收通過才開始計費，最短承諾 12 個月，期滿後可隨時終止。標價未稅，結帳加 5% 營業稅。`,
+      a: `網站上線後要有人顧主機、SSL、備份與安全更新。形象官網建議安心維護 ${p("care-basic")}／月，建置費下單時付清，月費要等驗收通過後另寄定期定額授權連結才開始計費，最短承諾 12 個月，期滿後可隨時終止。標價未稅，結帳加 5% 營業稅。`,
     },
     {
       q: "網域與原始碼在誰名下？",
@@ -62,7 +62,7 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
     },
     {
       q: "Why does every build require a care plan?",
-      a: `Someone has to watch hosting, SSL, backups and security updates. Essential Care is ${p("care-basic")}/month, billed only after launch and acceptance, with a 12-month minimum, cancellable any time after. Prices exclude 5% VAT.`,
+      a: `Someone has to watch hosting, SSL, backups and security updates. Essential Care is ${p("care-basic")}/month, billed only after launch and acceptance through a separate recurring authorization link we email you (the build itself is paid at checkout), with a 12-month minimum, cancellable any time after. Prices exclude 5% VAT.`,
     },
     {
       q: "Whose name is the domain and source code in?",

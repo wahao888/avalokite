@@ -149,7 +149,9 @@ export async function POST(req: NextRequest) {
   }
   // 有建置＝先付一次性款項，網站上線驗收後才寄維護授權連結；
   // 無建置＝單購維護（既有網站），服務當下就在提供，結帳當下即授權。
-  const hasBuild = oneTimeTotal > 0;
+  // 以「是否需要維護的建置」判斷，與結帳頁一致。用 oneTimeTotal > 0 的話，
+  // 網站健檢（一次性、不需維護）＋單購維護會被當成建置案，月費卡在「等上線」而永遠不授權。
+  const hasBuild = careRequired(skus);
 
   if (d.referralCode && !(await referralEligibility(prisma, d.referralCode, d))) {
     return NextResponse.json({ error: "referral unavailable" }, { status: 422 });

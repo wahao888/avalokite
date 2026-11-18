@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import {
   ADDONS,
   fmt,
+  isBuildBoundCare,
   monthlyProducts,
   oneTimeProducts,
   plansUsingCare,
@@ -58,6 +59,14 @@ export function PriceCard({ product, locale }: { product: Product; locale: Local
         {product.quoteOnly ? (
           <Link href="/contact" className="btn-ghost">
             {t("custom.cta")}
+          </Link>
+        ) : isBuildBoundCare(product) ? (
+          // AI 託管／自動化維運只能和對應建置一起買：直接加進購物車只會在購物車被擋
+          <Link
+            href={product.careFamily === "automation" ? "/services/ai-automation" : "/services/line-ai-chatbot"}
+            className="btn-ghost"
+          >
+            {t("withBuildCta")}
           </Link>
         ) : (
           <AddToCartButton sku={product.sku} />

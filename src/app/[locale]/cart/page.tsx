@@ -208,7 +208,8 @@ export default function CartPage() {
               <span>NT${fmt(cart.monthlySubtotal)} {perMonthLabel(locale)}</span>
             </div>
             <div className="cart-monthly-note">
-              ✦ {t("monthlyNote")}：NT${fmt(withTax(cart.monthlySubtotal))} {perMonthLabel(locale)}
+              {/* 含建置的訂單今天只收建置費，月費要等上線驗收後另寄授權連結——不講清楚，客人會以為兩筆一起刷 */}
+              ✦ {t(careNeeded ? "monthlyNoteBuild" : "monthlyNote")}：NT${fmt(withTax(cart.monthlySubtotal))} {perMonthLabel(locale)}
             </div>
           </>
         )}

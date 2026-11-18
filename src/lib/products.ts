@@ -26,8 +26,8 @@ export interface Product {
   group?: ProductGroup; // 不設 = 一般方案
   badge?: { "zh-TW": string; en: string }; // 覆寫 featured-badge 文字
   promoNote?: { "zh-TW": string; en: string }; // 卡片底部小字（席次／條件）
-  // 建議搭配的維護方案。有此欄位＝該方案必須搭配一份維護（購物車強制擇一），
-  // 維護自第一個月起計費；建置費不含任何維護月份。
+  // 建議搭配的維護方案。有此欄位＝該方案必須搭配一份維護（購物車強制擇一）。
+  // 建置費下單時付清、不含任何維護月份；維護要等上線驗收後另寄定期定額授權連結才開始計費。
   recommendedCareSku?: string;
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
   // 行情區間的數值版，給首頁的行情對照圖表畫橫條用；沒有可對照區間的方案留空
@@ -38,6 +38,10 @@ export interface Product {
   // 月費方案所屬的維護類別。建置方案只能搭配「同類別、且不低於建議方案」的維護，
   // 否則會出現 AI 客服配網站維護（沒人顧 AI）或商務網站配最便宜維護的漏洞。
   careFamily?: CareFamily;
+  // 建置方案：除了建議維護所屬類別之外，還能被哪些類別的維護一併照顧。
+  // 數據儀表板單獨買配成長維護，但和自動化流程一起買時由 AI 託管一併維運
+  //（自動化起步組合本來就是「工作流＋儀表板＋AI 託管」）。
+  alsoCoveredBy?: CareFamily[];
   // 單張訂單可買的數量上限（預設 MAX_QTY）。一個網站／一套客服只配一份維護，
   // 這類建置買兩份就等於「兩個網站一份維護」，所以設 1；按條計價的自動化才可多份。
   maxQty?: number;
@@ -312,6 +316,7 @@ export const PRODUCTS: Product[] = [
     sku: "dashboard",
     type: "onetime",
     maxQty: 1,
+    alsoCoveredBy: ["automation"],
     price: 39000,
     recommendedCareSku: "care-growth",
     marketRange: { "zh-TW": "市場少有固定報價", en: "Rarely fixed-priced in market" },
@@ -730,6 +735,9 @@ export const isPurchasable = (sku: string) => {
 
 /** 單張訂單的一般數量上限（購物車與結帳 API 共用） */
 export const MAX_QTY = 9;
+
+/** 必須搭配對應建置才能購買的維護類別（AI 客服託管、自動化維運） */
+const BUILD_BOUND_FAMILIES: CareFamily[] = ["ai-support", "automation"];
 export const maxQtyOf = (sku: string) => getProduct(sku)?.maxQty ?? MAX_QTY;
 /** 對外顯示用的價格字串；依需求報價的方案一律不露出內部底價 */
 export const publicPrice = (p: Product, zh = true) =>
@@ -776,25 +784,34 @@ export const careOptionsFor = (skus: string[]): Product[] => {
   if (builds.some((p) => p.group === "promo")) {
     return PRODUCTS.filter((p) => p.type === "monthly" && p.group === "promo");
   }
-  // 以車上最高價建置的建議維護為底：同類別、價格不低於它的方案才可選（可往上升級，不能往下）
+  // 以車上最貴的建議維護為底：同類別、價格不低於它的方案才可選（可往上升級，不能往下）
   const floor = getProduct(recommendedCareFor(skus) ?? "");
-  if (!floor) return [];
+  if (!floor?.careFamily) return [];
   return monthlyProducts().filter(
     (p) => p.careFamily === floor.careFamily && p.price >= floor.price,
   );
 };
+
+/** 建置方案可被哪些維護類別照顧（自己建議維護的類別＋alsoCoveredBy） */
+const familiesCovering = (build: Product): CareFamily[] => {
+  const own = getProduct(build.recommendedCareSku ?? "")?.careFamily;
+  return [...(own ? [own] : []), ...(build.alsoCoveredBy ?? [])];
+};
+
+/** AI 客服託管與自動化維運：一定要跟對應建置一起買（見 careNeedsMatchingBuild） */
+export const isBuildBoundCare = (p: Product) =>
+  p.type === "monthly" && !!p.careFamily && BUILD_BOUND_FAMILIES.includes(p.careFamily);
 
 /**
  * 車上的建置方案需要不同類別的維護（例如形象官網＋AI 客服）。
  * 一張訂單只會有一份維護，混在一起就一定有一邊沒人顧，所以請客戶分開結帳。
  */
 export const careFamilyConflict = (skus: string[]) => {
-  const families = new Set(
-    buildsNeedingCare(skus)
-      .filter((p) => !p.group)
-      .map((p) => getProduct(p.recommendedCareSku!)?.careFamily),
-  );
-  return families.size > 1;
+  const builds = buildsNeedingCare(skus).filter((p) => !p.group);
+  if (builds.length < 2) return false;
+  // 底線維護的類別必須照顧得到車上每一個建置，否則一定有一邊沒人顧
+  const family = getProduct(recommendedCareFor(skus) ?? "")?.careFamily;
+  return !family || builds.some((b) => !familiesCovering(b).includes(family));
 };
 
 /**
@@ -827,7 +844,6 @@ export const recommendedCareFor = (skus: string[]): string | undefined =>
  * 單購也沒有承諾期，等於用月費價買到一份不綁約、無標的的服務。
  * 網站維護不在此限（既有網站可以單獨委託代管）。
  */
-const BUILD_BOUND_FAMILIES: CareFamily[] = ["ai-support", "automation"];
 export const careNeedsMatchingBuild = (skus: string[]) => {
   const buildFamilies = new Set(
     buildsNeedingCare(skus).map((p) => getProduct(p.recommendedCareSku!)?.careFamily),
