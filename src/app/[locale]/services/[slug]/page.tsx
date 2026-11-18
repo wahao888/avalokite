@@ -138,6 +138,13 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
       {addons.length > 0 && (
         <section className="fa-section">
           <h2 className="fa-h2">{zh ? "可加購" : "Add-ons"}</h2>
+          {/* 單項功能沒有加入購物車：範圍因案而異，價格是參考價，要先談過才報價 */}
+          <p className="fa-p" style={{ marginBottom: "1.25rem" }}>
+            {zh
+              ? "以下為未稅參考價，實際依整合範圍於諮詢後書面報價，可加在任一方案上。"
+              : "Reference prices excl. VAT. Final pricing depends on scope and is quoted in writing after a consultation; can be added to any plan."}{" "}
+            <Link href="/contact">{zh ? "詢問加購 →" : "Ask about add-ons →"}</Link>
+          </p>
           <div className="addon-grid">
             {addons.map((a) => (
               <div className="addon-item" key={a.id}>

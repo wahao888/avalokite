@@ -59,7 +59,12 @@ export async function POST(
 
     if (action === "change") {
       // 訂單沒有建置品項（單購維護）時 careOptionsFor 為空，改以「同型月費方案」為準
-      const ok = allowed.length > 0 ? allowed.includes(newSku) : getProduct(newSku)?.type === "monthly";
+      // 單購維護也只能在同類別內換（網站維護不能換成 AI 託管，反之亦然）
+      const next = getProduct(newSku);
+      const ok =
+        allowed.length > 0
+          ? allowed.includes(newSku)
+          : next?.type === "monthly" && next.careFamily === getProduct(sub.sku)?.careFamily;
       if (!ok || newSku === sub.sku) return back("err=badsku");
     }
 

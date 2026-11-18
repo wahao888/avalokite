@@ -4,9 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { genOrderId } from "@/lib/ecpay";
 import {
   BUILD_COMMIT_MONTHS,
+  careFamilyConflict,
+  careNeedsMatchingBuild,
   careOptionsFor,
   careRequired,
   getProduct,
+  maxQtyOf,
   mixedBuildConflict,
   promoCareNeedsBuild,
   promoPlanForSkus,
@@ -90,6 +93,16 @@ export async function POST(req: NextRequest) {
     if (!p) return NextResponse.json({ error: `unknown sku ${item.sku}` }, { status: 400 });
     // 依需求報價的方案沒有標價，內部底價不是成交價，不能直接結帳
     if (p.quoteOnly) return NextResponse.json({ error: `quote-only sku ${item.sku}` }, { status: 400 });
+    // 已停售的方案只為了舊訂單能解析品名而保留
+    if (p.retired) return NextResponse.json({ error: `retired sku ${item.sku}` }, { status: 400 });
+    // 同一品項拆成兩列送進來，等於繞過數量上限
+    if (d.items.filter((i) => i.sku === item.sku).length > 1) {
+      return NextResponse.json({ error: `duplicate sku ${item.sku}` }, { status: 400 });
+    }
+    // 一個網站／一套客服只配一份維護：這類建置一張單只能買一份
+    if (item.qty > maxQtyOf(item.sku)) {
+      return NextResponse.json({ error: `qty over limit for ${item.sku}` }, { status: 400 });
+    }
     if (p.type === "onetime") {
       oneTimeTotal += p.price * item.qty;
     } else {
@@ -100,17 +113,29 @@ export async function POST(req: NextRequest) {
   if (oneTimeTotal === 0 && monthlyTotal === 0) {
     return NextResponse.json({ error: "empty order" }, { status: 400 });
   }
+  // 一張訂單只對應一份定期定額；購物車本來就互斥，這裡擋繞過前端的請求
+  if (monthlySkus.length > 1) {
+    return NextResponse.json({ error: "only one care plan per order" }, { status: 400 });
+  }
   // 建置案必須搭配維護（購物車已擋，此處為伺服器端再驗一次，防繞過前端）
   const skus = d.items.map((i) => i.sku);
   // 促銷建置與正式建置同車會讓正式方案吃到促銷維護價，直接擋掉
   if (mixedBuildConflict(skus)) {
     return NextResponse.json({ error: "promo and standard builds cannot be mixed" }, { status: 400 });
   }
+  // 網站與 AI 客服等不同類別的建置同一張單，只會有一份維護，一定有一邊沒人顧
+  if (careFamilyConflict(skus)) {
+    return NextResponse.json({ error: "builds need different care plans" }, { status: 400 });
+  }
   if (careRequired(skus)) {
     const options = careOptionsFor(skus).map((p) => p.sku);
     if (!monthlySkus.some((s) => options.includes(s))) {
       return NextResponse.json({ error: "care plan required" }, { status: 400 });
     }
+  }
+  // AI 託管／自動化維運沒有對應建置＝沒有標的、也沒有承諾期（見 careNeedsMatchingBuild）
+  if (careNeedsMatchingBuild(skus)) {
+    return NextResponse.json({ error: "this care plan requires its build" }, { status: 400 });
   }
   // 促銷維護單獨結帳＝用促銷價買到沒有綁約的維護，擋掉（見 promoCareNeedsBuild）
   if (promoCareNeedsBuild(skus)) {

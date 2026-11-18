@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { getProduct } from "./products";
+import { getProduct, isPurchasable, maxQtyOf } from "./products";
 import { measureItemsAdded, track } from "./track";
 
 export interface CartItem {
@@ -49,7 +49,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: CartItem[] = JSON.parse(raw);
-        updateItems(parsed.filter((i) => getProduct(i.sku) && !getProduct(i.sku)?.quoteOnly && i.qty > 0));
+        // 舊資料可能含已停售、依需求報價或超量的品項，載入時一併清掉／壓回上限
+        updateItems(
+          parsed
+            .filter((i) => isPurchasable(i.sku) && i.qty > 0)
+            .map((i) => ({ ...i, qty: Math.min(i.qty, maxQtyOf(i.sku)) })),
+        );
       }
     } catch {
       /* 壞資料直接重置 */
@@ -67,13 +72,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     for (const sku of typeof selection === "string" ? [selection] : selection) {
       const prod = getProduct(sku);
-      if (!prod || prod.quoteOnly) continue;
+      if (!prod || !isPurchasable(sku)) continue;
       track("add_to_cart", { sku });
       const found = next.some((i) => i.sku === sku);
       // 月費方案同品項不重複加（一個網站一份維護）；一次性可加量
       if (found) {
         if (prod.type !== "monthly") {
-          next = next.map((i) => (i.sku === sku ? { ...i, qty: i.qty + 1 } : i));
+          next = next.map((i) =>
+            i.sku === sku ? { ...i, qty: Math.min(i.qty + 1, maxQtyOf(sku)) } : i,
+          );
         }
         continue;
       }
@@ -97,7 +104,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const setQty = useCallback((sku: string, qty: number) => {
     const previous = currentItems.current;
     const item = previous.find((i) => i.sku === sku);
-    const nextQty = Math.min(qty, 9);
+    const nextQty = Math.min(qty, maxQtyOf(sku));
     if (!item || item.qty === nextQty) return;
     updateItems(nextQty <= 0
       ? previous.filter((i) => i.sku !== sku)

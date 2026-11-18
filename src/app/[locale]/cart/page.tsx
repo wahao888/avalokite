@@ -5,9 +5,12 @@ import { Link } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart";
 import {
   BUILD_COMMIT_MONTHS,
+  careFamilyConflict,
+  careNeedsMatchingBuild,
   careOptionsFor,
   fmt,
   getProduct,
+  maxQtyOf,
   mixedBuildConflict,
   promoCareNeedsBuild,
   promoPlanForSkus,
@@ -27,7 +30,10 @@ export default function CartPage() {
   // 車上有建置方案 → 必須擇一維護（月費自網站上線驗收後起計），未選則不給結帳
   const skus = cart.items.map((i) => i.sku);
   // 促銷建置與正式建置同車 → 維護選項會被促銷價汙染，請客戶分兩張單
-  const mixedBuilds = mixedBuildConflict(skus);
+  // 網站與 AI 客服等不同類別的建置同車 → 一份維護顧不到兩邊，同樣請客戶分單
+  const promoMixed = mixedBuildConflict(skus);
+  const mixedBuilds = promoMixed || careFamilyConflict(skus);
+  const mixedMsg = promoMixed ? t("mixedBuildsBlocked") : t("mixedCareBlocked");
   const careOptions = careOptionsFor(skus);
   const careNeeded = careOptions.length > 0;
   const recommendedCare = recommendedCareFor(skus);
@@ -44,6 +50,8 @@ export default function CartPage() {
   const loosePromoPlan = careNeeded ? undefined : promoPlanForSkus(skus);
   // 促銷維護被單獨留在車上：伺服器端會擋，前端也要擋，否則客戶按下結帳只會拿到一個 400
   const promoCareAlone = promoCareNeedsBuild(skus);
+  // AI 託管／自動化維運單獨留在車上：沒有對應建置就沒有東西可以顧，伺服器端同樣會擋
+  const aiCareAlone = careNeedsMatchingBuild(skus);
 
   if (!cart.ready) return null; // 等 localStorage 載入，避免空車畫面閃現
 
@@ -72,7 +80,14 @@ export default function CartPage() {
           <div className="cart-qty">
             <button onClick={() => cart.setQty(sku, qty - 1)} aria-label="-">−</button>
             <span>{qty}</span>
-            <button onClick={() => cart.setQty(sku, qty + 1)} aria-label="+">＋</button>
+            <button
+              onClick={() => cart.setQty(sku, qty + 1)}
+              aria-label="+"
+              disabled={qty >= maxQtyOf(sku)}
+              title={qty >= maxQtyOf(sku) ? t("qtyLimit") : undefined}
+            >
+              ＋
+            </button>
           </div>
         ) : (
           <span className="cart-item-unit">×1</span>
@@ -90,7 +105,7 @@ export default function CartPage() {
 
   const oneTimeTax = withTax(cart.oneTimeSubtotal) - cart.oneTimeSubtotal;
   const dueNow = withTax(cart.oneTimeSubtotal);
-  const careBlocked = mixedBuilds || promoCareAlone || (careNeeded && !selectedCare);
+  const careBlocked = mixedBuilds || promoCareAlone || aiCareAlone || (careNeeded && !selectedCare);
 
   return (
     <main className="page-wrap page-wrap-narrow">
@@ -120,7 +135,7 @@ export default function CartPage() {
             <span className="care-required-tag">{t("careRequiredTag")}</span>
           </div>
           <p className="care-required-note">
-            {mixedBuilds ? t("mixedBuildsBlocked") : t("careRequiredNote")}
+            {mixedBuilds ? mixedMsg : t("careRequiredNote")}
           </p>
           {/* 綁約要在購物車就講清楚，不能只寫在條款裡等客戶自己去翻 */}
           {!mixedBuilds && (
@@ -200,9 +215,11 @@ export default function CartPage() {
         {careBlocked && (
           <div className="cart-blocked-note">
             {mixedBuilds
-              ? t("mixedBuildsBlocked")
+              ? mixedMsg
               : promoCareAlone
                 ? t("promoCareAloneBlocked")
+                : aiCareAlone
+                  ? t("aiCareAloneBlocked")
                 : t("careRequiredBlocked")}
           </div>
         )}

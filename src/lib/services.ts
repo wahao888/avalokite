@@ -245,7 +245,8 @@ export const SERVICES: Service[] = [
     serviceType: "AI customer service chatbot",
     // 三階都列進來：JSON-LD 的 offers 會逐階輸出，搜尋結果才顯示得出價格區間
     skus: ["ai-chatbot-lite", "ai-chatbot", "ai-chatbot-enterprise"],
-    addons: ["rag"],
+    // 不列 RAG 加購：三階本身就是 RAG 知識庫客服，再列一次會讓人以為要另外付錢
+    addons: [],
     cases: ["/cases/agagent"],
     i18n: {
       "zh-TW": {
