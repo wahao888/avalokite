@@ -11,6 +11,7 @@ import {
   PROMO_INCLUDES,
   promoPlanTotal,
   careRequired,
+  careFamilyConflict,
   careOptionsFor,
   recommendedCareFor,
   promoPlanForSkus,
@@ -19,6 +20,9 @@ import {
   prepaidPeriodsFor,
   earlyExitFee,
   isPurchasable,
+  maxQtyOf,
+  MAX_QTY,
+  careNeedsMatchingBuild,
   publicPrice,
   earlyExitTierLabels,
   EARLY_EXIT_TIERS,
@@ -196,11 +200,30 @@ describe("維護配對（recommendedCareSku）", () => {
 });
 
 describe("維護必選（careRequired / careOptionsFor）", () => {
-  it("車上有建置方案時必選維護，且列出全部正式月費方案", () => {
+  it("車上有建置方案時必選維護，只列同類別且不低於建議方案的月費", () => {
+    const opts = (skus: string[]) => careOptionsFor(skus).map((p) => p.sku);
     expect(careRequired(["web-basic"])).toBe(true);
-    expect(careOptionsFor(["web-basic"]).map((p) => p.sku)).toEqual(
-      monthlyProducts().map((p) => p.sku)
-    );
+    expect(opts(["web-basic"])).toEqual(["care-basic", "care-growth"]);
+    // 商務網站不能配最便宜的安心維護
+    expect(opts(["web-commerce"])).toEqual(["care-growth"]);
+    // AI 客服只能配 AI 託管：輕量可升級商務，商務不能降回輕量
+    expect(opts(["ai-chatbot-lite"])).toEqual(["care-ai-lite", "care-ai-business"]);
+    expect(opts(["ai-chatbot"])).toEqual(["care-ai-business"]);
+    expect(opts(["automation"])).toEqual(["care-ai"]);
+  });
+
+  it("每個需要維護的正式建置，建議方案都在自己的選項裡", () => {
+    for (const p of oneTimeProducts().filter((x) => x.recommendedCareSku && !x.group)) {
+      expect(careOptionsFor([p.sku]).map((c) => c.sku)).toContain(p.recommendedCareSku);
+    }
+  });
+
+  it("網站與 AI 客服等不同維護類別的建置不得同車", () => {
+    expect(careFamilyConflict(["web-basic", "ai-chatbot-lite"])).toBe(true);
+    expect(careFamilyConflict(["ai-chatbot", "automation"])).toBe(true);
+    expect(careFamilyConflict(["web-basic", "web-commerce"])).toBe(false);
+    expect(careFamilyConflict(["ai-chatbot-lite", "site-rescue"])).toBe(false);
+    expect(careFamilyConflict(["launch-setup"])).toBe(false);
   });
 
   it("網站健檢與單購維護不強制", () => {
@@ -238,6 +261,36 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
         expect(care.type).toBe("monthly");
       }
     }
+  });
+});
+
+describe("其他下單防呆", () => {
+  it("一個網站／一套客服的建置一張單只能買一份；按條計價的自動化可多份", () => {
+    for (const sku of ["web-basic", "web-commerce", "ai-chatbot-lite", "ai-chatbot", "dashboard", "automation-bundle", "launch-deposit"]) {
+      expect(maxQtyOf(sku)).toBe(1);
+    }
+    expect(maxQtyOf("automation")).toBe(MAX_QTY);
+    expect(maxQtyOf("site-rescue")).toBe(MAX_QTY);
+  });
+
+  it("同價位建置以較貴的建議維護當底線（形象官網＋儀表板要成長維護）", () => {
+    expect(recommendedCareFor(["web-basic", "dashboard"])).toBe("care-growth");
+    expect(recommendedCareFor(["dashboard", "web-basic"])).toBe("care-growth");
+    expect(careOptionsFor(["web-basic", "dashboard"]).map((p) => p.sku)).toEqual(["care-growth"]);
+  });
+
+  it("AI 託管與自動化維運不能單獨購買，網站維護可以", () => {
+    expect(careNeedsMatchingBuild(["care-ai-lite"])).toBe(true);
+    expect(careNeedsMatchingBuild(["care-ai"])).toBe(true);
+    expect(careNeedsMatchingBuild(["web-basic", "care-ai-lite"])).toBe(true);
+    expect(careNeedsMatchingBuild(["ai-chatbot-lite", "care-ai-lite"])).toBe(false);
+    expect(careNeedsMatchingBuild(["automation", "care-ai"])).toBe(false);
+    expect(careNeedsMatchingBuild(["care-basic"])).toBe(false);
+  });
+
+  it("已停售的 launch-setup 不能再下單", () => {
+    expect(isPurchasable("launch-setup")).toBe(false);
+    expect(getProduct("launch-setup")).toBeDefined();
   });
 });
 

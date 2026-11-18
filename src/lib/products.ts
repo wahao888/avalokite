@@ -7,6 +7,9 @@ export type ProductType = "onetime" | "monthly";
 // 刻意不與正式方案並排：避免 NT$10,000 的 Launch 與 NT$39,000 的形象官網互相打架。
 export type ProductGroup = "promo";
 
+/** 維護類別：網站主機維護／AI 客服託管／流程自動化維運 */
+export type CareFamily = "web" | "ai-support" | "automation";
+
 export interface ProductI18n {
   label: string; // 小標（方案類別）
   name: string;
@@ -32,6 +35,14 @@ export interface Product {
   // 依需求報價：不公開標價、不能加入購物車或結帳，卡片改導向諮詢。
   // price 仍保留為內部評估的參考底價，任何對外輸出都不得引用（見 publicPrice）。
   quoteOnly?: boolean;
+  // 月費方案所屬的維護類別。建置方案只能搭配「同類別、且不低於建議方案」的維護，
+  // 否則會出現 AI 客服配網站維護（沒人顧 AI）或商務網站配最便宜維護的漏洞。
+  careFamily?: CareFamily;
+  // 單張訂單可買的數量上限（預設 MAX_QTY）。一個網站／一套客服只配一份維護，
+  // 這類建置買兩份就等於「兩個網站一份維護」，所以設 1；按條計價的自動化才可多份。
+  maxQty?: number;
+  // 已停售：只為了讓舊訂單仍解析得出品名與價格而保留，不能再下單。
+  retired?: boolean;
   i18n: { "zh-TW": ProductI18n; en: ProductI18n };
 }
 
@@ -43,6 +54,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "web-basic",
     type: "onetime",
+    maxQty: 1,
     price: 39000,
     recommendedCareSku: "care-basic",
     marketRange: { "zh-TW": "市場行情 NT$30,000–100,000", en: "Market rate NT$30k–100k" },
@@ -79,6 +91,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "web-commerce",
     type: "onetime",
+    maxQty: 1,
     price: 89000,
     featured: true,
     recommendedCareSku: "care-growth",
@@ -116,6 +129,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "ai-chatbot-lite",
     type: "onetime",
+    maxQty: 1,
     price: 12800,
     recommendedCareSku: "care-ai-lite",
     marketRange: { "zh-TW": "既有官網可只接 LINE", en: "Add LINE support to your existing setup" },
@@ -153,6 +167,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "ai-chatbot",
     type: "onetime",
+    maxQty: 1,
     price: 39800,
     recommendedCareSku: "care-ai-business",
     marketRange: { "zh-TW": "LINE 與官網共用知識庫", en: "Shared knowledge base across LINE and web" },
@@ -260,6 +275,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "automation-bundle",
     type: "onetime",
+    maxQty: 1,
     price: 99000,
     recommendedCareSku: "care-ai",
     marketRange: { "zh-TW": "個別購買約 NT$126,000", en: "≈ NT$126k bought separately" },
@@ -295,6 +311,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "dashboard",
     type: "onetime",
+    maxQty: 1,
     price: 39000,
     recommendedCareSku: "care-growth",
     marketRange: { "zh-TW": "市場少有固定報價", en: "Rarely fixed-priced in market" },
@@ -370,6 +387,8 @@ export const PRODUCTS: Product[] = [
   {
     sku: "launch-setup",
     type: "onetime",
+    maxQty: 1,
+    retired: true,
     price: 10000,
     group: "promo",
     recommendedCareSku: "launch-care",
@@ -423,6 +442,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "launch-deposit",
     type: "onetime",
+    maxQty: 1,
     price: 2000,
     group: "promo",
     recommendedCareSku: "launch-care",
@@ -506,6 +526,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-basic",
     type: "monthly",
+    careFamily: "web",
     price: 2990,
     marketRange: { "zh-TW": "行情 NT$1,500–5,000/月", en: "Market NT$1.5k–5k/mo" },
     i18n: {
@@ -538,6 +559,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-growth",
     type: "monthly",
+    careFamily: "web",
     price: 5990,
     featured: true,
     marketRange: { "zh-TW": "行情 NT$3,000–10,000/月", en: "Market NT$3k–10k/mo" },
@@ -571,6 +593,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-ai-lite",
     type: "monthly",
+    careFamily: "ai-support",
     price: 2490,
     marketRange: { "zh-TW": "單通道客服維運", en: "Single-channel support operations" },
     i18n: {
@@ -605,6 +628,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-ai-business",
     type: "monthly",
+    careFamily: "ai-support",
     price: 5990,
     marketRange: { "zh-TW": "雙通道客服維運", en: "Dual-channel support operations" },
     i18n: {
@@ -627,6 +651,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-ai",
     type: "monthly",
+    careFamily: "automation",
     price: 8990,
     marketRange: { "zh-TW": "行情 NT$10,000+/月", en: "Market NT$10k+/mo" },
     i18n: {
@@ -661,6 +686,7 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-ai-plus",
     type: "monthly",
+    careFamily: "ai-support",
     price: 19900,
     quoteOnly: true,
     marketRange: { "zh-TW": "依通道數、整合範圍與 SLA 報價", en: "Quoted by channels, integrations and SLA" },
@@ -696,11 +722,15 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const getProduct = (sku: string) => PRODUCTS.find((p) => p.sku === sku);
-/** 可以直接下單的方案（排除依需求報價者）；結帳與購物車以此為準 */
+/** 可以直接下單的方案（排除依需求報價與已停售者）；結帳與購物車以此為準 */
 export const isPurchasable = (sku: string) => {
   const p = getProduct(sku);
-  return !!p && !p.quoteOnly;
+  return !!p && !p.quoteOnly && !p.retired;
 };
+
+/** 單張訂單的一般數量上限（購物車與結帳 API 共用） */
+export const MAX_QTY = 9;
+export const maxQtyOf = (sku: string) => getProduct(sku)?.maxQty ?? MAX_QTY;
 /** 對外顯示用的價格字串；依需求報價的方案一律不露出內部底價 */
 export const publicPrice = (p: Product, zh = true) =>
   p.quoteOnly ? (zh ? "依需求報價" : "Quoted on request") : `NT$${fmt(p.price)}`;
@@ -746,7 +776,25 @@ export const careOptionsFor = (skus: string[]): Product[] => {
   if (builds.some((p) => p.group === "promo")) {
     return PRODUCTS.filter((p) => p.type === "monthly" && p.group === "promo");
   }
-  return monthlyProducts();
+  // 以車上最高價建置的建議維護為底：同類別、價格不低於它的方案才可選（可往上升級，不能往下）
+  const floor = getProduct(recommendedCareFor(skus) ?? "");
+  if (!floor) return [];
+  return monthlyProducts().filter(
+    (p) => p.careFamily === floor.careFamily && p.price >= floor.price,
+  );
+};
+
+/**
+ * 車上的建置方案需要不同類別的維護（例如形象官網＋AI 客服）。
+ * 一張訂單只會有一份維護，混在一起就一定有一邊沒人顧，所以請客戶分開結帳。
+ */
+export const careFamilyConflict = (skus: string[]) => {
+  const families = new Set(
+    buildsNeedingCare(skus)
+      .filter((p) => !p.group)
+      .map((p) => getProduct(p.recommendedCareSku!)?.careFamily),
+  );
+  return families.size > 1;
 };
 
 /**
@@ -762,9 +810,39 @@ export const mixedBuildConflict = (skus: string[]) => {
   return builds.some((p) => p.group === "promo") && builds.some((p) => !p.group);
 };
 
-/** 預設推薦的維護方案：以車上最高價的建置方案為準 */
+/**
+ * 預設推薦的維護方案：取車上各建置建議維護中「最貴的那一份」。
+ * 不用建置價排序——形象官網與儀表板同為 39,000，用建置價比會依加入順序
+ * 挑到安心維護，讓儀表板吃到比它該配的成長維護更便宜的方案。
+ */
 export const recommendedCareFor = (skus: string[]): string | undefined =>
-  buildsNeedingCare(skus).sort((a, b) => b.price - a.price)[0]?.recommendedCareSku;
+  buildsNeedingCare(skus)
+    .map((p) => getProduct(p.recommendedCareSku!))
+    .filter((c): c is Product => !!c)
+    .sort((a, b) => b.price - a.price)[0]?.sku;
+
+/**
+ * AI 客服託管與自動化維運不得單獨購買。
+ * 它們維護的是我們建的客服或流程，沒有對應建置就沒有東西可以顧；
+ * 單購也沒有承諾期，等於用月費價買到一份不綁約、無標的的服務。
+ * 網站維護不在此限（既有網站可以單獨委託代管）。
+ */
+const BUILD_BOUND_FAMILIES: CareFamily[] = ["ai-support", "automation"];
+export const careNeedsMatchingBuild = (skus: string[]) => {
+  const buildFamilies = new Set(
+    buildsNeedingCare(skus).map((p) => getProduct(p.recommendedCareSku!)?.careFamily),
+  );
+  return skus
+    .map(getProduct)
+    .some(
+      (p) =>
+        !!p &&
+        p.type === "monthly" &&
+        !!p.careFamily &&
+        BUILD_BOUND_FAMILIES.includes(p.careFamily) &&
+        !buildFamilies.has(p.careFamily),
+    );
+};
 
 // ─── 限時零元啟動：方案組合 ───
 //
