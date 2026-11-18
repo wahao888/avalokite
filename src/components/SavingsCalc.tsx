@@ -15,7 +15,7 @@ export default function SavingsCalc() {
   const monthly = Math.round(hours * wage);
   const yearly = monthly * 12;
   const bot = getProduct("ai-chatbot")!;
-  const care = getProduct("care-ai")!;
+  const care = getProduct("care-ai-business")!;
   const yearCost = bot.price + care.price * 12;
 
   return (

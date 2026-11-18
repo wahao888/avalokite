@@ -17,9 +17,13 @@ function productLines(): string {
     const care = p.recommendedCareSku
       ? `　必須搭配維護方案：${p.recommendedCareSku}（建置費不含任何維護月份，維護自第一個月起計費）`
       : "";
+    // 依需求報價的方案：不給模型任何數字，免得它把內部底價當成承諾報出去
+    const priceLine = p.quoteOnly
+      ? "　無標準價：依需求評估後提供書面報價。不得報出任何金額，請引導客人預約諮詢或轉真人。"
+      : `　未稅 NT$${fmt(p.price)}${unit}；含稅 NT$${fmt(withTax(p.price))}`;
     return [
       `■ ${t.name}（sku: ${p.sku}）`,
-      `　未稅 NT$${fmt(p.price)}${unit}；含稅 NT$${fmt(withTax(p.price))}`,
+      priceLine,
       `　${t.desc}`,
       `　內容：${t.features.join("、")}`,
       `　${p.marketRange["zh-TW"]}`,

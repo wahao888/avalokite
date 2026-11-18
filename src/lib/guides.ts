@@ -1,3 +1,8 @@
+import { fmt, getProduct } from "@/lib/products";
+
+const chatbotBuildPrice = "NT$" + fmt(getProduct("ai-chatbot")!.price);
+const chatbotCarePrice = "NT$" + fmt(getProduct("care-ai-business")!.price);
+
 export interface GuideSection {
   h: string;
   body: string[];
@@ -250,14 +255,14 @@ export const GUIDES: Guide[] = [
     i18n: {
       "zh-TW": {
         title: "LINE 官方帳號 AI 客服怎麼做：費用、流程、限制",
-        description: "LINE OA 加網站雙通道、用你的資料當知識庫、轉真人。Avalo 標價 NT$69,000，含部署與初始知識庫。",
+        description: `LINE OA 加網站雙通道、用你的資料當知識庫、轉真人。Avalo 標價 ${chatbotBuildPrice}，含部署與初始知識庫。`,
         lede: "台灣中小企業的客人先加 LINE，不先填表單。AI 客服要接在官方帳號上，而且網站那顆聊天鈕要講同一套話，不然客人會覺得你們有兩個窗口在互踢。",
         sections: [
           {
             h: "我們怎麼接",
             body: [
               "LINE Webhook 與官網聊天共用同一套知識庫與同一套轉人規則。價格、交期、方案從商品目錄當場算出來，不另抄一份——抄了就會在調價後繼續報舊價。",
-              "標價 NT$69,000（未稅），市場常見 NT$100,000–500,000。必須搭配 AI 維運月費。知識庫來自你的 FAQ、方案與條款。",
+              `標價 ${chatbotBuildPrice}（未稅），搭配 ${chatbotCarePrice}／月的商務託管。知識庫來自你的 FAQ、方案與條款。`,
             ],
           },
           {
@@ -271,13 +276,13 @@ export const GUIDES: Guide[] = [
       },
       en: {
         title: "How we build LINE OA AI support: cost, flow, limits",
-        description: "LINE plus on-site chat, trained on your material, with human handoff. Avalo lists it at NT$69,000.",
+        description: `LINE plus on-site chat, trained on your material, with human handoff. Avalo lists it at ${chatbotBuildPrice}.`,
         lede: "In Taiwan, customers add LINE before they fill a form. The agent has to live on the official account, and the site widget has to tell the same story.",
         sections: [
           {
             h: "How we wire it",
             body: [
-              "The LINE webhook and the site chat share one knowledge base and one handoff policy. Prices are computed from the catalogue, never copied. The plan is NT$69,000 excl. VAT plus AI Ops.",
+              `The LINE webhook and the site chat share one knowledge base and one handoff policy. Prices are computed from the catalogue, never copied. The plan is ${chatbotBuildPrice} plus ${chatbotCarePrice}/month for Business operations, excl. VAT.`,
             ],
           },
           {

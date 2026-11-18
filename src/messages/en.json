@@ -76,7 +76,7 @@
         "d": "Reply on LINE and the AI pauses itself."
       }
     ],
-    "priceLine": "Builds from {lite}; enterprise integration from {enterprise} (excl. VAT)",
+    "priceLine": "LINE-only builds from {lite}, LINE plus website {business} (excl. VAT); enterprise integration quoted on request",
     "ctaPlans": "See the three tiers →",
     "ctaLine": "Ask us on LINE"
   },

@@ -88,6 +88,8 @@ export async function POST(req: NextRequest) {
   for (const item of d.items) {
     const p = getProduct(item.sku);
     if (!p) return NextResponse.json({ error: `unknown sku ${item.sku}` }, { status: 400 });
+    // 依需求報價的方案沒有標價，內部底價不是成交價，不能直接結帳
+    if (p.quoteOnly) return NextResponse.json({ error: `quote-only sku ${item.sku}` }, { status: 400 });
     if (p.type === "onetime") {
       oneTimeTotal += p.price * item.qty;
     } else {
