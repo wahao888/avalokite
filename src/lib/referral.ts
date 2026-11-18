@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { Order, Prisma } from "@prisma/client";
+import { ADDONS, getProduct } from "@/lib/products";
 
 type DB = Prisma.TransactionClient;
 export const referralEmail = (email: string) => email.trim().toLowerCase();
@@ -66,51 +67,77 @@ export async function grantReferral(db: DB, order: Order) {
   });
 }
 
-export async function referralSummary(db: DB, email: string) {
+// ── 獎勵：免費服務一次（三選一）──────────────────────────────
+// 價值直接引用定價頁的數字，改價時這裡跟著變，不會出現兩個版本。
+// 「新增一頁」沒有公開單價（依頁面內容而定），所以不標金額。
+const rescue = getProduct("site-rescue");
+const seo = ADDONS.find((a) => a.id === "seo-starter");
+
+export const REFERRAL_SERVICES = [
+  {
+    key: "site-check",
+    value: rescue?.price ?? null,
+    zh: { name: "網站健檢報告", desc: "速度、SEO、資安與 AI 搜尋能見度檢測，附書面改善建議" },
+    en: { name: "Website health check", desc: "Speed, SEO, security and AI-search visibility review with a written action plan" },
+  },
+  {
+    key: "seo-starter",
+    value: seo?.price ?? null,
+    zh: { name: "SEO 起步包", desc: seo?.i18n["zh-TW"].desc ?? "關鍵字規劃、頁面 meta 與結構優化" },
+    en: { name: "SEO starter", desc: seo?.i18n.en.desc ?? "Keyword plan and on-page optimisation" },
+  },
+  {
+    key: "extra-page",
+    value: null,
+    zh: { name: "新增一頁", desc: "套用網站現有版型，例如活動頁或新服務頁，文字與圖片需先備妥" },
+    en: { name: "One extra page", desc: "Built on your site's existing layout, such as a campaign or new service page; you supply copy and images" },
+  },
+] as const;
+export type ReferralServiceKey = (typeof REFERRAL_SERVICES)[number]["key"];
+export const referralService = (key: string | null | undefined) => REFERRAL_SERVICES.find((s) => s.key === key) ?? null;
+
+/** 核發起算的有效月數 */
+export const REWARD_VALID_MONTHS = 12;
+
+// 依台北日曆加月並月底夾限：1/31 + 1 個月 = 2/28（閏年為 2/29）。
+export function addTaipeiMonths(date: Date, months: number) {
+  const offset = 8 * 60 * 60 * 1000;
+  const local = new Date(date.getTime() + offset);
+  const end = new Date(local);
+  end.setUTCDate(1);
+  end.setUTCMonth(end.getUTCMonth() + months);
+  const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() + 1, 0)).getUTCDate();
+  end.setUTCDate(Math.min(local.getUTCDate(), last));
+  return new Date(end.getTime() - offset);
+}
+export const rewardExpiresAt = (createdAt: Date) => addTaipeiMonths(createdAt, REWARD_VALID_MONTHS);
+export const rewardUsable = (r: { redeemedAt: Date | null; createdAt: Date }, now = new Date()) =>
+  !r.redeemedAt && now < rewardExpiresAt(r.createdAt);
+
+export async function referralSummary(db: DB, email: string, now = new Date()) {
   const normalized = referralEmail(email);
   const [invitation, rewards] = await Promise.all([
     db.referralCode.findUnique({ where: { email: normalized } }),
     db.careReward.findMany({ where: { email: normalized }, orderBy: { createdAt: "desc" } }),
   ]);
-  return { code: invitation?.code ?? null, available: rewards.filter((r) => !r.redeemedAt).length, rewards };
+  return {
+    code: invitation?.code ?? null,
+    available: rewards.filter((r) => rewardUsable(r, now)).length,
+    rewards: rewards.map((r) => ({ ...r, expiresAt: rewardExpiresAt(r.createdAt) })),
+  };
 }
 
-// 依台北日曆月底夾限：1/31 + 一個月 = 2/28（閏年為 2/29）。
-export function nextCareMonth(date: Date) {
-  const offset = 8 * 60 * 60 * 1000;
-  const local = new Date(date.getTime() + offset);
-  const end = new Date(local);
-  end.setUTCDate(1);
-  end.setUTCMonth(end.getUTCMonth() + 1);
-  const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() + 1, 0)).getUTCDate();
-  end.setUTCDate(Math.min(local.getUTCDate(), last));
-  return new Date(end.getTime() - offset);
-}
-
-// 不冒充已免扣款：須先在綠界調整排程，再帶核對紀錄登記一個確定免費的服務月。
-export async function redeemCareReward(db: DB, input: {
-  id: number; mtn: string; freeFrom: Date; billingReference: string;
-}) {
-  if (!Number.isFinite(input.freeFrom.getTime()) || input.billingReference.trim().length < 5) {
-    throw new Error("invalid redemption");
-  }
+// 服務交付之後才登記：選了哪一項、交付紀錄。登記不會碰訂閱、月費或綠界。
+export async function fulfillReward(db: DB, input: { id: number; service: string; note: string }, now = new Date()) {
+  const service = referralService(input.service);
+  const note = input.note.trim();
+  if (!service || note.length < 2) throw new Error("invalid fulfilment");
   const reward = await db.careReward.findUnique({ where: { id: input.id } });
-  if (!reward || reward.redeemedAt) throw new Error("reward unavailable");
-  const sub = await db.subscription.findUnique({ where: { merchantTradeNo: input.mtn }, include: { order: true } });
-  if (!sub || sub.status !== "active" || sub.pastDueSince || referralEmail(sub.order.email) !== reward.email) {
-    throw new Error("invalid subscription");
-  }
-  const freeUntil = nextCareMonth(input.freeFrom);
-  const overlap = await db.careReward.findFirst({ where: {
-    merchantTradeNo: input.mtn, redeemedAt: { not: null },
-    freeFrom: { lt: freeUntil }, freeUntil: { gt: input.freeFrom },
-  } });
-  if (overlap) throw new Error("overlapping free month");
+  if (!reward || !rewardUsable(reward, now)) throw new Error("reward unavailable");
   const result = await db.careReward.updateMany({
     where: { id: reward.id, redeemedAt: null },
-    data: { redeemedAt: new Date(), merchantTradeNo: input.mtn, freeFrom: input.freeFrom,
-      freeUntil, billingReference: input.billingReference.trim() },
+    data: { redeemedAt: now, service: service.key, note },
   });
   if (!result.count) throw new Error("reward unavailable");
-  return { email: reward.email, freeUntil };
+  return { email: reward.email, service };
 }

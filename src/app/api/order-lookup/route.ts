@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     items: JSON.parse(order.items),
     oneTimeTotal: order.oneTimeTotal,
     monthlyTotal: order.monthlyTotal,
-    freeCareMonths: referral.available,
+    referralRewards: referral.available,
     payments: order.payments.map((p) => ({
       kind: p.kind,
       amount: p.amount,

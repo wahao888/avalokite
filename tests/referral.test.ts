@@ -6,7 +6,7 @@ import type { PrismaClient } from "@prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { checkMacValue } from "@/lib/ecpay";
-import { activeCare, issueReferralCode, nextCareMonth, redeemCareReward, referralEligibility, referralSummary } from "@/lib/referral";
+import { activeCare, addTaipeiMonths, fulfillReward, issueReferralCode, referralEligibility, referralSummary, rewardExpiresAt } from "@/lib/referral";
 
 const { admin } = vi.hoisted(() => ({ admin: vi.fn(async () => true) }));
 vi.mock("@/lib/admin-auth", () => ({ isAdmin: admin }));
@@ -71,7 +71,7 @@ async function pay(id: string, fields: Record<string, string> = {}) {
   await payment(signed({ MerchantTradeNo: id + "1", TradeAmt: "105", ...fields }));
 }
 
-describe("付費推薦與免費維護月份", () => {
+describe("付費推薦與免費服務", () => {
   it("只有正常付費維護可取得獨立公開碼；同 Email 換卡仍取得原碼", async () => {
     const pending = await order({ recurring: true });
     await expect(issueReferralCode(db, pending.email)).rejects.toThrow("inactive");
@@ -141,19 +141,32 @@ describe("付費推薦與免費維護月份", () => {
     expect(await db.careReward.count()).toBe(2);
   });
 
-  it("不同獎勵不能兌換同一訂閱上重疊的免費月份，連續月份可以", async () => {
+  it("服務券登記一次就用掉；未知服務、空白交付紀錄、重複登記都擋下", async () => {
     const o = await owner();
-    const first = await order({ code: o.code });
-    const second = await order({ code: o.code });
-    await pay(first.id);
-    await pay(second.id);
-    const rewards = await db.careReward.findMany({ where: { email: "owner@example.com" } });
-    const input = { mtn: o.id + "2", freeFrom: new Date("2027-01-18T00:00:00+08:00"), billingReference: "綠界測試排程核對完成" };
-    await db.$transaction((tx) => redeemCareReward(tx, { ...input, id: rewards[0].id }));
-    await expect(db.$transaction((tx) => redeemCareReward(tx, { ...input, id: rewards[1].id }))).rejects.toThrow("overlapping");
-    expect((await referralSummary(db, o.email)).available).toBe(1);
-    await db.$transaction((tx) => redeemCareReward(tx, { ...input, id: rewards[1].id, freeFrom: new Date("2027-02-18T00:00:00+08:00") }));
+    const friend = await order({ code: o.code });
+    await pay(friend.id);
+    const reward = await db.careReward.findFirstOrThrow({ where: { email: "owner@example.com" } });
+    await expect(db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "free-month", note: "已完成" })))
+      .rejects.toThrow("invalid");
+    await expect(db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "site-check", note: " " })))
+      .rejects.toThrow("invalid");
+    const done = await db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "site-check", note: "健檢報告已寄出" }));
+    expect(done.service.zh.name).toBe("網站健檢報告");
     expect((await referralSummary(db, o.email)).available).toBe(0);
+    await expect(db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "extra-page", note: "再一次" })))
+      .rejects.toThrow("unavailable");
+  });
+
+  it("核發 12 個月後過期，不能再登記，也不算在可兌換次數", async () => {
+    const o = await owner();
+    const friend = await order({ code: o.code });
+    await pay(friend.id);
+    const reward = await db.careReward.findFirstOrThrow({ where: { email: friend.email } });
+    const later = addTaipeiMonths(reward.createdAt, 12);
+    expect((await referralSummary(db, friend.email, new Date(later.getTime() - 1))).available).toBe(1);
+    expect((await referralSummary(db, friend.email, later)).available).toBe(0);
+    await expect(db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "seo-starter", note: "逾期" }, later)))
+      .rejects.toThrow("unavailable");
   });
 
   it("首期失敗後才首次實收仍可得獎，後續續扣不再核發", async () => {
@@ -174,35 +187,26 @@ describe("付費推薦與免費維護月份", () => {
     expect(await db.careReward.count()).toBe(0);
   });
 
-  it("沒有維護的朋友先保留，日後同 Email 啟用維護可使用；不能轉用他人訂閱", async () => {
+  it("沒有維護的朋友也能直接兌換；登記不改任何訂閱或月費", async () => {
     const o = await owner();
     const friend = await order({ code: o.code });
     await pay(friend.id);
+    const before = await db.subscription.findUniqueOrThrow({ where: { merchantTradeNo: o.id + "2" } });
     const reward = await db.careReward.findFirstOrThrow({ where: { email: friend.email } });
-    const input = { id: reward.id, mtn: o.id + "2", freeFrom: new Date("2027-01-31T00:00:00+08:00"), billingReference: "綠界已設定，2027/02/28 恢復扣款" };
-    await expect(db.$transaction((tx) => redeemCareReward(tx, input))).rejects.toThrow("invalid subscription");
-    const care = await order({ email: friend.email.toUpperCase(), recurring: true });
-    await payment(signed({ MerchantTradeNo: care.id + "2", TradeAmt: "105" }));
-    const before = await db.subscription.findUniqueOrThrow({ where: { merchantTradeNo: care.id + "2" } });
-    const result = await db.$transaction((tx) => redeemCareReward(tx, { ...input, mtn: care.id + "2" }));
-    expect(result.freeUntil.toISOString()).toBe("2027-02-27T16:00:00.000Z");
-    expect((await referralSummary(db, friend.email)).available).toBe(0);
-    const after = await db.subscription.findUniqueOrThrow({ where: { merchantTradeNo: care.id + "2" } });
-    expect(after.commitEndsAt).toEqual(before.commitEndsAt);
-    expect(after.termMonths).toBe(before.termMonths);
-    expect(after.monthlyAmount).toBe(before.monthlyAmount);
-    await expect(db.$transaction((tx) => redeemCareReward(tx, { ...input, mtn: care.id + "2" }))).rejects.toThrow("unavailable");
+    await db.$transaction((tx) => fulfillReward(tx, { id: reward.id, service: "extra-page", note: "活動頁已上線" }));
+    const after = await db.subscription.findUniqueOrThrow({ where: { merchantTradeNo: o.id + "2" } });
+    expect(after).toEqual(before);
   });
 
-  it("月底、閏年依台北日曆計算一個月", () => {
-    expect(nextCareMonth(new Date("2028-01-31T00:00:00+08:00")).toISOString()).toBe("2028-02-28T16:00:00.000Z");
-    expect(nextCareMonth(new Date("2026-11-18T00:00:00+08:00")).toISOString()).toBe("2026-12-17T16:00:00.000Z");
+  it("有效期限依台北日曆加 12 個月，月底夾限", () => {
+    expect(rewardExpiresAt(new Date("2028-02-29T00:00:00+08:00")).toISOString()).toBe("2029-02-27T16:00:00.000Z");
+    expect(addTaipeiMonths(new Date("2028-01-31T00:00:00+08:00"), 1).toISOString()).toBe("2028-02-28T16:00:00.000Z");
   });
 
-  it("後台兌換要管理員與同來源，缺少排程核對紀錄不能標記已使用", async () => {
+  it("後台登記要管理員與同來源，缺少交付紀錄不能標記已使用", async () => {
     const { POST } = await import("@/app/api/admin/referral-rewards/route");
     const request = (origin = "http://localhost:3210") => new NextRequest("http://localhost:3210/api/admin/referral-rewards", {
-      method: "POST", headers: { host: "localhost:3210", origin }, body: new URLSearchParams({ id: "1", mtn: "AVLR00000012", freeFrom: "2027-01-31", confirmed: "yes" }),
+      method: "POST", headers: { host: "localhost:3210", origin }, body: new URLSearchParams({ id: "1", service: "site-check", confirmed: "yes" }),
     });
     admin.mockResolvedValueOnce(false);
     expect((await POST(request())).status).toBe(401);
