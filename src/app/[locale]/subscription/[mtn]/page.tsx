@@ -4,6 +4,10 @@ import { careOptionsFor, earlyExitFee, fmt, getProduct, prepaidPeriodsFor } from
 import { findSubscription } from "@/lib/subscription";
 import type { Locale } from "@/i18n/routing";
 import SubscriptionActions from "@/components/SubscriptionActions";
+import ReferralShare from "@/components/ReferralShare";
+import { prisma } from "@/lib/prisma";
+import { referralSummary } from "@/lib/referral";
+import { localePath } from "@/i18n/routing";
 
 export { NOINDEX as metadata } from "@/lib/site-routes";
 
@@ -44,6 +48,8 @@ export default async function SubscriptionPage({
   // 換方案的可選範圍與購物車一致：促銷建置只能在促銷維護裡換
   const options = careOptionsFor(orderSkus).filter((p) => p.sku !== sub.sku);
   const ended = sub.status === "cancelled" || sub.status === "replaced";
+  const referral = await referralSummary(prisma, sub.order.email);
+  const canInvite = sub.status === "active" && sub.totalSuccessTimes > 0 && !sub.pastDueSince;
   // 補償金額看的是「已完成幾期」，不是日曆月：客戶付了幾期就攤掉了幾期的建置費。
   // 下單時的席次保留金也是實付的一期，一併計入，否則客戶會被多算一期的補償。
   const prepaid = prepaidPeriodsFor(orderSkus);
@@ -105,6 +111,26 @@ export default async function SubscriptionPage({
         )}
         <div className="cart-monthly-note">✦ {t("taxNote")}</div>
       </div>
+
+      <section style={{ marginTop: "2.5rem" }}>
+        <div className="cart-section-head">{lc === "en" ? "Invite friends · Free care months" : "邀請朋友・免費維護月份"}</div>
+        <p className="care-required-note">{lc === "en"
+          ? `Available: ${referral.available} month(s). A friend's first purchase with your code earns one month each. Months are saved until care starts, without extending your minimum term.`
+          : `待用 ${referral.available} 個月。朋友首次購買任一項目並使用你的邀請碼，雙方各送一個月。可累積、未啟用先保留，不延長綁約期。`}</p>
+        {canInvite && (referral.code ? <ReferralShare code={referral.code} zh={lc !== "en"}
+          url={`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://avalokite.xyz"}${localePath(lc, "/referral")}?code=${referral.code}`} />
+          : <form method="post" action={`/api/subscription/${mtn}`}>
+            <input type="hidden" name="action" value="referral" />
+            <button className="btn-primary" type="submit">{lc === "en" ? "Get my invitation code" : "取得我的邀請碼"}</button>
+          </form>)}
+        {!canInvite && <p className="form-note">{lc === "en" ? "Invitation codes can be used while your paid care subscription is active and current." : "維護訂閱正常付費且無欠費時，即可使用邀請碼推薦朋友。"}</p>}
+        {referral.rewards.map((reward) => <p key={reward.id} className="form-note">
+          {fmtDate(reward.createdAt)} · {reward.redeemedAt
+            ? `${lc === "en" ? "Free care" : "免費維護"} ${fmtDate(reward.freeFrom)} – ${fmtDate(reward.freeUntil)}`
+            : (lc === "en" ? "1 month saved · awaiting a free billing period" : "已保留 1 個月・待安排免費維護期間")}
+        </p>)}
+        <Link href="/referral" className="form-note">{lc === "en" ? "Referral details" : "查看推薦規則"}</Link>
+      </section>
 
       {ended ? (
         <p className="care-required-note" style={{ marginTop: "2rem" }}>

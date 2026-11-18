@@ -8,6 +8,7 @@ import { careRequired, fmt, getProduct, withTax, promoPlanForSkus } from "@/lib/
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
 import { track } from "@/lib/track";
+import { REFERRAL_STORAGE } from "@/components/ReferralInvite";
 import {
   INVOICE_ADDRESS_LIMIT, INVOICE_CARRIER_PATTERN, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT,
 } from "@/lib/invoice-details";
@@ -23,9 +24,15 @@ export default function CheckoutPage() {
   const [stale, setStale] = useState(false); // 條款已改版，需重新確認
   const [promoClosed, setPromoClosed] = useState(false); // 促銷檔期已額滿或結束
   const [taxId, setTaxId] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [referralError, setReferralError] = useState(false);
   const corporateInvoice = taxId.trim().length > 0;
   const checkoutTracked = useRef(false);
   const hasItems = cart.items.length > 0;
+
+  useEffect(() => {
+    try { setReferralCode(sessionStorage.getItem(REFERRAL_STORAGE) ?? ""); } catch { /* 可手動填寫 */ }
+  }, []);
 
   useEffect(() => {
     if (!cart.ready || !hasItems || checkoutTracked.current) return;
@@ -48,6 +55,7 @@ export default function CheckoutPage() {
     setError(false);
     setStale(false);
     setPromoClosed(false);
+    setReferralError(false);
     setSubmitting(true);
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
     try {
@@ -68,9 +76,15 @@ export default function CheckoutPage() {
         setSubmitting(false);
         return;
       }
+      if (res.status === 422) {
+        setReferralError(true);
+        setSubmitting(false);
+        return;
+      }
       if (!res.ok) throw new Error();
       const { payUrl } = (await res.json()) as { payUrl: string };
       cart.clear();
+      try { sessionStorage.removeItem(REFERRAL_STORAGE); } catch { /* 不影響付款 */ }
       window.location.href = payUrl; // 自動送出表單導向綠界
     } catch {
       setError(true);
@@ -147,6 +161,20 @@ export default function CheckoutPage() {
               <div className="form-note">{t("invoiceCarrierNote")}</div>
             </div>
           )}
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="co-referral">{locale === "en" ? "Invitation code (optional)" : "邀請碼（選填）"}</label>
+            <input id="co-referral" name="referralCode" className="form-input" maxLength={15}
+              autoCapitalize="characters" autoComplete="off" placeholder="AV-XXXXXXXXXXXX"
+              value={referralCode} onChange={(e) => { setReferralCode(e.target.value.toUpperCase()); setReferralError(false); }}
+              aria-invalid={referralError} aria-describedby="co-referral-note" />
+            <div className="form-note" id="co-referral-note">{locale === "en"
+              ? "New customers: use an active care subscriber's code and pay for any item. Both receive one free month of care; yours is saved until you activate care."
+              : "新客戶使用有效維護訂閱客戶的邀請碼，完成任一項目付款，雙方各送一個月免費維護。尚未訂閱可先保留。"}</div>
+            {referralError && <div className="form-feedback err" role="alert">{locale === "en"
+              ? "This code is unavailable for this order. Check the code and eligibility (new customers only; no self-referrals), or clear it to continue."
+              : "此邀請碼無法用於本次訂單。請確認碼與資格（限新客戶、不可自行推薦），或清空後繼續結帳。"}</div>}
+          </div>
 
           <div className="form-group">
             <label className="form-label" htmlFor="co-note">{t("note")}</label>

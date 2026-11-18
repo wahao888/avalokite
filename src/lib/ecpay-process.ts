@@ -5,6 +5,28 @@ import { recalcOrderStatus, subscriptionUrl } from "@/lib/subscription";
 import { getProduct } from "@/lib/products";
 import { queueInvoice } from "@/lib/invoices";
 import { queueAdsConversion } from "@/lib/openai-ads-conversions";
+import { grantReferral } from "@/lib/referral";
+
+async function notifyReferral(referral: Awaited<ReturnType<typeof grantReferral>>) {
+  if (!referral) return;
+  for (const reward of referral.rewards) {
+    await sendMail({
+      to: reward.email,
+      subject: "[Avalo] 推薦成功，獲得一個月免費維護 / One free month of care",
+      text: `推薦碼 ${referral.code} 已完成一筆付費推薦，您獲得一個月免費維護。\n` +
+        `尚未啟用維護時，月份會保留在此 Email。已訂閱者由我們安排免費月份，安排完成後可在訂閱管理頁查看日期。` +
+        `獎勵可累積，不延長原本的最短承諾期。\n\n` +
+        `A paid referral with code ${referral.code} earned you one free month of care. ` +
+        `It stays with this email until you activate care. We arrange the free billing period for active subscribers; ` +
+        `confirmed dates appear on your subscription page. Rewards accumulate without extending your minimum term.\n\n` +
+        `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://avalokite.xyz"}/order/lookup`,
+    });
+  }
+  await notifyOwner("[Avalo] 推薦成功：雙方各一個月免費維護待安排",
+    `訂單：${referral.orderId}\n邀請碼：${referral.code}\n` +
+    referral.rewards.map((r) => `${r.side}：${r.email}（獎勵 #${r.id}）`).join("\n") +
+    "\n請在營運後台安排免費月份，確認綠界免扣款排程後再登記兌換。");
+}
 
 export async function formToParams(req: Request): Promise<Record<string, string>> {
   const text = await req.text();
@@ -35,7 +57,7 @@ export async function processPaymentResult(params: Record<string, string>) {
   if (success && Number(params.TradeAmt) !== payment.amount) throw new Error("TradeAmt mismatch");
   const paidAt = success ? new Date() : null;
 
-  const order = await prisma.$transaction(async (tx) => {
+  const processed = await prisma.$transaction(async (tx) => {
     const updated = await tx.payment.updateMany({
       where: { id: payment.id, status: { notIn: ["paid", "cancelled"] } },
       data: {
@@ -79,9 +101,14 @@ export async function processPaymentResult(params: Record<string, string>) {
       });
       await tx.order.update({ where: { id: order.id }, data: { adsOppref: null, adsObref: null } });
     }
-    return recalcOrderStatus(payment.orderId, tx);
+    const referral = success && payment.amount > 0 ? await grantReferral(tx, payment.order) : null;
+    return { order: await recalcOrderStatus(payment.orderId, tx), referral };
   });
-  if (!order) return payment.order.id;
+  if (!processed) return payment.order.id;
+  const { order, referral } = processed;
+
+  await notifyReferral(referral);
+
 
   if (success) {
     const zh = order.locale !== "en";
@@ -148,7 +175,7 @@ export async function processPeriodCharge(params: Record<string, string>) {
     if (times === 1) return; // 首次扣款由 ReturnURL / OrderResultURL 處理。
   }
 
-  const changed = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const updated = await tx.subscription.updateMany({
       where: {
         id: sub.id,
@@ -182,9 +209,11 @@ export async function processPeriodCharge(params: Record<string, string>) {
         chargedAt: params.ProcessDate ?? params.process_date ?? "",
       });
     }
-    return updated.count > 0;
+    const referral = updated.count > 0 && success ? await grantReferral(tx, sub.order) : null;
+    return { changed: updated.count > 0, referral };
   });
-  if (!changed) return;
+  if (!result.changed) return;
+  await notifyReferral(result.referral);
 
   // 每期都要讓客戶收到憑據。訂閱制最怕的是客戶在信用卡帳單上看到一筆
   // 認不出來的「綠界」扣款——那通常直接變成爭議請款或退訂。

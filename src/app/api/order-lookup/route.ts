@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { referralSummary } from "@/lib/referral";
 
 // 查詢需同時提供訂單編號與相符的 Email，但沒有限流的話仍可暴力猜測訂單編號
 // （AVL + 秒級時間戳 + 24 bit 隨機）。10 次/10 分鐘足夠真實查詢者使用。
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
+  const referral = await referralSummary(prisma, order.email);
   return NextResponse.json({
     id: order.id,
     status: order.status,
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
     items: JSON.parse(order.items),
     oneTimeTotal: order.oneTimeTotal,
     monthlyTotal: order.monthlyTotal,
+    freeCareMonths: referral.available,
     payments: order.payments.map((p) => ({
       kind: p.kind,
       amount: p.amount,

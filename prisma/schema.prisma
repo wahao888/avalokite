@@ -18,6 +18,7 @@ model Order {
   invoiceAddress     String?
   invoiceCarrier     String?
   note               String?
+  referralCode       String? // 結帳時驗證過的公開邀請碼；不是訂閱管理憑證
   locale             String         @default("zh-TW")
   items              String // JSON: [{ sku, qty }]
   oneTimeTotal       Int            @default(0) // 一次性小計（未稅，TWD）
@@ -38,6 +39,46 @@ model Order {
   payments           Payment[]
   subscriptions      Subscription[]
   invoices           Invoice[]
+  referral           Referral?
+}
+
+model ReferralCode {
+  code      String   @id
+  email     String   @unique // 正規化 Email，同一位客戶換卡、換方案仍用同一碼
+  createdAt DateTime @default(now())
+  referrals Referral[]
+}
+
+// 每位新客戶的首次實收僅成立一次推薦。付款、推薦與雙方獎勵在同一交易中寫入。
+model Referral {
+  id         Int          @id @default(autoincrement())
+  orderId    String       @unique
+  order      Order        @relation(fields: [orderId], references: [id])
+  code       String
+  invitation ReferralCode @relation(fields: [code], references: [code])
+  email      String       @unique
+  phone      String       @unique
+  createdAt  DateTime     @default(now())
+  rewards    CareReward[]
+}
+
+// 一列就是一個免費維護月。未啟用維護時保留，以 Email 領取，不依附舊授權。
+// 綠界暫停／恢復排程只能在廠商後台操作；確認排程已調整後才登記兌換。
+model CareReward {
+  id               Int       @id @default(autoincrement())
+  referralId       Int
+  referral         Referral  @relation(fields: [referralId], references: [id])
+  side             String // referrer | friend
+  email            String
+  createdAt        DateTime  @default(now())
+  redeemedAt       DateTime?
+  merchantTradeNo  String? // 實際使用的訂閱，保留換卡前的歷史
+  freeFrom         DateTime?
+  freeUntil        DateTime?
+  billingReference String? // 綠界排程調整的核對紀錄
+
+  @@unique([referralId, side])
+  @@index([email, redeemedAt])
 }
 
 model AdsConversion {

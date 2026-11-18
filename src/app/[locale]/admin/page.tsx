@@ -43,7 +43,7 @@ export default async function AdminPage({
     );
   }
 
-  const [orders, subscriptions, inquiries, openHandoffs, invoices] = await Promise.all([
+  const [orders, subscriptions, inquiries, openHandoffs, invoices, referralMonths] = await Promise.all([
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -61,6 +61,7 @@ export default async function AdminPage({
       orderBy: [{ status: "desc" }, { createdAt: "desc" }],
       take: 50,
     }),
+    prisma.careReward.count({ where: { redeemedAt: null } }),
   ]);
 
   // 建置款已付、維護卻還沒授權——服務在跑但月費沒進來，這種訂單要最先被看到
@@ -82,6 +83,7 @@ export default async function AdminPage({
           <a href="/admin/chat" className="btn-ghost">
             AI 客服{openHandoffs > 0 ? ` ・${openHandoffs} 筆待處理` : ""}
           </a>
+          <a href="/admin/referrals" className="btn-ghost">推薦獎勵{referralMonths > 0 ? ` ・${referralMonths} 個月待安排` : ""}</a>
           <form method="post" action="/api/admin/logout">
             <button type="submit" className="btn-ghost">登出</button>
           </form>
