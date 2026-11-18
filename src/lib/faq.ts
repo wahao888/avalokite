@@ -48,7 +48,7 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
     },
     {
       q: "AI 客服多少錢？有幾種方案？",
-      a: `三階：輕量 ${p("ai-chatbot-lite")} 建置＋${p("care-ai-lite")}／月，單一通道、每月 1,000 組對話，適合微型企業；商務 ${p("ai-chatbot")} 建置＋${p("care-ai")}／月，LINE 與官網雙通道、每月 5,000 組；企業 ${p("ai-chatbot-enterprise")} 起，含系統整合與多語言。價格均為未稅，結帳加 5% 營業稅。`,
+      a: `三階：輕量 ${p("ai-chatbot-lite")} 建置＋${p("care-ai-lite")}／月，單一通道、每月 1,000 組對話，適合微型企業；商務 ${p("ai-chatbot")} 建置＋${p("care-ai-business")}／月，LINE 與官網雙通道、每月 5,000 組；企業方案含多通道、系統整合與多語言，依需求評估後提供書面報價。價格均為未稅，結帳加 5% 營業稅。`,
     },
     {
       q: "AI 客服會不會亂報價？用量會不會爆？",
@@ -90,7 +90,7 @@ export const SITE_FAQ: Record<"zh-TW" | "en", FaqItem[]> = {
     },
     {
       q: "How much does AI customer service cost?",
-      a: `Three tiers: Lite at ${p("ai-chatbot-lite")} build plus ${p("care-ai-lite")}/month for one channel and 1,000 conversations; Business at ${p("ai-chatbot")} plus ${p("care-ai")}/month for LINE and web with 5,000 conversations; Enterprise from ${p("ai-chatbot-enterprise")} with system integration and multilingual replies. Prices exclude 5% VAT.`,
+      a: `Three tiers: Lite at ${p("ai-chatbot-lite")} build plus ${p("care-ai-lite")}/month for one channel and 1,000 conversations; Business at ${p("ai-chatbot")} plus ${p("care-ai-business")}/month for LINE and web with 5,000 conversations; Enterprise, with multiple channels, system integration and multilingual replies, is quoted in writing after a needs assessment. Prices exclude 5% VAT.`,
     },
     {
       q: "Can the AI quote the wrong price, or run up a surprise bill?",

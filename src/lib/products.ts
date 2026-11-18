@@ -29,6 +29,9 @@ export interface Product {
   marketRange: { "zh-TW": string; en: string }; // 台灣行情對照（透明定價賣點）
   // 行情區間的數值版，給首頁的行情對照圖表畫橫條用；沒有可對照區間的方案留空
   marketBand?: { low: number; high: number };
+  // 依需求報價：不公開標價、不能加入購物車或結帳，卡片改導向諮詢。
+  // price 仍保留為內部評估的參考底價，任何對外輸出都不得引用（見 publicPrice）。
+  quoteOnly?: boolean;
   i18n: { "zh-TW": ProductI18n; en: ProductI18n };
 }
 
@@ -113,21 +116,21 @@ export const PRODUCTS: Product[] = [
   {
     sku: "ai-chatbot-lite",
     type: "onetime",
-    price: 29000,
+    price: 12800,
     recommendedCareSku: "care-ai-lite",
-    marketRange: { "zh-TW": "市場行情 NT$60,000–150,000", en: "Market rate NT$60k–150k" },
-    marketBand: { low: 60000, high: 150000 },
+    marketRange: { "zh-TW": "既有官網可只接 LINE", en: "Add LINE support to your existing setup" },
     i18n: {
       "zh-TW": {
         label: "AI 應用",
         name: "AI 智能客服・輕量",
         desc: "單一通道的 AI 客服，用你的 FAQ 與價目回答，下班後也有人回。",
         features: [
-          "LINE 官方帳號或網站聊天，擇一開通",
+          "沿用既有 LINE 官方帳號，或選擇只開通官網聊天",
           "知識庫用你的 FAQ 與價目（約 1 萬字）",
           "需要真人時以 Email 通知你",
           "每月 1,000 組對話",
-          "知識庫每季更新一次",
+          "上線前驗收 FAQ、價格與轉人工",
+          "每月一次知識庫小修（最多 5 筆 FAQ 或價目）",
         ],
         unit: "一次性",
       },
@@ -136,11 +139,12 @@ export const PRODUCTS: Product[] = [
         name: "AI Customer Service — Lite",
         desc: "Single-channel AI support answering from your FAQ and price list.",
         features: [
-          "LINE Official Account or website chat, pick one",
+          "Connect your existing LINE Official Account or choose website chat",
           "Knowledge base from your FAQ and prices (~10k characters)",
           "Email notification on handoff",
           "1,000 conversations per month",
-          "Knowledge base updated quarterly",
+          "Pre-launch tests for FAQs, pricing and human handoff",
+          "One minor knowledge-base update per month (up to 5 FAQ or price entries)",
         ],
         unit: "one-time",
       },
@@ -149,10 +153,9 @@ export const PRODUCTS: Product[] = [
   {
     sku: "ai-chatbot",
     type: "onetime",
-    price: 69000,
-    recommendedCareSku: "care-ai",
-    marketRange: { "zh-TW": "市場行情 NT$100,000–500,000", en: "Market rate NT$100k–500k" },
-    marketBand: { low: 100000, high: 500000 },
+    price: 39800,
+    recommendedCareSku: "care-ai-business",
+    marketRange: { "zh-TW": "LINE 與官網共用知識庫", en: "Shared knowledge base across LINE and web" },
     i18n: {
       "zh-TW": {
         label: "AI 應用",
@@ -160,9 +163,9 @@ export const PRODUCTS: Product[] = [
         desc: "LINE 官方帳號＋網站雙通道 AI 客服，用你的資料訓練知識庫。",
         features: [
           "LINE OA＋網站即時聊天雙通道",
-          "RAG 知識庫（用你的 FAQ／文件訓練）",
+          "RAG 知識庫（FAQ 與文件，約 12 萬字）",
           "真人轉接與對話紀錄後台",
-          "每月對話用量報表",
+          "每月 5,000 組對話與成效報告",
           "含部署上線與知識庫首次建置",
         ],
         unit: "一次性",
@@ -173,9 +176,9 @@ export const PRODUCTS: Product[] = [
         desc: "AI support on LINE OA + your website, trained on your own knowledge base.",
         features: [
           "LINE OA + website live chat",
-          "RAG knowledge base from your docs/FAQ",
+          "RAG knowledge base from your docs and FAQs (~120k characters)",
           "Human handoff + conversation logs",
-          "Monthly usage reports",
+          "5,000 conversations per month and a performance report",
           "Deployment and initial knowledge base setup",
         ],
         unit: "one-time",
@@ -186,9 +189,9 @@ export const PRODUCTS: Product[] = [
     sku: "ai-chatbot-enterprise",
     type: "onetime",
     price: 149000,
+    quoteOnly: true,
     recommendedCareSku: "care-ai-plus",
-    marketRange: { "zh-TW": "市場行情 NT$300,000–1,000,000", en: "Market rate NT$300k–1M" },
-    marketBand: { low: 300000, high: 1000000 },
+    marketRange: { "zh-TW": "需求評估後提供書面報價", en: "Written quote after a needs assessment" },
     i18n: {
       "zh-TW": {
         label: "AI 應用",
@@ -201,7 +204,7 @@ export const PRODUCTS: Product[] = [
           "每月 20,000 組對話起，可再加",
           "回應時間 SLA 與資料落地選項",
         ],
-        unit: "一次性起",
+        unit: "依需求報價",
       },
       en: {
         label: "AI Solutions",
@@ -214,7 +217,7 @@ export const PRODUCTS: Product[] = [
           "From 20,000 conversations per month",
           "Response-time SLA and data residency options",
         ],
-        unit: "from, one-time",
+        unit: "quoted per project",
       },
     },
   },
@@ -568,8 +571,8 @@ export const PRODUCTS: Product[] = [
   {
     sku: "care-ai-lite",
     type: "monthly",
-    price: 2990,
-    marketRange: { "zh-TW": "行情 NT$3,000+/月", en: "Market NT$3k+/mo" },
+    price: 2490,
+    marketRange: { "zh-TW": "單通道客服維運", en: "Single-channel support operations" },
     i18n: {
       "zh-TW": {
         label: "月費方案",
@@ -578,7 +581,7 @@ export const PRODUCTS: Product[] = [
         features: [
           "AI 客服運作監控",
           "含每月 AI 用量額度（1,000 組對話）",
-          "知識庫每季更新一次",
+          "每月一次知識庫小修（最多 5 筆既有 FAQ 或價目）",
           "轉真人時 Email 通知",
           "每月一封用量摘要",
         ],
@@ -591,10 +594,32 @@ export const PRODUCTS: Product[] = [
         features: [
           "AI support uptime monitoring",
           "Monthly AI usage included (1,000 conversations)",
-          "Knowledge base refreshed quarterly",
+          "One minor monthly update (up to 5 existing FAQ or price entries)",
           "Email notification on handoff",
           "Monthly usage summary",
         ],
+        unit: "per month",
+      },
+    },
+  },
+  {
+    sku: "care-ai-business",
+    type: "monthly",
+    price: 5990,
+    marketRange: { "zh-TW": "雙通道客服維運", en: "Dual-channel support operations" },
+    i18n: {
+      "zh-TW": {
+        label: "月費方案",
+        name: "AI 託管・商務",
+        desc: "LINE 和官網客服的一站式代管。",
+        features: ["雙通道運作監控與異常處理", "含每月 5,000 組對話", "每月知識庫更新與成效報告"],
+        unit: "每月",
+      },
+      en: {
+        label: "Monthly Care",
+        name: "AI Operations — Business",
+        desc: "Managed support for LINE and website chat.",
+        features: ["Monitoring and incident handling for both channels", "5,000 conversations per month", "Monthly knowledge-base update and performance report"],
         unit: "per month",
       },
     },
@@ -637,7 +662,8 @@ export const PRODUCTS: Product[] = [
     sku: "care-ai-plus",
     type: "monthly",
     price: 19900,
-    marketRange: { "zh-TW": "行情 NT$25,000+/月", en: "Market NT$25k+/mo" },
+    quoteOnly: true,
+    marketRange: { "zh-TW": "依通道數、整合範圍與 SLA 報價", en: "Quoted by channels, integrations and SLA" },
     i18n: {
       "zh-TW": {
         label: "月費方案",
@@ -650,7 +676,7 @@ export const PRODUCTS: Product[] = [
           "回應時間 SLA 與異常即時處理",
           "每月成效與問題分類報告",
         ],
-        unit: "每月起",
+        unit: "依需求報價",
       },
       en: {
         label: "Monthly Care",
@@ -663,18 +689,27 @@ export const PRODUCTS: Product[] = [
           "Response-time SLA and incident response",
           "Monthly performance and topic breakdown",
         ],
-        unit: "from, per month",
+        unit: "quoted per project",
       },
     },
   },
 ];
 
 export const getProduct = (sku: string) => PRODUCTS.find((p) => p.sku === sku);
-// 促銷方案由 promoProducts() 獨立呈現，故從兩個常規清單排除（見 ProductGroup 註解）
+/** 可以直接下單的方案（排除依需求報價者）；結帳與購物車以此為準 */
+export const isPurchasable = (sku: string) => {
+  const p = getProduct(sku);
+  return !!p && !p.quoteOnly;
+};
+/** 對外顯示用的價格字串；依需求報價的方案一律不露出內部底價 */
+export const publicPrice = (p: Product, zh = true) =>
+  p.quoteOnly ? (zh ? "依需求報價" : "Quoted on request") : `NT$${fmt(p.price)}`;
+// 促銷方案由 promoProducts() 獨立呈現，故從兩個常規清單排除（見 ProductGroup 註解）；
+// 依需求報價的方案沒有標價，也不列入標準價目表
 export const oneTimeProducts = () =>
-  PRODUCTS.filter((p) => p.type === "onetime" && !p.group);
+  PRODUCTS.filter((p) => p.type === "onetime" && !p.group && !p.quoteOnly);
 export const monthlyProducts = () =>
-  PRODUCTS.filter((p) => p.type === "monthly" && !p.group);
+  PRODUCTS.filter((p) => p.type === "monthly" && !p.group && !p.quoteOnly);
 export const promoProducts = () => PRODUCTS.filter((p) => p.group === "promo");
 
 // 反查：哪些一次性方案建議搭配此維護（用於定價區「適用方案」標註）

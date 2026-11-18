@@ -62,20 +62,20 @@ model Referral {
   rewards    CareReward[]
 }
 
-// 一列就是一個免費維護月。未啟用維護時保留，以 Email 領取，不依附舊授權。
-// 綠界暫停／恢復排程只能在廠商後台操作；確認排程已調整後才登記兌換。
+// 一列就是一張「免費服務一次」的兌換券，以 Email 領取，可累積，核發起 12 個月內有效。
+// 刻意不碰月費：定期定額一授權就照排程扣到終止為止，要免收一個月得到綠界後台
+// 暫停再恢復或刷退，忘了一步就是漏收或多收。改送服務，帳就跟綠界完全無關。
+// 表名沿用 CareReward（2026-11-18 第一版是免費維護月，當時正式站沒有任何一筆）。
 model CareReward {
-  id               Int       @id @default(autoincrement())
-  referralId       Int
-  referral         Referral  @relation(fields: [referralId], references: [id])
-  side             String // referrer | friend
-  email            String
-  createdAt        DateTime  @default(now())
-  redeemedAt       DateTime?
-  merchantTradeNo  String? // 實際使用的訂閱，保留換卡前的歷史
-  freeFrom         DateTime?
-  freeUntil        DateTime?
-  billingReference String? // 綠界排程調整的核對紀錄
+  id         Int       @id @default(autoincrement())
+  referralId Int
+  referral   Referral  @relation(fields: [referralId], references: [id])
+  side       String // referrer | friend
+  email      String
+  createdAt  DateTime  @default(now())
+  redeemedAt DateTime? // 服務已提供的時間
+  service    String? // 提供了哪一項，見 lib/referral.ts 的 REFERRAL_SERVICES
+  note       String? // 交付紀錄：做了什麼、交給誰
 
   @@unique([referralId, side])
   @@index([email, redeemedAt])

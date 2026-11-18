@@ -18,6 +18,8 @@ import {
   promoCareNeedsBuild,
   prepaidPeriodsFor,
   earlyExitFee,
+  isPurchasable,
+  publicPrice,
   earlyExitTierLabels,
   EARLY_EXIT_TIERS,
   BUILD_COMMIT_MONTHS,
@@ -188,7 +190,8 @@ describe("維護配對（recommendedCareSku）", () => {
     const names = (sku: string) => plansUsingCare(sku).map((p) => p.sku).sort();
     expect(names("care-basic")).toEqual(["web-basic"]);
     expect(names("care-growth")).toEqual(["dashboard", "web-commerce"]);
-    expect(names("care-ai")).toEqual(["ai-chatbot", "automation", "automation-bundle"]);
+    expect(names("care-ai-business")).toEqual(["ai-chatbot"]);
+    expect(names("care-ai")).toEqual(["automation", "automation-bundle"]);
   });
 });
 
@@ -220,12 +223,48 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
     expect(recommendedCareFor(["site-rescue"])).toBeUndefined();
   });
 
+  it.each([
+    ["ai-chatbot-lite", "care-ai-lite", 12800, 2490],
+    ["ai-chatbot", "care-ai-business", 39800, 5990],
+  ] as const)("客服方案 %s 對應正確的建置及託管價格", (buildSku, careSku, buildPrice, carePrice) => {
+    expect(getProduct(buildSku)?.price).toBe(buildPrice);
+    expect(recommendedCareFor([buildSku])).toBe(careSku);
+    expect(careOptionsFor([buildSku]).find((p) => p.sku === careSku)?.price).toBe(carePrice);
+  });
+
   it("必選的維護方案都真實存在且為月費", () => {
     for (const p of oneTimeProducts()) {
       for (const care of careOptionsFor([p.sku])) {
         expect(care.type).toBe("monthly");
       }
     }
+  });
+});
+
+describe("依需求報價（quoteOnly）", () => {
+  const quoteSkus = ["ai-chatbot-enterprise", "care-ai-plus"];
+
+  it("企業客服的建置與託管都不能直接下單", () => {
+    for (const sku of quoteSkus) {
+      expect(getProduct(sku)?.quoteOnly).toBe(true);
+      expect(isPurchasable(sku)).toBe(false);
+    }
+    expect(isPurchasable("ai-chatbot-lite")).toBe(true);
+  });
+
+  it("不出現在標準價目表，也沒有行情橫條", () => {
+    const listed = [...oneTimeProducts(), ...monthlyProducts()].map((p) => p.sku);
+    for (const sku of quoteSkus) {
+      expect(listed).not.toContain(sku);
+      expect(getProduct(sku)?.marketBand).toBeUndefined();
+    }
+  });
+
+  it("對外價格字串不露出內部底價", () => {
+    const p = getProduct("ai-chatbot-enterprise")!;
+    expect(publicPrice(p)).toBe("依需求報價");
+    expect(publicPrice(p, false)).toBe("Quoted on request");
+    expect(publicPrice(getProduct("ai-chatbot-lite")!)).toBe("NT$12,800");
   });
 });
 

@@ -5,27 +5,29 @@ import { recalcOrderStatus, subscriptionUrl } from "@/lib/subscription";
 import { getProduct } from "@/lib/products";
 import { queueInvoice } from "@/lib/invoices";
 import { queueAdsConversion } from "@/lib/openai-ads-conversions";
-import { grantReferral } from "@/lib/referral";
+import { grantReferral, REFERRAL_SERVICES, rewardExpiresAt } from "@/lib/referral";
 
 async function notifyReferral(referral: Awaited<ReturnType<typeof grantReferral>>) {
   if (!referral) return;
+  const menuZh = REFERRAL_SERVICES.map((s, i) => `${i + 1}. ${s.zh.name}：${s.zh.desc}`).join("\n");
+  const menuEn = REFERRAL_SERVICES.map((s, i) => `${i + 1}. ${s.en.name}: ${s.en.desc}`).join("\n");
   for (const reward of referral.rewards) {
+    const until = rewardExpiresAt(reward.createdAt).toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
     await sendMail({
       to: reward.email,
-      subject: "[Avalo] 推薦成功，獲得一個月免費維護 / One free month of care",
-      text: `推薦碼 ${referral.code} 已完成一筆付費推薦，您獲得一個月免費維護。\n` +
-        `尚未啟用維護時，月份會保留在此 Email。已訂閱者由我們安排免費月份，安排完成後可在訂閱管理頁查看日期。` +
-        `獎勵可累積，不延長原本的最短承諾期。\n\n` +
-        `A paid referral with code ${referral.code} earned you one free month of care. ` +
-        `It stays with this email until you activate care. We arrange the free billing period for active subscribers; ` +
-        `confirmed dates appear on your subscription page. Rewards accumulate without extending your minimum term.\n\n` +
-        `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://avalokite.xyz"}/order/lookup`,
+      subject: "[Avalo] 推薦成功，獲得一次免費服務 / A free service on us",
+      text: `邀請碼 ${referral.code} 已完成一筆付費推薦，您獲得一次免費服務，可從以下三項擇一：\n${menuZh}\n\n` +
+        `請在 ${until} 前回覆此信或透過 LINE 告訴我們想使用哪一項，我們會與您確認時程。獎勵可累積，不折現、不轉讓，與維護月費無關。\n\n` +
+        `A paid referral with code ${referral.code} earned you one free service. Choose one:\n${menuEn}\n\n` +
+        `Reply to this email or message us on LINE by ${until} to tell us which one you'd like. ` +
+        `Rewards accumulate, have no cash value, and do not affect your care billing.\n\n` +
+        `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://avalokite.xyz"}/referral`,
     });
   }
-  await notifyOwner("[Avalo] 推薦成功：雙方各一個月免費維護待安排",
+  await notifyOwner("[Avalo] 推薦成功：雙方各一次免費服務",
     `訂單：${referral.orderId}\n邀請碼：${referral.code}\n` +
-    referral.rewards.map((r) => `${r.side}：${r.email}（獎勵 #${r.id}）`).join("\n") +
-    "\n請在營運後台安排免費月份，確認綠界免扣款排程後再登記兌換。");
+    referral.rewards.map((r) => `${r.side === "referrer" ? "推薦人" : "被推薦人"}：${r.email}（獎勵 #${r.id}）`).join("\n") +
+    "\n客戶會來信指定項目，交付後到 /admin/referrals 登記。");
 }
 
 export async function formToParams(req: Request): Promise<Record<string, string>> {

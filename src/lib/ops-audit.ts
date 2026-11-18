@@ -17,7 +17,7 @@ import { PROMO_WINDOW, currentDeadline, isExpired, seatsLeft } from "@/lib/promo
 import { getTenant, HOUSE_TENANT, TENANTS } from "@/lib/tenants";
 import { planOf } from "@/lib/ai-plans";
 import { invoiceEnvironment } from "@/lib/ecpay-invoice";
-import { referralEmail } from "@/lib/referral";
+import { rewardExpiresAt, rewardUsable } from "@/lib/referral";
 
 /** 0 = 正常、1 = 留意、2 = 今天就要處理 */
 export type Severity = 0 | 1 | 2;
@@ -48,8 +48,8 @@ const PAYMENT_FAILED_DAYS = 3;
 const NOTIFY_LOOKBACK_DAYS = 7;
 /** 客戶站訂單停在待確認超過這麼多天就提醒店家 */
 const SHOP_PENDING_DAYS = 2;
-/** 推薦獎勵核發後超過這麼多天還沒安排就提醒 */
-const REWARD_NOTICE_DAYS = 7;
+/** 推薦獎勵到期前這麼多天內還沒兌現就提醒 */
+const REWARD_NOTICE_DAYS = 30;
 
 const siteName = (tenantId: string | null | undefined) =>
   tenantId ? (getTenant(tenantId)?.name ?? tenantId) : "Avalo 主站";
@@ -404,38 +404,27 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
     });
   });
 
-  // 推薦獎勵是自動發的，但免費月份要人去安排。客戶收到「獲得一個月免費維護」的信之後
-  // 遲遲沒下文，等於承諾沒兌現；所以「有有效訂閱、卻放超過一週沒安排」就要提醒。
-  // 沒有有效維護的人是照規則先保留，不算待辦。
-  await guard("referral-reward", "推薦獎勵待安排", async () => {
-    const [open, activeSubs] = await Promise.all([
-      prisma.careReward.findMany({ where: { redeemedAt: null }, select: { email: true, createdAt: true } }),
-      prisma.subscription.findMany({
-        where: { status: "active", totalSuccessTimes: { gt: 0 }, pastDueSince: null },
-        select: { order: { select: { email: true } } },
-      }),
-    ]);
-    const careEmails = new Set(activeSubs.map((s) => referralEmail(s.order.email)));
-    const ready = open.filter((r) => careEmails.has(r.email));
-    const overdue = ready.filter((r) => now.getTime() - r.createdAt.getTime() > REWARD_NOTICE_DAYS * DAY);
-    const saved = open.length - ready.length;
+  // 推薦獎勵是「免費服務一次」，客戶要來指定項目才會開始做。
+  // 放著不用的話，快到期時客戶反而會覺得被吃掉，所以到期前一個月提醒一聲。
+  await guard("referral-reward", "推薦獎勵還沒兌現", async () => {
+    const open = await prisma.careReward.findMany({
+      where: { redeemedAt: null },
+      select: { createdAt: true, redeemedAt: true },
+    });
+    const usable = open.filter((r) => rewardUsable(r, now));
+    const soon = usable.filter((r) => rewardExpiresAt(r.createdAt).getTime() - now.getTime() <= REWARD_NOTICE_DAYS * DAY);
     add({
       id: "referral-reward",
-      label: "推薦獎勵待安排",
-      value: open.length
-        ? [
-            ready.length ? `可安排 ${ready.length} 個月${overdue.length ? `（其中 ${overdue.length} 個超過 ${REWARD_NOTICE_DAYS} 天）` : ""}` : "",
-            saved ? `保留中 ${saved} 個月（對方還沒有有效維護）` : "",
-          ]
-            .filter(Boolean)
-            .join("；")
-        : "0 個月",
-      level: overdue.length > 0 ? 1 : 0,
-      action: overdue.length
-        ? "客戶已收到獲得免費月的通知，卻還沒安排。到 /admin/referrals 處理"
-        : ready.length
-          ? `到 /admin/referrals 安排；超過 ${REWARD_NOTICE_DAYS} 天會升為留意`
-          : "沒有需要安排的",
+      label: "推薦獎勵還沒兌現",
+      value: usable.length
+        ? `${usable.length} 次${soon.length ? `（其中 ${soon.length} 次 ${REWARD_NOTICE_DAYS} 天內到期）` : ""}`
+        : "0 次",
+      level: soon.length > 0 ? 1 : 0,
+      action: soon.length
+        ? "快到期了，主動聯絡客戶問要選哪一項服務。名單在 /admin/referrals"
+        : usable.length
+          ? `等客戶來指定項目；到期前 ${REWARD_NOTICE_DAYS} 天會升為留意`
+          : "沒有待兌現的",
     });
   });
 

@@ -15,8 +15,8 @@ export default function ReferralInvite({ code, zh }: { code: string; zh: boolean
       <div className="form-label">{zh ? "朋友的邀請碼" : "Your friend's invitation code"}</div>
       <p style={{ fontSize: "1.4rem", overflowWrap: "anywhere" }}><code>{code}</code></p>
       <p className="care-required-note">{zh
-        ? "結帳時使用此碼並完成任一項目付款，雙方各獲得一個月免費維護。尚未訂閱也會先為你保留。邀請碼資格於付款成功時確認。"
-        : "Use this code at checkout and pay for any item to earn one free month of care for both of you. Your month is saved if you haven't subscribed. Eligibility is confirmed at payment."}</p>
+        ? "結帳時使用此碼並完成任一項目付款，你和朋友各獲得一次免費服務（網站健檢、SEO 起步包或新增一頁，三選一）。邀請碼資格於付款成功時確認。"
+        : "Use this code at checkout and pay for any item, and you and your friend each get one free service (a website health check, SEO starter or one extra page). Eligibility is confirmed at payment."}</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <Link className="btn-primary" href="/pricing">{zh ? "查看方案" : "View plans"}</Link>
         <button className="btn-ghost" onClick={async () => {

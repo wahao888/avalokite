@@ -11,7 +11,7 @@ interface LookupResult {
   items: { sku: string; qty: number }[];
   oneTimeTotal: number;
   monthlyTotal: number;
-  freeCareMonths: number;
+  referralRewards: number;
   payments: { kind: string; amount: number; status: string; paidAt: string | null }[];
   subscriptions: {
     sku: string;
@@ -83,9 +83,9 @@ export default function OrderLookupPage() {
             <span className={`badge ${result.status}`}>{t(`status.${result.status}`)}</span>
           </div>
 
-          {result.freeCareMonths > 0 && <p className="care-required-note">{locale === "en"
-            ? `${result.freeCareMonths} free care month(s) saved with your email. We can arrange them for your active care subscription, or save them until care starts.`
-            : `你的 Email 已保留 ${result.freeCareMonths} 個月免費維護，可安排於有效維護訂閱使用；尚未啟用維護時會繼續保留。`}</p>}
+          {result.referralRewards > 0 && <p className="care-required-note">{locale === "en"
+            ? `You have ${result.referralRewards} free referral service(s): a website health check, SEO starter or one extra page. Reply to the referral email or message us on LINE to choose.`
+            : `你有 ${result.referralRewards} 次推薦獎勵免費服務（網站健檢、SEO 起步包或新增一頁，三選一），回覆推薦通知信或透過 LINE 告訴我們要哪一項。`}</p>}
 
           <div className="cart-section-head">{t("itemsHeading")}</div>
           {result.items.map((i) => (

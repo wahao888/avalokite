@@ -22,6 +22,7 @@ const POINT_ICONS: DoodleName[] = ["folder", "calc", "handoff"];
 const price = (sku: string) => {
   const p = getProduct(sku);
   if (!p) throw new Error(`aiBand 引用了不存在的方案：${sku}`);
+  if (p.quoteOnly) throw new Error(`aiBand 不可引用依需求報價方案的價格：${sku}`);
   return `NT$${fmt(p.price)}`;
 };
 
@@ -65,7 +66,7 @@ export default function AiSupport() {
           <p className="ai-band-price">
             {t("priceLine", {
               lite: price(AI_PLANS.lite.buildSku),
-              enterprise: price(AI_PLANS.enterprise.buildSku),
+              business: price(AI_PLANS.business.buildSku),
             })}
           </p>
           <div className="ai-band-cta">

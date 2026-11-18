@@ -49,7 +49,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: CartItem[] = JSON.parse(raw);
-        updateItems(parsed.filter((i) => getProduct(i.sku) && i.qty > 0));
+        updateItems(parsed.filter((i) => getProduct(i.sku) && !getProduct(i.sku)?.quoteOnly && i.qty > 0));
       }
     } catch {
       /* 壞資料直接重置 */
@@ -67,7 +67,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     for (const sku of typeof selection === "string" ? [selection] : selection) {
       const prod = getProduct(sku);
-      if (!prod) continue;
+      if (!prod || prod.quoteOnly) continue;
       track("add_to_cart", { sku });
       const found = next.some((i) => i.sku === sku);
       // 月費方案同品項不重複加（一個網站一份維護）；一次性可加量

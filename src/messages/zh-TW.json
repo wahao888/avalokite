@@ -76,7 +76,7 @@
         "d": "你在 LINE 回覆後，AI 自動暫停。"
       }
     ],
-    "priceLine": "建置 {lite} 起，企業整合 {enterprise} 起（未稅）",
+    "priceLine": "單做 LINE 建置 {lite} 起，LINE＋官網 {business}（未稅）；企業整合依需求報價",
     "ctaPlans": "看三階方案 →",
     "ctaLine": "用 LINE 直接問"
   },

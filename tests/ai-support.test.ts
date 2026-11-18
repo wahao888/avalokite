@@ -61,8 +61,15 @@ describe("知識庫", () => {
   it("每個在售方案的名稱與未稅價都在裡面", () => {
     for (const p of PRODUCTS) {
       expect(kb).toContain(p.i18n["zh-TW"].name);
-      expect(kb).toContain(`NT$${fmt(p.price)}`);
+      if (!p.quoteOnly) expect(kb).toContain(`NT$${fmt(p.price)}`);
     }
+  });
+
+  it("依需求報價的方案不把內部底價交給模型", () => {
+    for (const p of PRODUCTS.filter((x) => x.quoteOnly)) {
+      expect(kb).not.toContain(`NT$${fmt(p.price)}`);
+    }
+    expect(kb).toContain("依需求評估後提供書面報價");
   });
 
   it("同時給出含稅價，客服才不會把未稅價講成實付金額", () => {

@@ -2,7 +2,7 @@ import { COMPANY, LINE_URL, SITE } from "@/lib/site";
 import { GUIDES } from "@/lib/guides";
 import { INDUSTRIES } from "@/lib/industries";
 import { SERVICES, filledCopy, servicePath } from "@/lib/services";
-import { getProduct, monthlyProducts, oneTimeProducts, fmt } from "@/lib/products";
+import { getProduct, monthlyProducts, oneTimeProducts, fmt, publicPrice } from "@/lib/products";
 import { AI_PLANS } from "@/lib/ai-plans";
 
 /** /llms.txt：給 AI 爬蟲的純文字摘要。價格與方案從同一份目錄來，不手抄。 */
@@ -30,8 +30,8 @@ export function llmsTxt(): string {
     if (!build || !care) throw new Error(`llms.txt 引用了不存在的方案：${plan.buildSku}`);
     return {
       name: build.i18n["zh-TW"].name,
-      build: `NT$${fmt(build.price)}`,
-      care: `NT$${fmt(care.price)}`,
+      build: publicPrice(build),
+      care: publicPrice(care),
       convos: plan.monthlyConversations.toLocaleString("en-US"),
     };
   };
@@ -67,8 +67,8 @@ ${care}
 Avalo 的 LINE AI 客服分三階，價格均為未稅，結帳加 5% 營業稅：
 ${lite.name}建置 ${lite.build}、月費 ${lite.care}，LINE 或官網擇一通道，每月 ${lite.convos} 組對話，適合微型企業與個人工作室；
 ${business.name}建置 ${business.build}、月費 ${business.care}，LINE 與官網雙通道，含文件知識庫與真人轉接後台，每月 ${business.convos} 組對話；
-${enterprise.name}建置 ${enterprise.build} 起、月費 ${enterprise.care} 起，含系統整合（訂單查詢、預約、寫回 CRM）、多語言與回應時間 SLA。
-三階都含部署上線與知識庫首次建置，約 2–3 週交付。
+${enterprise.name}依需求評估後提供書面報價，適用多通道、系統整合（訂單查詢、預約、寫回 CRM）、多語言與回應時間 SLA。
+輕量與商務含部署上線與知識庫首次建置，資料齊備後約 2–3 週交付；企業方案交期依整合範圍另訂。
 模型用量不另外向客戶計費：實測每段對話的成本約 NT$0.011，方案的差別在知識庫規模、通道數與系統整合深度，不在 token。
 Avalo 自己的官網與 LINE 官方帳號跑的就是這一套，實測數字公開在 ${origin}/cases/avalo-ai-support。
 

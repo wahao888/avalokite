@@ -25,14 +25,20 @@ export function PriceCard({ product, locale }: { product: Product; locale: Local
       <div className="price-label">{info.label}</div>
       <div className="price-name">{info.name}</div>
       <p className="price-desc">{info.desc}</p>
-      <div className="price-amount">
-        <span className="price-cur">NT$</span>
-        {fmt(product.price)}
-        {product.type === "monthly" && (
-          <span className="price-per">{t("perMonth")}</span>
-        )}
-      </div>
-      <div className="price-unit">TWD · {info.unit}</div>
+      {product.quoteOnly ? (
+        <div className="price-amount" style={{ fontSize: "1.4rem" }}>
+          {t("custom.price")}
+        </div>
+      ) : (
+        <div className="price-amount">
+          <span className="price-cur">NT$</span>
+          {fmt(product.price)}
+          {product.type === "monthly" && (
+            <span className="price-per">{t("perMonth")}</span>
+          )}
+        </div>
+      )}
+      <div className="price-unit">{product.quoteOnly ? info.unit : `TWD · ${info.unit}`}</div>
       <div className="price-market">{product.marketRange[locale]}</div>
       <div className="price-divider" />
       {info.features.map((f) => (
@@ -49,7 +55,13 @@ export function PriceCard({ product, locale }: { product: Product; locale: Local
         <div className="price-promo-note">{product.promoNote[locale]}</div>
       )}
       <div className="price-cta">
-        <AddToCartButton sku={product.sku} />
+        {product.quoteOnly ? (
+          <Link href="/contact" className="btn-ghost">
+            {t("custom.cta")}
+          </Link>
+        ) : (
+          <AddToCartButton sku={product.sku} />
+        )}
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ export interface AiPlan {
   /** 知識庫規模的量級（字數），用於文案與驗收界線 */
   knowledgeChars: number;
   /** 知識庫更新頻率 */
-  updateCadence: "quarterly" | "monthly" | "ondemand";
+  updateCadence: "monthly" | "ondemand";
 }
 
 export const AI_PLANS: Record<AiPlanTier, AiPlan> = {
@@ -44,12 +44,12 @@ export const AI_PLANS: Record<AiPlanTier, AiPlan> = {
     monthlyBudgetUsd: 3,
     channels: 1,
     knowledgeChars: 10_000,
-    updateCadence: "quarterly",
+    updateCadence: "monthly",
   },
   business: {
     tier: "business",
     buildSku: "ai-chatbot",
-    careSku: "care-ai",
+    careSku: "care-ai-business",
     monthlyConversations: 5_000,
     monthlyBudgetUsd: 10,
     channels: 2,

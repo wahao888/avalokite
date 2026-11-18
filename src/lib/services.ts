@@ -41,6 +41,8 @@ export function fill(text: string): string {
     .replace(/\{price:([a-z0-9-]+)\}/g, (_, sku: string) => {
       const p = getProduct(sku);
       if (!p) throw new Error(`services.ts 引用了不存在的方案：${sku}`);
+      // 依需求報價的方案沒有對外價格，文案引用它就是要露出內部底價，直接擋下
+      if (p.quoteOnly) throw new Error(`services.ts 不可引用依需求報價方案的價格：${sku}`);
       return `NT$${fmt(p.price)}`;
     })
     .replace(/\{addon:([a-z0-9-]+)\}/g, (_, id: string) => {
@@ -250,10 +252,10 @@ export const SERVICES: Service[] = [
         name: "LINE AI 客服",
         title: "LINE AI 客服・聊天機器人建置 {price:ai-chatbot-lite} 起｜用你的資料回答｜Avalo 阿瓦羅",
         description:
-          "LINE 官方帳號與網站的 AI 客服：以你的 FAQ 與文件建立知識庫（RAG）、真人轉接與對話紀錄後台。單一通道 {price:ai-chatbot-lite}、LINE＋網站雙通道 {price:ai-chatbot}（未稅），含部署與知識庫首次建置，約 2–3 週上線。",
+          "已有官網也能單做 LINE AI 客服。輕量建置 {price:ai-chatbot-lite}＋{price:care-ai-lite}／月，含知識庫、真人接手與代管，資料齊備後約 2–3 週上線。LINE＋官網雙通道另有商務方案，企業整合依需求報價。",
         label: "LINE AI 客服・智能客服",
         h1: "LINE AI 客服：\n用你的資料，回答客人的問題",
-        lede: "營業時間、價格、方案差異、怎麼付款——客服每天回答的，多半是同樣的幾十個問題。Avalo 的 AI 客服接在 LINE 官方帳號與網站上，用你的 FAQ、價目與文件建立知識庫來回答；需要真人的時候，就交給你。單一通道 {price:ai-chatbot-lite}（未稅）起，LINE＋網站雙通道 {price:ai-chatbot}，含部署上線與知識庫首次建置。",
+        lede: "已有官網也能單做 LINE。Avalo 接上你現有的 LINE 官方帳號，整理 FAQ 和價目表，驗收後上線。輕量建置 {price:ai-chatbot-lite}＋{price:care-ai-lite}／月。LINE＋官網商務建置 {price:ai-chatbot}＋{price:care-ai-business}／月。以上未稅，建置須搭配至少 12 個月託管。",
         fit: [
           "LINE 官方帳號訊息多到回不完，或下班後沒人回",
           "同樣的問題每天要回答幾十次的客服與業務",
@@ -276,15 +278,19 @@ export const SERVICES: Service[] = [
           },
           {
             q: "上線後的 AI 用量怎麼計費？",
-            a: "建置費含部署與知識庫首次建置；上線後建議搭配 AI 託管 {price:care-ai}／月，內含每月 AI API 用量額度、知識庫內容更新與流程監控。",
+            a: "輕量託管 {price:care-ai-lite}／月，含 1,000 組對話與每月一次既有 FAQ 或價目的小修。商務託管 {price:care-ai-business}／月，含 5,000 組對話、每月知識庫更新與成效報告。兩者含監控，LINE 官方帳號方案與推播費依 LINE 計收。",
           },
           {
-            q: "可以只做網站客服、不接 LINE 嗎？",
-            a: "可以，兩個通道可以只開一個；之後要加開另一個，沿用同一份知識庫。",
+            q: "已有官網，可以只做 LINE 客服嗎？",
+            a: "可以，輕量方案可沿用既有 LINE 官方帳號，也可選擇只開通官網聊天。若 LINE 已接其他客服平台，我們會先確認串接方式。",
           },
           {
             q: "可以先試用看看嗎？",
             a: "可以直接試我們自己的：本站的線上客服，以及 LINE 官方帳號 {line}，背後就是這套系統。",
+          },
+          {
+            q: "企業方案為什麼沒有標價？",
+            a: "企業方案的費用取決於通道數、要串接的系統（訂單、預約、CRM）、多語言與 SLA 要求，差異很大。我們先做需求評估，再提供書面固定報價，報價後不二價。",
           },
         ],
       },
@@ -292,10 +298,10 @@ export const SERVICES: Service[] = [
         name: "LINE AI Customer Service",
         title: "LINE AI Chatbot for Business | from {price:ai-chatbot-lite} | Avalo",
         description:
-          "AI customer service on your LINE Official Account and website, answering from a knowledge base built on your own FAQ and documents (RAG), with human handoff and conversation logs. One channel {price:ai-chatbot-lite}, LINE plus website {price:ai-chatbot} excl. VAT, live in about 2–3 weeks.",
+          "Add AI support to your existing LINE Official Account, even if you already have a website. Lite is {price:ai-chatbot-lite} to set up plus {price:care-ai-lite}/month, with knowledge base, human handoff and managed operations, live in about 2–3 weeks once your material is ready. LINE plus website is on the Business plan; enterprise integration is quoted on request.",
         label: "LINE AI customer service",
         h1: "LINE AI customer service\nthat answers from your own data",
-        lede: "Opening hours, prices, plan differences, how to pay — most of what support answers every day is the same few dozen questions. Avalo's AI support runs on your LINE Official Account and your website, answering from a knowledge base built on your FAQ, price list and documents, and handing over to you when a human is needed. One channel from {price:ai-chatbot-lite}, LINE plus website {price:ai-chatbot} (excl. VAT), including deployment and the initial knowledge base.",
+        lede: "Add AI support to your existing LINE Official Account. Lite is {price:ai-chatbot-lite} to set up plus {price:care-ai-lite}/month. Business covers LINE and website chat for {price:ai-chatbot} to set up plus {price:care-ai-business}/month. Prices exclude VAT. Builds require at least 12 months of managed service.",
         fit: [
           "LINE Official Accounts with more messages than anyone can answer, or none answered after hours",
           "Support and sales teams answering the same questions dozens of times a day",
@@ -318,15 +324,19 @@ export const SERVICES: Service[] = [
           },
           {
             q: "How is AI usage billed after launch?",
-            a: "The build fee covers deployment and the initial knowledge base. After launch we recommend AI Operations at {price:care-ai}/month, which includes a monthly AI API allowance, knowledge base updates and monitoring.",
+            a: "Lite operations cost {price:care-ai-lite}/month and include 1,000 conversations and one minor update to existing FAQs or prices. Business operations cost {price:care-ai-business}/month and include 5,000 conversations, monthly knowledge-base updates and a performance report. Both include monitoring. LINE bills account and push messaging fees separately.",
           },
           {
-            q: "Can I have website chat without LINE?",
-            a: "Yes — either channel can run on its own, and adding the other later reuses the same knowledge base.",
+            q: "Can I add LINE support to my existing website setup?",
+            a: "Yes. Lite connects your existing LINE Official Account or website chat. If your LINE account already uses another support tool, we’ll check how to connect it first.",
           },
           {
             q: "Can I try it first?",
             a: "Try ours: the live chat on this site and our LINE Official Account {line} run on this same system.",
+          },
+          {
+            q: "Why is there no list price for Enterprise?",
+            a: "Enterprise cost depends on the number of channels, the systems to integrate (orders, booking, CRM), languages and SLA requirements. We assess your needs first, then give a written fixed quote that stays final.",
           },
         ],
       },

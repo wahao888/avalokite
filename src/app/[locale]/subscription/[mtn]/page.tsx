@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import SubscriptionActions from "@/components/SubscriptionActions";
 import ReferralShare from "@/components/ReferralShare";
 import { prisma } from "@/lib/prisma";
-import { referralSummary } from "@/lib/referral";
+import { referralService, referralSummary } from "@/lib/referral";
 import { localePath } from "@/i18n/routing";
 
 export { NOINDEX as metadata } from "@/lib/site-routes";
@@ -113,10 +113,10 @@ export default async function SubscriptionPage({
       </div>
 
       <section style={{ marginTop: "2.5rem" }}>
-        <div className="cart-section-head">{lc === "en" ? "Invite friends · Free care months" : "邀請朋友・免費維護月份"}</div>
+        <div className="cart-section-head">{lc === "en" ? "Invite friends · Free services" : "邀請朋友・免費服務"}</div>
         <p className="care-required-note">{lc === "en"
-          ? `Available: ${referral.available} month(s). A friend's first purchase with your code earns one month each. Months are saved until care starts, without extending your minimum term.`
-          : `待用 ${referral.available} 個月。朋友首次購買任一項目並使用你的邀請碼，雙方各送一個月。可累積、未啟用先保留，不延長綁約期。`}</p>
+          ? `Available: ${referral.available}. A friend's first purchase with your code earns you both one free service: a website health check, SEO starter or one extra page. Rewards accumulate and don't affect your care billing.`
+          : `可兌換 ${referral.available} 次。朋友首次購買任一項目並使用你的邀請碼，雙方各送一次免費服務：網站健檢、SEO 起步包或新增一頁，三選一。可累積，與月費無關。`}</p>
         {canInvite && (referral.code ? <ReferralShare code={referral.code} zh={lc !== "en"}
           url={`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://avalokite.xyz"}${localePath(lc, "/referral")}?code=${referral.code}`} />
           : <form method="post" action={`/api/subscription/${mtn}`}>
@@ -126,8 +126,12 @@ export default async function SubscriptionPage({
         {!canInvite && <p className="form-note">{lc === "en" ? "Invitation codes can be used while your paid care subscription is active and current." : "維護訂閱正常付費且無欠費時，即可使用邀請碼推薦朋友。"}</p>}
         {referral.rewards.map((reward) => <p key={reward.id} className="form-note">
           {fmtDate(reward.createdAt)} · {reward.redeemedAt
-            ? `${lc === "en" ? "Free care" : "免費維護"} ${fmtDate(reward.freeFrom)} – ${fmtDate(reward.freeUntil)}`
-            : (lc === "en" ? "1 month saved · awaiting a free billing period" : "已保留 1 個月・待安排免費維護期間")}
+            ? `${lc === "en" ? "Delivered" : "已交付"}：${(lc === "en" ? referralService(reward.service)?.en.name : referralService(reward.service)?.zh.name) ?? reward.service}（${fmtDate(reward.redeemedAt)}）`
+            : new Date() >= reward.expiresAt
+              ? (lc === "en" ? "Expired unused" : "已過期，未使用")
+              : (lc === "en"
+                ? `1 free service · use by ${fmtDate(reward.expiresAt)}; reply to the email or message us on LINE`
+                : `免費服務 1 次・${fmtDate(reward.expiresAt)} 前有效，回信或 LINE 告訴我們要哪一項`)}
         </p>)}
         <Link href="/referral" className="form-note">{lc === "en" ? "Referral details" : "查看推薦規則"}</Link>
       </section>

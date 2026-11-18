@@ -169,8 +169,8 @@ export default function CheckoutPage() {
               value={referralCode} onChange={(e) => { setReferralCode(e.target.value.toUpperCase()); setReferralError(false); }}
               aria-invalid={referralError} aria-describedby="co-referral-note" />
             <div className="form-note" id="co-referral-note">{locale === "en"
-              ? "New customers: use an active care subscriber's code and pay for any item. Both receive one free month of care; yours is saved until you activate care."
-              : "新客戶使用有效維護訂閱客戶的邀請碼，完成任一項目付款，雙方各送一個月免費維護。尚未訂閱可先保留。"}</div>
+              ? "New customers: use an active care subscriber's code and pay for any item. You both get one free service: a website health check, SEO starter or one extra page."
+              : "新客戶使用有效維護訂閱客戶的邀請碼，完成任一項目付款，雙方各送一次免費服務：網站健檢、SEO 起步包或新增一頁，三選一。"}</div>
             {referralError && <div className="form-feedback err" role="alert">{locale === "en"
               ? "This code is unavailable for this order. Check the code and eligibility (new customers only; no self-referrals), or clear it to continue."
               : "此邀請碼無法用於本次訂單。請確認碼與資格（限新客戶、不可自行推薦），或清空後繼續結帳。"}</div>}

@@ -234,7 +234,8 @@ export function serviceLd({
   serviceType: string;
   skus: string[];
 }) {
-  const products = skus.map(getProduct).filter((p): p is Product => !!p);
+  // 依需求報價的方案沒有對外標價，不進 Offer，也不拉高 highPrice
+  const products = skus.map(getProduct).filter((p): p is Product => !!p && !p.quoteOnly);
   const offers = products.map((p) => offerLd(p, locale));
 
   // 一項服務有多個級距時，額外給 AggregateOffer。
