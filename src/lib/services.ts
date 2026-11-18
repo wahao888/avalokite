@@ -99,7 +99,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "除了建置費，還要付什麼？",
-            a: "建置案須搭配一份維護方案，形象官網建議搭配安心維護 {price:care-basic}／月（主機、SSL、每日備份、安全更新），自網站上線驗收後才開始計費，最短承諾 12 個月，期滿後可隨時終止。標價皆未稅，結帳加 5% 營業稅。",
+            a: "建置案須搭配一份維護方案，形象官網建議搭配安心維護 {price:care-basic}／月（主機、SSL、每日備份、安全更新），建置費下單時付清；月費要等網站上線驗收後，另寄信用卡定期定額授權連結，完成授權才開始計費，最短承諾 12 個月，期滿後可隨時終止。標價皆未稅，結帳加 5% 營業稅。",
           },
         ],
       },
@@ -141,7 +141,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "What do I pay besides the build fee?",
-            a: "Every build comes with a care plan; for a brand site we recommend Essential Care at {price:care-basic}/month (hosting, SSL, daily backups, security updates). Billing starts only after launch and acceptance, with a 12-month minimum term, cancellable any time after. Prices exclude 5% VAT.",
+            a: "Every build comes with a care plan; for a brand site we recommend Essential Care at {price:care-basic}/month (hosting, SSL, daily backups, security updates). The build is paid at checkout; care billing starts only after launch and acceptance, once you complete a separate recurring card authorization we email you, with a 12-month minimum term, cancellable any time after. Prices exclude 5% VAT.",
           },
         ],
       },
@@ -192,7 +192,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "除了建置費，還要付什麼？",
-            a: "建置案須搭配一份維護方案，商務網站建議搭配成長維護 {price:care-growth}／月（含每月 4 小時修改與 SEO＋GEO 調整），自網站上線驗收後才開始計費，最短承諾 12 個月。金流商的交易手續費，依你與金流商簽訂的費率另計。",
+            a: "建置案須搭配一份維護方案，商務網站建議搭配成長維護 {price:care-growth}／月（含每月 4 小時修改與 SEO＋GEO 調整），建置費下單時付清；月費要等網站上線驗收後，另寄信用卡定期定額授權連結，完成授權才開始計費，最短承諾 12 個月。金流商的交易手續費，依你與金流商簽訂的費率另計。",
           },
         ],
       },
@@ -234,7 +234,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "What do I pay besides the build fee?",
-            a: "Every build comes with a care plan; for a commerce site we recommend Growth Care at {price:care-growth}/month (four hours of changes a month plus SEO and GEO tuning). Billing starts after launch and acceptance, with a 12-month minimum term. Gateway transaction fees are charged separately at the rate you agree with the payment provider.",
+            a: "Every build comes with a care plan; for a commerce site we recommend Growth Care at {price:care-growth}/month (four hours of changes a month plus SEO and GEO tuning). The build is paid at checkout; care billing starts only after launch and acceptance, once you complete a separate recurring card authorization we email you, with a 12-month minimum term. Gateway transaction fees are charged separately at the rate you agree with the payment provider.",
           },
         ],
       },
@@ -282,6 +282,10 @@ export const SERVICES: Service[] = [
             a: "輕量託管 {price:care-ai-lite}／月，含 1,000 組對話與每月一次既有 FAQ 或價目的小修。商務託管 {price:care-ai-business}／月，含 5,000 組對話、每月知識庫更新與成效報告。兩者含監控，LINE 官方帳號方案與推播費依 LINE 計收。",
           },
           {
+            q: "建置費和月費是一起刷卡嗎？",
+            a: "不是，分兩次。下單時只付建置費；客服上線並經你驗收後，我們才寄出託管月費的信用卡定期定額授權連結，完成授權後每月自動扣款。製作期間不收月費。",
+          },
+          {
             q: "已有官網，可以只做 LINE 客服嗎？",
             a: "可以，輕量方案可沿用既有 LINE 官方帳號，也可選擇只開通官網聊天。若 LINE 已接其他客服平台，我們會先確認串接方式。",
           },
@@ -326,6 +330,10 @@ export const SERVICES: Service[] = [
           {
             q: "How is AI usage billed after launch?",
             a: "Lite operations cost {price:care-ai-lite}/month and include 1,000 conversations and one minor update to existing FAQs or prices. Business operations cost {price:care-ai-business}/month and include 5,000 conversations, monthly knowledge-base updates and a performance report. Both include monitoring. LINE bills account and push messaging fees separately.",
+          },
+          {
+            q: "Are the build fee and the monthly fee charged together?",
+            a: "No, they are separate. At checkout you pay only the build fee. Once the AI agent is live and accepted, we email a recurring card authorization link for the monthly operations plan; billing starts after you authorize. Nothing is charged during production.",
           },
           {
             q: "Can I add LINE support to my existing website setup?",
@@ -383,8 +391,8 @@ export const SERVICES: Service[] = [
             a: "可以。數據儀表板 {price:dashboard} 起，整合 POS、電商、廣告與表單數據，週報、月報自動寄送，手機也能看。",
           },
           {
-            q: "上線之後誰維護？",
-            a: "建議搭配 AI 託管 {price:care-ai}／月：流程監控、異常即時處理、知識庫更新與每月成效報告。",
+            q: "上線之後誰維護？月費怎麼付？",
+            a: "流程自動化與起步組合須搭配 AI 託管 {price:care-ai}／月：流程監控、異常即時處理、知識庫更新與每月成效報告。單獨做數據儀表板則搭配成長維護 {price:care-growth}／月；和自動化一起做時，由 AI 託管一併維運。建置費下單時付清；月費要等上線驗收後，另寄信用卡定期定額授權連結才開始計費，最短承諾 12 個月。",
           },
           {
             q: "會不會被你們綁住？",
@@ -425,8 +433,8 @@ export const SERVICES: Service[] = [
             a: "Yes. The Data Dashboard starts at {price:dashboard}, bringing POS, e-commerce, ads and form data together, with weekly and monthly reports sent automatically and mobile access.",
           },
           {
-            q: "Who maintains it after launch?",
-            a: "We recommend AI Operations at {price:care-ai}/month: workflow monitoring, immediate incident response, knowledge base updates and a monthly performance report.",
+            q: "Who maintains it after launch, and how is it billed?",
+            a: "Automation workflows and the Starter Bundle come with AI Operations at {price:care-ai}/month: workflow monitoring, immediate incident response, knowledge base updates and a monthly performance report. A dashboard on its own comes with Growth Care at {price:care-growth}/month; built together with automation, AI Operations covers it. The build is paid at checkout; care billing starts only after launch and acceptance, once you complete a separate recurring card authorization we email you, with a 12-month minimum term.",
           },
           {
             q: "Will we be locked in?",
@@ -530,7 +538,8 @@ export const SERVICES: Service[] = [
   {
     slug: "maintenance",
     serviceType: "Website maintenance and hosting",
-    skus: ["care-basic", "care-growth", "care-ai"],
+    // AI 託管不列在這裡：它必須跟 AI 客服或自動化建置一起買，單獨加購只會在購物車被擋
+    skus: ["care-basic", "care-growth"],
     addons: ["domain"],
     cases: ["/cases/rekat", "/cases/monsieurlong"],
     i18n: {
@@ -571,7 +580,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "怎麼付款？",
-            a: "信用卡每月自動扣款（綠界定期定額）。標價未稅，結帳加 5% 營業稅，可開立統編發票。",
+            a: "信用卡每月自動扣款（綠界定期定額）。單獨購買維護，結帳時直接完成授權；搭配建置案時，建置費下單付清，月費等上線驗收後另寄授權連結。標價未稅，結帳加 5% 營業稅，可開立統編發票。",
           },
         ],
       },

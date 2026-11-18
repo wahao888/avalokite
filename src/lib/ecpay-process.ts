@@ -119,7 +119,7 @@ export async function processPaymentResult(params: Record<string, string>) {
     const careHeadsUp =
       payment.kind === "onetime" && order.monthlyTotal > 0
         ? zh
-          ? `\n\n※ 還有一步：您的方案含維護，月費自網站上線驗收後才起算，製作期間不收月費。上線驗收後我們會另寄信用卡定期定額授權連結；促銷方案的席次保留金依方案約定全額折抵第一期。`
+          ? `\n\n※ 還有一步：您的方案含維護，月費自網站或系統上線驗收後才起算，製作期間不收月費。上線驗收後我們會另寄信用卡定期定額授權連結；促銷方案的席次保留金依方案約定全額折抵第一期。`
           : `\n\n※ One more step: your plan includes care, which starts after launch and acceptance. No care fees are charged during production. We email the recurring card authorization link after acceptance; promotional seat deposits are credited in full toward the first period under your plan.`
         : "";
     // 定期定額首期於授權當下即扣，信件要講清楚「已扣第一期」而不是含糊的「付款成功」

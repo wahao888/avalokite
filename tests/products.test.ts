@@ -20,6 +20,7 @@ import {
   prepaidPeriodsFor,
   earlyExitFee,
   isPurchasable,
+  isBuildBoundCare,
   maxQtyOf,
   MAX_QTY,
   careNeedsMatchingBuild,
@@ -224,6 +225,21 @@ describe("維護必選（careRequired / careOptionsFor）", () => {
     expect(careFamilyConflict(["web-basic", "web-commerce"])).toBe(false);
     expect(careFamilyConflict(["ai-chatbot-lite", "site-rescue"])).toBe(false);
     expect(careFamilyConflict(["launch-setup"])).toBe(false);
+  });
+
+  it("儀表板和自動化同車時由 AI 託管一併維運，和網站同車則用網站維護", () => {
+    expect(careFamilyConflict(["automation", "dashboard"])).toBe(false);
+    expect(careOptionsFor(["automation", "dashboard"]).map((p) => p.sku)).toEqual(["care-ai"]);
+    expect(careFamilyConflict(["web-basic", "dashboard"])).toBe(false);
+    expect(careOptionsFor(["dashboard"]).map((p) => p.sku)).toEqual(["care-growth"]);
+    // 網站和自動化仍然要分單
+    expect(careFamilyConflict(["web-basic", "automation"])).toBe(true);
+    expect(careFamilyConflict(["web-basic", "automation", "dashboard"])).toBe(true);
+  });
+
+  it("AI 託管與自動化維運標記為須搭配建置（方案卡不給直接加入購物車）", () => {
+    const bound = monthlyProducts().filter(isBuildBoundCare).map((p) => p.sku).sort();
+    expect(bound).toEqual(["care-ai", "care-ai-business", "care-ai-lite"]);
   });
 
   it("網站健檢與單購維護不強制", () => {
