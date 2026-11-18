@@ -111,6 +111,11 @@ export default async function LaunchPage({ params }: { params: Promise<{ locale:
               </div>
             </div>
           </div>
+          <p className="ip-lede">
+            {zh
+              ? "最短承諾 24 個月。下單付 NT$2,000 席次保留金，上線驗收後全額折抵第一期月費。"
+              : "24-month minimum term. The NT$2,000 deposit is credited in full to your first month after launch and acceptance."}
+          </p>
           <div className="fa-hero-cta">
             <LineCta label={zh ? "加 LINE 問這一檔" : "Ask on LINE"} />
             <Link href="/contact" className="btn-ghost">{zh ? "填諮詢表單" : "Enquiry form"}</Link>

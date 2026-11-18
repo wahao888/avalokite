@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import ContactForm from "@/components/ContactForm";
 import JsonLd from "@/components/JsonLd";
 import FaqList from "@/components/FaqList";
 import LineCta from "@/components/LineCta";
@@ -33,6 +35,8 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
   const c = filledCopy(s, locale);
   const zh = locale !== "en";
   const loc = (locale === "en" ? "en" : "zh-TW") as Locale;
+  const website = slug === "website";
+  const consult = zh ? "免費諮詢" : "Free consultation";
   const products = s.skus.map(getProduct).filter((p): p is NonNullable<typeof p> => !!p);
   const addons = ADDONS.filter((a) => s.addons.includes(a.id));
   const cases = ((zhTW as { cases?: { items?: { url?: string; name?: string }[] } }).cases?.items ?? []).filter((i) =>
@@ -40,7 +44,7 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
   );
 
   return (
-    <main className="page-wrap">
+    <main className={website ? "page-wrap website-landing" : "page-wrap"}>
       <JsonLd
         data={breadcrumbLd(locale, [
           { name: zh ? "首頁" : "Home", path: "/" },
@@ -59,13 +63,42 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
         })}
       />
       <JsonLd data={faqLd(c.faq)} />
-      <p className="mono-label">{c.label}</p>
-      <h1 className="section-title" style={{ whiteSpace: "pre-line" }}>{c.h1}</h1>
-      <p className="fa-lede">{c.lede}</p>
-      <div className="fa-hero-cta" style={{ marginBottom: "3rem" }}>
-        <Link href="/pricing" className="btn-primary">{zh ? "看透明定價 →" : "See pricing →"}</Link>
-        <LineCta label={zh ? "加 LINE 免費諮詢" : "Chat on LINE"} className="btn-ghost" />
-      </div>
+      {website ? (
+        <>
+          <header className="website-hero">
+            <div>
+              <h1 className="section-title">{c.h1}</h1>
+              <p className="fa-lede">{c.lede}</p>
+              <div className="fa-hero-cta">
+                <a href="#website-consult" className="btn-primary">{consult}</a>
+              </div>
+              <p className="website-reply">{zh ? "工作日 24 小時內回覆" : "Replies within 24 hours on business days"}</p>
+            </div>
+            <Link href="/cases/monsieurlong" className="website-case">
+              <Image src="/cases/monsieurlong.jpg" alt="" fill sizes="(max-width: 720px) 92vw, 360px" />
+              <span>{zh ? "實際案例 · 隆先生品牌官網" : "Case study · Monsieur Long"}</span>
+            </Link>
+          </header>
+          <section id="website-consult" className="website-consult fa-section" aria-labelledby="website-consult-title">
+            <div>
+              <h2 id="website-consult-title" className="fa-h2">{consult}</h2>
+              <p className="fa-lede">{zh ? "留 Email 或 LINE ID，告訴我們你想做的網站。" : "Leave an email or LINE ID and tell us about the site you want to build."}</p>
+              <LineCta label={zh ? "加 LINE 詢問" : "Ask on LINE"} className="btn-ghost" />
+            </div>
+            <ContactForm placement="website" />
+          </section>
+        </>
+      ) : (
+        <>
+          <p className="mono-label">{c.label}</p>
+          <h1 className="section-title" style={{ whiteSpace: "pre-line" }}>{c.h1}</h1>
+          <p className="fa-lede">{c.lede}</p>
+          <div className="fa-hero-cta" style={{ marginBottom: "3rem" }}>
+            <Link href="/pricing" className="btn-primary">{zh ? "看透明定價 →" : "See pricing →"}</Link>
+            <LineCta label={zh ? "加 LINE 免費諮詢" : "Chat on LINE"} className="btn-ghost" />
+          </div>
+        </>
+      )}
       <TrustMarks locale={locale} />
 
       <section className="fa-section">
@@ -140,7 +173,9 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
       <section className="fa-final">
         <h2 className="fa-final-t">{zh ? "下一步" : "Next step"}</h2>
         <div className="fa-hero-cta" style={{ justifyContent: "center" }}>
-          <Link href="/contact" className="btn-primary">{zh ? "免費諮詢" : "Free consult"}</Link>
+          {website ? <a href="#website-consult" className="btn-primary">{consult}</a> : (
+            <Link href="/contact" className="btn-primary">{consult}</Link>
+          )}
           <LineCta label={zh ? "加 LINE" : "LINE"} className="btn-ghost" />
         </div>
       </section>

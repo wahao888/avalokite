@@ -15,7 +15,7 @@ type Status = "idle" | "submitting" | "ok" | "err" | "badEmail";
  * 後端的 schema（email 與 phone 擇一必填）不用動。
  * 公司、服務類型、預算改成「補充資訊」折疊起來，想填的人才展開。
  */
-export default function ContactForm() {
+export default function ContactForm({ placement }: { placement?: "website" }) {
   const t = useTranslations("contact.form");
   const locale = useLocale();
   const pathname = usePathname();
@@ -43,6 +43,7 @@ export default function ContactForm() {
 
     setStatus("submitting");
     try {
+      const utm = new URLSearchParams(window.location.search);
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,12 +52,19 @@ export default function ContactForm() {
           email: looksLikeEmail ? contact : "",
           phone: looksLikeEmail ? "" : contact,
           locale,
-          placement: pathname === "/" ? "home" : "contact",
+          placement: placement ?? (pathname === "/" ? "home" : "contact"),
+          campaign: {
+            source: utm.get("utm_source"),
+            medium: utm.get("utm_medium"),
+            name: utm.get("utm_campaign"),
+            content: utm.get("utm_content"),
+          },
         }),
       });
       if (!res.ok) throw new Error();
+      const result = await res.json();
       setStatus("ok");
-      track("generate_lead", { via: "form" });
+      if (result.recorded === true) track("generate_lead", { via: "form" });
       form.reset();
       setMoreOpen(false);
     } catch {

@@ -31,7 +31,7 @@ export async function queueAdsConversion(
     id: string;
     email: string;
     locale: string;
-    path: "/" | "/contact" | "/checkout";
+    path: "/" | "/contact" | "/services/website" | "/checkout";
     occurredAt: Date;
     matching: Pick<Matching, "adsOppref" | "adsObref">;
   } & ({ type: "lead_created" } | { type: "order_created"; amountTwd: number }),
