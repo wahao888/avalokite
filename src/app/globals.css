@@ -1598,6 +1598,36 @@ button { font-family: inherit; }
 .fa-lede { font-size: 1.05rem; line-height: 1.85; color: var(--ink-soft); }
 .fa-hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
 
+.website-landing { padding-top: clamp(6.75rem, 11vw, 9rem); }
+.website-hero, .website-consult {
+  display: grid; grid-template-columns: 1.3fr 1fr; align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+.website-hero { margin-bottom: 2.5rem; }
+.website-hero .section-title { margin-bottom: 1rem; }
+.website-hero .fa-hero-cta { margin-top: 1.25rem; }
+.website-reply { margin-top: 0.65rem; color: var(--muted); font-size: 0.875rem; }
+.website-case {
+  position: relative; display: flex; align-items: end; min-height: 13rem;
+  aspect-ratio: 16 / 10; overflow: hidden; background: var(--cream);
+}
+.website-case img { object-fit: cover; }
+.website-case span {
+  position: relative; margin: 0.75rem; padding: 0.5rem 0.7rem;
+  background: var(--paper); color: var(--ink); font-size: 0.875rem;
+}
+.website-consult {
+  scroll-margin-top: 6rem; grid-template-columns: 0.8fr 1.2fr; align-items: start;
+  padding-top: 1.5rem; border-top: 1px solid var(--border);
+}
+.website-consult .btn-ghost { margin-top: 1rem; }
+@media (max-width: 720px) {
+  .website-landing { padding-inline: 1.15rem; }
+  .website-hero, .website-consult { grid-template-columns: 1fr; }
+  .website-hero .section-title { font-size: clamp(1.8rem, 7vw, 2.6rem); }
+  .website-case { aspect-ratio: 2 / 1; min-height: 8rem; max-height: 14rem; }
+}
+
 .fa-stats {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
   background: var(--border); border: 1px solid var(--border);

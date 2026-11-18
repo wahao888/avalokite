@@ -65,8 +65,8 @@ export const SERVICES: Service[] = [
         description:
           "全客製形象官網，5 頁以內 {price:web-basic}（未稅）起：RWD 響應式、SEO 基礎與 GA4、聯絡表單與 LINE 導流，含部署上線。約 2–3 週交付，價格公開不二價，可線上直接下單。",
         label: "網頁設計・形象官網",
-        h1: "形象官網設計，{price:web-basic} 起，\n價格先講清楚",
-        lede: "形象官網是客人認識你的第一站，也是他決定要不要聯絡你的地方。Avalo 的形象官網全客製設計、不套版，5 頁以內 {price:web-basic}（未稅）起，從設計、開發到部署上線一手包辦；上線之後由維護方案接手主機、備份與更新，不會做完就沒人管。",
+        h1: "形象官網 {price:web-basic} 起",
+        lede: "文案和圖片齊備後約 2–3 週上線。含 5 頁以內客製設計、手機版與部署。起價未稅，須搭配維護方案。",
         fit: [
           "剛創業或剛成立工作室，需要一個拿得出手的正式門面",
           "有實體店面，希望客人在 Google 與 LINE 上找得到、看得懂你",
@@ -107,8 +107,8 @@ export const SERVICES: Service[] = [
         description:
           "Fully custom brand websites (up to 5 pages) from {price:web-basic} excl. VAT: responsive design, SEO foundation and GA4, contact form and LINE integration, deployment included. Delivered in about 2–3 weeks. Published prices, order online.",
         label: "Web design · Brand websites",
-        h1: "Brand website design\nfrom {price:web-basic}, priced up front",
-        lede: "Your website is where customers first meet you — and where they decide whether to get in touch. Avalo builds fully custom brand sites, no templates, from {price:web-basic} (excl. VAT) for up to five pages, covering design, development and deployment. After launch a care plan takes over hosting, backups and updates, so the site is never left unattended.",
+        h1: "Brand website design from {price:web-basic}",
+        lede: "Launch in about 2–3 weeks once your copy and images are ready. Includes up to five custom pages, mobile layouts and deployment. Prices exclude VAT. A care plan is required.",
         fit: [
           "New businesses and studios that need a credible home on the web",
           "Local shops that want to be found — and understood — on Google and LINE",

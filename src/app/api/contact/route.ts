@@ -3,9 +3,18 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { adsMatchingFields, queueAdsConversion } from "@/lib/openai-ads-conversions";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
+const campaignLabel = z.string().regex(/^[a-z0-9_-]{1,80}$/);
+const campaignSchema = z.object({
+  source: z.literal("chatgpt"),
+  medium: z.literal("cpc"),
+  name: campaignLabel,
+  content: campaignLabel,
+});
+const placementPaths = { home: "/", contact: "/contact", website: "/services/website" } as const;
 
 const schema = z
   .object({
@@ -17,6 +26,9 @@ const schema = z
     budget: z.string().trim().max(100).optional().or(z.literal("")),
     message: z.string().trim().max(3000).optional().or(z.literal("")),
     locale: z.string().max(10).optional(),
+    adsMeasurement: z.literal("yes").optional(),
+    placement: z.enum(["home", "contact", "website"]).optional(),
+    campaign: z.unknown().optional(),
     // honeypot
     website: z.string().max(500).optional().or(z.literal("")),
   })
@@ -51,18 +63,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const inquiry = await prisma.inquiry.create({
-    data: {
-      name: d.name,
-      email: d.email || "-",
-      phone: d.phone || null,
-      company: d.company || null,
-      service: d.service || null,
-      budget: d.budget || null,
-      message: d.message || "(未填寫)",
-      locale: d.locale ?? "zh-TW",
-    },
+  const matching = adsMatchingFields(req, d.adsMeasurement === "yes");
+  const campaign = campaignSchema.safeParse(d.campaign);
+  const inquiry = await prisma.$transaction(async (tx) => {
+    const saved = await tx.inquiry.create({
+      data: {
+        name: d.name,
+        email: d.email || "-",
+        phone: d.phone || null,
+        company: d.company || null,
+        service: d.service || null,
+        budget: d.budget || null,
+        message: d.message || "(未填寫)",
+        payload: campaign.success ? JSON.stringify({ campaign: campaign.data }) : undefined,
+        locale: d.locale ?? "zh-TW",
+      },
+    });
+    if (matching) {
+      await queueAdsConversion(tx, {
+        id: `avalo-lead-${saved.id}`, type: "lead_created", email: saved.email,
+        locale: saved.locale, path: placementPaths[d.placement ?? "contact"],
+        occurredAt: saved.createdAt, matching,
+      });
+    }
+    return saved;
   });
+
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
     `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message || "(未填寫)"}`
@@ -71,5 +97,5 @@ export async function POST(req: NextRequest) {
   if (notified) {
     await prisma.inquiry.update({ where: { id: inquiry.id }, data: { notified: true } });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, recorded: true });
 }

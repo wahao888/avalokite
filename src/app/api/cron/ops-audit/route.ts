@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auditTsv, runOpsAudit } from "@/lib/ops-audit";
+import { auditTsv, bizTsv, runBusinessDigest, runOpsAudit } from "@/lib/ops-audit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,15 +17,28 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const checks = await runOpsAudit();
+  // 生意彙整出錯時只放掉這一塊（簡報會退回 bash 數的筆數），不能連累稽核結果一起 500
+  const [checks, business] = await Promise.all([
+    runOpsAudit(),
+    runBusinessDigest().catch((err) => {
+      console.error("[ops-audit] 生意彙整失敗:", err);
+      return null;
+    }),
+  ]);
 
   if (req.nextUrl.searchParams.get("format") === "tsv") {
-    return new NextResponse(auditTsv(checks) + "\n", {
+    // biz_ok 只在彙整成功時印：昨天零生意時沒有任何 biz 列，排版器要靠它分辨
+    // 「真的沒生意」與「這段沒跑到、該退回 bash 自己數的那份」。
+    const body = [auditTsv(checks), business ? "biz_ok\t1" : "", business ? bizTsv(business) : ""]
+      .filter(Boolean)
+      .join("\n");
+    return new NextResponse(body + "\n", {
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
   }
   return NextResponse.json({
     worst: checks.reduce((m, c) => Math.max(m, c.level), 0),
+    business,
     checks,
   });
 }

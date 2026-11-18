@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { careOptionsFor, getProduct } from "@/lib/products";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
+import { prisma } from "@/lib/prisma";
+import { issueReferralCode } from "@/lib/referral";
+import { sameOrigin } from "@/lib/portal-http";
 import {
   cancelSubscription,
   findSubscription,
@@ -35,6 +38,13 @@ export async function POST(
   const action = String(form.get("action") ?? "");
   const back = (q: string) =>
     NextResponse.redirect(`${subscriptionUrl(mtn, sub.order.locale)}?${q}`, 303);
+
+  if (action === "referral") {
+    if (!sameOrigin(req)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    if (sub.status !== "active" || sub.totalSuccessTimes < 1 || sub.pastDueSince) return back("err=inactive");
+    await issueReferralCode(prisma, sub.order.email);
+    return back("done=referral");
+  }
 
   if (action === "cancel") {
     const r = await cancelSubscription(sub, "customer");

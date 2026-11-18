@@ -38,7 +38,7 @@ const FONT =
   "-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif";
 
 // ── 解析 stdin 的 TSV ────────────────────────────────────────────────
-const LIST_KEYS = new Set(["top_ip", "top_bad", "top_path", "top_404", "leak_path", "jail", "bot", "referrer", "audit"]);
+const LIST_KEYS = new Set(["top_ip", "top_bad", "top_path", "top_404", "leak_path", "jail", "bot", "referrer", "audit", "biz"]);
 
 function parse(raw) {
   const s = {};
@@ -112,6 +112,51 @@ if (s.audit_error)
     ? "伺服器 .env 少了 CRON_SECRET，待辦與檔期這幾項今天是空的"
     : "curl /api/cron/ops-audit 失敗，確認服務還活著、CRON_SECRET 正確");
 for (const a of audit) if (a.level > 0) flag(a.level, `${a.label}：${a.value}`, a.action);
+
+// ── 昨天的生意（放在信件最上面）──────────────────────────────────────
+// 來源優先用 /api/cron/ops-audit 的 biz 列：它分得出主站與各客戶站、帶金額與是誰。
+// 稽核沒跑成功（沒有 biz_ok）時，退回 bash 用 sqlite3 自己數的三個數字，至少不會整塊空白。
+const BIZ_LABEL = {
+  inquiry: "新詢問",
+  order: "新訂單",
+  paid: "付款成功",
+  failed: "付款失敗",
+  shop: "商店訂單",
+  daigou: "代購下單",
+};
+const biz = l.biz.map(([site, kind, count, amount, detail]) => ({
+  site: String(site || ""),
+  kind: String(kind || ""),
+  count: n(count),
+  amount: n(amount),
+  detail: String(detail || ""),
+}));
+const bizLive = s.biz_ok === "1";
+const sum = (kinds, field) => biz.filter((b) => kinds.includes(b.kind)).reduce((m, b) => m + b[field], 0);
+const B = bizLive
+  ? {
+      inquiry: sum(["inquiry"], "count"),
+      order: sum(["order", "shop", "daigou"], "count"),
+      paid: sum(["paid"], "count"),
+      revenue: sum(["paid"], "amount"),
+      failed: sum(["failed"], "count"),
+    }
+  : { inquiry: n(s.new_inquiry), order: n(s.new_order), paid: n(s.new_paid), revenue: null, failed: 0 };
+const bizAny = B.inquiry + B.order + B.paid + B.failed > 0;
+const ntd = (v) => "NT$" + fmt(v);
+// 主旨用：有生意才寫，沒有就省略，讓「有寫」本身就是訊號
+const bizSubject = bizAny
+  ? "💰 " +
+    [
+      B.inquiry ? `詢問 ${B.inquiry}` : "",
+      B.order ? `訂單 ${B.order}` : "",
+      B.paid ? `收款 ${B.revenue != null ? ntd(B.revenue) : B.paid + " 筆"}` : "",
+      B.failed ? `付款失敗 ${B.failed}` : "",
+    ]
+      .filter(Boolean)
+      .join("・") +
+    "　"
+  : "";
 
 // Verify off-host backup success; photo object ages do not measure sync freshness.
 if (s.s3_backup === "OFF") flag(1, "離線備份未啟用或 AWS 工具不可用", "確認 BACKUP_S3_BUCKET、AWS CLI 與 IAM Role");
@@ -228,13 +273,50 @@ const leakBlock =
        </div>`
     : "";
 
+const bizRows = biz.length
+  ? T(`width="100%" style="margin-top:12px;background:${C.card};border:1px solid ${C.border};border-radius:8px;"`,
+      `<tr><td style="padding:4px 14px;">${T('width="100%"',
+        biz
+          .map((b, i) => `<tr>
+            <td valign="top" width="34%" style="padding:8px 0;${i ? `border-top:1px solid ${C.paper};` : ""}font:400 12px/1.6 ${FONT};color:${C.muted};">
+              ${esc(b.site)}<br><b style="color:${b.kind === "failed" ? C.warn : C.ink};">${esc(BIZ_LABEL[b.kind] || b.kind)} ${fmt(b.count)}</b>
+            </td>
+            <td valign="top" style="padding:8px 0;${i ? `border-top:1px solid ${C.paper};` : ""}font:400 12px/1.6 ${FONT};color:${C.ink};">
+              ${esc(b.detail)}${b.count > 5 ? `<span style="color:${C.muted};">　…等 ${fmt(b.count)} 筆</span>` : ""}
+            </td>
+            <td valign="top" width="18%" align="right" style="padding:8px 0;${i ? `border-top:1px solid ${C.paper};` : ""}font:700 13px/1.6 ${FONT};color:${b.kind === "failed" ? C.warn : C.ink};white-space:nowrap;">
+              ${b.amount ? ntd(b.amount) : ""}
+            </td>
+          </tr>`)
+          .join(""))}</td></tr>`)
+  : "";
+
+const bizBlock = `
+<tr><td style="background:${bizAny ? C.okBg : C.paper};border-bottom:1px solid ${C.border};padding:20px 24px;">
+  <div style="font:700 17px/1.3 ${FONT};color:${bizAny ? C.moss : C.ink};">💰　昨天的生意</div>
+  <div style="font:400 12px/1.6 ${FONT};color:${C.muted};padding:4px 0 12px 0;">${
+    bizAny
+      ? "主站與各客戶站合計。詢問單要盡快回，付款失敗的客人值得主動聯絡。"
+      : "昨天沒有新詢問、訂單或付款。"
+  }${bizLive ? "" : "（今天稽核沒跑成功，這裡只有主站的筆數）"}</div>
+  ${cards([
+    { value: fmt(B.inquiry), label: "新詢問", color: B.inquiry ? C.moss : C.ink },
+    { value: fmt(B.order), label: "新訂單", color: B.order ? C.moss : C.ink },
+    { value: fmt(B.paid), label: "付款成功", color: B.paid ? C.moss : C.ink },
+    B.revenue != null
+      ? { value: ntd(B.revenue), label: "主站收款", color: B.revenue ? C.moss : C.ink }
+      : { value: fmt(s.db_order), label: "訂單累計" },
+  ])}
+  ${bizRows}
+</td></tr>`;
+
 const html = `<!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Avalo 每日簡報 ${esc(s.period)}</title></head>
 <body style="margin:0;padding:0;background:${C.paper};">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${V.emoji} ${V.word}：${esc(V.line)}　請求 ${fmt(total)}、攔下 ${fmt(blocked)}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(bizSubject)}${V.emoji} ${V.word}：${esc(V.line)}　請求 ${fmt(total)}、攔下 ${fmt(blocked)}</div>
 ${T(`width="100%" style="background:${C.paper};"`, `<tr><td align="center" style="padding:20px 10px;">
 ${T(`width="640" style="max-width:640px;background:${C.card};border:1px solid ${C.border};border-radius:12px;overflow:hidden;"`, `
 
@@ -246,6 +328,9 @@ ${T(`width="640" style="max-width:640px;background:${C.card};border:1px solid ${
   </tr>`)}
   <div style="font:400 12px/1.6 ${FONT};color:#A79E92;padding-top:4px;">統計區間 ${esc(s.period)}（UTC 整日）</div>
 </td></tr>
+
+<!-- 生意：放最上面，打開信第一眼先看到有沒有錢進來 -->
+${bizBlock}
 
 <!-- 結論 -->
 <tr><td style="background:${V.bg};border-bottom:1px solid ${C.border};padding:20px 24px;">
@@ -350,18 +435,7 @@ ${section(
 )}
 
 ${section(
-  "③ 生意",
-  "這一段跟安全無關，是昨天實際發生的事。",
-  cards([
-    { value: fmt(s.new_inquiry), label: "新詢問單" },
-    { value: fmt(s.new_order), label: "新訂單" },
-    { value: fmt(s.new_paid), label: "付款成功" },
-    { value: fmt(s.db_order), label: "訂單累計" },
-  ])
-)}
-
-${section(
-  "④ 待辦與風險",
+  "③ 待辦與風險",
   "由 /api/cron/ops-audit 每天重算。要新增檢查項目，改 src/lib/ops-audit.ts 就會出現在這裡。",
   audit.length
     ? T(`width="100%" style="border:1px solid ${C.border};border-radius:8px;"`, `<tr><td style="padding:6px 14px;">
@@ -382,7 +456,7 @@ ${section(
 )}
 
 ${section(
-  "⑤ 機器狀況",
+  "④ 機器狀況",
   "有問題的項目已經列在最上面的待辦；這裡是完整數值。",
   T(`width="100%" style="border:1px solid ${C.border};border-radius:8px;"`, `<tr><td style="padding:6px 14px;">
     ${T('width="100%"',
@@ -418,6 +492,10 @@ ${section(
 // ── 純文字版（不吃 HTML 的信箱、以及日後 grep 用）─────────────────────
 const text = `Avalo 每日簡報　${s.period}（UTC 整日）
 
+【💰 昨天的生意】
+  新詢問 ${fmt(B.inquiry)}　新訂單 ${fmt(B.order)}　付款成功 ${fmt(B.paid)}${B.revenue != null ? `　主站收款 ${ntd(B.revenue)}` : ""}${B.failed ? `　付款失敗 ${fmt(B.failed)}` : ""}
+${biz.length ? biz.map((b) => `  ${b.site}｜${BIZ_LABEL[b.kind] || b.kind} ${b.count}${b.amount ? `（${ntd(b.amount)}）` : ""}：${b.detail}`).join("\n") : bizAny ? "" : "  昨天沒有新詢問、訂單或付款。"}${bizLive ? "" : "\n  （稽核沒跑成功，只有主站筆數）"}
+
 ${V.emoji} ${V.word}　${V.line}
 
 【今天需要你做的事】
@@ -452,9 +530,8 @@ ${audit.length
   ? audit.map((a) => `  ${(a.level === 2 ? "要處理" : a.level === 1 ? "注意　" : "正常　")}　${a.label}：${a.value}${a.level > 0 ? `\n        → ${a.action}` : ""}`).join("\n")
   : "  今天沒有拿到稽核結果，這幾項是空的（不代表沒事）。"}
 
-【生意】
-  新詢問單 ${fmt(s.new_inquiry)}　新訂單 ${fmt(s.new_order)}　付款成功 ${fmt(s.new_paid)}
-  累計：詢問單 ${s.db_inquiry}　訂單 ${s.db_order}　付款 ${s.db_payment}
+【累計】
+  詢問單 ${s.db_inquiry}　訂單 ${s.db_order}　付款 ${s.db_payment}
 
 【機器】
   服務 ${s.svc}　磁碟 ${s.disk_pct}%（${s.disk_txt}）　記憶體 ${s.mem_txt}　swap ${s.swap_txt}
@@ -466,6 +543,7 @@ ${audit.length
 // 主旨也要能單獨判讀——收件匣一眼就知道昨天有沒有事
 const subject =
   `[Avalo] ${V.emoji} 每日簡報 ${s.period_short || s.period}　` +
+  bizSubject +
   (worst > 0 ? `${findings.length} 項待處理　` : "一切正常　") +
   `請求 ${fmt(total)}／攔下 ${fmt(blocked)}`;
 

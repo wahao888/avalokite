@@ -54,6 +54,30 @@ async function order(id: string, sku: string, invoice = {}) {
 }
 
 describe("Avalo 綠界電子發票", () => {
+  it("只把明確同意的正式首次實收回報為一次廣告成交", async () => {
+    vi.stubEnv("ECPAY_ENV", "production");
+    try {
+      const { id } = await order("AVLADSPAY", "site-rescue", {
+        adsMeasurementAt: new Date(), adsOppref: "test-click", oneTimeTotal: 100,
+      });
+      const mtn = id + "1";
+      await prisma.payment.create({ data: { orderId: id, merchantTradeNo: mtn, kind: "onetime", amount: 105 } });
+      const fields = { MerchantTradeNo: mtn, TradeAmt: "105", PaymentDate: chargedAt };
+      await processPaymentResult(callback({ ...fields, SimulatePaid: "1" }));
+      await processPaymentResult(callback({ ...fields, RtnCode: "0" }));
+      expect(await prisma.adsConversion.count({ where: { id: "avalo-order-" + id } })).toBe(0);
+
+      await Promise.all([processPaymentResult(callback(fields)), processPaymentResult(callback(fields))]);
+      const conversion = await prisma.adsConversion.findUniqueOrThrow({ where: { id: "avalo-order-" + id } });
+      expect(JSON.parse(conversion.payload)).toMatchObject({
+        type: "order_created", oppref: "test-click", data: { type: "contents", amount: 10500, currency: "TWD" },
+      });
+      expect(await prisma.order.findUnique({ where: { id } })).toMatchObject({ adsOppref: null, adsObref: null });
+    } finally {
+      vi.stubEnv("ECPAY_ENV", "stage");
+    }
+  });
+
   it("收款回呼並行重送只入帳一次，逾時後查詢同一張發票再更新狀態", async () => {
     const { id } = await order("AVLSINGLE", "site-rescue");
     const mtn = id + "1";

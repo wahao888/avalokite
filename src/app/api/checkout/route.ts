@@ -17,6 +17,8 @@ import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import { consentRecord } from "@/lib/legal-consent";
+import { adsMatchingFields } from "@/lib/openai-ads-conversions";
+import { referralEligibility } from "@/lib/referral";
 import {
   INVOICE_ADDRESS_LIMIT, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT, invoiceCarrierPattern, validTaxId,
 } from "@/lib/invoice-details";
@@ -41,10 +43,12 @@ const schema = z.object({
   invoiceAddress: z.string().trim().max(INVOICE_ADDRESS_LIMIT).optional(),
   invoiceCarrier: z.string().trim().toUpperCase().regex(invoiceCarrierPattern).optional().or(z.literal("")),
   note: z.string().trim().max(2000).optional().or(z.literal("")),
+  referralCode: z.string().trim().toUpperCase().max(40).optional(),
   locale: z.string().max(10).optional(),
   // 契約同意：勾選值與客戶當下看到的條款版本
   agree: z.literal("yes"),
   termsVersion: z.string().max(20),
+  adsMeasurement: z.literal("yes").optional(),
   items: z
     .array(z.object({ sku: z.string().max(50), qty: z.number().int().min(1).max(9) }))
     .min(1)
@@ -120,6 +124,10 @@ export async function POST(req: NextRequest) {
   // 無建置＝單購維護（既有網站），服務當下就在提供，結帳當下即授權。
   const hasBuild = oneTimeTotal > 0;
 
+  if (d.referralCode && !(await referralEligibility(prisma, d.referralCode, d))) {
+    return NextResponse.json({ error: "referral unavailable" }, { status: 422 });
+  }
+
   const orderId = genOrderId();
   const order = await prisma.order.create({
     data: {
@@ -132,10 +140,12 @@ export async function POST(req: NextRequest) {
       invoiceAddress: d.taxId ? d.invoiceAddress : null,
       invoiceCarrier: d.taxId ? null : d.invoiceCarrier || null,
       note: d.note || null,
+      referralCode: d.referralCode || null,
       locale: d.locale ?? "zh-TW",
       items: JSON.stringify(d.items),
       // 同意紀錄：雜湊以伺服器自己的條款內容計算，不採信前端傳來的值
       ...consentRecord(d.locale ?? "zh-TW", clientIp(req)),
+      ...adsMatchingFields(req, d.adsMeasurement === "yes" && process.env.ECPAY_ENV === "production"),
       oneTimeTotal,
       monthlyTotal,
     },
