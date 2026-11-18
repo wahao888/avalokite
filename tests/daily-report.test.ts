@@ -49,6 +49,32 @@ describe("daily ops audit rows", () => {
     expect(out).toMatch(/正常.*未處理的詢問單：0 筆/);
   });
 
+  it("生意排在信件最上面，連主旨都看得到", () => {
+    const out = report(
+      "biz_ok\t1\n" +
+        "biz\tAvalo 主站\tpaid\t1\t2100\t王小明 NT$2,100\n" +
+        "biz\tREKAT ROASTERY\tshop\t2\t1560\t林 NT$780（匯款）、陳 NT$780（貨到付款）\n",
+    );
+    const [subject] = out.split("\n");
+    expect(subject).toContain("💰 訂單 2・收款 NT$2,100");
+    // 比待辦清單還前面
+    expect(out.indexOf("昨天的生意")).toBeGreaterThan(-1);
+    expect(out.indexOf("昨天的生意")).toBeLessThan(out.indexOf("【今天需要你做的事】"));
+    expect(out).toContain("REKAT ROASTERY｜商店訂單 2（NT$1,560）");
+  });
+
+  it("沒有生意時主旨不寫、信裡說清楚", () => {
+    const out = report("biz_ok\t1\n");
+    expect(out.split("\n")[0]).not.toContain("💰");
+    expect(out).toContain("昨天沒有新詢問、訂單或付款");
+  });
+
+  it("稽核沒跑成功時，生意退回 bash 自己數的筆數", () => {
+    const out = report("new_inquiry\t3\n");
+    expect(out).toContain("新詢問 3");
+    expect(out).toContain("只有主站筆數");
+  });
+
   it("稽核沒跑成功要說出來——那幾項是空的，不是沒事", () => {
     expect(report("audit_error\tcurl\n")).toContain("營運稽核沒跑成功");
     expect(report("audit_error\tnosecret\n")).toContain("CRON_SECRET");

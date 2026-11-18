@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { auditTsv, runOpsAudit, type OpsCheck } from "@/lib/ops-audit";
+import { auditTsv, bizTsv, runBusinessDigest, runOpsAudit, yesterdayUtc, type OpsCheck } from "@/lib/ops-audit";
 import { purgeExpiredChat, CHAT_RETENTION_DAYS, WEBHOOK_RETENTION_DAYS } from "@/lib/chat-stats";
 import { prisma } from "@/lib/prisma";
 
@@ -217,5 +217,45 @@ describe("限時檔期", () => {
     // 檔期一過，外面的短影音與貼文還在跑，網站卻已經不顯示優惠了，
     // 所以要處理的時候下一步得寫清楚「去改哪一個檔案」
     if (c.level > 0) expect(c.action).toContain("promo-window.ts");
+  });
+});
+
+describe("新增的每日檢查", () => {
+  it("通知信、發票、付款失敗、客戶站訂單、廣告回報都有列", async () => {
+    const ids = (await runOpsAudit()).map((c) => c.id);
+    for (const id of ["notify-failed", "invoice-stuck", "payment-failed", "shop-pending", "ads-conversion"]) {
+      expect(ids).toContain(id);
+    }
+  });
+
+  it("通知信沒寄出的詢問單是今天要處理——沒有人知道有這筆", async () => {
+    const row = await newInquiry(0);
+    expect(row.notified).toBe(false);
+    const c = pick(await runOpsAudit(), "notify-failed");
+    expect(c.level).toBe(2);
+    expect(c.value).toContain("Avalo 主站");
+  });
+});
+
+describe("昨天的生意", () => {
+  it("統計區間是前一個 UTC 整日，與簡報一致", () => {
+    const { from, to } = yesterdayUtc(new Date("2026-11-18T05:30:00Z"));
+    expect(from.toISOString()).toBe("2026-11-17T00:00:00.000Z");
+    expect(to.toISOString()).toBe("2026-11-18T00:00:00.000Z");
+  });
+
+  it("昨天進來的詢問單會帶名字出現在主站那一列", async () => {
+    const row = await newInquiry(0);
+    const { from } = yesterdayUtc();
+    await prisma.inquiry.update({ where: { id: row.id }, data: { createdAt: new Date(from.getTime() + 3600_000) } });
+    const lines = await runBusinessDigest();
+    const house = lines.find((b) => b.site === "Avalo 主站" && b.kind === "inquiry");
+    expect(house?.count).toBeGreaterThanOrEqual(1);
+    expect(house?.detail.join("、") ?? "").toContain("稽核測試");
+  });
+
+  it("TSV 一行六欄、第一欄是 biz", () => {
+    const line = bizTsv([{ site: "REKAT", kind: "shop", count: 2, amount: 1560, detail: ["a\tb", "c"] }]);
+    expect(line.split("\t")).toEqual(["biz", "REKAT", "shop", "2", "1560", "a b、c"]);
   });
 });

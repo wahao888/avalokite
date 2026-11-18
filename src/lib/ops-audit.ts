@@ -16,6 +16,7 @@ import { CHAT_RETENTION_DAYS } from "@/lib/chat-stats";
 import { PROMO_WINDOW, currentDeadline, isExpired, seatsLeft } from "@/lib/promo-window";
 import { getTenant, HOUSE_TENANT, TENANTS } from "@/lib/tenants";
 import { planOf } from "@/lib/ai-plans";
+import { invoiceEnvironment } from "@/lib/ecpay-invoice";
 
 /** 0 = 正常、1 = 留意、2 = 今天就要處理 */
 export type Severity = 0 | 1 | 2;
@@ -40,10 +41,35 @@ const COMMIT_NOTICE_DAYS = 90;
 const ORDER_STUCK_DAYS = 7;
 /** 檔期剩這麼多天以內要決定續檔或收檔 */
 const PROMO_NOTICE_DAYS = 7;
+/** 付款失敗往回看幾天 */
+const PAYMENT_FAILED_DAYS = 3;
+/** 通知信沒寄出往回看幾天（更舊的已經在後台被看過了） */
+const NOTIFY_LOOKBACK_DAYS = 7;
+/** 客戶站訂單停在待確認超過這麼多天就提醒店家 */
+const SHOP_PENDING_DAYS = 2;
+
+const siteName = (tenantId: string | null | undefined) =>
+  tenantId ? (getTenant(tenantId)?.name ?? tenantId) : "Avalo 主站";
 
 export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
   const checks: OpsCheck[] = [];
   const add = (c: OpsCheck) => checks.push(c);
+  // 讀較新資料表的檢查包一層：某張表還沒套 migration、或單一查詢出錯時，
+  // 只有這一項標成「沒跑成功」，其餘照常進信。否則整份稽核 500，
+  // 簡報上待辦、金流、檔期全部變空白，反而什麼都看不到。
+  const guard = async (id: string, label: string, fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch (err) {
+      add({
+        id,
+        label,
+        value: "查詢失敗",
+        level: 1,
+        action: `這一項今天沒跑成功（${err instanceof Error ? err.message.split("\n").filter(Boolean).pop() : "未知錯誤"}），其他項目不受影響。常見原因是資料庫還沒套用最新 migration`,
+      });
+    }
+  };
 
   // ── 詢問單 ──────────────────────────────────────────────
   const openInquiries = await prisma.inquiry.findMany({
@@ -56,7 +82,7 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
     : 0;
   const bySite = new Map<string, number>();
   for (const q of openInquiries) {
-    const name = q.tenantId ? (getTenant(q.tenantId)?.name ?? q.tenantId) : "Avalo 主站";
+    const name = siteName(q.tenantId);
     bySite.set(name, (bySite.get(name) ?? 0) + 1);
   }
   add({
@@ -260,6 +286,121 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
       : "每一筆都有留證",
   });
 
+  // 結帳刷卡失敗、事後也沒有再付成功的客人。他們是真的想買，
+  // 只是卡片被拒或 3D 驗證沒過——主動聯絡通常救得回來，放著就流失了。
+  const failedPays = await prisma.payment.findMany({
+    where: { status: "failed", updatedAt: { gte: new Date(now.getTime() - PAYMENT_FAILED_DAYS * DAY) } },
+    select: { orderId: true, order: { select: { name: true, status: true } } },
+  });
+  const lost = [
+    ...new Map(
+      failedPays
+        .filter((p) => !["paid", "partial", "cancelled"].includes(p.order.status))
+        .map((p) => [p.orderId, p.order.name] as const),
+    ),
+  ];
+  add({
+    id: "payment-failed",
+    label: `${PAYMENT_FAILED_DAYS} 天內付款失敗、還沒付成功的客人`,
+    value: lost.length ? `${lost.length} 位：` + lost.map(([id, name]) => `${name}（${id}）`).join("、") : "0 位",
+    level: lost.length > 0 ? 1 : 0,
+    action: lost.length
+      ? "客人想買但刷卡沒過。到 /admin 看訂單，主動打電話或寄重新付款連結"
+      : "沒有卡在付款這一步的客人",
+  });
+
+  // 電子發票是法定義務：收了錢沒開票，罰的是我們不是綠界。
+  // 自動重試六次後會轉 manual 並寄一封信，但那封信很容易被埋掉，所以每天再提一次。
+  const env = invoiceEnvironment();
+  const [manualInvoices, slowInvoices] = await Promise.all([
+    prisma.invoice.findMany({ where: { environment: env, status: "manual" }, select: { orderId: true, amount: true } }),
+    prisma.invoice.count({
+      where: { environment: env, status: "pending", createdAt: { lt: new Date(now.getTime() - DAY) } },
+    }),
+  ]);
+  add({
+    id: "invoice-stuck",
+    label: "還沒開出去的電子發票",
+    value:
+      manualInvoices.length || slowInvoices
+        ? [
+            manualInvoices.length
+              ? `需人工 ${manualInvoices.length} 張：` +
+                manualInvoices.map((i) => `${i.orderId} NT$${i.amount.toLocaleString("en-US")}`).join("、")
+              : "",
+            slowInvoices ? `重試超過一天 ${slowInvoices} 張` : "",
+          ]
+            .filter(Boolean)
+            .join("；")
+        : "0 張",
+    level: manualInvoices.length ? 2 : slowInvoices ? 1 : 0,
+    action: manualInvoices.length
+      ? "先到綠界後台查這筆是否已開立，沒有就手動開。收款後拖太久開票會被罰"
+      : slowInvoices
+        ? "自動重試中但已超過一天，確認綠界發票 API 金鑰與服務狀態"
+        : "都開出去了",
+  });
+
+  // 即時通知信沒寄出去＝那一筆詢問／訂單沒有人知道。
+  // 客戶站的訂單通知是寄給店家的，寄不出去時店家完全不知道有客人下單。
+  const notifySince = new Date(now.getTime() - NOTIFY_LOOKBACK_DAYS * DAY);
+  const [silentInquiries, silentShop] = await Promise.all([
+    prisma.inquiry.findMany({ where: { notified: false, createdAt: { gte: notifySince } }, select: { tenantId: true } }),
+    prisma.shopOrder.findMany({ where: { notified: false, createdAt: { gte: notifySince } }, select: { tenantId: true } }),
+  ]);
+  const silentBySite = new Map<string, number>();
+  for (const r of [...silentInquiries, ...silentShop]) {
+    const name = siteName(r.tenantId);
+    silentBySite.set(name, (silentBySite.get(name) ?? 0) + 1);
+  }
+  const silentTotal = silentInquiries.length + silentShop.length;
+  add({
+    id: "notify-failed",
+    label: `${NOTIFY_LOOKBACK_DAYS} 天內通知信沒寄出的詢問／訂單`,
+    value: silentTotal ? `${silentTotal} 筆：` + [...silentBySite].map(([k, v]) => `${k} ${v}`).join("、") : "0 筆",
+    level: silentTotal > 0 ? 2 : 0,
+    action: silentTotal
+      ? "這幾筆沒有人收到通知。先到 /admin 或客戶的 /portal 看內容並轉告；再查寄信設定（SMTP、寄件網域）是不是壞了"
+      : "每一筆都有寄出通知",
+  });
+
+  // 客戶站的訂單是店家要處理的，但店家沒處理時客人會覺得「這網站是不是壞了」，
+  // 最後怪到網站頭上。放太久就提醒店家一聲。
+  const shopStale = await prisma.shopOrder.findMany({
+    where: { status: "pending", createdAt: { lt: new Date(now.getTime() - SHOP_PENDING_DAYS * DAY) } },
+    select: { tenantId: true },
+  });
+  const shopBySite = new Map<string, number>();
+  for (const r of shopStale) {
+    const name = siteName(r.tenantId);
+    shopBySite.set(name, (shopBySite.get(name) ?? 0) + 1);
+  }
+  add({
+    id: "shop-pending",
+    label: `客戶站訂單超過 ${SHOP_PENDING_DAYS} 天沒確認`,
+    value: shopStale.length ? `${shopStale.length} 筆：` + [...shopBySite].map(([k, v]) => `${k} ${v}`).join("、") : "0 筆",
+    level: shopStale.length > 0 ? 1 : 0,
+    action: shopStale.length
+      ? "客人下了單還沒被確認。傳個訊息提醒店家到 /portal/orders 確認收款或出貨"
+      : "店家都有在處理",
+  });
+
+  // 廣告轉換回報一直失敗的話，廣告平台以為沒有成交，出價會越來越不準。
+  await guard("ads-conversion", "廣告轉換回報重試 3 次以上", async () => {
+    const adsStuck = await prisma.adsConversion.count({
+      where: { sentAt: null, attempts: { gte: 3 }, payload: { not: "" } },
+    });
+    add({
+      id: "ads-conversion",
+      label: "廣告轉換回報重試 3 次以上",
+      value: `${adsStuck} 筆`,
+      level: adsStuck > 0 ? 1 : 0,
+      action: adsStuck
+        ? "廣告平台收不到成交。確認 .env 的廣告金鑰與 Pixel ID，錯誤原因在資料庫 AdsConversion.lastError"
+        : "回報正常",
+    });
+  });
+
   // ── 行銷檔期 ───────────────────────────────────────────
   const left = seatsLeft();
   const expired = isExpired(now.getTime());
@@ -294,5 +435,157 @@ export function auditTsv(checks: OpsCheck[]): string {
   const clean = (v: string) => v.replace(/[\t\r\n]+/g, " ").trim();
   return checks
     .map((c) => ["audit", c.level, c.id, clean(c.label), clean(c.value), clean(c.action)].join("\t"))
+    .join("\n");
+}
+
+// ── 昨天的生意 ────────────────────────────────────────────
+//
+// 簡報最上面那一塊。原本是 daily-report.sh 自己用 sqlite3 數 Inquiry／Order／Payment，
+// 只看得到 Avalo 主站：REKAT 的 ShopOrder、Amber 的 DgOrder 根本不在裡面，
+// 客戶站的詢問單也跟主站混在同一個數字裡。租戶名稱與金額欄位住在程式碼裡，
+// 所以改由這裡算，bash 那份只留作稽核失敗時的備援。
+
+export type BizKind = "inquiry" | "order" | "paid" | "failed" | "shop" | "daigou";
+
+export interface BizLine {
+  site: string;
+  kind: BizKind;
+  count: number;
+  /** 新台幣。詢問單沒有金額，填 0 */
+  amount: number;
+  /** 前幾筆的「誰、多少」，讓人不用登入後台就知道是什麼生意 */
+  detail: string[];
+}
+
+const DETAIL_MAX = 5;
+const ntd = (v: number) => `NT$${v.toLocaleString("en-US")}`;
+
+/** 與每日簡報同一個統計區間：前一個 UTC 整日 */
+export function yesterdayUtc(now: Date = new Date()) {
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return { from: new Date(to.getTime() - DAY), to };
+}
+
+export async function runBusinessDigest(now: Date = new Date()): Promise<BizLine[]> {
+  const { from, to } = yesterdayUtc(now);
+  const inWindow = { gte: from, lt: to };
+  const out: BizLine[] = [];
+  const push = (site: string, kind: BizKind, rows: { amount: number; detail: string }[]) => {
+    if (!rows.length) return;
+    out.push({
+      site,
+      kind,
+      count: rows.length,
+      amount: rows.reduce((m, r) => m + r.amount, 0),
+      detail: rows.slice(0, DETAIL_MAX).map((r) => r.detail),
+    });
+  };
+
+  const [inquiries, orders, paid, failed, shop, daigou] = await Promise.all([
+    prisma.inquiry.findMany({
+      where: { createdAt: inWindow },
+      orderBy: { createdAt: "asc" },
+      select: { tenantId: true, name: true, service: true },
+    }),
+    prisma.order.findMany({
+      where: { createdAt: inWindow },
+      orderBy: { createdAt: "asc" },
+      select: { name: true, oneTimeTotal: true, monthlyTotal: true },
+    }),
+    prisma.payment.findMany({
+      where: { status: "paid", paidAt: inWindow },
+      orderBy: { paidAt: "asc" },
+      select: { amount: true, kind: true, order: { select: { name: true } } },
+    }),
+    prisma.payment.findMany({
+      where: { status: "failed", updatedAt: inWindow },
+      orderBy: { updatedAt: "asc" },
+      select: { amount: true, order: { select: { name: true } } },
+    }),
+    prisma.shopOrder.findMany({
+      where: { createdAt: inWindow, status: { not: "cancelled" } },
+      orderBy: { createdAt: "asc" },
+      select: { tenantId: true, name: true, total: true, payment: true },
+    }),
+    prisma.dgOrder.findMany({
+      where: { createdAt: inWindow, status: { not: "void" } },
+      orderBy: { createdAt: "asc" },
+      select: {
+        tenantId: true,
+        itemsTotal: true,
+        source: true,
+        member: { select: { name: true, lineDisplayName: true } },
+      },
+    }),
+  ]);
+
+  const bySite = <T extends { tenantId: string | null }>(rows: T[]) => {
+    const m = new Map<string, T[]>();
+    for (const r of rows) {
+      const k = siteName(r.tenantId);
+      m.set(k, [...(m.get(k) ?? []), r]);
+    }
+    return m;
+  };
+  const inquiryRow = (q: { name: string; service: string | null }) => ({
+    amount: 0,
+    detail: q.service ? `${q.name}（${q.service}）` : q.name,
+  });
+
+  // 主站排第一：那是我們自己的營收
+  const house = siteName(null);
+  const inqSites = bySite(inquiries);
+  push(house, "inquiry", (inqSites.get(house) ?? []).map(inquiryRow));
+  push(
+    house,
+    "order",
+    orders.map((o) => ({
+      amount: o.oneTimeTotal,
+      detail: [o.name, o.oneTimeTotal ? ntd(o.oneTimeTotal) : "", o.monthlyTotal ? `月費 ${ntd(o.monthlyTotal)}` : ""]
+        .filter(Boolean)
+        .join(" "),
+    })),
+  );
+  push(
+    house,
+    "paid",
+    paid.map((p) => ({
+      amount: p.amount,
+      detail: `${p.order.name} ${ntd(p.amount)}${p.kind === "period" ? "（月費授權）" : ""}`,
+    })),
+  );
+  push(house, "failed", failed.map((p) => ({ amount: p.amount, detail: `${p.order.name} ${ntd(p.amount)}` })));
+
+  for (const [site, rows] of inqSites) if (site !== house) push(site, "inquiry", rows.map(inquiryRow));
+  for (const [site, rows] of bySite(shop)) {
+    push(
+      site,
+      "shop",
+      rows.map((o) => ({
+        amount: o.total,
+        detail: `${o.name} ${ntd(o.total)}（${o.payment === "cod" ? "貨到付款" : o.payment === "transfer" ? "匯款" : o.payment}）`,
+      })),
+    );
+  }
+  for (const [site, rows] of bySite(daigou)) {
+    push(
+      site,
+      "daigou",
+      rows.map((o) => ({
+        amount: o.itemsTotal,
+        detail:
+          `${o.member.name || o.member.lineDisplayName || "會員"} ${ntd(o.itemsTotal)}` +
+          (o.source === "manual" ? "（後台代打）" : ""),
+      })),
+    );
+  }
+  return out;
+}
+
+/** 生意的 TSV：biz、站名、種類、筆數、金額、明細（明細之間用「、」） */
+export function bizTsv(lines: BizLine[]): string {
+  const clean = (v: string) => v.replace(/[\t\r\n]+/g, " ").trim();
+  return lines
+    .map((b) => ["biz", clean(b.site), b.kind, b.count, b.amount, clean(b.detail.join("、"))].join("\t"))
     .join("\n");
 }
