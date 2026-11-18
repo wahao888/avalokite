@@ -223,7 +223,14 @@ describe("限時檔期", () => {
 describe("新增的每日檢查", () => {
   it("通知信、發票、付款失敗、客戶站訂單、廣告回報都有列", async () => {
     const ids = (await runOpsAudit()).map((c) => c.id);
-    for (const id of ["notify-failed", "invoice-stuck", "payment-failed", "shop-pending", "ads-conversion"]) {
+    for (const id of [
+      "notify-failed",
+      "invoice-stuck",
+      "payment-failed",
+      "shop-pending",
+      "ads-conversion",
+      "referral-reward",
+    ]) {
       expect(ids).toContain(id);
     }
   });

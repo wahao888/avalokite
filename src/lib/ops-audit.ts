@@ -17,6 +17,7 @@ import { PROMO_WINDOW, currentDeadline, isExpired, seatsLeft } from "@/lib/promo
 import { getTenant, HOUSE_TENANT, TENANTS } from "@/lib/tenants";
 import { planOf } from "@/lib/ai-plans";
 import { invoiceEnvironment } from "@/lib/ecpay-invoice";
+import { referralEmail } from "@/lib/referral";
 
 /** 0 = 正常、1 = 留意、2 = 今天就要處理 */
 export type Severity = 0 | 1 | 2;
@@ -47,6 +48,8 @@ const PAYMENT_FAILED_DAYS = 3;
 const NOTIFY_LOOKBACK_DAYS = 7;
 /** 客戶站訂單停在待確認超過這麼多天就提醒店家 */
 const SHOP_PENDING_DAYS = 2;
+/** 推薦獎勵核發後超過這麼多天還沒安排就提醒 */
+const REWARD_NOTICE_DAYS = 7;
 
 const siteName = (tenantId: string | null | undefined) =>
   tenantId ? (getTenant(tenantId)?.name ?? tenantId) : "Avalo 主站";
@@ -398,6 +401,41 @@ export async function runOpsAudit(now: Date = new Date()): Promise<OpsCheck[]> {
       action: adsStuck
         ? "廣告平台收不到成交。確認 .env 的廣告金鑰與 Pixel ID，錯誤原因在資料庫 AdsConversion.lastError"
         : "回報正常",
+    });
+  });
+
+  // 推薦獎勵是自動發的，但免費月份要人去安排。客戶收到「獲得一個月免費維護」的信之後
+  // 遲遲沒下文，等於承諾沒兌現；所以「有有效訂閱、卻放超過一週沒安排」就要提醒。
+  // 沒有有效維護的人是照規則先保留，不算待辦。
+  await guard("referral-reward", "推薦獎勵待安排", async () => {
+    const [open, activeSubs] = await Promise.all([
+      prisma.careReward.findMany({ where: { redeemedAt: null }, select: { email: true, createdAt: true } }),
+      prisma.subscription.findMany({
+        where: { status: "active", totalSuccessTimes: { gt: 0 }, pastDueSince: null },
+        select: { order: { select: { email: true } } },
+      }),
+    ]);
+    const careEmails = new Set(activeSubs.map((s) => referralEmail(s.order.email)));
+    const ready = open.filter((r) => careEmails.has(r.email));
+    const overdue = ready.filter((r) => now.getTime() - r.createdAt.getTime() > REWARD_NOTICE_DAYS * DAY);
+    const saved = open.length - ready.length;
+    add({
+      id: "referral-reward",
+      label: "推薦獎勵待安排",
+      value: open.length
+        ? [
+            ready.length ? `可安排 ${ready.length} 個月${overdue.length ? `（其中 ${overdue.length} 個超過 ${REWARD_NOTICE_DAYS} 天）` : ""}` : "",
+            saved ? `保留中 ${saved} 個月（對方還沒有有效維護）` : "",
+          ]
+            .filter(Boolean)
+            .join("；")
+        : "0 個月",
+      level: overdue.length > 0 ? 1 : 0,
+      action: overdue.length
+        ? "客戶已收到獲得免費月的通知，卻還沒安排。到 /admin/referrals 處理"
+        : ready.length
+          ? `到 /admin/referrals 安排；超過 ${REWARD_NOTICE_DAYS} 天會升為留意`
+          : "沒有需要安排的",
     });
   });
 
