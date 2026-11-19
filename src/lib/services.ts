@@ -65,7 +65,7 @@ export const SERVICES: Service[] = [
         name: "形象官網設計",
         title: "網頁設計・形象官網 {price:web-basic} 起｜價格全公開｜Avalo 阿瓦羅",
         description:
-          "全客製形象官網，5 頁以內 {price:web-basic}（未稅）起：RWD 響應式、SEO 基礎與 GA4、聯絡表單與 LINE 導流，含部署上線。約 2–3 週交付，價格公開不二價，可線上直接下單。",
+          "全客製形象官網，5 頁以內 {price:web-basic}（未稅）起：RWD 響應式、SEO 基礎與 GA4、聯絡表單與 LINE 導流，含部署上線。約 2–3 週交付，價格公開透明，可線上直接下單。",
         label: "網頁設計・形象官網",
         h1: "形象官網 {price:web-basic} 起",
         lede: "文案和圖片齊備後約 2–3 週上線。含 5 頁以內客製設計、手機版與部署。起價未稅，須搭配維護方案。",
@@ -87,7 +87,7 @@ export const SERVICES: Service[] = [
         faq: [
           {
             q: "5 頁不夠怎麼辦？",
-            a: "常見的配置是首頁、關於、服務、作品、聯絡五頁。需要更多頁面或功能，可以加購單項功能（例如多語系 {addon:i18n} 起、線上預約 {addon:booking} 起），或直接選商務網站方案；超出標準範圍的部分，諮詢後提供書面固定報價，報價後一樣不二價。",
+            a: "常見的配置是首頁、關於、服務、作品、聯絡五頁。需要更多頁面或功能，可以加購單項功能（例如多語系 {addon:i18n} 起、線上預約 {addon:booking} 起），或直接選商務網站方案；超出標準範圍的部分，諮詢後提供書面固定報價。",
           },
           {
             q: "上線之後可以自己改內容嗎？",
@@ -129,7 +129,7 @@ export const SERVICES: Service[] = [
         faq: [
           {
             q: "What if five pages aren't enough?",
-            a: "A typical setup is Home, About, Services, Work and Contact. For more pages or features, add à la carte items (e.g. multilingual from {addon:i18n}, online booking from {addon:booking}) or choose the Commerce Website plan. Anything beyond the standard scope gets a fixed written quote after a consultation — and that quote is not negotiated either.",
+            a: "A typical setup is Home, About, Services, Work and Contact. For more pages or features, add à la carte items (e.g. multilingual from {addon:i18n}, online booking from {addon:booking}) or choose the Commerce Website plan. Anything beyond the standard scope gets a fixed written quote after a consultation.",
           },
           {
             q: "Can I edit the content myself after launch?",
@@ -295,7 +295,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "企業方案為什麼沒有標價？",
-            a: "企業方案的費用取決於通道數、要串接的系統（訂單、預約、CRM）、多語言與 SLA 要求，差異很大。我們先做需求評估，再提供書面固定報價，報價後不二價。",
+            a: "企業方案的費用取決於通道數、要串接的系統（訂單、預約、CRM）、多語言與 SLA 要求，差異很大。我們先做需求評估，再提供書面固定報價。",
           },
         ],
       },
@@ -345,7 +345,7 @@ export const SERVICES: Service[] = [
           },
           {
             q: "Why is there no list price for Enterprise?",
-            a: "Enterprise cost depends on the number of channels, the systems to integrate (orders, booking, CRM), languages and SLA requirements. We assess your needs first, then give a written fixed quote that stays final.",
+            a: "Enterprise cost depends on the number of channels, the systems to integrate (orders, booking, CRM), languages and SLA requirements. We assess your needs first, then give a written fixed quote.",
           },
         ],
       },

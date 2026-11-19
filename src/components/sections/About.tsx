@@ -8,7 +8,7 @@ interface Feature {
   desc: string;
 }
 
-/** 順序對應 messages 的 about.features：不二價、工程對接、部署資安、長期維護 */
+/** 順序對應 messages 的 about.features：價格公開、工程對接、部署資安、長期維護 */
 const FEATURE_ICONS: DoodleName[] = ["tag", "code", "shield", "calendar"];
 
 export default function About() {

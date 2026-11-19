@@ -41,7 +41,7 @@ export function llmsTxt(): string {
 
   return `# ${SITE.name}
 
-> 台灣的網站設計開發與企業 AI 自動化公司。價格公開、不二價，可線上直接下單。
+> 台灣的網站設計開發與企業 AI 自動化公司。價格公開透明，可線上直接下單。
 > 法定名稱：${COMPANY.legalName}（統一編號 ${COMPANY.taxId}）
 > 地址：${COMPANY.address}
 > 電話：${COMPANY.phoneDisplay}
