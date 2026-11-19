@@ -1,3 +1,5 @@
+import { GOOGLE_ADS_LEAD_DESTINATION } from "./google-ads";
+
 /** 第一方轉換事件。不依賴 GA；有 GA ID 時同時送 gtag。 */
 export type TrackEvent =
   | "generate_lead"
@@ -30,6 +32,13 @@ export function track(event: TrackEvent, extra: Record<string, string | number |
   }
   const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
   gtag?.("event", event, extra);
+  if (event === "generate_lead") {
+    gtag?.("event", "conversion", {
+      send_to: GOOGLE_ADS_LEAD_DESTINATION,
+      value: 1,
+      currency: "TWD",
+    });
+  }
 }
 
 type OpenAIAdsEvent =
