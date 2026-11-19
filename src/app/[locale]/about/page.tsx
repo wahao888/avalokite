@@ -84,7 +84,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             )}
           </p>
           <ul className="ip-chips">
-            <li>{zh ? "價格公開、不二價" : "Published prices"}</li>
+            <li>{zh ? "價格公開透明" : "Published prices"}</li>
             <li>{zh ? "標準方案線上下單" : "Order standard plans online"}</li>
           </ul>
         </div>

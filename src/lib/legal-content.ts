@@ -11,8 +11,8 @@ import { COMPANY, SITE } from "./site";
  * 條款版本。客戶同意的版本會寫進訂單，日後爭議時據此還原當時的條款全文。
  * 格式為改動日期；同一天改多次就加序號（2026-08-07b）。
  */
-export const LEGAL_VERSION = "2026-11-02";
-const PRIVACY_UPDATED = "2026-11-14";
+export const LEGAL_VERSION = "2026-11-19";
+const PRIVACY_UPDATED = "2026-11-19";
 
 /** 結帳時要求同意的文件（其他文件如隱私權為告知性質，不在同意範圍） */
 export const AGREED_DOCS = ["terms", "refund"] as const;
@@ -48,7 +48,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
             "網站上標示之價格均為新台幣未稅價，結帳時加計 5% 營業稅。付款透過綠界科技 ECPay 處理，一次性款項與維護月費均以信用卡支付。",
             "建置服務須搭配一份維護方案。建置款與維護月費為兩筆分開的授權：建置款（或促銷方案之席次保留金）於結帳時一次收取；維護月費自網站上線並經您驗收之日起計收，於該日後另行以信用卡定期定額授權，首期於授權當下扣款，其後每月自動扣款。網站製作期間不計收月費。",
             "促銷方案之席次保留金於結帳時收取，用以保留名額並排入製作排程；網站上線驗收後全額折抵首期月費，不另計費。因可歸責於本公司之事由致未能交付者，全額退還。",
-            "本公司採公開定價、不二價原則。客製專案於免費諮詢後提供書面固定報價，經雙方確認後始行開工。",
+            "本公司採公開定價原則。客製專案於免費諮詢後提供書面固定報價，經雙方確認後始行開工。",
             "維護月費之價格於您的訂閱存續期間維持不變；如日後調整定價，僅適用於新訂單。",
           ],
         },
@@ -186,7 +186,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
             "Listed prices are in TWD excluding tax; 5% VAT is added at checkout. Payments are processed by ECPay; both one-time fees and care subscriptions are paid by credit card.",
             "Build Services require an accompanying Care Plan. The build fee and the care subscription are two separate authorizations: the build fee (or, for promotional plans, the seat deposit) is collected at checkout; care is billed from the day your site goes live and is accepted by you, and is authorized as a recurring card payment after that date, with the first charge made at authorization and monthly charges thereafter. Nothing is billed monthly during production.",
             "A promotional plan's seat deposit is collected at checkout to hold your seat and book production. It is credited in full to your first month once the site is live and accepted, and is refunded in full if we fail to deliver for reasons attributable to the Company.",
-            "Pricing is published and non-negotiable. Custom projects receive a written fixed quote after a free consultation, and work begins only once both parties confirm it.",
+            "Pricing is published. Custom projects receive a written fixed quote after a free consultation, and work begins only once both parties confirm it.",
             "Your care rate stays fixed for as long as your subscription runs; any future price change applies only to new orders.",
           ],
         },
@@ -343,6 +343,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "五、Cookie 與分析",
           body: [
             "本站使用必要之 Cookie 維持購物車與登入狀態，並可能使用 Google Analytics 進行匿名流量分析。",
+            "本站可能使用 Google Ads 轉換追蹤衡量廣告成效。諮詢表單成功送出時，本站會向 Google 回報轉換事件。Google 可能使用 Cookie 或廣告點擊識別碼進行歸因，該事件不包含您填寫的聯絡資料或訊息。",
             "本站可能使用 OpenAI 的 ChatGPT Ads Measurement Pixel 衡量廣告成效。Pixel 會使用第一方 Cookie 儲存廣告點擊與瀏覽器識別碼，並向 OpenAI 回報公開頁面瀏覽、加入購物車、開始結帳及點擊 LINE 諮詢等事件。",
             "您可在諮詢表單選擇同意廣告配對。經您同意且諮詢送出成功時，本站可能透過 OpenAI Conversions API 傳送該事件、雜湊後的 Email（如有提供）及可用的廣告點擊與瀏覽器識別碼。您可以不勾選並照常送出諮詢。",
             "您也可在結帳時選擇同意廣告配對。經您同意且綠界確認訂單首次收款後，本站可能透過同一 API 回報付款事件及實收金額，並附上雜湊後的 Email 和可用的廣告識別碼。您可以不勾選並照常付款。",
@@ -391,6 +392,7 @@ export const LEGAL: Record<DocKey, Record<"zh-TW" | "en", LegalDoc>> = {
           h: "5. Cookies & Analytics",
           body: [
             "We use essential cookies for the cart and admin sessions, and may use Google Analytics for anonymized traffic analysis.",
+            "We may use Google Ads conversion tracking to measure advertising performance. When an inquiry is successfully submitted, the site reports a conversion event to Google. Google may use cookies or ad click identifiers for attribution. The event does not include the contact details or message you entered.",
             "We may use OpenAI’s ChatGPT Ads Measurement Pixel to measure ad performance. The Pixel uses first-party cookies to store ad click and browser identifiers and reports public page views, add-to-cart actions, checkout starts, and clicks on LINE contact links to OpenAI.",
             "The inquiry form lets you opt in to ad matching. If you opt in and submit a successful inquiry, we may send that event, your hashed email (if provided), and available ad click and browser identifiers through the OpenAI Conversions API. The form works without opting in.",
             "At checkout, you can separately opt in to ad matching. If you opt in and ECPay confirms the first payment, we may report the payment event and amount paid through the same API, with your hashed email and available ad identifiers. You can pay without opting in.",
