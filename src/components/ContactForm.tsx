@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { track } from "@/lib/track";
+import { readChatRef } from "@/lib/chat-ref";
 
 type Status = "idle" | "submitting" | "ok" | "err" | "badEmail";
 
@@ -53,6 +54,7 @@ export default function ContactForm({ placement }: { placement?: "website" }) {
           phone: looksLikeEmail ? "" : contact,
           locale,
           placement: placement ?? (pathname === "/" ? "home" : "contact"),
+          chatRef: readChatRef(),
           campaign: {
             source: utm.get("utm_source"),
             medium: utm.get("utm_medium"),

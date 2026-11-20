@@ -670,6 +670,76 @@
     "legendRange": "Taiwan market range",
     "legendOurs": "Avalo list price (pre-tax)"
   },
+  "compare": {
+    "label": "How to choose",
+    "title1": "Same budget,",
+    "title2": "very different deliverables",
+    "intro": "There are four common ways to get this done. Price is only one of them; what really sets them apart is who does the work, who is responsible after launch, and who owns the site and the data.",
+    "aria": "Avalo compared with other approaches",
+    "cols": [
+      "Avalo",
+      "Traditional web agency",
+      "DIY site / store builder",
+      "Global support SaaS"
+    ],
+    "rows": [
+      {
+        "topic": "Knowing the price",
+        "ours": "Every plan is priced publicly and can be ordered online",
+        "others": [
+          "Quoted case by case; comparing means waiting on each",
+          "Monthly fees are public, transaction fees usually extra",
+          "Usually quote-based through sales, often annual contracts"
+        ]
+      },
+      {
+        "topic": "Who does the work",
+        "ours": "Design, development and launch, all handled by us",
+        "others": [
+          "The agency builds it",
+          "You assemble it yourself from a template",
+          "Tools are provided; setup and operation are on you"
+        ]
+      },
+      {
+        "topic": "LINE AI support",
+        "ours": "Generative AI that understands questions, sends links and quick-reply buttons, hands off to a person and logs leads automatically",
+        "others": [
+          "Usually not included; a separate vendor is needed",
+          "Depends on plugins, mostly keyword auto-replies",
+          "Full-featured, but you build the knowledge base and flows"
+        ]
+      },
+      {
+        "topic": "After launch",
+        "ours": "The monthly fee covers hosting, certificates, backups, monitoring and content updates",
+        "others": [
+          "Separate maintenance contract or per-request fees",
+          "Hosting by the platform, content updates by you",
+          "Platform runs the system, you run daily operations"
+        ]
+      },
+      {
+        "topic": "Domain and data",
+        "ours": "Your domain is registered in your name and your data is yours; 6 months of redirects if you leave",
+        "others": [
+          "Depends on the contract; check before signing",
+          "The site lives on the platform; moving usually means rebuilding",
+          "Conversations and contacts stay on the platform"
+        ]
+      },
+      {
+        "topic": "Starting cost",
+        "ours": "Brand website NT${web} + NT${webCare}/mo; LINE AI support NT${ai} + NT${aiCare}/mo (excl. tax)",
+        "others": [
+          "Brand websites often NT$20k–100k+, maintenance extra",
+          "From a few thousand NT$ per month plus transaction fees and plugins",
+          "Commonly from US$149–399 per month, messaging fees extra"
+        ]
+      }
+    ],
+    "note": "Descriptions of other approaches summarize publicly available information by category (November 2026, including marketplace quote statistics and public pricing pages). They describe typical cases; individual vendors' quotes and contracts prevail. Avalo prices are public and exclude tax; plans that include a build carry a 12-month minimum term for maintenance."
+  },
   "process": {
     "label": "How we work",
     "title1": "What happens",

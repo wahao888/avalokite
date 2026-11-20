@@ -1607,25 +1607,53 @@ button { font-family: inherit; }
 .website-hero .section-title { margin-bottom: 1rem; }
 .website-hero .fa-hero-cta { margin-top: 1.25rem; }
 .website-reply { margin-top: 0.65rem; color: var(--muted); font-size: 0.875rem; }
+.website-price-summary {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem;
+  max-width: 29rem; margin: 1.1rem 0 0;
+}
+.website-price-summary div { padding: 0.65rem 0.85rem; background: var(--cream); border: 1px solid var(--border); }
+.website-price-summary dt { color: var(--muted); font-size: 0.82rem; }
+.website-price-summary dd { margin: 0.15rem 0 0; color: var(--ink); font-size: 1rem; font-weight: 700; }
+.website-price-terms { margin: 0.45rem 0 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
 .website-case {
   position: relative; display: flex; align-items: end; min-height: 13rem;
   aspect-ratio: 16 / 10; overflow: hidden; background: var(--cream);
 }
+.website-case-image { position: absolute; inset: 0; }
 .website-case img { object-fit: cover; }
-.website-case span {
+.website-case-caption {
   position: relative; margin: 0.75rem; padding: 0.5rem 0.7rem;
   background: var(--paper); color: var(--ink); font-size: 0.875rem;
 }
+.website-case-arrow { display: none; }
 .website-consult {
   scroll-margin-top: 6rem; grid-template-columns: 0.8fr 1.2fr; align-items: start;
   padding-top: 1.5rem; border-top: 1px solid var(--border);
 }
 .website-consult .btn-ghost { margin-top: 1rem; }
 @media (max-width: 720px) {
-  .website-landing { padding-inline: 1.15rem; }
+  .website-landing {
+    --website-top-offset: 5.25rem;
+    padding: var(--website-top-offset) 1.15rem 4rem;
+  }
+  body:has(.topbar .promo-bar) .website-landing { --website-top-offset: 8rem; }
   .website-hero, .website-consult { grid-template-columns: 1fr; }
-  .website-hero .section-title { font-size: clamp(1.8rem, 7vw, 2.6rem); }
-  .website-case { aspect-ratio: 2 / 1; min-height: 8rem; max-height: 14rem; }
+  .website-hero { gap: 0.85rem; margin-bottom: 1.5rem; }
+  .website-hero .section-title { margin-bottom: 0.55rem; font-size: clamp(1.8rem, 7vw, 2.6rem); }
+  .website-hero .fa-lede { font-size: 0.95rem; line-height: 1.65; }
+  .website-hero .fa-hero-cta { margin-top: 0.85rem; }
+  .website-hero .btn-primary { justify-content: center; width: 100%; min-height: 48px; text-align: center; }
+  .website-reply { margin-top: 0.4rem; text-align: center; }
+  .website-case {
+    display: grid; grid-template-columns: 5.25rem minmax(0, 1fr) auto; align-items: center; gap: 0.7rem;
+    aspect-ratio: auto; min-height: 3.75rem; padding: 0.35rem 0.8rem 0.35rem 0.35rem;
+    border: 1px solid var(--border); text-decoration: none;
+  }
+  .website-case-image { position: relative; inset: auto; height: 3.35rem; }
+  .website-case-caption { margin: 0; padding: 0; background: transparent; }
+  .website-case-arrow { display: block; color: var(--moss); }
+  .website-consult { gap: 0.85rem; scroll-margin-top: var(--website-top-offset); }
+  .website-consult .form-panel { padding: 1.25rem 1rem; }
 }
 
 .fa-stats {
@@ -2052,6 +2080,7 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 .chat-chips button:hover { border-color: var(--moss); color: var(--moss); }
+.chat-msg.is-bot a { color: var(--moss); text-decoration: underline; text-underline-offset: 2px; }
 
 .sticky-bar {
   display: none;
@@ -2174,6 +2203,96 @@ button { font-family: inherit; }
   border: 1px solid color-mix(in srgb, var(--wood) 48%, transparent);
 }
 .market-legend-mark { width: 3px; height: 14px; background: var(--moss); }
+
+/* ── 選擇比較（Avalo 與三種常見做法）── */
+.compare-section { border-top: 1px solid var(--border); }
+.cmp { border: 1px solid var(--border); background: var(--paper); }
+.cmp-head,
+.cmp-row {
+  display: grid;
+  grid-template-columns: 9rem 1.25fr 1fr 1fr 1fr;
+}
+.cmp-head > span {
+  padding: 1.1rem 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--muted-strong);
+  border-bottom: 1px solid var(--border);
+}
+.cmp-head .cmp-ours {
+  color: var(--paper);
+  background: var(--moss);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+.cmp-row + .cmp-row { border-top: 1px solid var(--border); }
+.cmp-topic {
+  padding: 1.15rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.cmp-cell {
+  padding: 1.15rem 1.2rem;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  border-left: 1px solid var(--border);
+}
+.cmp-cell.cmp-ours {
+  position: relative;
+  padding-left: 2.3rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--moss) 9%, var(--paper));
+}
+.cmp-other { color: var(--muted-strong); }
+.cmp-check {
+  position: absolute;
+  left: 1.05rem;
+  top: 1.45rem;
+  width: 0.75rem;
+  height: 0.42rem;
+  border-left: 2px solid var(--moss);
+  border-bottom: 2px solid var(--moss);
+  transform: rotate(-45deg);
+}
+.cmp-label { display: none; }
+.cmp-note {
+  margin-top: 1.1rem;
+  font-size: 0.72rem;
+  line-height: 1.8;
+  color: var(--muted-strong);
+  max-width: 62rem;
+}
+
+/* 手機：每一列變成一張卡。Avalo 的答案在上、反白；其他三種用小字列在下面 */
+@media (max-width: 860px) {
+  .cmp { border: none; background: none; display: flex; flex-direction: column; gap: 0.9rem; }
+  .cmp-head { display: none; }
+  .cmp-row {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    background: var(--paper);
+  }
+  .cmp-row + .cmp-row { border-top: 1px solid var(--border); }
+  .cmp-topic { padding: 0.9rem 1rem 0.6rem; font-size: 0.82rem; }
+  .cmp-cell { border-left: none; padding: 0.55rem 1rem; }
+  .cmp-cell.cmp-ours { padding: 0.8rem 1rem 0.8rem 2.2rem; font-size: 0.86rem; }
+  .cmp-check { left: 0.95rem; top: 1.12rem; }
+  .cmp-other { font-size: 0.76rem; border-top: 1px dashed var(--border); }
+  .cmp-other:last-child { padding-bottom: 0.8rem; }
+  .cmp-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.15rem;
+  }
+  .cmp-cell.cmp-ours .cmp-label { color: var(--moss-deep); }
+}
 
 /* ── 合作四步 ── */
 .process-section { border-top: 1px solid var(--border); }

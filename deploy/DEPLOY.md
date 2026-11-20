@@ -110,6 +110,7 @@ NEXT_PUBLIC_BING_VERIFICATION=""                # Bing Webmaster msvalidate.01
    plan 是 `lite` / `business` / `enterprise`，界線與上限查 [ai-plans.ts](../src/lib/ai-plans.ts)
 4. 部署，然後在客戶的 LINE Developers Console 把 Webhook URL 設成
    `https://avalokite.xyz/api/line/webhook/wenshan`（**網址結尾是該站的 slug**），並關掉「自動回應訊息」
+   與「加入好友的歡迎訊息」（歡迎詞由我們送，含按鈕；沒關的話客人會收到兩則）
 5. 到 `/admin/chat` 的「客戶站的 AI 客服」區塊貼上他們的 FAQ 與價目，按儲存
 
 只開官網通道的話，第 1、2 步與 `lineSecretEnv`／`lineTokenEnv` 可以省略。
@@ -148,6 +149,13 @@ channel**（一支 Messaging API、一支 LINE Login），密鑰不共用。兩�
 `https://avalokite.xyz/api/line/webhook`，打開 Use webhook；同時到 LINE Official
 Account Manager → 回應設定，把「自動回應訊息」關掉。兩者互斥，沒關掉的話
 客人只會收到罐頭回覆，AI 的回覆根本不會送出。
+同一頁的「加入好友的歡迎訊息」也要關掉：加好友的歡迎詞與按鈕由 webhook 送
+（[chat-service.ts](../src/lib/chat-service.ts) 的 `welcomeMessage`），兩邊都開客人會收到兩則。
+
+**AI 客服題庫**：`npm run ai:eval` 用真的模型問一輪固定問題（價格、交期、折扣轉人、
+提示注入、連結），價格從 products.ts 讀所以調價不必改題庫。`deploy.sh` 會自動跑，
+有一題不過就不部署；本機沒有 `OPENAI_API_KEY` 時自動略過，趕時間可 `SKIP_AI_EVAL=1`。
+題目在 [scripts/ai-eval.mts](../scripts/ai-eval.mts)，客人常問的新問題可以加進去。
 
 **`LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET` 留空時，LINE 登入會自動停用**（前台不顯示按鈕，
 手機號碼那條路照常運作），所以不必為了上線硬等客戶交金鑰。
@@ -610,6 +618,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 | `45 3 * * *` [run-cron.sh](run-cron.sh) `retention` | 刪掉超過保留期的 AI 客服對話紀錄與 webhook 去重列。隱私權政策寫了保留兩年，沒有這支就是沒兌現 |
 | `0 4 1 * *` [run-cron.sh](run-cron.sh) `geo-prompts` | 每月 1 號問同一組問題，看模型回覆有沒有提到 Avalo，結果寄到 MAIL_OWNER |
 | `0 5 * * 1` [run-cron.sh](run-cron.sh) `indexnow` | 每週一再 ping 一次 IndexNow（部署時 [deploy.sh](deploy.sh) 也會 ping） |
+| `0 1 * * 1` [run-cron.sh](run-cron.sh) `chat-review` | 每週一台灣 09:00（伺服器是 UTC）寄「AI 客服週報」到 MAIL_OWNER：上週轉給專人、客服說不確定、客人重問同一句的對話，附後台連結。用來決定知識庫要補什麼。邏輯在 [src/lib/chat-review.ts](../src/lib/chat-review.ts)，`?dry=1` 只看不寄 |
 | `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
 | `25 3 * * *` [backup-uploads.sh](backup-uploads.sh) | 商品照片同步到 S3（只累加，不刪） |
 
@@ -625,6 +634,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 45 3 * * * /opt/avalo/app/deploy/run-cron.sh retention >> /opt/avalo/cron-retention.log 2>&1
 0 4 1 * * /opt/avalo/app/deploy/run-cron.sh geo-prompts >> /opt/avalo/cron-geo.log 2>&1
 0 5 * * 1 /opt/avalo/app/deploy/run-cron.sh indexnow >> /opt/avalo/cron-indexnow.log 2>&1
+0 1 * * 1 /opt/avalo/app/deploy/run-cron.sh chat-review >> /opt/avalo/cron-chat-review.log 2>&1
 ```
 
 root 再加：

@@ -22,6 +22,7 @@ import { LEGAL_VERSION } from "@/lib/legal-content";
 import { consentRecord } from "@/lib/legal-consent";
 import { adsMatchingFields } from "@/lib/openai-ads-conversions";
 import { referralEligibility } from "@/lib/referral";
+import { CHAT_REFS } from "@/lib/chat-ref";
 import {
   INVOICE_ADDRESS_LIMIT, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT, invoiceCarrierPattern, validTaxId,
 } from "@/lib/invoice-details";
@@ -47,6 +48,7 @@ const schema = z.object({
   invoiceCarrier: z.string().trim().toUpperCase().regex(invoiceCarrierPattern).optional().or(z.literal("")),
   note: z.string().trim().max(2000).optional().or(z.literal("")),
   referralCode: z.string().trim().toUpperCase().max(40).optional(),
+  chatRef: z.enum(CHAT_REFS).optional(),
   locale: z.string().max(10).optional(),
   // 契約同意：勾選值與客戶當下看到的條款版本
   agree: z.literal("yes"),
@@ -170,6 +172,7 @@ export async function POST(req: NextRequest) {
       invoiceCarrier: d.taxId ? null : d.invoiceCarrier || null,
       note: d.note || null,
       referralCode: d.referralCode || null,
+      chatRef: d.chatRef ?? null,
       locale: d.locale ?? "zh-TW",
       items: JSON.stringify(d.items),
       // 同意紀錄：雜湊以伺服器自己的條款內容計算，不採信前端傳來的值

@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { sameOrigin } from "@/lib/portal-http";
-import { handleMessage } from "@/lib/chat-service";
+import { handleMessageDetailed } from "@/lib/chat-service";
 import { HOUSE_TENANT, tenantFromHost } from "@/lib/tenants";
 
 export const runtime = "nodejs";
@@ -63,14 +63,14 @@ export async function POST(req: NextRequest) {
   const visitorId = existing ?? crypto.randomUUID();
 
   // 官網不靜音（那裡沒有真人介面），所以這裡實際上永遠拿得到字串
-  const reply = await handleMessage({
+  const reply = await handleMessageDetailed({
     tenantId,
     channel: "web",
     externalId: visitorId,
     text: parsed.data.message,
   });
 
-  const res = NextResponse.json({ reply: reply ?? "" });
+  const res = NextResponse.json({ reply: reply?.text ?? "", quickReplies: reply?.quickReplies ?? [] });
   if (!existing) {
     res.cookies.set(VISITOR_COOKIE, visitorId, {
       httpOnly: true,

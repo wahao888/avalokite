@@ -8,6 +8,7 @@ import { careRequired, fmt, getProduct, withTax, promoPlanForSkus } from "@/lib/
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import type { Locale } from "@/i18n/routing";
 import { track } from "@/lib/track";
+import { readChatRef } from "@/lib/chat-ref";
 import { REFERRAL_STORAGE } from "@/components/ReferralInvite";
 import {
   INVOICE_ADDRESS_LIMIT, INVOICE_CARRIER_PATTERN, INVOICE_COMPANY_LIMIT, INVOICE_EMAIL_LIMIT,
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, locale, items: cart.items }),
+        body: JSON.stringify({ ...data, locale, items: cart.items, chatRef: readChatRef() }),
       });
       // 條款在結帳途中改版 → 不默默用新版成立契約，請客戶重新確認
       if (res.status === 409) {
