@@ -211,6 +211,45 @@ export function conversationContext(displayName: string | null | undefined, firs
   ].join("\n");
 }
 
+export const ACK_WAITING =
+  "已為您轉給專人，請稍候 🙏\n方便的話請留下稱呼與聯絡方式（電話或 Email），專人會盡快回覆您。";
+export const ACK_CONTACT = "收到，謝謝您！\n專人會盡快與您聯繫；有其他想補充的，也可以直接在這裡留言。";
+
+/** 客人一直在等、超過這麼久沒聽到任何回應，就再送一次「還在處理」。 */
+const ACK_REPEAT_MS = 4 * 3_600_000;
+
+/**
+ * 轉真人、AI 靜音期間，要不要回客人一句固定的確認。
+ *
+ * 原本靜音就是完全不出聲：客人點了「我是既有客戶」之後毫無回應，在他眼裡就是
+ * 已讀不回（2026-11-20 實測抓到）。但也不能每句都回——真人正在 LINE 後台打字時，
+ * 機器人在旁邊一直插話一樣糟。所以只在三個時機說話，而且都是固定文字、不呼叫模型：
+ *   1. 轉接後客人第一次開口：告訴他已經轉給專人，並請他留聯絡方式
+ *   2. 客人留下電話或 email：確認收到（只回一次）
+ *   3. 上一次確認已經超過 4 小時：讓他知道還在處理，不是被忘了
+ * 「這個對話我自己接」（站方手動接手）不送：那是你正在親自回，機器人不該出聲。
+ */
+export async function handoffAck(
+  convo: { id: number; handoffAt: Date | null; handoffReason: string | null },
+  text: string,
+): Promise<string | null> {
+  if (!convo.handoffAt || convo.handoffReason === "站方手動接手") return null;
+  const acks = await prisma.chatMessage.findMany({
+    where: {
+      conversationId: convo.id,
+      role: "assistant",
+      createdAt: { gte: convo.handoffAt },
+      content: { in: [ACK_WAITING, ACK_CONTACT] },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { content: true, createdAt: true },
+  });
+  if (looksLikeContact(text) && !acks.some((a) => a.content === ACK_CONTACT)) return ACK_CONTACT;
+  if (acks.length === 0) return ACK_WAITING;
+  if (Date.now() - acks[0].createdAt.getTime() > ACK_REPEAT_MS) return ACK_WAITING;
+  return null;
+}
+
 /** 這個 LINE 對話目前是否由真人接手（AI 靜音中）。 */
 export async function lineMuted(tenantId: string, externalId: string): Promise<boolean> {
   const convo = await prisma.chatConversation.findUnique({
@@ -255,18 +294,22 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
   const muted =
     msg.channel === "line" && !!convo.mutedUntil && convo.mutedUntil > new Date();
   if (muted) {
+    const ack = await handoffAck(convo, text);
     await prisma.$transaction([
       prisma.chatMessage.create({
         data: { conversationId: convo.id, role: "user", content: text },
       }),
+      ...(ack
+        ? [prisma.chatMessage.create({ data: { conversationId: convo.id, role: "assistant", content: ack } })]
+        : []),
       prisma.chatConversation.update({
         where: { id: convo.id },
         data: { lastAt: new Date() },
       }),
     ]);
-    await notifyIfNeeded(convo, msg, null, []);
+    await notifyIfNeeded(convo, msg, null, [], ack);
     await captureLead(convo.id, msg);
-    return null;
+    return ack ? { text: ack, quickReplies: [] } : null;
   }
 
   const recent = await prisma.chatMessage.findMany({
@@ -306,7 +349,16 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
     }),
   ]);
 
-  await notifyIfNeeded(convo, msg, result, history);
+  if (result.failed) {
+    // notifyOwner 本身有每小時上限，API 整個掛掉時不會一句一封把信箱灌爆
+    await notifyOwner(
+      `[${brandOf(msg.tenantId)}] ⚠️ AI 客服回覆失敗（${msg.channel}）`,
+      `客人收到的是備用回覆（請他再傳一次或留聯絡方式），這段對話沒有被靜音。\n` +
+        `如果連續收到這封信，請檢查 OpenAI 金鑰、額度與伺服器 log。\n\n客人：${msg.text}\n\n對話 ID：${convo.id}`,
+    );
+  } else {
+    await notifyIfNeeded(convo, msg, result, history);
+  }
   await captureLead(convo.id, msg);
 
   return { text: withRef(result.reply, msg), quickReplies: result.quickReplies ?? [] };
@@ -338,6 +390,8 @@ async function notifyIfNeeded(
   msg: IncomingMessage,
   result: { reply: string; needsHuman: boolean; handoffReason: string } | null,
   history: AgentTurn[],
+  /** 靜音期間送給客人的固定確認訊息（見 handoffAck）；沒送就是 undefined */
+  autoAck?: string | null,
 ): Promise<void> {
   const firstTime = !!result?.needsHuman && !convo.handoff;
   if (!firstTime && !convo.handoff) return;
@@ -389,7 +443,11 @@ async function notifyIfNeeded(
       "",
       "─── 對話 ───",
       recent,
-      ...(result ? [`客服：${result.reply}`] : ["（AI 靜音中，未回覆）"]),
+      ...(result
+        ? [`客服：${result.reply}`]
+        : autoAck
+          ? [`客服（自動確認，AI 仍靜音中）：${autoAck}`]
+          : ["（AI 靜音中，未回覆）"]),
       "",
       `對話 ID：${convo.id}`,
   ].join("\n");
@@ -454,7 +512,9 @@ const MEDIA_LABEL: Record<MediaKind, string> = {
  *
  * 原本整個忽略——客人傳了截圖問「這個做得到嗎」，結果完全沒人理。
  * 貼圖通常只是打招呼或道謝，固定回一句、給按鈕就好（不呼叫模型，不花錢）；
- * 圖片、檔案、語音多半是真的有東西要給人看，直接轉專人。
+ * 圖片、檔案、語音多半是真的有東西要給人看：寄信請站方去 LINE 後台看，
+ * 但**不轉人、不靜音**——客人常常先傳截圖、下一句才打字問「這個多少錢」，
+ * 那一句 AI 要能照常回答，不能因為一張圖就讓他等 12 小時。
  */
 export async function handleMedia(
   msg: Omit<IncomingMessage, "text">,
@@ -472,15 +532,18 @@ export async function handleMedia(
   const muted = msg.channel === "line" && !!convo.mutedUntil && convo.mutedUntil > new Date();
 
   const casual = kind === "sticker" || kind === "location";
+  const ack = muted ? await handoffAck(convo, label) : null;
   const reply: OutgoingReply | null = muted
-    ? null
+    ? ack
+      ? { text: ack, quickReplies: [] }
+      : null
     : casual
       ? {
           text: "收到您的訊息 😊\n有想問的直接打字就可以，例如價格、交期或做過的案例。",
           quickReplies: msg.tenantId === HOUSE_TENANT ? ["看方案價格", "看作品案例", "找專人聊"] : ["我想詢問", "找專人聊"],
         }
       : {
-          text: `收到您傳來的${label.slice(1, -1)}，我們請專人看過後回覆您。\n\n方便的話，也可以用文字簡單說明想詢問的事。`,
+          text: `收到您傳來的${label.slice(1, -1)}，已請同事查看 🙏\n\n線上客服看不到${label.slice(1, -1)}內容；如果是想詢問價格、交期或做法，直接打字問，我們馬上回覆。`,
           quickReplies: [],
         };
 
@@ -492,17 +555,34 @@ export async function handleMedia(
     prisma.chatConversation.update({ where: { id: convo.id }, data: { lastAt: new Date() } }),
   ]);
 
-  if (!casual || muted) {
+  if (muted) {
     const history = await recentTurns(convo.id);
-    await notifyIfNeeded(
-      convo,
-      full,
-      muted ? null : { reply: reply!.text, needsHuman: true, handoffReason: `客人傳了${label.slice(1, -1)}，AI 看不到內容` },
-      // 剛存進去的這則（與回覆）notifyIfNeeded 會自己補上，前文要扣掉
-      history.slice(0, reply ? -2 : -1),
-    );
+    // 剛存進去的這則（與確認）notifyIfNeeded 會自己補上，前文要扣掉
+    await notifyIfNeeded(convo, full, null, history.slice(0, reply ? -2 : -1), ack);
+  } else if (!casual) {
+    await notifyMedia(convo.id, full, label);
   }
   return reply;
+}
+
+/** 客人傳了 AI 看不到的東西：寄一封「請去 LINE 後台看」，不改變對話狀態。 */
+async function notifyMedia(conversationId: number, msg: IncomingMessage, label: string): Promise<void> {
+  const what = label.slice(1, -1);
+  const turns = await recentTurns(conversationId, 8);
+  const who = msg.displayName ?? msg.externalId;
+  const subject = `[${brandOf(msg.tenantId)}] 客人傳了${what} — ${who}（${msg.channel}）`;
+  const body = [
+    `客人傳了${what}，AI 看不到內容，請到 LINE 官方帳號的聊天分頁查看。`,
+    "這段對話沒有轉人、也沒有靜音：客人接著用文字問的問題，AI 會照常回答。",
+    "",
+    "─── 最近對話 ───",
+    turns.map((t) => `${t.role === "user" ? "客人" : "客服"}：${t.content}`).join("\n"),
+    "",
+    `對話 ID：${conversationId}`,
+  ].join("\n");
+  const tenant = msg.tenantId === HOUSE_TENANT ? null : getTenant(msg.tenantId);
+  if (tenant) await notifyTenant(tenant, { subject, text: body });
+  else await notifyOwner(subject, body);
 }
 
 async function recentTurns(conversationId: number, take = 8): Promise<AgentTurn[]> {
