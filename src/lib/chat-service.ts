@@ -205,6 +205,8 @@ export function conversationContext(
   firstTurn: boolean,
   /** 這段對話已經通知過專人時，帶入當時的原因 */
   handoffReason?: string | null,
+  /** 客人已經留下聯絡方式、系統已自動建立詢問單 */
+  leadOpen = false,
 ): string | undefined {
   const parts: string[] = [];
   const name = (displayName ?? "").replace(/[\r\n]+/g, " ").trim().slice(0, 20);
@@ -222,6 +224,13 @@ export function conversationContext(
       "在那之前請你繼續協助：能回答的照常回答；想下單就說明線上下單的方式；想留需求或要詢價單，",
       "就請他直接在這裡留下稱呼、聯絡方式和需求（系統會自動建立詢問單）。",
       "不要只回一句「已轉給專人，請稍候」就沒有下文。needs_human 填 false，除非出現和上面原因不同的新狀況。",
+    );
+  }
+  if (leadOpen) {
+    parts.push(
+      "【詢問單】客人已經留下聯絡方式，系統已自動建立詢問單並通知專人（客人之後說的話也會自動併進去）。",
+      "不要再說「收到後會建立詢問單」或要他提供什麼才建立——直接告訴他詢問單已經建立、專人會用他留的方式聯繫。",
+      "需求概況可以請他順便補充，但不是必要。客人想直接下單，照樣給一鍵下單連結。",
     );
   }
   return parts.length ? parts.join("\n") : undefined;
@@ -296,6 +305,8 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
     .reverse()
     .map((m) => ({ role: m.role as AgentTurn["role"], content: m.content }));
 
+  // 這句含聯絡方式，或先前已經留過：回覆之後 captureLead 會建單（或併入既有的單）
+  const leadOpen = looksLikeContact(msg.text) || !!(await findLead(convo.id, msg.tenantId));
   const result = await answer(
     history,
     msg.text,
@@ -304,6 +315,7 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
       convo.displayName ?? msg.displayName,
       history.length === 0,
       convo.handoff ? (convo.handoffReason ?? "") : null,
+      leadOpen,
     ),
   );
 
@@ -559,6 +571,17 @@ async function notifyMedia(conversationId: number, msg: IncomingMessage, label: 
   else await notifyOwner(subject, body);
 }
 
+/** 這段對話自動建立的詢問單（一段對話最多一張）。 */
+function findLead(conversationId: number, tenantId: string) {
+  return prisma.inquiry.findFirst({
+    where: {
+      tenantId: tenantId === HOUSE_TENANT ? null : tenantId,
+      payload: { contains: leadTag(conversationId) },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 async function recentTurns(conversationId: number, take = 8): Promise<AgentTurn[]> {
   const rows = await prisma.chatMessage.findMany({
     where: { conversationId },
@@ -592,20 +615,21 @@ const leadTag = (conversationId: number) => `"chatConversationId":${conversation
  * 轉人中的對話已經寄過「含聯絡方式」的通知信，這裡就不再寄，避免同一件事兩封信。
  */
 export async function captureLead(conversationId: number, msg: IncomingMessage): Promise<void> {
-  if (!looksLikeContact(msg.text)) return;
+  const hasContact = looksLikeContact(msg.text);
   try {
+    const tenantId = msg.tenantId === HOUSE_TENANT ? null : msg.tenantId;
+    const existing = await findLead(conversationId, msg.tenantId);
+    // 還沒有單、這句也沒有聯絡方式：沒事可做。
+    // 已經有單時，客人之後補充的每一句（例如需求概況）都要併進去——
+    // AI 會請他「補充需求」，補了卻沒進詢問單，專人打電話時還是一問三不知。
+    if (!hasContact && !existing) return;
     const convo = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
     if (!convo) return;
     const { phone, email } = extractContact(msg.text);
-    const tenantId = msg.tenantId === HOUSE_TENANT ? null : msg.tenantId;
     const turns = await recentTurns(conversationId, 12);
     const transcript = turns.map((t) => `${t.role === "user" ? "客人" : "客服"}：${t.content}`).join("\n");
     const channelName = msg.channel === "line" ? "LINE" : "官網聊天";
 
-    const existing = await prisma.inquiry.findFirst({
-      where: { tenantId, payload: { contains: leadTag(conversationId) } },
-      orderBy: { createdAt: "desc" },
-    });
     if (existing) {
       await prisma.inquiry.update({
         where: { id: existing.id },

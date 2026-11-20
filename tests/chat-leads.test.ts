@@ -143,6 +143,21 @@ describe("留電話自動建詢問單", () => {
     expect(leads[0].message).toContain("（客人補充）");
   });
 
+  it("留過聯絡方式後補充的需求（沒有電話）也併進同一張單", async () => {
+    const externalId = newId("lead3");
+    await handleMessageDetailed({ tenantId: "avalo", channel: "web", externalId, text: "0912345678" });
+    await handleMessageDetailed({ tenantId: "avalo", channel: "web", externalId, text: "想做咖啡店官網，五頁左右" });
+    const leads = await leadsOf((await convoOf(externalId)).id);
+    expect(leads).toHaveLength(1);
+    expect(leads[0].message).toContain("想做咖啡店官網");
+  });
+
+  it("沒留過聯絡方式的對話不會因為一般問題建單", async () => {
+    const externalId = newId("lead4");
+    await handleMessageDetailed({ tenantId: "avalo", channel: "web", externalId, text: "想做咖啡店官網" });
+    expect(await leadsOf((await convoOf(externalId)).id)).toHaveLength(0);
+  });
+
   it("客戶站的單記在客戶自己的 tenantId 底下", async () => {
     // 直接建對話再呼叫 captureLead：真實客戶站要在 tenants.ts 開了 AI 客服才會走到模型那段
     const externalId = newId("tenant");
