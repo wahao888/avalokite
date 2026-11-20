@@ -10,8 +10,7 @@ import TrustMarks from "@/components/TrustMarks";
 import { PriceCard } from "@/components/sections/Pricing";
 import { breadcrumbLd, faqLd, pageMetadata, serviceLd } from "@/lib/seo";
 import { SERVICES, filledCopy, getService, servicePath } from "@/lib/services";
-import { getProduct } from "@/lib/products";
-import { ADDONS } from "@/lib/products";
+import { ADDONS, BUILD_COMMIT_MONTHS, fmt, getProduct } from "@/lib/products";
 import { routing, type Locale } from "@/i18n/routing";
 import zhTW from "@/messages/zh-TW.json";
 
@@ -38,6 +37,8 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
   const website = slug === "website";
   const consult = zh ? "免費諮詢" : "Free consultation";
   const products = s.skus.map(getProduct).filter((p): p is NonNullable<typeof p> => !!p);
+  const websiteBuild = website ? products[0] : undefined;
+  const websiteCare = websiteBuild?.recommendedCareSku ? getProduct(websiteBuild.recommendedCareSku) : undefined;
   const addons = ADDONS.filter((a) => s.addons.includes(a.id));
   const cases = ((zhTW as { cases?: { items?: { url?: string; name?: string }[] } }).cases?.items ?? []).filter((i) =>
     s.cases.includes(i.url ?? ""),
@@ -67,16 +68,44 @@ export default async function ServicePage({ params }: { params: Promise<{ locale
         <>
           <header className="website-hero">
             <div>
-              <h1 className="section-title">{c.h1}</h1>
-              <p className="fa-lede">{c.lede}</p>
+              <h1 className="section-title">{c.name}</h1>
+              <p className="fa-lede">
+                {zh
+                  ? "5 頁以內客製設計，含手機版與部署。文案和圖片齊備後約 2–3 週上線。"
+                  : "Custom design for up to 5 pages, with mobile design and deployment. Launch in about 2–3 weeks once content is ready."}
+              </p>
+              {websiteBuild && websiteCare && (
+                <>
+                  <dl className="website-price-summary">
+                    <div>
+                      <dt>{zh ? "一次性建置" : "One-time build"}</dt>
+                      <dd>{zh ? `NT$${fmt(websiteBuild.price)} 起` : `From NT$${fmt(websiteBuild.price)}`}</dd>
+                    </div>
+                    <div>
+                      <dt>{zh ? "搭配安心維護" : "With Essential Care"}</dt>
+                      <dd>{zh ? `NT$${fmt(websiteCare.price)}／月` : `NT$${fmt(websiteCare.price)}/mo`}</dd>
+                    </div>
+                  </dl>
+                  <p className="website-price-terms">
+                    {zh
+                      ? `皆未稅。建置須搭維護，最短 ${BUILD_COMMIT_MONTHS} 個月，驗收並授權後開始計月費。`
+                      : `Prices exclude VAT. Care is required for at least ${BUILD_COMMIT_MONTHS} months and billed after acceptance and payment authorization.`}
+                  </p>
+                </>
+              )}
               <div className="fa-hero-cta">
-                <a href="#website-consult" className="btn-primary">{consult}</a>
+                <a href="#website-consult" className="btn-primary">
+                  {zh ? "填表免費諮詢" : "Request a free consultation"}
+                </a>
               </div>
               <p className="website-reply">{zh ? "工作日 24 小時內回覆" : "Replies within 24 hours on business days"}</p>
             </div>
             <Link href="/cases/monsieurlong" className="website-case">
-              <Image src="/cases/monsieurlong.jpg" alt="" fill sizes="(max-width: 720px) 92vw, 360px" />
-              <span>{zh ? "實際案例 · 隆先生品牌官網" : "Case study · Monsieur Long"}</span>
+              <div className="website-case-image">
+                <Image src="/cases/monsieurlong.jpg" alt="" fill sizes="(max-width: 720px) 96px, 440px" />
+              </div>
+              <span className="website-case-caption">{zh ? "看實際案例 · 隆先生品牌官網" : "See the Monsieur Long case study"}</span>
+              <span className="website-case-arrow" aria-hidden="true">→</span>
             </Link>
           </header>
           <section id="website-consult" className="website-consult fa-section" aria-labelledby="website-consult-title">
