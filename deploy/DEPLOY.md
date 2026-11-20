@@ -610,6 +610,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 | `45 3 * * *` [run-cron.sh](run-cron.sh) `retention` | 刪掉超過保留期的 AI 客服對話紀錄與 webhook 去重列。隱私權政策寫了保留兩年，沒有這支就是沒兌現 |
 | `0 4 1 * *` [run-cron.sh](run-cron.sh) `geo-prompts` | 每月 1 號問同一組問題，看模型回覆有沒有提到 Avalo，結果寄到 MAIL_OWNER |
 | `0 5 * * 1` [run-cron.sh](run-cron.sh) `indexnow` | 每週一再 ping 一次 IndexNow（部署時 [deploy.sh](deploy.sh) 也會 ping） |
+| `0 9 * * 1` [run-cron.sh](run-cron.sh) `chat-review` | 每週一寄「AI 客服週報」到 MAIL_OWNER：上週轉給專人、客服說不確定、客人重問同一句的對話，附後台連結。用來決定知識庫要補什麼。邏輯在 [src/lib/chat-review.ts](../src/lib/chat-review.ts)，`?dry=1` 只看不寄 |
 | `15 3 * * *` [backup-db.sh](backup-db.sh) | SQLite 備份上傳 S3 |
 | `25 3 * * *` [backup-uploads.sh](backup-uploads.sh) | 商品照片同步到 S3（只累加，不刪） |
 
@@ -625,6 +626,7 @@ server-update.sh 會自動退回「在伺服器 build」的備援路徑，不會
 45 3 * * * /opt/avalo/app/deploy/run-cron.sh retention >> /opt/avalo/cron-retention.log 2>&1
 0 4 1 * * /opt/avalo/app/deploy/run-cron.sh geo-prompts >> /opt/avalo/cron-geo.log 2>&1
 0 5 * * 1 /opt/avalo/app/deploy/run-cron.sh indexnow >> /opt/avalo/cron-indexnow.log 2>&1
+0 9 * * 1 /opt/avalo/app/deploy/run-cron.sh chat-review >> /opt/avalo/cron-chat-review.log 2>&1
 ```
 
 root 再加：

@@ -87,8 +87,36 @@ async function call(path: string, body: unknown, creds: LineCreds): Promise<bool
 }
 
 /** 回覆訊息。replyToken 只能用一次、約一分鐘內有效，且這條不計入 LINE 的訊息則數。 */
-export const replyText = (replyToken: string, text: string, creds: LineCreds = houseCreds()) =>
-  call("/message/reply", { replyToken, messages: [{ type: "text", text }] }, creds);
+export const replyText = (
+  replyToken: string,
+  text: string,
+  creds: LineCreds = houseCreds(),
+  quickReplies: string[] = [],
+) => call("/message/reply", { replyToken, messages: [textMessage(text, quickReplies)] }, creds);
+
+/**
+ * 文字訊息，可附快速回覆按鈕（訊息下方那排圓角按鈕，點了就替客人送出那句話）。
+ *
+ * label 上限 20 字、text 上限 300 字，超過 LINE 會把整則退件——客人就什麼都收不到。
+ * 呼叫端已經清理過，這裡再截一次是最後一道保險。
+ */
+export function textMessage(text: string, quickReplies: string[] = []) {
+  const items = quickReplies.slice(0, 13).map((q) => ({
+    type: "action",
+    action: { type: "message", label: q.slice(0, 20), text: q.slice(0, 300) },
+  }));
+  return items.length ? { type: "text", text, quickReply: { items } } : { type: "text", text };
+}
+
+/**
+ * 在客人的聊天室顯示「輸入中」動畫，直到我們送出回覆或秒數到期。
+ *
+ * AI 回覆要好幾秒，這段時間畫面毫無動靜，客人會以為沒人在。只有一對一聊天能用
+ * （群組會回 400），失敗也無妨——它只是體驗，不影響回覆本身。
+ * 秒數必須是 5 的倍數、最多 60。
+ */
+export const startLoading = (userId: string, creds: LineCreds = houseCreds(), seconds = 20) =>
+  call("/chat/loading/start", { chatId: userId, loadingSeconds: seconds }, creds);
 
 /** 主動推播。這條會吃掉方案的免費則數，只在真的必要時使用。 */
 export const pushText = (to: string, text: string, creds: LineCreds = houseCreds()) =>

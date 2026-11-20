@@ -5,8 +5,8 @@
 // 去重——這幾件只要有一邊漏掉，那個站就會安靜地壞掉，而且是壞在客人面前。
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyLineSignature, replyText, getDisplayName, type LineCreds, type LineEvent } from "@/lib/line";
-import { handleMessage } from "@/lib/chat-service";
+import { verifyLineSignature, replyText, startLoading, getDisplayName, type LineCreds, type LineEvent } from "@/lib/line";
+import { handleMessageDetailed, lineMuted } from "@/lib/chat-service";
 import { claimEvent } from "@/lib/line-events";
 
 /**
@@ -54,8 +54,14 @@ async function processEvent(
     const text = event.message.text?.trim();
     if (!userId || !text || !event.replyToken) return;
 
+    // 先開「輸入中」動畫再去做慢的事。不 await：它失敗不該擋住回覆。
+    // 真人接手（靜音）時不開——AI 不會回，動畫轉完什麼都沒有，看起來像當機。
+    if (event.source?.type === "user" && !(await lineMuted(tenantId, userId))) {
+      void startLoading(userId, creds);
+    }
+
     const displayName = await getDisplayName(userId, creds);
-    const reply = await handleMessage({
+    const reply = await handleMessageDetailed({
       tenantId,
       channel: "line",
       externalId: userId,
@@ -63,7 +69,7 @@ async function processEvent(
       text,
     });
     // null = 真人已接手，AI 這輪不說話。reply token 就讓它過期，不送任何訊息。
-    if (reply) await replyText(event.replyToken, reply, creds);
+    if (reply) await replyText(event.replyToken, reply.text, creds, reply.quickReplies);
   } catch (err) {
     // 背景工作沒有人接 promise，不自己 catch 就會變成 unhandled rejection。
     console.error(`[line/webhook] ${tenantId} 處理事件失敗`, err);

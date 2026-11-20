@@ -7,6 +7,41 @@ import { track } from "@/lib/track";
 interface Turn {
   role: "user" | "assistant";
   content: string;
+  /** 客服建議的下一句，只顯示在最後一則客服訊息下面 */
+  quickReplies?: string[];
+}
+
+const URL_RE = /(https?:\/\/[^\s，。、）)」]+)/g;
+
+/**
+ * 只把「自家網站」的網址變成可點連結。
+ *
+ * 回覆是模型產生的，客人有辦法誘導它吐出任意網址；畫成可點的連結就等於
+ * 我們替那個網址背書。所以只認本站與 avalokite.xyz 底下的網域，其他照純文字顯示。
+ */
+function trustedHost(href: string): boolean {
+  try {
+    const host = new URL(href).hostname;
+    return host === window.location.hostname || host === "avalokite.xyz" || host.endsWith(".avalokite.xyz");
+  } catch {
+    return false;
+  }
+}
+
+function Linkified({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(URL_RE).map((part, i) =>
+        i % 2 === 1 && trustedHost(part) ? (
+          <a key={i} href={part}>
+            {part.replace(/^https?:\/\//, "")}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
 }
 
 // 換頁不會掉（Next 是前端導航），但重新整理會，所以把對話留在 sessionStorage。
@@ -86,10 +121,10 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
-      const data = (await res.json()) as { reply?: string };
+      const data = (await res.json()) as { reply?: string; quickReplies?: string[] };
       setTurns((prev) => [
         ...prev,
-        { role: "assistant", content: data.reply || t("error") },
+        { role: "assistant", content: data.reply || t("error"), quickReplies: data.quickReplies ?? [] },
       ]);
     } catch {
       setTurns((prev) => [...prev, { role: "assistant", content: t("error") }]);
@@ -148,9 +183,19 @@ export default function ChatWidget() {
           )}
           {turns.map((turn, i) => (
             <div key={i} className={`chat-msg is-${turn.role === "user" ? "me" : "bot"}`}>
-              {turn.content}
+              {turn.role === "assistant" ? <Linkified text={turn.content} /> : turn.content}
             </div>
           ))}
+          {/* 建議回覆只跟著最後一則：舊訊息下的按鈕點了會接不上目前的話題 */}
+          {!busy && turns.at(-1)?.role === "assistant" && (turns.at(-1)?.quickReplies?.length ?? 0) > 0 && (
+            <div className="chat-chips">
+              {turns.at(-1)!.quickReplies!.map((c) => (
+                <button key={c} type="button" onClick={() => void send(c)}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
           {busy && (
             <div className="chat-msg is-bot chat-typing" aria-label={t("thinking")}>
               <i /><i /><i />

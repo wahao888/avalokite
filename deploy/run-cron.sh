@@ -5,6 +5,7 @@
 #   15 3 * * * /opt/avalo/app/deploy/run-cron.sh care-links dunning >> /opt/avalo/cron-care.log 2>&1
 #   0  4 1 * * /opt/avalo/app/deploy/run-cron.sh geo-prompts >> /opt/avalo/cron-geo.log 2>&1
 #   0  5 * * 1 /opt/avalo/app/deploy/run-cron.sh indexnow >> /opt/avalo/cron-indexnow.log 2>&1
+#   0  9 * * 1 /opt/avalo/app/deploy/run-cron.sh chat-review >> /opt/avalo/cron-chat-review.log 2>&1
 set -euo pipefail
 ENV=/opt/avalo/app/.env
 CRON_SECRET="$(grep -E '^CRON_SECRET=' "$ENV" | cut -d= -f2- | tr -d '"')"

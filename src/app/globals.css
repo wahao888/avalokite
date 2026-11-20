@@ -2080,6 +2080,7 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 .chat-chips button:hover { border-color: var(--moss); color: var(--moss); }
+.chat-msg.is-bot a { color: var(--moss); text-decoration: underline; text-underline-offset: 2px; }
 
 .sticky-bar {
   display: none;

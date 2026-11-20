@@ -59,6 +59,7 @@ const LIB_PRISMA_ALLOWED = [
   "src/lib/line-events.ts",
   "src/lib/chat-stats.ts",
   "src/lib/ops-audit.ts",
+  "src/lib/chat-review.ts", // 客服週報：只寄給站方（MAIL_OWNER），沒有任何客戶站入口
 ];
 
 describe("portal 只能透過資料層存取資料", () => {
