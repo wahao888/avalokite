@@ -84,16 +84,21 @@ export interface AgentAnswer {
   handoffReason: string;
   /** 可點的建議回覆，已清理過（最多 3 個、每個 12 字以內） */
   quickReplies: string[];
+  /** 這次是 API 失敗後的備用回覆，不是模型的判斷（見 chat-service 的處理） */
+  failed?: boolean;
   /** 這次呼叫實際用掉的 token，寫進對話紀錄供每月用量報表統計。 */
   usage: { input: number; output: number; cacheRead: number };
 }
 
 // API 掛掉時的回覆。沈默是最糟的處理：客人會以為沒人理他。
+// needsHuman 是 false：一次暫時性的 API 錯誤不該讓這段 LINE 對話靜音 12 小時——
+// 客人下一句重問時，API 多半已經恢復了。站方另外會收到一封「AI 回覆失敗」的提醒。
 const FALLBACK: AgentAnswer = {
   reply: "不好意思，系統剛才有點狀況。請再傳一次訊息，或留下您的稱呼與聯絡方式，我們請專人與您聯繫。",
-  needsHuman: true,
+  needsHuman: false,
   handoffReason: "AI 回覆失敗",
   quickReplies: [],
+  failed: true,
   usage: { input: 0, output: 0, cacheRead: 0 },
 };
 
@@ -140,7 +145,9 @@ export async function answer(
       reply: tidyReply(parsed.reply),
       needsHuman: parsed.needs_human,
       handoffReason: parsed.handoff_reason,
-      quickReplies: cleanQuickReplies(parsed.quick_replies),
+      // 轉真人的這一則不給按鈕：AI 接下來會靜音，客人點了按鈕只會換到一句固定確認，
+      // 看起來像按鈕壞了（2026-11-20 實測：點「我是既有客戶」後沒有回應）
+      quickReplies: parsed.needs_human ? [] : cleanQuickReplies(parsed.quick_replies),
       usage: {
         input: res.usage?.prompt_tokens ?? 0,
         output: res.usage?.completion_tokens ?? 0,

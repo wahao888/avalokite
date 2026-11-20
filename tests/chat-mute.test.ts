@@ -28,7 +28,7 @@ vi.mock("@/lib/ai-agent", () => ({
   },
 }));
 
-const { handleMessage } = await import("@/lib/chat-service");
+const { handleMessage, ACK_WAITING, ACK_CONTACT } = await import("@/lib/chat-service");
 const { prisma } = await import("@/lib/prisma");
 
 const ids: string[] = [];
@@ -51,13 +51,56 @@ afterEach(async () => {
 });
 
 describe("真人接手後 AI 靜音（LINE）", () => {
-  it("第一句仍會回，之後就不再回話", async () => {
+  it("第一句仍會回；之後 AI 不再回答，只送固定的確認", async () => {
     const externalId = newId("line");
     const first = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
     expect(first).toBeTruthy();
 
-    const second = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我姓王 0912345678" });
-    expect(second).toBeNull();
+    const second = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    expect(second).toBe(ACK_WAITING);
+  });
+
+  it("確認訊息不會每句都送：同一段等待只說一次", async () => {
+    const externalId = newId("line");
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    const third = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "還在嗎" });
+    expect(third).toBeNull();
+  });
+
+  it("客人留了聯絡方式：回一次「收到」，之後不再重複", async () => {
+    const externalId = newId("line");
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    const contact = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我姓王 0912345678" });
+    expect(contact).toBe(ACK_CONTACT);
+    const again = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "或打 0223456789" });
+    expect(again).toBeNull();
+  });
+
+  it("等了超過 4 小時還沒人回：再送一次「還在處理」", async () => {
+    const externalId = newId("line");
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    const convo = await prisma.chatConversation.findUniqueOrThrow({
+      where: { tenantId_channel_externalId: { tenantId: "avalo", channel: "line", externalId } },
+    });
+    const old = new Date(Date.now() - 5 * 3_600_000);
+    await prisma.chatConversation.update({ where: { id: convo.id }, data: { handoffAt: new Date(old.getTime() - 60_000) } });
+    await prisma.chatMessage.updateMany({ where: { conversationId: convo.id }, data: { createdAt: old } });
+    const later = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "請問有人嗎" });
+    expect(later).toBe(ACK_WAITING);
+  });
+
+  it("站方按了「這個對話我自己接」：完全不出聲，免得跟你搶話", async () => {
+    const externalId = newId("line");
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
+    await prisma.chatConversation.update({
+      where: { tenantId_channel_externalId: { tenantId: "avalo", channel: "line", externalId } },
+      data: { handoffReason: "站方手動接手" },
+    });
+    const r = await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    expect(r).toBeNull();
   });
 
   it("靜音期間不呼叫模型（省下來的就是錢）", async () => {
@@ -80,7 +123,7 @@ describe("真人接手後 AI 靜音（LINE）", () => {
     expect(convo.messages.map((m) => m.content)).toContain("我姓王 0912345678");
   });
 
-  it("靜音期間仍然寄信，主旨看得出有聯絡方式", async () => {
+  it("靜音期間仍然寄信，主旨看得出有聯絡方式，內文寫出送了哪句確認", async () => {
     const externalId = newId("line");
     await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
     mails.length = 0;
@@ -88,6 +131,15 @@ describe("真人接手後 AI 靜音（LINE）", () => {
 
     expect(mails).toHaveLength(1);
     expect(mails[0].subject).toContain("含聯絡方式");
+    expect(mails[0].body).toContain("自動確認，AI 仍靜音中");
+  });
+
+  it("沒有送確認的那幾句，通知信照實寫「未回覆」", async () => {
+    const externalId = newId("line");
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "叫真人來" });
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "我是既有客戶" });
+    mails.length = 0;
+    await handleMessage({ tenantId: "avalo", channel: "line", externalId, text: "還在嗎" });
     expect(mails[0].body).toContain("AI 靜音中，未回覆");
   });
 

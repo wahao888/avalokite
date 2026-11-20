@@ -78,23 +78,37 @@ describe("貼圖與圖片", () => {
     expect((await convoOf(externalId)).handoff).toBe(false);
     expect(mails).toHaveLength(0);
   });
-  it("圖片轉專人並寄通知，對話裡記成〔圖片〕", async () => {
+  it("圖片：寄信請站方查看，但不轉人、不靜音，對話裡記成〔圖片〕", async () => {
     const externalId = newId("image");
     const r = await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "image");
-    expect(r?.text).toContain("請專人");
+    expect(r?.text).toContain("已請同事查看");
     const c = await convoOf(externalId);
-    expect(c.handoff).toBe(true);
-    expect(mails[0].subject).toContain("轉接");
+    expect(c.handoff).toBe(false);
+    expect(c.mutedUntil).toBeNull();
+    expect(mails[0].subject).toContain("客人傳了圖片");
     const msgs = await prisma.chatMessage.findMany({ where: { conversationId: c.id }, orderBy: { id: "asc" } });
     expect(msgs[0].content).toBe("〔圖片〕");
   });
-  it("真人接手中傳圖片：不回覆，但照樣寄信", async () => {
-    const externalId = newId("muted");
+
+  it("傳完截圖接著打字問問題：AI 照常回答", async () => {
+    const externalId = newId("image-then-text");
     await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "image");
+    const r = await handleMessageDetailed({ tenantId: "avalo", channel: "line", externalId, text: "這種網站多少錢" });
+    expect(r?.text).toContain("方案頁");
+  });
+  it("真人接手中再傳檔案：只送一次固定確認，之後不出聲，但每次都寄信", async () => {
+    const externalId = newId("muted");
+    await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "sticker");
+    await prisma.chatConversation.update({
+      where: { id: (await convoOf(externalId)).id },
+      data: { handoff: true, handoffAt: new Date(), handoffReason: "客訴", mutedUntil: new Date(Date.now() + 3_600_000) },
+    });
     mails.length = 0;
     const r = await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "file");
-    expect(r).toBeNull();
-    expect(mails).toHaveLength(1);
+    expect(r?.text).toContain("已為您轉給專人");
+    const r2 = await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "image");
+    expect(r2).toBeNull();
+    expect(mails).toHaveLength(2);
   });
 });
 

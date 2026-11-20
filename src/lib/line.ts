@@ -119,8 +119,12 @@ export const startLoading = (userId: string, creds: LineCreds = houseCreds(), se
   call("/chat/loading/start", { chatId: userId, loadingSeconds: seconds }, creds);
 
 /** 主動推播。這條會吃掉方案的免費則數，只在真的必要時使用。 */
-export const pushText = (to: string, text: string, creds: LineCreds = houseCreds()) =>
-  call("/message/push", { to, messages: [{ type: "text", text }] }, creds);
+export const pushText = (
+  to: string,
+  text: string,
+  creds: LineCreds = houseCreds(),
+  quickReplies: string[] = [],
+) => call("/message/push", { to, messages: [textMessage(text, quickReplies)] }, creds);
 
 export interface LineEvent {
   type: string;
