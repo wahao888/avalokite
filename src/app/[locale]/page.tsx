@@ -5,6 +5,7 @@ import AiSupport from "@/components/sections/AiSupport";
 import HomeServices from "@/components/sections/HomeServices";
 import CaseGallery from "@/components/sections/CaseGallery";
 import MarketChart from "@/components/sections/MarketChart";
+import Compare from "@/components/sections/Compare";
 import HomePricing from "@/components/sections/HomePricing";
 import Process from "@/components/sections/Process";
 import About from "@/components/sections/About";
@@ -42,6 +43,7 @@ export default async function HomePage({
       <HomeServices />
       <CaseGallery />
       <MarketChart />
+      <Compare />
       <HomePricing />
       <Process />
       <About />

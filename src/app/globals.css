@@ -2204,6 +2204,96 @@ button { font-family: inherit; }
 }
 .market-legend-mark { width: 3px; height: 14px; background: var(--moss); }
 
+/* ── 選擇比較（Avalo 與三種常見做法）── */
+.compare-section { border-top: 1px solid var(--border); }
+.cmp { border: 1px solid var(--border); background: var(--paper); }
+.cmp-head,
+.cmp-row {
+  display: grid;
+  grid-template-columns: 9rem 1.25fr 1fr 1fr 1fr;
+}
+.cmp-head > span {
+  padding: 1.1rem 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--muted-strong);
+  border-bottom: 1px solid var(--border);
+}
+.cmp-head .cmp-ours {
+  color: var(--paper);
+  background: var(--moss);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+.cmp-row + .cmp-row { border-top: 1px solid var(--border); }
+.cmp-topic {
+  padding: 1.15rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.cmp-cell {
+  padding: 1.15rem 1.2rem;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  border-left: 1px solid var(--border);
+}
+.cmp-cell.cmp-ours {
+  position: relative;
+  padding-left: 2.3rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--moss) 9%, var(--paper));
+}
+.cmp-other { color: var(--muted-strong); }
+.cmp-check {
+  position: absolute;
+  left: 1.05rem;
+  top: 1.45rem;
+  width: 0.75rem;
+  height: 0.42rem;
+  border-left: 2px solid var(--moss);
+  border-bottom: 2px solid var(--moss);
+  transform: rotate(-45deg);
+}
+.cmp-label { display: none; }
+.cmp-note {
+  margin-top: 1.1rem;
+  font-size: 0.72rem;
+  line-height: 1.8;
+  color: var(--muted-strong);
+  max-width: 62rem;
+}
+
+/* 手機：每一列變成一張卡。Avalo 的答案在上、反白；其他三種用小字列在下面 */
+@media (max-width: 860px) {
+  .cmp { border: none; background: none; display: flex; flex-direction: column; gap: 0.9rem; }
+  .cmp-head { display: none; }
+  .cmp-row {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    background: var(--paper);
+  }
+  .cmp-row + .cmp-row { border-top: 1px solid var(--border); }
+  .cmp-topic { padding: 0.9rem 1rem 0.6rem; font-size: 0.82rem; }
+  .cmp-cell { border-left: none; padding: 0.55rem 1rem; }
+  .cmp-cell.cmp-ours { padding: 0.8rem 1rem 0.8rem 2.2rem; font-size: 0.86rem; }
+  .cmp-check { left: 0.95rem; top: 1.12rem; }
+  .cmp-other { font-size: 0.76rem; border-top: 1px dashed var(--border); }
+  .cmp-other:last-child { padding-bottom: 0.8rem; }
+  .cmp-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.15rem;
+  }
+  .cmp-cell.cmp-ours .cmp-label { color: var(--moss-deep); }
+}
+
 /* ── 合作四步 ── */
 .process-section { border-top: 1px solid var(--border); }
 
