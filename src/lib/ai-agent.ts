@@ -25,7 +25,7 @@ const getClient = () => (client ??= new OpenAI());
 // 而不是做成 optional——做成 optional 會被 API 直接退回。
 const AnswerSchema = z.object({
   reply: z.string().describe("要傳給客人看的訊息，繁體中文，200 字以內；用換行分段、每筆費用獨立一行，不用 Markdown"),
-  needs_human: z.boolean().describe("是否需要轉給專人：報價客製、議價、客訴、或連續答不出來"),
+  needs_human: z.boolean().describe("是否需要通知專人：客製報價、議價、既有客戶帳務或客訴、客人明確要找真人、或連續答不出來。想下單、要詢價單不算"),
   handoff_reason: z.string().describe("需要轉人的原因，一句話；不需要時填空字串"),
   quick_replies: z
     .array(z.string())
@@ -145,9 +145,7 @@ export async function answer(
       reply: tidyReply(parsed.reply),
       needsHuman: parsed.needs_human,
       handoffReason: parsed.handoff_reason,
-      // 轉真人的這一則不給按鈕：AI 接下來會靜音，客人點了按鈕只會換到一句固定確認，
-      // 看起來像按鈕壞了（2026-11-20 實測：點「我是既有客戶」後沒有回應）
-      quickReplies: parsed.needs_human ? [] : cleanQuickReplies(parsed.quick_replies),
+      quickReplies: cleanQuickReplies(parsed.quick_replies),
       usage: {
         input: res.usage?.prompt_tokens ?? 0,
         output: res.usage?.completion_tokens ?? 0,

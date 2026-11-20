@@ -258,7 +258,8 @@ export default async function AdminChatPage({
         轉人次數以首次判定的時間歸月。
       </p>
       <p className="form-note" style={{ marginTop: "0.4rem" }}>
-        ✦ 「我自己接」會讓該 LINE 對話的 AI 閉嘴 {MUTE_HOURS} 小時，客人的訊息照樣存檔並寄信給你。
+        ✦ AI 判定要轉專人時只會寄信通知你，AI 仍會繼續回答客人。要親自在 LINE 回覆時，先按「我自己接」：
+        該 LINE 對話的 AI 會閉嘴 {MUTE_HOURS} 小時，客人的訊息照樣存檔並寄信給你。
         官網的聊天視窗沒有真人介面，所以不提供靜音。
       </p>
     </main>

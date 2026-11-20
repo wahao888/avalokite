@@ -96,7 +96,7 @@ describe("貼圖與圖片", () => {
     const r = await handleMessageDetailed({ tenantId: "avalo", channel: "line", externalId, text: "這種網站多少錢" });
     expect(r?.text).toContain("方案頁");
   });
-  it("真人接手中再傳檔案：只送一次固定確認，之後不出聲，但每次都寄信", async () => {
+  it("站方接手中再傳檔案：AI 不出聲，但每次都寄信", async () => {
     const externalId = newId("muted");
     await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "sticker");
     await prisma.chatConversation.update({
@@ -105,7 +105,7 @@ describe("貼圖與圖片", () => {
     });
     mails.length = 0;
     const r = await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "file");
-    expect(r?.text).toContain("已為您轉給專人");
+    expect(r).toBeNull();
     const r2 = await handleMedia({ tenantId: "avalo", channel: "line", externalId }, "image");
     expect(r2).toBeNull();
     expect(mails).toHaveLength(2);
