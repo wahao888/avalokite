@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createProxy from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { tenantFromHost, robotsFor, sitemapFor } from "./lib/tenants";
+import { BASE_DOMAIN, tenantFromHost, robotsFor, sitemapFor } from "./lib/tenants";
 import { isSuspended, suspendedPage } from "./lib/suspension";
 import { SITE } from "./lib/site";
+import { capturePaidAttribution, PAID_SOURCE_COOKIE } from "./lib/paid-attribution";
 
 const intlProxy = createProxy(routing);
 
@@ -81,7 +82,25 @@ export default function proxy(req: NextRequest) {
   // app/sitemap.ts），不進 i18n 路由——否則會被導成 /zh-TW/robots.txt
   if (path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt") return NextResponse.next();
 
-  return intlProxy(req);
+  const response = intlProxy(req);
+  const host = req.headers.get("host")?.split(":")[0].toLowerCase();
+  const isMainHost = host === BASE_DOMAIN || host === `www.${BASE_DOMAIN}` ||
+    (process.env.NODE_ENV !== "production" && host === "localhost");
+  if (isMainHost && req.method === "GET" && !/^\/(?:(?:en|zh-TW)\/)?admin(?:\/|$)/.test(path) &&
+      !req.headers.has("next-router-prefetch") && req.headers.get("purpose") !== "prefetch") {
+    const attribution = capturePaidAttribution(req.nextUrl.searchParams, req.cookies.get(PAID_SOURCE_COOKIE)?.value);
+    if (attribution) {
+      response.cookies.set(PAID_SOURCE_COOKIE, attribution.value, {
+        httpOnly: true,
+        secure: host !== "localhost",
+        sameSite: "lax",
+        path: "/",
+        expires: attribution.expires,
+      });
+      response.headers.set("Cache-Control", "private, no-store");
+    }
+  }
+  return response;
 }
 
 export const config = {

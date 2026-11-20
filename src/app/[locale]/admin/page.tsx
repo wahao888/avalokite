@@ -8,6 +8,7 @@ import CancelSubButton from "@/components/CancelSubButton";
 import LaunchSubButton from "@/components/LaunchSubButton";
 import { cellStyle, headStyle, fmtDate } from "./_table";
 import { addTaipeiMonths, REWARD_VALID_MONTHS } from "@/lib/referral";
+import { formatPaidSource, readInquirySource } from "@/lib/paid-attribution";
 
 export { NOINDEX as metadata } from "@/lib/site-routes";
 
@@ -369,40 +370,51 @@ export default async function AdminPage({
             </tr>
           </thead>
           <tbody>
-            {inquiries.map((q) => (
-              <tr key={q.id} style={q.handled ? { opacity: 0.5 } : undefined}>
-                <td style={cellStyle}>{q.id}</td>
-                <td style={cellStyle}>
-                  {getTenant(q.tenantId)?.name ?? "Avalo 主站"}
-                  {!q.notified && (
-                    <>
-                      <br />
-                      <span title="通知信未送出，請確認 SMTP 與該租戶的收件人設定">⚠ 未通知</span>
-                    </>
-                  )}
-                </td>
-                <td style={cellStyle}>
-                  {q.name}
-                  <br />
-                  <span style={{ color: "var(--muted)" }}>{q.email}<br />{q.phone ?? ""}</span>
-                </td>
-                <td style={cellStyle}>{q.service ?? "-"}<br />{q.budget ?? "-"}</td>
-                <td style={{ ...cellStyle, maxWidth: 360, whiteSpace: "pre-wrap" }}>{q.message}</td>
-                <td style={cellStyle}>{fmtDate(q.createdAt)}</td>
-                <td style={cellStyle}>
-                  {q.handled ? (
-                    "✓ 已處理"
-                  ) : (
-                    <form method="post" action="/api/admin/handle-inquiry">
-                      <input type="hidden" name="id" value={q.id} />
-                      <button type="submit" className="cart-remove" style={{ color: "var(--moss)" }}>
-                        標記已處理
-                      </button>
-                    </form>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {inquiries.map((q) => {
+              const source = q.tenantId ? {} : readInquirySource(q.payload);
+              return (
+                <tr key={q.id} style={q.handled ? { opacity: 0.5 } : undefined}>
+                  <td style={cellStyle}>{q.id}</td>
+                  <td style={cellStyle}>
+                    {getTenant(q.tenantId)?.name ?? "Avalo 主站"}
+                    {!q.tenantId && (
+                      <div style={{ color: "var(--muted)", overflowWrap: "anywhere" }}>
+                        {source.first && <div>首次付費　{formatPaidSource(source.first)}</div>}
+                        {source.last
+                          ? <div>最近付費　{formatPaidSource(source.last)}</div>
+                          : "未記錄付費來源"}
+                      </div>
+                    )}
+                    {!q.notified && (
+                      <>
+                        <br />
+                        <span title="通知信未送出，請確認 SMTP 與該租戶的收件人設定">⚠ 未通知</span>
+                      </>
+                    )}
+                  </td>
+                  <td style={cellStyle}>
+                    {q.name}
+                    <br />
+                    <span style={{ color: "var(--muted)" }}>{q.email}<br />{q.phone ?? ""}</span>
+                  </td>
+                  <td style={cellStyle}>{q.service ?? "-"}<br />{q.budget ?? "-"}</td>
+                  <td style={{ ...cellStyle, maxWidth: 360, whiteSpace: "pre-wrap" }}>{q.message}</td>
+                  <td style={cellStyle}>{fmtDate(q.createdAt)}</td>
+                  <td style={cellStyle}>
+                    {q.handled ? (
+                      "✓ 已處理"
+                    ) : (
+                      <form method="post" action="/api/admin/handle-inquiry">
+                        <input type="hidden" name="id" value={q.id} />
+                        <button type="submit" className="cart-remove" style={{ color: "var(--moss)" }}>
+                          標記已處理
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

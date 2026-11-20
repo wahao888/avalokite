@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { adsMatchingFields, queueAdsConversion } from "@/lib/openai-ads-conversions";
+import { formatPaidSource, PAID_SOURCE_COOKIE, readPaidAttribution } from "@/lib/paid-attribution";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
@@ -65,6 +66,10 @@ export async function POST(req: NextRequest) {
 
   const matching = adsMatchingFields(req, d.adsMeasurement === "yes");
   const campaign = campaignSchema.safeParse(d.campaign);
+  const attribution = readPaidAttribution(req.cookies.get(PAID_SOURCE_COOKIE)?.value);
+  const payload = attribution || campaign.success
+    ? JSON.stringify({ attribution, campaign: campaign.data })
+    : undefined;
   const inquiry = await prisma.$transaction(async (tx) => {
     const saved = await tx.inquiry.create({
       data: {
@@ -75,7 +80,7 @@ export async function POST(req: NextRequest) {
         service: d.service || null,
         budget: d.budget || null,
         message: d.message || "(未填寫)",
-        payload: campaign.success ? JSON.stringify({ campaign: campaign.data }) : undefined,
+        payload,
         locale: d.locale ?? "zh-TW",
       },
     });
@@ -89,9 +94,12 @@ export async function POST(req: NextRequest) {
     return saved;
   });
 
+  const sourceNote = attribution
+    ? `\n首次付費來源：${formatPaidSource(attribution.first)}\n最近付費來源：${formatPaidSource(attribution.last)}`
+    : campaign.success ? `\n最近付費來源：${formatPaidSource(campaign.data)}` : "";
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
-    `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}\n\n${d.message || "(未填寫)"}`
+    `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}${sourceNote}\n\n${d.message || "(未填寫)"}`
   );
   // 後台會把通知信未送達的單標記出來（SMTP 掛掉時仍不會漏單）
   if (notified) {
