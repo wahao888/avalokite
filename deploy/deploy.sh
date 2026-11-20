@@ -18,6 +18,13 @@ cd "$(dirname "$0")/.."
 echo "=== 1/4 本機測試 ==="
 npx vitest run
 
+# AI 客服題庫：用真的模型問一輪，價格、轉人、格式有一題不對就不部署（見 scripts/ai-eval.mts）。
+# 本機 .env 沒有 OPENAI_API_KEY 時會自動略過；趕時間可用 SKIP_AI_EVAL=1 跳過。
+if [ "${SKIP_AI_EVAL:-}" != "1" ]; then
+  echo "  AI 客服題庫…"
+  npm run --silent ai:eval
+fi
+
 echo "=== 2/4 本機 build ==="
 # NEXT_PUBLIC_* 會在 build 時被「編進」前端 bundle 與預先產生的頁面，
 # 所以必須用伺服器那份的值，不能用本機的——本機 .env 是開發用的

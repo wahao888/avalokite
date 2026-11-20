@@ -90,9 +90,31 @@ const KIND_LABEL: Record<ReviewKind, string> = {
   repeat: "客人重問",
 };
 
-export function formatReview(items: ReviewItem[], totalConvos: number, origin: string): string {
+/** 客服上週帶來的生意。訂單只算已付款的，未付款的單不代表成交。 */
+export interface ChatImpact {
+  /** 客人在聊天裡留電話／email，自動建立的詢問單 */
+  leads: number;
+  /** 從客服附的連結點進來後，自己填官網諮詢表單 */
+  formInquiries: number;
+  /** 從客服連結點進來後下單並付款 */
+  paidOrders: number;
+  /** 上面那些訂單的一次性金額合計（未稅） */
+  paidOneTime: number;
+}
+
+export function formatImpact(i: ChatImpact): string {
+  return [
+    "【客服帶來的生意】",
+    `・聊天中留下聯絡方式（已自動建詢問單）：${i.leads} 位`,
+    `・點客服連結後填諮詢表單：${i.formInquiries} 位`,
+    `・點客服連結後下單付款：${i.paidOrders} 筆${i.paidOrders ? `，一次性金額合計未稅 NT$${i.paidOneTime.toLocaleString("en-US")}` : ""}`,
+  ].join("\n");
+}
+
+export function formatReview(items: ReviewItem[], totalConvos: number, origin: string, impact?: ChatImpact): string {
+  const impactBlock = impact ? `\n\n${formatImpact(impact)}` : "";
   if (items.length === 0) {
-    return `上週共 ${totalConvos} 段客服對話，沒有轉人、沒有答不出來、也沒有客人重問。知識庫目前夠用。`;
+    return `上週共 ${totalConvos} 段客服對話，沒有轉人、沒有答不出來、也沒有客人重問。知識庫目前夠用。${impactBlock}`;
   }
   const shown = items.slice(0, MAX_ITEMS);
   const name = (t: string) => (t === HOUSE_TENANT ? "主站" : (getTenant(t)?.name ?? t));
@@ -110,6 +132,7 @@ export function formatReview(items: ReviewItem[], totalConvos: number, origin: s
     "",
     ...lines,
     items.length > shown.length ? `\n另有 ${items.length - shown.length} 段未列出，請到 ${origin}/admin/chat 查看。` : "",
+    impactBlock,
   ]
     .join("\n")
     .trim();
@@ -140,8 +163,31 @@ export async function runChatReview(now: Date = new Date(), send = true) {
     .filter((x): x is ReviewItem => x !== null);
 
   const origin = "https://avalokite.xyz";
-  const text = formatReview(items, convos.length, origin);
+  const impact = await chatImpact(since);
+  const text = formatReview(items, convos.length, origin, impact);
   const subject = `[Avalo] AI 客服週報：${items.length ? `${items.length} 段對話值得看` : "本週沒有卡住的對話"}`;
   if (send) await notifyOwner(subject, text);
   return { conversations: convos.length, items, subject, text };
+}
+
+/** 主站的客服成效。客戶站的詢問單不算進來：那是客戶的生意，不是這封信要看的。 */
+export async function chatImpact(since: Date): Promise<ChatImpact> {
+  const [leads, formInquiries, orders] = await Promise.all([
+    prisma.inquiry.count({
+      where: { tenantId: null, createdAt: { gte: since }, payload: { contains: '"source":"ai-chat"' } },
+    }),
+    prisma.inquiry.count({
+      where: { tenantId: null, createdAt: { gte: since }, payload: { contains: '"chatRef":"' } },
+    }),
+    prisma.order.findMany({
+      where: { chatRef: { not: null }, createdAt: { gte: since }, status: { in: ["paid", "partial"] } },
+      select: { oneTimeTotal: true },
+    }),
+  ]);
+  return {
+    leads,
+    formInquiries,
+    paidOrders: orders.length,
+    paidOneTime: orders.reduce((sum, o) => sum + o.oneTimeTotal, 0),
+  };
 }

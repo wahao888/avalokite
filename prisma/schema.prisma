@@ -19,6 +19,9 @@ model Order {
   invoiceCarrier     String?
   note               String?
   referralCode       String? // 結帳時驗證過的公開邀請碼；不是訂閱管理憑證
+  /// 客人是從 AI 客服附的連結點進來的（line-ai | web-ai，見 src/lib/chat-ref.ts）。
+  /// 只記來源，用來算「客服帶來多少訂單」。
+  chatRef            String?
   locale             String         @default("zh-TW")
   items              String // JSON: [{ sku, qty }]
   oneTimeTotal       Int            @default(0) // 一次性小計（未稅，TWD）

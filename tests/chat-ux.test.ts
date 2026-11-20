@@ -99,3 +99,11 @@ describe("連結挪到問句前面", () => {
     expect(tidyReply("請看 https://avalokite.xyz/cases 好嗎？")).toBe("請看 https://avalokite.xyz/cases 好嗎？");
   });
 });
+
+describe("週報的客服成效段落", () => {
+  it("沒有付款訂單時不印金額，有的話印未稅合計", async () => {
+    const { formatImpact } = await import("@/lib/chat-review");
+    expect(formatImpact({ leads: 2, formInquiries: 1, paidOrders: 0, paidOneTime: 0 })).not.toContain("合計");
+    expect(formatImpact({ leads: 0, formInquiries: 0, paidOrders: 1, paidOneTime: 12800 })).toContain("NT$12,800");
+  });
+});

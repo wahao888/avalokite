@@ -8,6 +8,7 @@ const EVENTS = new Set([
   "purchase",
   "click_line",
   "open_chat",
+  "chat_link_visit",
   "quiz_complete",
   "tool_geo",
   "tool_cost",

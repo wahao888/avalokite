@@ -39,6 +39,11 @@ const newId = (tag: string) => {
 };
 
 afterEach(async () => {
+  // 客人留電話會自動建詢問單（captureLead），一起清掉，不要在本機資料庫留下測試單
+  const convos = await prisma.chatConversation.findMany({ where: { externalId: { in: ids } }, select: { id: true } });
+  for (const c of convos) {
+    await prisma.inquiry.deleteMany({ where: { payload: { contains: `"chatConversationId":${c.id}` } } });
+  }
   await prisma.chatConversation.deleteMany({ where: { externalId: { in: ids } } });
   ids.length = 0;
   mails.length = 0;

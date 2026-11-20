@@ -9,6 +9,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ScrollFx from "@/components/ScrollFx";
 import ChatWidget from "@/components/ChatWidget";
+import ChatRefCapture from "@/components/ChatRefCapture";
 import StickyBar from "@/components/StickyBar";
 import Analytics from "@/components/Analytics";
 import OpenAIAdsPixel from "@/components/OpenAIAdsPixel";
@@ -67,6 +68,7 @@ export default async function LocaleLayout({
             <Footer />
             <ScrollFx />
             <ChatWidget />
+            <ChatRefCapture />
             <StickyBar />
             <Analytics />
           </CartProvider>

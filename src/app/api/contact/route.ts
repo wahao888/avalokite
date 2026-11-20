@@ -5,6 +5,7 @@ import { notifyOwner } from "@/lib/mail";
 import { clientIp, rateLimited } from "@/lib/rate-limit";
 import { adsMatchingFields, queueAdsConversion } from "@/lib/openai-ads-conversions";
 import { formatPaidSource, PAID_SOURCE_COOKIE, readPaidAttribution } from "@/lib/paid-attribution";
+import { CHAT_REFS, CHAT_REF_LABEL } from "@/lib/chat-ref";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
@@ -30,6 +31,8 @@ const schema = z
     adsMeasurement: z.literal("yes").optional(),
     placement: z.enum(["home", "contact", "website"]).optional(),
     campaign: z.unknown().optional(),
+    // 從 AI 客服附的連結點進來（見 src/lib/chat-ref.ts）
+    chatRef: z.enum(CHAT_REFS).optional(),
     // honeypot
     website: z.string().max(500).optional().or(z.literal("")),
   })
@@ -67,8 +70,8 @@ export async function POST(req: NextRequest) {
   const matching = adsMatchingFields(req, d.adsMeasurement === "yes");
   const campaign = campaignSchema.safeParse(d.campaign);
   const attribution = readPaidAttribution(req.cookies.get(PAID_SOURCE_COOKIE)?.value);
-  const payload = attribution || campaign.success
-    ? JSON.stringify({ attribution, campaign: campaign.data })
+  const payload = attribution || campaign.success || d.chatRef
+    ? JSON.stringify({ attribution, campaign: campaign.data, chatRef: d.chatRef })
     : undefined;
   const inquiry = await prisma.$transaction(async (tx) => {
     const saved = await tx.inquiry.create({
@@ -97,9 +100,10 @@ export async function POST(req: NextRequest) {
   const sourceNote = attribution
     ? `\n首次付費來源：${formatPaidSource(attribution.first)}\n最近付費來源：${formatPaidSource(attribution.last)}`
     : campaign.success ? `\n最近付費來源：${formatPaidSource(campaign.data)}` : "";
+  const chatNote = d.chatRef ? `\n來源：${CHAT_REF_LABEL[d.chatRef]}（客人從客服附的連結點進來）` : "";
   const notified = await notifyOwner(
     `[Avalo] 新詢問單 #${inquiry.id} — ${d.name}`,
-    `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}${sourceNote}\n\n${d.message || "(未填寫)"}`
+    `姓名：${d.name}\nEmail：${d.email || "-"}\n電話/LINE：${d.phone || "-"}\n公司：${d.company || "-"}\n服務：${d.service || "-"}\n預算：${d.budget || "-"}${sourceNote}${chatNote}\n\n${d.message || "(未填寫)"}`
   );
   // 後台會把通知信未送達的單標記出來（SMTP 掛掉時仍不會漏單）
   if (notified) {

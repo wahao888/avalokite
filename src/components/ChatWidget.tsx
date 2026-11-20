@@ -34,7 +34,8 @@ function Linkified({ text }: { text: string }) {
       {text.split(URL_RE).map((part, i) =>
         i % 2 === 1 && trustedHost(part) ? (
           <a key={i} href={part}>
-            {part.replace(/^https?:\/\//, "")}
+            {/* 顯示時藏掉來源標記，實際連結仍帶著它（見 chat-ref.ts） */}
+            {part.replace(/^https?:\/\//, "").replace(/[?&]ref=[\w-]+$/, "")}
           </a>
         ) : (
           part

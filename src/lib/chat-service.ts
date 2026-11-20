@@ -8,6 +8,7 @@ import { estimateCostUsd } from "@/lib/chat-pricing";
 import { dailyReplyCap, planOf } from "@/lib/ai-plans";
 import { getTenant, HOUSE_TENANT } from "@/lib/tenants";
 import { taipeiDateKey, taipeiDayStart, taipeiMonthStart } from "@/lib/tw-time";
+import type { ChatRef } from "@/lib/chat-ref";
 
 export type ChatChannel = "line" | "web";
 
@@ -264,6 +265,7 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
       }),
     ]);
     await notifyIfNeeded(convo, msg, null, []);
+    await captureLead(convo.id, msg);
     return null;
   }
 
@@ -305,8 +307,9 @@ export async function handleMessageDetailed(msg: IncomingMessage): Promise<Outgo
   ]);
 
   await notifyIfNeeded(convo, msg, result, history);
+  await captureLead(convo.id, msg);
 
-  return { text: result.reply, quickReplies: result.quickReplies ?? [] };
+  return { text: withRef(result.reply, msg), quickReplies: result.quickReplies ?? [] };
 }
 
 // 台灣手機、市話、email。前面加 (?<!\d) 是因為沒有邊界的話，
@@ -397,4 +400,208 @@ async function notifyIfNeeded(
   const tenant = msg.tenantId === HOUSE_TENANT ? null : getTenant(msg.tenantId);
   if (tenant) await notifyTenant(tenant, { subject, text: body });
   else await notifyOwner(subject, body);
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// 加好友歡迎詞、非文字訊息、留電話自動建詢問單、連結來源標記
+// ─────────────────────────────────────────────────────────────
+
+const brandOf = (tenantId: string) =>
+  tenantId === HOUSE_TENANT ? "Avalo 阿瓦羅" : (getTenant(tenantId)?.name ?? tenantId);
+
+/**
+ * 客人加好友（或解除封鎖）時的第一則訊息。
+ *
+ * 這是客人對官方帳號最有興趣的一刻，沉默就是把人放走。固定文字、不呼叫模型：
+ * 加好友不代表他有問題要問，為每個新好友燒一次 API 沒有意義。
+ * ⚠ 要到 LINE Official Account Manager 關掉內建的「加入好友的歡迎訊息」，否則客人會收到兩則。
+ */
+export function welcomeMessage(tenantId: string, displayName?: string | null): OutgoingReply {
+  const name = displayName?.replace(/[\r\n]+/g, " ").trim().slice(0, 20);
+  const hello = name ? `${name} 您好！` : "您好！";
+  if (tenantId === HOUSE_TENANT) {
+    return {
+      text: [
+        `${hello}感謝加入 Avalo 阿瓦羅。`,
+        "",
+        "官網、電商、LINE AI 客服的價格與交期，都可以直接在這裡問，我們會馬上回覆；需要專人時也會請同事接手。",
+        "",
+        "想從哪裡開始？",
+      ].join("\n"),
+      quickReplies: ["看方案價格", "看作品案例", "找專人聊"],
+    };
+  }
+  return {
+    text: `${hello}感謝加入 ${brandOf(tenantId)}。\n\n有任何問題都可以直接在這裡問，我們會盡快回覆您。`,
+    quickReplies: ["我想詢問", "找專人聊"],
+  };
+}
+
+export type MediaKind = "sticker" | "image" | "video" | "audio" | "file" | "location";
+
+const MEDIA_LABEL: Record<MediaKind, string> = {
+  sticker: "〔貼圖〕",
+  image: "〔圖片〕",
+  video: "〔影片〕",
+  audio: "〔語音〕",
+  file: "〔檔案〕",
+  location: "〔位置資訊〕",
+};
+
+/**
+ * 貼圖、圖片這類 AI 讀不到的訊息。
+ *
+ * 原本整個忽略——客人傳了截圖問「這個做得到嗎」，結果完全沒人理。
+ * 貼圖通常只是打招呼或道謝，固定回一句、給按鈕就好（不呼叫模型，不花錢）；
+ * 圖片、檔案、語音多半是真的有東西要給人看，直接轉專人。
+ */
+export async function handleMedia(
+  msg: Omit<IncomingMessage, "text">,
+  kind: MediaKind,
+): Promise<OutgoingReply | null> {
+  const label = MEDIA_LABEL[kind];
+  const full: IncomingMessage = { ...msg, text: label };
+  const convo = await prisma.chatConversation.upsert({
+    where: {
+      tenantId_channel_externalId: { tenantId: msg.tenantId, channel: msg.channel, externalId: msg.externalId },
+    },
+    create: { tenantId: msg.tenantId, channel: msg.channel, externalId: msg.externalId, displayName: msg.displayName ?? null },
+    update: msg.displayName ? { displayName: msg.displayName } : {},
+  });
+  const muted = msg.channel === "line" && !!convo.mutedUntil && convo.mutedUntil > new Date();
+
+  const casual = kind === "sticker" || kind === "location";
+  const reply: OutgoingReply | null = muted
+    ? null
+    : casual
+      ? {
+          text: "收到您的訊息 😊\n有想問的直接打字就可以，例如價格、交期或做過的案例。",
+          quickReplies: msg.tenantId === HOUSE_TENANT ? ["看方案價格", "看作品案例", "找專人聊"] : ["我想詢問", "找專人聊"],
+        }
+      : {
+          text: `收到您傳來的${label.slice(1, -1)}，我們請專人看過後回覆您。\n\n方便的話，也可以用文字簡單說明想詢問的事。`,
+          quickReplies: [],
+        };
+
+  await prisma.$transaction([
+    prisma.chatMessage.create({ data: { conversationId: convo.id, role: "user", content: label } }),
+    ...(reply
+      ? [prisma.chatMessage.create({ data: { conversationId: convo.id, role: "assistant", content: reply.text } })]
+      : []),
+    prisma.chatConversation.update({ where: { id: convo.id }, data: { lastAt: new Date() } }),
+  ]);
+
+  if (!casual || muted) {
+    const history = await recentTurns(convo.id);
+    await notifyIfNeeded(
+      convo,
+      full,
+      muted ? null : { reply: reply!.text, needsHuman: true, handoffReason: `客人傳了${label.slice(1, -1)}，AI 看不到內容` },
+      // 剛存進去的這則（與回覆）notifyIfNeeded 會自己補上，前文要扣掉
+      history.slice(0, reply ? -2 : -1),
+    );
+  }
+  return reply;
+}
+
+async function recentTurns(conversationId: number, take = 8): Promise<AgentTurn[]> {
+  const rows = await prisma.chatMessage.findMany({
+    where: { conversationId },
+    orderBy: { createdAt: "desc" },
+    take,
+  });
+  return rows.reverse().map((m) => ({ role: m.role as AgentTurn["role"], content: m.content }));
+}
+
+const PHONE_RE = /(?<!\d)(09\d{2}[-\s]?\d{3}[-\s]?\d{3}|0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{3,4})(?!\d)/;
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]{2,}/;
+
+/** 從客人的訊息抓出電話與 email。抓不到的欄位回空字串。 */
+export function extractContact(text: string): { phone: string; email: string } {
+  return {
+    phone: text.match(PHONE_RE)?.[0].replace(/[-\s]/g, "") ?? "",
+    email: text.match(EMAIL_RE)?.[0] ?? "",
+  };
+}
+
+/** 詢問單 payload 裡標記「這張單來自哪段客服對話」，用來去重與在週報裡統計。 */
+const leadTag = (conversationId: number) => `"chatConversationId":${conversationId}`;
+
+/**
+ * 客人在聊天裡留了電話或 email，就自動建一張詢問單。
+ *
+ * 原本只寄通知信：信一被埋掉，這個人就消失了。詢問單會出現在後台（客戶站則在客戶
+ * 自己的 portal）的待處理清單，每日簡報也會追「未處理詢問單」，不會被忘記。
+ *
+ * 一段對話只建一張：客人補第二支電話時，把新的聯絡方式補進同一張單，不另開新單。
+ * 轉人中的對話已經寄過「含聯絡方式」的通知信，這裡就不再寄，避免同一件事兩封信。
+ */
+export async function captureLead(conversationId: number, msg: IncomingMessage): Promise<void> {
+  if (!looksLikeContact(msg.text)) return;
+  try {
+    const convo = await prisma.chatConversation.findUnique({ where: { id: conversationId } });
+    if (!convo) return;
+    const { phone, email } = extractContact(msg.text);
+    const tenantId = msg.tenantId === HOUSE_TENANT ? null : msg.tenantId;
+    const turns = await recentTurns(conversationId, 12);
+    const transcript = turns.map((t) => `${t.role === "user" ? "客人" : "客服"}：${t.content}`).join("\n");
+    const channelName = msg.channel === "line" ? "LINE" : "官網聊天";
+
+    const existing = await prisma.inquiry.findFirst({
+      where: { tenantId, payload: { contains: leadTag(conversationId) } },
+      orderBy: { createdAt: "desc" },
+    });
+    if (existing) {
+      await prisma.inquiry.update({
+        where: { id: existing.id },
+        data: {
+          phone: existing.phone || phone || null,
+          email: existing.email || email,
+          message: `${existing.message}\n\n（客人補充）${msg.text}`,
+        },
+      });
+      return;
+    }
+
+    const name = convo.displayName ?? msg.displayName ?? `${channelName}客人`;
+    const inquiry = await prisma.inquiry.create({
+      data: {
+        tenantId,
+        name,
+        email,
+        phone: phone || null,
+        service: `AI 客服（${channelName}）`,
+        message: `客人在 ${channelName} 與 AI 客服對話時留下聯絡方式。\n\n─── 最近對話 ───\n${transcript}`,
+        payload: JSON.stringify({ source: "ai-chat", channel: msg.channel, chatConversationId: conversationId }),
+        notified: convo.handoff,
+      },
+    });
+    if (convo.handoff) return;
+
+    const subject = `[${brandOf(msg.tenantId)}] 新詢問單 #${inquiry.id}（AI 客服留資料）— ${name}`;
+    const body = `電話：${phone || "-"}\nEmail：${email || "-"}\n來源：${channelName} AI 客服\n\n${transcript}\n\n對話 ID：${conversationId}`;
+    const tenant = tenantId ? getTenant(tenantId) : null;
+    const sent = tenant ? await notifyTenant(tenant, { subject, text: body }) : await notifyOwner(subject, body);
+    if (sent) await prisma.inquiry.update({ where: { id: inquiry.id }, data: { notified: true } });
+  } catch (err) {
+    // 建單失敗不能讓客人收不到回覆
+    console.error("[chat] 自動建立詢問單失敗", err);
+  }
+}
+
+/** 客服附的自家連結加上來源標記，之後的詢問單與訂單才算得出「客服帶來多少生意」（見 chat-ref.ts）。 */
+/**
+ * 只標主站自己的網址（avalokite.xyz，不含客戶站子網域）：客戶站的表單與結帳
+ * 不認這個標記，加了只是讓網址變長。參數名用短的 ref，LINE 上會整串顯示出來。
+ */
+export function withRef(text: string, msg: Pick<IncomingMessage, "tenantId" | "channel">): string {
+  if (msg.tenantId !== HOUSE_TENANT) return text;
+  const ref: ChatRef = msg.channel === "line" ? "line-ai" : "web-ai";
+  return text.replace(/https:\/\/avalokite\.xyz(?![\w.-])[^\s，。、）)」]*/g, (match) => {
+    // 網址後面緊接的問號或句點是句子的標點，不是網址的一部分
+    const [, url, tail] = match.match(/^(.*?)([?？.。!！]*)$/)!;
+    if (/[?&]ref=/.test(url)) return match;
+    return `${url}${url.includes("?") ? "&" : "?"}ref=${ref}${tail}`;
+  });
 }

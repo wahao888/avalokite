@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyLineSignature, replyText, startLoading, getDisplayName, type LineCreds, type LineEvent } from "@/lib/line";
-import { handleMessageDetailed, lineMuted } from "@/lib/chat-service";
+import { handleMessageDetailed, handleMedia, lineMuted, welcomeMessage, type MediaKind } from "@/lib/chat-service";
 import { claimEvent } from "@/lib/line-events";
 
 /**
@@ -42,17 +42,41 @@ export async function handleLineWebhook(
   return NextResponse.json({ ok: true });
 }
 
+const MEDIA_KINDS = new Set<MediaKind>(["sticker", "image", "video", "audio", "file", "location"]);
+
 async function processEvent(
   event: LineEvent,
   { tenantId, creds }: { tenantId: string; creds: LineCreds },
 ) {
   try {
-    if (event.type !== "message" || event.message?.type !== "text") return;
-    if (!(await claimEvent(event))) return;
-
     const userId = event.source?.userId;
+    if (!userId || !event.replyToken) return;
+
+    // 加好友（含解除封鎖）：送歡迎詞與按鈕
+    if (event.type === "follow") {
+      if (!(await claimEvent(event))) return;
+      const name = await getDisplayName(userId, creds);
+      const w = welcomeMessage(tenantId, name);
+      await replyText(event.replyToken, w.text, creds, w.quickReplies);
+      return;
+    }
+
+    if (event.type !== "message" || !event.message) return;
+
+    // 貼圖、圖片等 AI 讀不到的訊息：固定回覆或轉專人，不呼叫模型
+    if (event.message.type !== "text") {
+      const kind = event.message.type as MediaKind;
+      if (!MEDIA_KINDS.has(kind)) return;
+      if (!(await claimEvent(event))) return;
+      const displayName = await getDisplayName(userId, creds);
+      const reply = await handleMedia({ tenantId, channel: "line", externalId: userId, displayName }, kind);
+      if (reply) await replyText(event.replyToken, reply.text, creds, reply.quickReplies);
+      return;
+    }
+
+    if (!(await claimEvent(event))) return;
     const text = event.message.text?.trim();
-    if (!userId || !text || !event.replyToken) return;
+    if (!text) return;
 
     // 先開「輸入中」動畫再去做慢的事。不 await：它失敗不該擋住回覆。
     // 真人接手（靜音）時不開——AI 不會回，動畫轉完什麼都沒有，看起來像當機。

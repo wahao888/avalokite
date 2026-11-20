@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 // 每週一寄一封「AI 客服答不好的問題」。只讀不寫。
 //
-//   0 9 * * 1 /opt/avalo/app/deploy/run-cron.sh chat-review >> /opt/avalo/cron-chat-review.log 2>&1
+//   0 1 * * 1 /opt/avalo/app/deploy/run-cron.sh chat-review >> /opt/avalo/cron-chat-review.log 2>&1
 //
 // 加上 ?dry=1 只回傳內容、不寄信，手動查看用。
 async function handle(req: NextRequest) {
