@@ -733,6 +733,19 @@ export const isPurchasable = (sku: string) => {
   return !!p && !p.quoteOnly && !p.retired;
 };
 
+/**
+ * 「一鍵下單」連結（/cart?add=sku）實際要放進購物車的品項。
+ *
+ * 建置方案一律連同建議的維護方案一起放：車上有建置卻沒有維護時不能結帳，
+ * 只放一半的話客人點進來還得自己找維護方案，等於沒有「一鍵」。
+ * 連結是 AI 客服附給客人的，網址可能被改，所以不認得或不能買的 sku 一律忽略。
+ */
+export function orderSkusFor(sku: string): string[] {
+  if (!isPurchasable(sku)) return [];
+  const care = getProduct(sku)?.recommendedCareSku;
+  return care && isPurchasable(care) ? [sku, care] : [sku];
+}
+
 /** 單張訂單的一般數量上限（購物車與結帳 API 共用） */
 export const MAX_QTY = 9;
 

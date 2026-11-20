@@ -4,7 +4,7 @@
 // 手抄的下場是調價後客服還在報舊價，而這是會讓客戶拿去當承諾的數字。
 // 需要人工維護的只有 FAQ 與接待規則（本檔下半部），那些本來就沒有程式來源。
 
-import { PRODUCTS, ADDONS, fmt, withTax, type Product } from "@/lib/products";
+import { PRODUCTS, ADDONS, PROMO_PLANS, fmt, withTax, getProduct, isPurchasable, type Product } from "@/lib/products";
 import { PROMO_WINDOW, currentDeadline, promoOpen, seatsLeft } from "@/lib/promo-window";
 import { SITE, COMPANY } from "@/lib/site";
 import { SERVICES, servicePath } from "@/lib/services";
@@ -23,8 +23,12 @@ function pageFor(sku: string): string | null {
 
 const zh = (p: Product) => p.i18n["zh-TW"];
 
+/** 一鍵下單：點了就把方案（含必搭的維護）放進購物車，見 cart 頁與 orderSkusFor。 */
+const orderLink = (sku: string) => `${ORIGIN}/cart?add=${sku}`;
+
 function productLines(): string {
-  return PRODUCTS.map((p) => {
+  // 停售的不列（模型會照報），促銷方案在【促銷檔期】另外講
+  return PRODUCTS.filter((p) => !p.retired && !p.group).map((p) => {
     const t = zh(p);
     const unit = p.type === "monthly" ? "／月" : "（一次性）";
     const care = p.recommendedCareSku
@@ -42,6 +46,8 @@ function productLines(): string {
       `　${p.marketRange["zh-TW"]}`,
       care,
       pageFor(p.sku) ? `　方案頁：${pageFor(p.sku)}` : "",
+      // 單購維護沒有建置就不能結帳（AI、自動化類），不給一鍵下單，免得客人點進去卡住
+      isPurchasable(p.sku) && p.type === "onetime" ? `　一鍵下單：${orderLink(p.sku)}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -61,10 +67,32 @@ function promoLines(): string {
     return "目前沒有進行中的促銷檔期。客人問起促銷時，據實說明檔期已結束，改以正式方案報價。";
   }
   const left = seatsLeft();
+  const plans = PROMO_PLANS.map((plan) => {
+    const t = plan.i18n["zh-TW"];
+    const items = plan.skus
+      .map(getProduct)
+      .filter((p): p is Product => !!p)
+      .map((p) => `　・${zh(p).name}：未稅 NT$${fmt(p.price)}${p.type === "monthly" ? "／月" : "（一次性）"}——${zh(p).desc}`);
+    const build = plan.skus.map(getProduct).find((p) => p?.type === "onetime");
+    const care = plan.skus.map(getProduct).find((p) => p?.type === "monthly");
+    return [
+      `■ ${t.name}：${t.tagline}`,
+      `　適用：${care ? zh(care).features.join("、") : ""}；網站內容是 5 頁以內的全客製形象官網，資料齊全後 10 個工作天上線`,
+      `　條件：${t.terms.join("；")}`,
+      ...items,
+      `　方案說明頁：${ORIGIN}/launch`,
+      build ? `　一鍵下單：${orderLink(build.sku)}（點開就會把保留金與月費方案一起放進購物車）` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  });
   return [
     `目前有進行中的限時方案，剩餘 ${left} 席（共 ${PROMO_WINDOW.seatsTotal} 席）。`,
     `報名截止：${new Date(currentDeadline()).toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" })}。`,
     "席次與截止日由網站即時計算，不要自行加碼或延長。",
+    "客人說「有優惠的那個」「限時方案」「零元」指的就是下面這個方案。",
+    "",
+    ...plans,
   ].join("\n");
 }
 
@@ -189,8 +217,16 @@ const conduct = (brand: string, siteNote: string) => `
 ・不要提到你使用哪家廠商的模型或技術細節
 
 【客人想下單、要詢價單或報價單：你自己處理，不用轉專人】
-・想下單：說明可以在官網方案頁加入購物車、線上結帳；附上資料裡對應的方案頁連結。
-　還沒決定方案，就先問一個問題幫他選
+・想下單而且方案已經確定（包括說「直接下單」「就這個」）：附上該方案的「一鍵下單」連結，
+　說明點開就會放進購物車，確認後按結帳、填資料付款即可。不要再丟方案總覽頁、也不要再反問一次。
+　這種回覆要短，不用重報價格（購物車會顯示）；格式像這樣：
+　「好的，點下面的連結就會把〔方案名〕和〔維護方案名〕放進購物車：
+　〔一鍵下單網址〕
+　確認內容後按結帳、填資料付款就完成了。」
+・你沒辦法替客人刷卡或代填結帳資料；客人要你「幫我下單」時，就給一鍵下單連結，這就是最快的方式。
+　客人要你「幫我填資料」時，不要只說做不到：說明付款資料為了安全要本人在結帳頁填，
+　如果想先由專人協助，也可以把稱呼與聯絡方式留在這裡，我們建立詢問單、專人聯繫他
+・還沒決定方案，就先問一個問題幫他選；資料裡沒有一鍵下單連結的方案（依需求報價）就請他留需求
 ・要詢價單、報價單或想留需求：請他直接在這裡留下稱呼、聯絡方式（電話或 Email）和大概的需求，
 　說明我們收到後會建立詢問單、由專人回覆；也可以附上資料裡的「留下需求」連結
 ・這兩種情況 needs_human 都填 false

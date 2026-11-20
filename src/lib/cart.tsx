@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { getProduct, isPurchasable, maxQtyOf } from "./products";
+import { getProduct, isPurchasable, maxQtyOf, orderSkusFor } from "./products";
 import { measureItemsAdded, track } from "./track";
 
 export interface CartItem {
@@ -33,6 +33,23 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "avalo-cart";
 
+/**
+ * 一鍵下單：AI 客服附的 /cart?add=<sku> 連結，點進來就把方案（含必搭的維護）放進車。
+ *
+ * 放在 Provider 讀完 localStorage 的同一步做，而不是在購物車頁另開 effect 等
+ * ready——兩邊各自的 effect 時序不保證，實測過頁面偶爾等不到 ready 變 true。
+ * 只拿掉 add、保留 ref（來源追蹤要用）；拿掉也讓重新整理不會再加一次。
+ */
+function takeOrderLink(add: (skus: readonly string[]) => void) {
+  const url = new URL(window.location.href);
+  const sku = url.searchParams.get("add");
+  if (!sku) return;
+  const skus = orderSkusFor(sku);
+  if (skus.length) add(skus);
+  url.searchParams.delete("add");
+  window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -44,7 +61,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(next);
   }, []);
 
+  // 開發模式的 StrictMode 會把 effect 跑兩次：第二次重讀 localStorage（那時還沒寫回）
+  // 會蓋掉剛由一鍵下單放進去的品項，所以只載入一次
+  const loaded = useRef(false);
   useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -59,7 +81,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* 壞資料直接重置 */
     }
+    takeOrderLink(add);
     setHydrated(true);
+    // add 是穩定的 useCallback；這個 effect 只在載入時跑一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateItems]);
 
   useEffect(() => {

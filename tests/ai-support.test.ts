@@ -58,8 +58,8 @@ describe("LINE 簽章驗證", () => {
 describe("知識庫", () => {
   const kb = buildKnowledge();
 
-  it("每個在售方案的名稱與未稅價都在裡面", () => {
-    for (const p of PRODUCTS) {
+  it("每個在售方案的名稱與未稅價都在裡面（停售的不列，免得客服照報）", () => {
+    for (const p of PRODUCTS.filter((x) => !x.retired)) {
       expect(kb).toContain(p.i18n["zh-TW"].name);
       if (!p.quoteOnly) expect(kb).toContain(`NT$${fmt(p.price)}`);
     }
@@ -78,11 +78,28 @@ describe("知識庫", () => {
   });
 
   it("需要搭配維護的方案會標註，避免報價漏掉月費", () => {
-    const needsCare = PRODUCTS.filter((p) => p.recommendedCareSku);
+    // 促銷方案的維護在【促銷檔期】裡以方案組合呈現，另外測
+    const needsCare = PRODUCTS.filter((p) => p.recommendedCareSku && !p.retired && !p.group);
     expect(needsCare.length).toBeGreaterThan(0);
     for (const p of needsCare) {
       expect(kb).toContain(`必須搭配維護方案：${p.recommendedCareSku}`);
     }
+  });
+
+  it("可以直接買的建置方案都附一鍵下單連結；依需求報價的沒有", () => {
+    for (const p of PRODUCTS.filter((x) => x.type === "onetime" && !x.retired && !x.group)) {
+      const link = `https://avalokite.xyz/cart?add=${p.sku}`;
+      if (p.quoteOnly) expect(kb).not.toContain(link);
+      else expect(kb).toContain(link);
+    }
+  });
+
+  it("促銷檔期講得出內容、條件、說明頁與一鍵下單（客人說「有優惠的那個」時答得出來）", () => {
+    expect(kb).toContain("零元啟動");
+    expect(kb).toContain("最短承諾 24 個月");
+    expect(kb).toContain("https://avalokite.xyz/launch");
+    expect(kb).toContain("https://avalokite.xyz/cart?add=launch-deposit");
+    expect(kb).not.toContain("Launch 快啟官網"); // 停售的舊品項
   });
 
   it("含營運主體資料，客人問統編時答得出來", () => {
