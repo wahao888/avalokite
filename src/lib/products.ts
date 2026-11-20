@@ -985,6 +985,13 @@ export const promoCareNeedsBuild = (skus: string[]) => {
   return has("monthly") && !has("onetime");
 };
 
+/** 這車能不能直接結帳：任何一種「要分單／缺建置」的衝突都算（購物車頁與結帳 API 各自也會擋） */
+export const cartConflict = (skus: string[]) =>
+  mixedBuildConflict(skus) ||
+  careFamilyConflict(skus) ||
+  promoCareNeedsBuild(skus) ||
+  careNeedsMatchingBuild(skus);
+
 /**
  * 促銷方案的席次保留金相當於幾期月費。
  *

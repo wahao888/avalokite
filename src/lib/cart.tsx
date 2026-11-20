@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { getProduct, isPurchasable, maxQtyOf, orderSkusFor } from "./products";
+import { cartConflict, getProduct, isPurchasable, maxQtyOf, orderSkusFor } from "./products";
 import { measureItemsAdded, track } from "./track";
 
 export interface CartItem {
@@ -40,12 +40,24 @@ const STORAGE_KEY = "avalo-cart";
  * ready——兩邊各自的 effect 時序不保證，實測過頁面偶爾等不到 ready 變 true。
  * 只拿掉 add、保留 ref（來源追蹤要用）；拿掉也讓重新整理不會再加一次。
  */
-function takeOrderLink(add: (skus: readonly string[]) => void) {
+function takeOrderLink(
+  add: (skus: readonly string[]) => void,
+  current: () => CartItem[],
+  replace: (items: CartItem[]) => void,
+) {
   const url = new URL(window.location.href);
   const sku = url.searchParams.get("add");
   if (!sku) return;
   const skus = orderSkusFor(sku);
-  if (skus.length) add(skus);
+  if (skus.length) {
+    add(skus);
+    // 車上原本的東西跟這次要買的不能同一張單（例如先放了 AI 客服、再點零元啟動的連結）：
+    // 客人點的是「就買這個」，換成只剩這次的方案，不要留一台結不了帳的車給他。
+    // 不衝突的（例如同類的加購）照樣保留。
+    if (cartConflict(current().map((i) => i.sku))) {
+      replace(skus.map((s) => ({ sku: s, qty: 1 })));
+    }
+  }
   url.searchParams.delete("add");
   window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
 }
@@ -81,7 +93,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* 壞資料直接重置 */
     }
-    takeOrderLink(add);
+    takeOrderLink(add, () => currentItems.current, updateItems);
     setHydrated(true);
     // add 是穩定的 useCallback；這個 effect 只在載入時跑一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
